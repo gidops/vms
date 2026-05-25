@@ -1,3 +1,0 @@
-# Contributors
-
-- Gideon (DevOps Engineer)
