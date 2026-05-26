@@ -126,18 +126,17 @@ locals {
     apt-get install -y nodejs
 
     # Clone and build the frontend
-    cd /opt
-    git clone https://github.com/gidops/vms.git
-    cd vms/frontend
+    git clone -b develop https://github.com/gidops/vms.git /opt/vms
+    cd /opt/vms/frontend
     npm ci
     npm run build
 
     # Assemble the Next.js standalone bundle and start it on port 80
-    cp -r public .next/standalone/public
-    mkdir -p .next/standalone/.next
-    cp -r .next/static .next/standalone/.next/static
+    cp -r /opt/vms/frontend/public /opt/vms/frontend/.next/standalone/public
+    mkdir -p /opt/vms/frontend/.next/standalone/.next
+    cp -r /opt/vms/frontend/.next/static /opt/vms/frontend/.next/standalone/.next/static
 
-    cd .next/standalone
+    cd /opt/vms/frontend/.next/standalone
     PORT=80 HOSTNAME=0.0.0.0 nohup node server.js > /var/log/frontend.log 2>&1 &
   EOT
 }
