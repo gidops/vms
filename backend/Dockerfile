@@ -42,9 +42,20 @@ COPY --from=prod-deps --chown=nestjs:nodejs /app/node_modules ./node_modules
 # `prisma generate`) on top of the prod node_modules.
 COPY --from=builder --chown=nestjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nestjs:nodejs /app/node_modules/@prisma/client ./node_modules/@prisma/client
+# Prisma CLI and its symlink: needed at runtime so the entrypoint can run
+# `prisma migrate deploy`. Prisma is a devDependency, so prod-deps doesn't
+# include it — we lift it from the builder stage.
+COPY --from=builder --chown=nestjs:nodejs /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder --chown=nestjs:nodejs /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
+# Prisma schema and migration history.
+COPY --from=builder --chown=nestjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nestjs:nodejs /app/package.json ./package.json
 
+# Entrypoint: wait for the DB, run migrations, then exec the app.
+COPY --chown=nestjs:nodejs docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 USER nestjs
 EXPOSE 4000
-CMD ["node", "dist/main"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
