@@ -288,15 +288,57 @@ locals {
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
     apt-get install -y nodejs
 
-    # Clone and build the backend
+    # Clone the backend and install dependencies
     git clone -b develop https://github.com/gidops/vms.git /opt/vms
     cd /opt/vms/backend
     npm ci
+
+    # RDS connection string — exported before any Prisma step so generate,
+    # build, and migrate deploy all see it.
+    export DATABASE_URL="postgres://vmsuser:${random_password.db.result}@${aws_db_instance.main.address}:5432/vmsdb"
+
+    # Generate the Prisma client and build (neither needs the DB)
+    npx prisma generate
     npm run build
 
+    # Parse host and port out of DATABASE_URL (postgresql://user:pass@host:port/db)
+    host_port_db="$${DATABASE_URL##*@}"
+    host_port="$${host_port_db%%/*}"
+    case "$host_port" in
+      *:*)
+        DB_HOST="$${host_port%%:*}"
+        DB_PORT="$${host_port##*:}"
+        ;;
+      *)
+        DB_HOST="$host_port"
+        DB_PORT="5432"
+        ;;
+    esac
+
+    # Wait until RDS is accepting connections before applying migrations.
+    echo "Waiting for database at $${DB_HOST}:$${DB_PORT}..."
+    attempts=0
+    max_attempts=60
+    until node -e "
+    const net = require('net');
+    const s = net.createConnection({ host: '$${DB_HOST}', port: $${DB_PORT}, timeout: 2000 });
+    s.once('connect', () => { s.end(); process.exit(0); });
+    s.once('error', () => process.exit(1));
+    s.once('timeout', () => { s.destroy(); process.exit(1); });
+    " >/dev/null 2>&1; do
+      attempts=$((attempts + 1))
+      if [ "$attempts" -ge "$max_attempts" ]; then
+        echo "Database not reachable after $${max_attempts} attempts; aborting." >&2
+        exit 1
+      fi
+      sleep 1
+    done
+    echo "Database reachable after $${attempts} attempt(s)."
+
+    # Apply migrations to RDS
+    npx prisma migrate deploy
+
     # Start the NestJS app on port 4000 with the RDS connection string
-    export DATABASE_URL="postgres://vmsuser:${random_password.db.result}@${aws_db_instance.main.address}:5432/vmsdb"
-    cd /opt/vms/backend
     PORT=4000 NODE_ENV=production DATABASE_URL=$DATABASE_URL nohup node dist/main.js > /var/log/backend.log 2>&1 &
   EOT
 }
