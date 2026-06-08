@@ -125,19 +125,20 @@ locals {
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
     apt-get install -y nodejs
 
-    # Clone and build the frontend
+    # Clone the monorepo and build the frontend workspace from the root
     git clone -b develop https://github.com/gidops/vms.git /opt/vms
-    cd /opt/vms/frontend
+    cd /opt/vms
     npm ci
-    npm run build
+    npx turbo run build --filter=@vms/frontend
 
-    # Assemble the Next.js standalone bundle and start it on port 80
-    cp -r /opt/vms/frontend/public /opt/vms/frontend/.next/standalone/public
-    mkdir -p /opt/vms/frontend/.next/standalone/.next
-    cp -r /opt/vms/frontend/.next/static /opt/vms/frontend/.next/standalone/.next/static
+    # Assemble the Next.js standalone bundle (monorepo layout nests the server
+    # under apps/frontend) and start it on port 80.
+    cp -r /opt/vms/apps/frontend/public /opt/vms/apps/frontend/.next/standalone/apps/frontend/public
+    mkdir -p /opt/vms/apps/frontend/.next/standalone/apps/frontend/.next
+    cp -r /opt/vms/apps/frontend/.next/static /opt/vms/apps/frontend/.next/standalone/apps/frontend/.next/static
 
-    cd /opt/vms/frontend/.next/standalone
-    PORT=80 HOSTNAME=0.0.0.0 nohup node server.js > /var/log/frontend.log 2>&1 &
+    cd /opt/vms/apps/frontend/.next/standalone
+    PORT=80 HOSTNAME=0.0.0.0 nohup node apps/frontend/server.js > /var/log/frontend.log 2>&1 &
   EOT
 }
 
@@ -288,18 +289,18 @@ locals {
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
     apt-get install -y nodejs
 
-    # Clone the backend and install dependencies
+    # Clone the monorepo and install from the root. The backend's postinstall
+    # runs `prisma generate` (needs only the schema, not the DB).
     git clone -b develop https://github.com/gidops/vms.git /opt/vms
-    cd /opt/vms/backend
+    cd /opt/vms
     npm ci
 
-    # RDS connection string — exported before any Prisma step so generate,
-    # build, and migrate deploy all see it.
+    # RDS connection string — exported before any Prisma step so build and
+    # migrate deploy all see it.
     export DATABASE_URL="postgres://vmsuser:${random_password.db.result}@${aws_db_instance.main.address}:5432/vmsdb"
 
-    # Generate the Prisma client and build (neither needs the DB)
-    npx prisma generate
-    npm run build
+    # Build the backend workspace (does not need the DB)
+    npx turbo run build --filter=@vms/backend
 
     # Parse host and port out of DATABASE_URL (postgresql://user:pass@host:port/db)
     host_port_db="$${DATABASE_URL##*@}"
@@ -335,7 +336,9 @@ locals {
     done
     echo "Database reachable after $${attempts} attempt(s)."
 
-    # Apply migrations to RDS
+    # Apply migrations to RDS (run from the backend workspace so Prisma finds
+    # prisma/schema.prisma).
+    cd /opt/vms/apps/backend
     npx prisma migrate deploy
 
     # Start the NestJS app on port 4000 with the RDS connection string

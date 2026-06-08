@@ -7,12 +7,9 @@ on:
     branches: [develop, staging, main]
 
 jobs:
-  frontend:
-    name: Frontend (lint + build)
+  apps:
+    name: Apps (lint + typecheck + build)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,42 +19,25 @@ jobs:
         with:
           node-version: 20.11.0
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install dependencies
+      - name: Install dependencies (workspace root)
         run: npm ci
 
       - name: Lint
-        run: npm run lint
+        run: npx turbo run lint:check
+
+      - name: Typecheck
+        run: npx turbo run typecheck
 
       - name: Build
-        run: npm run build
+        run: npx turbo run build
 
-  backend:
-    name: Backend (lint + build)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Build Storybook
+        run: npx turbo run build-storybook
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.11.0
-          cache: npm
-          cache-dependency-path: backend/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint:check
-
-      - name: Build
-        run: npm run build
+      - name: Test
+        run: npx turbo run test
 
   terraform:
     name: Terraform (fmt + validate)

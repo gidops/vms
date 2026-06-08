@@ -1,0 +1,50 @@
+{
+  "app": {
+    "name": "AATC VMS"
+  },
+  "nav": {
+    "schedule": "Programme du jour",
+    "requests": "Demandes et alertes",
+    "visitors": "Visiteurs"
+  },
+  "login": {
+    "title": "Connexion",
+    "subtitle": "Accéder au système de gestion des visiteurs",
+    "email": "E-mail",
+    "emailPlaceholder": "nom@aatc.org",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "Saisissez votre mot de passe",
+    "forgot": "Mot de passe oublié ?",
+    "submit": "Se connecter",
+    "signingIn": "Connexion…",
+    "error": "E-mail ou mot de passe invalide.",
+    "or": "ou",
+    "okta": "Se connecter avec Okta SSO"
+  },
+  "dashboard": {
+    "welcome": "Bienvenue, {name}",
+    "subtitle": "Voici ce qui se passe à l'entrée aujourd'hui.",
+    "createVisit": "Créer une visite",
+    "search": "Rechercher visiteur, hôte, étage, ID de pass",
+    "records": "Registre des visiteurs",
+    "searchRecords": "Rechercher dans le registre",
+    "searchAction": "Rechercher",
+    "stats": {
+      "today": "Visiteurs aujourd'hui",
+      "onsite": "Actuellement sur site",
+      "overdue": "Sorties en retard",
+      "overdueHint": "au-delà de l'heure prévue"
+    },
+    "columns": {
+      "visitor": "Visiteur",
+      "host": "Hôte / Étage",
+      "checkin": "Arrivée",
+      "status": "Statut"
+    }
+  },
+  "common": {
+    "notifications": "Notifications",
+    "logout": "Se déconnecter",
+    "allStatus": "Tous les statuts"
+  }
+}

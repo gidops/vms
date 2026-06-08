@@ -26,6 +26,8 @@ Concrete capabilities present in the repo today:
 - **ORM:** Prisma 6 (`prisma-client-js` generator)
 - **Database:** PostgreSQL 16
 - **DB browser (dev):** Adminer
+- **Monorepo:** Turborepo + npm workspaces. Apps in `apps/*`, shared packages in `packages/*`. Single root lockfile; run tasks from the root via `turbo`.
+- **Shared contracts:** `packages/contracts` — zod schemas + types (dual ESM/CJS build via tsup) consumed by both apps.
 - **Infra:** Docker Compose for local dev, Terraform (AWS) for cloud
 - **CI:** GitHub Actions
 
@@ -35,9 +37,18 @@ From a fresh clone:
 
 ```bash
 nvm use                                        # picks Node 20.11.0 from .nvmrc
-cp frontend/.env.example frontend/.env
-cp backend/.env.example backend/.env
+npm install                                    # single root install (npm workspaces)
+cp apps/frontend/.env.example apps/frontend/.env
+cp apps/backend/.env.example apps/backend/.env
 docker compose up --build                      # postgres + backend + frontend + adminer
+```
+
+For non-Docker local dev, run tasks from the repo root with Turbo:
+
+```bash
+npx turbo run build                            # build all workspaces (contracts → apps)
+npx turbo run dev                              # run app dev servers
+npx turbo run lint:check typecheck test        # the CI gates
 ```
 
 Then:
@@ -76,24 +87,32 @@ In containerised environments (Compose or any orchestrator that runs the backend
 
 ```
 vms/
-├── frontend/                       # Next.js app (App Router, Tailwind, @/* alias)
-│   ├── app/api/health/             # GET /api/health -> { status, timestamp }
-│   ├── Dockerfile                  # multi-stage build using Next.js standalone output
-│   └── .env.example                # NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_API_BASE_URL
-├── backend/                        # NestJS app (REST API)
-│   ├── src/app.controller.ts       # GET / and GET /health (DB-aware)
-│   ├── src/prisma/                 # PrismaService + PrismaModule
-│   ├── prisma/schema.prisma        # Prisma schema (datasource + Visitor model)
-│   ├── prisma/migrations/          # SQL migration history
-│   ├── Dockerfile                  # multi-stage: deps -> builder -> prod-deps -> runner
-│   ├── docker-entrypoint.sh        # waits for DB, runs migrate deploy, execs node
-│   └── .env.example                # DATABASE_URL, JWT_SECRET, JWT_EXPIRES_IN, PORT, NODE_ENV
+├── apps/
+│   ├── frontend/                   # Next.js app (App Router, Tailwind, @/* alias)
+│   │   ├── app/api/health/         # GET /api/health -> { status, timestamp }
+│   │   ├── next.config.ts          # standalone output + outputFileTracingRoot (monorepo)
+│   │   ├── Dockerfile              # root-context turbo-prune build → Next.js standalone
+│   │   └── .env.example            # NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_API_BASE_URL
+│   └── backend/                    # NestJS app (REST API)
+│       ├── src/app.controller.ts   # GET / and GET /health (DB-aware)
+│       ├── src/prisma/             # PrismaService + PrismaModule
+│       ├── prisma/schema.prisma    # Prisma schema (datasource + Visitor model)
+│       ├── prisma/migrations/      # SQL migration history
+│       ├── Dockerfile              # root-context turbo-prune build; runner + entrypoint
+│       ├── docker-entrypoint.sh    # waits for DB, runs migrate deploy, execs node
+│       └── .env.example            # DATABASE_URL, JWT_SECRET, JWT_EXPIRES_IN, PORT, NODE_ENV
+├── packages/
+│   ├── contracts/                  # @vms/contracts — shared zod schemas/types (tsup dual build)
+│   └── config/                     # @vms/config — shared tsconfig presets (eslint presets later)
 ├── terraform/                      # AWS infra (VPC + 2 subnets, EC2 x2, RDS, SGs)
-├── .github/workflows/ci.yml        # CI: lint + build for both apps
+├── turbo.json                      # Turborepo task pipeline
+├── package.json                    # root: workspaces + turbo scripts
+├── tsconfig.base.json              # base TS config extended across the repo
+├── .github/workflows/ci.yml        # CI: root npm ci + turbo lint:check/typecheck/build/test
 └── docker-compose.yml              # postgres + backend + frontend + adminer
 ```
 
-Each app has its own `package.json`, `tsconfig.json`, and `node_modules`. Run all npm commands from inside the respective folder. The backend runtime image bundles the Prisma CLI plus the `prisma/` folder (schema + migrations) so the entrypoint can run migrations on container start.
+The repo is npm workspaces + Turborepo: one root `package.json`, one root `package-lock.json`, one hoisted `node_modules`. Run tasks from the root via `turbo` (or scope to a workspace with `npm run <script> -w @vms/backend`). The backend Dockerfile (build context = repo root) uses `turbo prune @vms/backend --docker` and the runtime image bundles the Prisma CLI plus the `prisma/` folder so the entrypoint can run migrations on container start. The backend has a `postinstall` that runs `prisma generate`, so the client is generated on every install.
 
 ## Branches
 
@@ -105,7 +124,9 @@ CI runs on push and PR to all three branches. As of writing, `main` and `staging
 
 ## Commands
 
-### Frontend (`cd frontend`)
+All workspace tasks can run from the repo root via Turbo (`npx turbo run <task>`), which respects the dependency graph (e.g. `@vms/contracts` builds before the apps that consume it). To run a single workspace's script directly, use `npm run <script> -w @vms/frontend` (or `-w @vms/backend`), or `cd` into the app folder as below.
+
+### Frontend (`cd apps/frontend`)
 
 | Task        | Command         |
 | ----------- | --------------- |
@@ -116,7 +137,7 @@ CI runs on push and PR to all three branches. As of writing, `main` and `staging
 
 Dev server runs on `http://localhost:3000`. Turbopack is intentionally disabled.
 
-### Backend (`cd backend`)
+### Backend (`cd apps/backend`)
 
 | Task                   | Command                                       |
 | ---------------------- | --------------------------------------------- |
@@ -135,13 +156,13 @@ Dev server runs on `http://localhost:3000`. Turbopack is intentionally disabled.
 | Prisma — migrate (prod / CI) | `npx prisma migrate deploy`             |
 | Prisma — Studio        | `npx prisma studio`                           |
 
-Nest listens on `process.env.PORT ?? 3000` (`backend/src/main.ts:6`). When running directly alongside the frontend, set `PORT=4000` in `backend/.env` to avoid clashing. In Docker the backend's `PORT` is `4000`.
+Nest listens on `process.env.PORT ?? 3000` (`apps/backend/src/main.ts:6`). When running directly alongside the frontend, set `PORT=4000` in `apps/backend/.env` to avoid clashing. In Docker the backend's `PORT` is `4000`.
 
 CI uses `lint:check` (no `--fix`) so any lint finding fails the build — leave the `lint` script alone if you want auto-fix locally.
 
 ## Health checks
 
-- **Frontend:** `GET /api/health` → `{ status: "ok", timestamp: <ISO> }` (`frontend/app/api/health/route.ts`). Marked `dynamic = "force-dynamic"` so the timestamp isn't statically cached.
+- **Frontend:** `GET /api/health` → `{ status: "ok", timestamp: <ISO> }` (`apps/frontend/app/api/health/route.ts`). Marked `dynamic = "force-dynamic"` so the timestamp isn't statically cached.
 - **Backend:** `GET /health` (handler on `AppController`) pings the DB via ``prisma.$queryRaw`SELECT 1` `` inside a try/catch and returns:
   - Success: `{ status: "ok", database: "connected", timestamp: <ISO> }`
   - Failure: `{ status: "ok", database: "disconnected", error: <message>, timestamp: <ISO> }`
@@ -151,29 +172,29 @@ CI uses `lint:check` (no `--fix`) so any lint finding fails the build — leave 
 
 Pinned to **Prisma `^6.19.3`** (`@prisma/client` runtime + `prisma` devDep). Prisma 7 was tried briefly but reverted — it requires Node ≥20.19, while the project pins 20.11.0 via `.nvmrc`.
 
-- **Schema:** `backend/prisma/schema.prisma`. Generator is `prisma-client-js`, default output to `node_modules/@prisma/client` (so you `import { PrismaClient } from '@prisma/client'`). Datasource is `postgresql` with `url = env("DATABASE_URL")`.
+- **Schema:** `apps/backend/prisma/schema.prisma`. Generator is `prisma-client-js`, default output to `node_modules/@prisma/client` (hoisted to the repo root; you still `import { PrismaClient } from '@prisma/client'`). Datasource is `postgresql` with `url = env("DATABASE_URL")`. The backend `postinstall` runs `prisma generate`.
 - **Models:** `Visitor` — `id` (Int, autoincrement PK), `fullName`, `email` (unique), `phone?`, `hostName`, `purpose`, `checkIn` (`@default(now())`), `checkOut?`, `createdAt` (`@default(now())`), `updatedAt` (`@updatedAt`).
-- **Migrations:** `backend/prisma/migrations/`. Current history is one migration: `20260529110322_init_visitor`.
-- **PrismaService** (`backend/src/prisma/prisma.service.ts`) extends `PrismaClient` and implements `OnModuleInit` / `OnModuleDestroy` to `$connect` / `$disconnect` with the Nest lifecycle.
-- **PrismaModule** (`backend/src/prisma/prisma.module.ts`) provides and exports `PrismaService`; wired into `AppModule.imports`.
+- **Migrations:** `apps/backend/prisma/migrations/`. Current history is one migration: `20260529110322_init_visitor`.
+- **PrismaService** (`apps/backend/src/prisma/prisma.service.ts`) extends `PrismaClient` and implements `OnModuleInit` / `OnModuleDestroy` to `$connect` / `$disconnect` with the Nest lifecycle.
+- **PrismaModule** (`apps/backend/src/prisma/prisma.module.ts`) provides and exports `PrismaService`; wired into `AppModule.imports`.
 - **Usage:** `constructor(private readonly prisma: PrismaService) {}` then `this.prisma.visitor.findMany()` etc.
-- **Tests:** Any spec that constructs a controller/provider that depends on `PrismaService` must register a mock provider. See `backend/src/app.controller.spec.ts` — it registers `{ provide: PrismaService, useValue: { $queryRaw: jest.fn().mockResolvedValue([...]) } }`.
+- **Tests:** Any spec that constructs a controller/provider that depends on `PrismaService` must register a mock provider. See `apps/backend/src/app.controller.spec.ts` — it registers `{ provide: PrismaService, useValue: { $queryRaw: jest.fn().mockResolvedValue([...]) } }`.
 
 ## Environment variables
 
 `.env` files are gitignored; only `.env.example` is checked in. Copy them before running:
 
 ```bash
-cp frontend/.env.example frontend/.env
-cp backend/.env.example backend/.env
+cp apps/frontend/.env.example apps/frontend/.env
+cp apps/backend/.env.example apps/backend/.env
 ```
 
-**Frontend** (`frontend/.env.example`):
+**Frontend** (`apps/frontend/.env.example`):
 - `NEXT_PUBLIC_APP_URL` — public URL of the frontend
 - `NEXT_PUBLIC_API_BASE_URL` — public URL of the backend (e.g. `http://localhost:4000`)
 
-**Backend** (`backend/.env.example`):
-- `DATABASE_URL` — Postgres connection string. Inside Docker Compose use the service hostname: `postgresql://vms:vms@postgres:5432/vms`. When running Prisma CLI on the host (e.g. `npx prisma migrate dev`), switch the host to `localhost`. `backend/.env` carries a comment reminding of this.
+**Backend** (`apps/backend/.env.example`):
+- `DATABASE_URL` — Postgres connection string. Inside Docker Compose use the service hostname: `postgresql://vms:vms@postgres:5432/vms`. When running Prisma CLI on the host (e.g. `npx prisma migrate dev`), switch the host to `localhost`. `apps/backend/.env` carries a comment reminding of this.
 - `JWT_SECRET`, `JWT_EXPIRES_IN`
 - `PORT` — set to `4000` in Docker; can be any free port locally
 - `NODE_ENV`
@@ -187,11 +208,11 @@ Frontend's `.gitignore` has an explicit `!.env.example` exception because the br
 | Service  | Host port | Image / build         | Notes                                            |
 | -------- | --------- | --------------------- | ------------------------------------------------ |
 | postgres | 5432      | `postgres:16-alpine`  | named volume `postgres_data`; healthchecked      |
-| backend  | 4000      | `./backend` (build)   | `env_file: ./backend/.env`; waits for healthy DB |
-| frontend | 3000      | `./frontend` (build)  | `env_file: ./frontend/.env`; depends on backend  |
+| backend  | 4000      | root ctx, `apps/backend/Dockerfile`  | `env_file: ./apps/backend/.env`; waits for healthy DB |
+| frontend | 3000      | root ctx, `apps/frontend/Dockerfile` | `env_file: ./apps/frontend/.env`; depends on backend   |
 | adminer  | 8080      | `adminer` (official)  | depends on postgres; browse the DB at `:8080`    |
 
-Postgres defaults: user `vms`, password `vms`, db `vms`. Match these in `backend/.env`'s `DATABASE_URL`.
+Both app images build with the repo root as context (`dockerfile:` points at `apps/*/Dockerfile`) and use `turbo prune` to produce a focused workspace subset. Postgres defaults: user `vms`, password `vms`, db `vms`. Match these in `apps/backend/.env`'s `DATABASE_URL`.
 
 ```bash
 docker compose up --build

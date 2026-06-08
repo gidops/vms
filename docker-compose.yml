@@ -18,10 +18,11 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: .
+      dockerfile: apps/backend/Dockerfile
     restart: unless-stopped
     env_file:
-      - ./backend/.env
+      - ./apps/backend/.env
     ports:
       - "4000:4000"
     depends_on:
@@ -30,10 +31,11 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: .
+      dockerfile: apps/frontend/Dockerfile
     restart: unless-stopped
     env_file:
-      - ./frontend/.env
+      - ./apps/frontend/.env
     ports:
       - "3000:3000"
     depends_on:

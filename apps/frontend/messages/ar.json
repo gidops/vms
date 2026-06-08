@@ -1,0 +1,50 @@
+{
+  "app": {
+    "name": "AATC VMS"
+  },
+  "nav": {
+    "schedule": "جدول اليوم",
+    "requests": "الطلبات والتنبيهات",
+    "visitors": "الزوّار"
+  },
+  "login": {
+    "title": "تسجيل الدخول",
+    "subtitle": "الوصول إلى نظام إدارة الزوّار",
+    "email": "البريد الإلكتروني",
+    "emailPlaceholder": "name@aatc.org",
+    "password": "كلمة المرور",
+    "passwordPlaceholder": "أدخل كلمة المرور",
+    "forgot": "هل نسيت كلمة المرور؟",
+    "submit": "تسجيل الدخول",
+    "signingIn": "جارٍ تسجيل الدخول…",
+    "error": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+    "or": "أو",
+    "okta": "تسجيل الدخول عبر Okta SSO"
+  },
+  "dashboard": {
+    "welcome": "مرحبًا، {name}",
+    "subtitle": "إليك ما يحدث عند البوابة اليوم.",
+    "createVisit": "إنشاء زيارة",
+    "search": "ابحث عن زائر أو مضيف أو طابق أو رقم تصريح",
+    "records": "سجلات الزوّار",
+    "searchRecords": "ابحث في سجلات الزوّار",
+    "searchAction": "بحث",
+    "stats": {
+      "today": "زوّار اليوم",
+      "onsite": "متواجدون حاليًا",
+      "overdue": "تأخّر تسجيل الخروج",
+      "overdueHint": "تجاوز الوقت المتوقع"
+    },
+    "columns": {
+      "visitor": "الزائر",
+      "host": "المضيف / الطابق",
+      "checkin": "الدخول",
+      "status": "الحالة"
+    }
+  },
+  "common": {
+    "notifications": "الإشعارات",
+    "logout": "تسجيل الخروج",
+    "allStatus": "كل الحالات"
+  }
+}

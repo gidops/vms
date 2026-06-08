@@ -1,0 +1,50 @@
+{
+  "app": {
+    "name": "AATC VMS"
+  },
+  "nav": {
+    "schedule": "Today's Schedule",
+    "requests": "Requests & Alerts",
+    "visitors": "Visitors"
+  },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Access the Visitor Management System",
+    "email": "Email",
+    "emailPlaceholder": "name@aatc.org",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "forgot": "Forgot password?",
+    "submit": "Sign in",
+    "signingIn": "Signing in…",
+    "error": "Invalid email or password.",
+    "or": "or",
+    "okta": "Login with Okta SSO"
+  },
+  "dashboard": {
+    "welcome": "Welcome, {name}",
+    "subtitle": "Here's what's happening at the gate today.",
+    "createVisit": "Create visit",
+    "search": "Search visitor, host, floor, pass id",
+    "records": "Visitor Records",
+    "searchRecords": "Search visitor records",
+    "searchAction": "Search",
+    "stats": {
+      "today": "Visitors today",
+      "onsite": "Currently on-site",
+      "overdue": "Overdue checkout",
+      "overdueHint": "past expected time"
+    },
+    "columns": {
+      "visitor": "Visitor",
+      "host": "Host / Floor",
+      "checkin": "Check-in",
+      "status": "Status"
+    }
+  },
+  "common": {
+    "notifications": "Notifications",
+    "logout": "Log out",
+    "allStatus": "All Status"
+  }
+}
