@@ -114,7 +114,7 @@ CI runs on push and PR to all three branches. As of writing, `main` and `staging
 | Start prod  | `npm start`     |
 | Lint        | `npm run lint`  |
 
-Dev server runs on `http://localhost:3000`. Turbopack is intentionally disabled.
+Dev server runs on `http://localhost:3000`.
 
 ### Backend (`cd backend`)
 
