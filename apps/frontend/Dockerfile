@@ -21,6 +21,14 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/ ./
 COPY --from=pruner /app/out/full/ ./
+COPY --from=pruner /app/tsconfig.base.json ./tsconfig.base.json
+# NEXT_PUBLIC_* vars are inlined into the client bundle at build time. This ARG
+# lets `docker build --build-arg NEXT_PUBLIC_API_BASE_URL=...` pass the backend
+# URL in; the ENV promotes it into the build environment so Next/turbo bake it
+# into the bundle. Without this, the bundle falls back to the hardcoded
+# http://localhost:4000 in data/http/client.ts and breaks against a remote backend.
+ARG NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 RUN npx turbo run build --filter=@vms/frontend
 
 # ---- runner: minimal runtime image ----

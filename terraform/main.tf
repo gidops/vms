@@ -116,29 +116,12 @@ locals {
     #!/bin/bash
     set -euxo pipefail
     exec > >(tee /var/log/user-data.log) 2>&1
-
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -y
-    apt-get install -y curl git ca-certificates
-
-    # Node.js 20 via NodeSource
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-    apt-get install -y nodejs
-
-    # Clone the monorepo and build the frontend workspace from the root
-    git clone -b develop https://github.com/gidops/vms.git /opt/vms
-    cd /opt/vms
-    npm ci
-    npx turbo run build --filter=@vms/frontend
-
-    # Assemble the Next.js standalone bundle (monorepo layout nests the server
-    # under apps/frontend) and start it on port 80.
-    cp -r /opt/vms/apps/frontend/public /opt/vms/apps/frontend/.next/standalone/apps/frontend/public
-    mkdir -p /opt/vms/apps/frontend/.next/standalone/apps/frontend/.next
-    cp -r /opt/vms/apps/frontend/.next/static /opt/vms/apps/frontend/.next/standalone/apps/frontend/.next/static
-
-    cd /opt/vms/apps/frontend/.next/standalone
-    PORT=80 HOSTNAME=0.0.0.0 nohup node apps/frontend/server.js > /var/log/frontend.log 2>&1 &
+    apt-get install -y docker.io awscli
+    systemctl enable --now docker
+    aws ecr get-login-password --region ${var.region} | docker login --username AWS --password-stdin ${aws_ecr_repository.frontend.repository_url}
+    docker run -d --name vms-frontend --restart unless-stopped -p 80:3000 ${aws_ecr_repository.frontend.repository_url}:latest
   EOT
 }
 
@@ -149,6 +132,7 @@ resource "aws_instance" "frontend" {
   vpc_security_group_ids      = [aws_security_group.frontend.id]
   associate_public_ip_address = true
   key_name                    = var.key_name
+  iam_instance_profile        = aws_iam_instance_profile.ec2_ecr.name
   user_data                   = local.user_data
 
   tags = {
@@ -280,69 +264,16 @@ locals {
     #!/bin/bash
     set -euxo pipefail
     exec > >(tee /var/log/user-data.log) 2>&1
-
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -y
-    apt-get install -y curl git ca-certificates
-
-    # Node.js 20 via NodeSource
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-    apt-get install -y nodejs
-
-    # Clone the monorepo and install from the root. The backend's postinstall
-    # runs `prisma generate` (needs only the schema, not the DB).
-    git clone -b develop https://github.com/gidops/vms.git /opt/vms
-    cd /opt/vms
-    npm ci
-
-    # RDS connection string — exported before any Prisma step so build and
-    # migrate deploy all see it.
-    export DATABASE_URL="postgres://vmsuser:${random_password.db.result}@${aws_db_instance.main.address}:5432/vmsdb"
-
-    # Build the backend workspace (does not need the DB)
-    npx turbo run build --filter=@vms/backend
-
-    # Parse host and port out of DATABASE_URL (postgresql://user:pass@host:port/db)
-    host_port_db="$${DATABASE_URL##*@}"
-    host_port="$${host_port_db%%/*}"
-    case "$host_port" in
-      *:*)
-        DB_HOST="$${host_port%%:*}"
-        DB_PORT="$${host_port##*:}"
-        ;;
-      *)
-        DB_HOST="$host_port"
-        DB_PORT="5432"
-        ;;
-    esac
-
-    # Wait until RDS is accepting connections before applying migrations.
-    echo "Waiting for database at $${DB_HOST}:$${DB_PORT}..."
-    attempts=0
-    max_attempts=60
-    until node -e "
-    const net = require('net');
-    const s = net.createConnection({ host: '$${DB_HOST}', port: $${DB_PORT}, timeout: 2000 });
-    s.once('connect', () => { s.end(); process.exit(0); });
-    s.once('error', () => process.exit(1));
-    s.once('timeout', () => { s.destroy(); process.exit(1); });
-    " >/dev/null 2>&1; do
-      attempts=$((attempts + 1))
-      if [ "$attempts" -ge "$max_attempts" ]; then
-        echo "Database not reachable after $${max_attempts} attempts; aborting." >&2
-        exit 1
-      fi
-      sleep 1
-    done
-    echo "Database reachable after $${attempts} attempt(s)."
-
-    # Apply migrations to RDS (run from the backend workspace so Prisma finds
-    # prisma/schema.prisma).
-    cd /opt/vms/apps/backend
-    npx prisma migrate deploy
-
-    # Start the NestJS app on port 4000 with the RDS connection string
-    PORT=4000 NODE_ENV=production DATABASE_URL=$DATABASE_URL nohup node dist/main.js > /var/log/backend.log 2>&1 &
+    apt-get install -y docker.io awscli
+    systemctl enable --now docker
+    aws ecr get-login-password --region ${var.region} | docker login --username AWS --password-stdin ${aws_ecr_repository.backend.repository_url}
+    docker run -d --name vms-backend --restart unless-stopped -p 4000:4000 \
+      -e DATABASE_URL="postgres://${aws_db_instance.main.username}:${random_password.db.result}@${aws_db_instance.main.address}:5432/${aws_db_instance.main.db_name}" \
+      -e JWT_SECRET="${random_password.jwt_secret.result}" \
+      -e ENCRYPTION_KEY="${random_bytes.encryption_key.base64}" \
+      ${aws_ecr_repository.backend.repository_url}:latest
   EOT
 }
 
@@ -353,6 +284,7 @@ resource "aws_instance" "backend" {
   vpc_security_group_ids      = [aws_security_group.backend.id]
   associate_public_ip_address = true
   key_name                    = var.key_name
+  iam_instance_profile        = aws_iam_instance_profile.ec2_ecr.name
   user_data                   = local.backend_user_data
 
   depends_on = [aws_db_instance.main]
@@ -360,4 +292,9 @@ resource "aws_instance" "backend" {
   tags = {
     Name = "${var.project_name}-backend"
   }
+}
+
+resource "aws_eip_association" "backend" {
+  instance_id   = aws_instance.backend.id
+  allocation_id = aws_eip.backend.id
 }

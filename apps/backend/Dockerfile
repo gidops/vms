@@ -27,6 +27,7 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/ ./
 COPY --from=pruner /app/out/full/ ./
+COPY --from=pruner /app/tsconfig.base.json ./tsconfig.base.json
 RUN npm --workspace @vms/backend run db:generate
 RUN npx turbo run build --filter=@vms/backend
 
@@ -38,10 +39,24 @@ ENV PORT=4000
 
 RUN addgroup -S -g 1001 nodejs && adduser -S -u 1001 -G nodejs nestjs
 
-# Carry the built workspace node_modules (includes generated @prisma/client and
-# the Prisma CLI used by the entrypoint to run migrate deploy at startup),
-# the compiled output, and the Prisma schema + migration history.
-COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
+# Install production deps from the pruned lockfile so ALL runtime
+# dependencies (including @vms/contracts' transitive deps like zod)
+# resolve correctly, rather than copying a partial node_modules.
+COPY --from=pruner /app/out/json/ ./
+RUN npm ci --omit=dev --ignore-scripts
+
+# Bring in the BUILT workspace package so the @vms/contracts symlink
+# resolves to real compiled output.
+COPY --from=builder --chown=nestjs:nodejs /app/packages/contracts/dist ./packages/contracts/dist
+COPY --from=builder --chown=nestjs:nodejs /app/packages/contracts/package.json ./packages/contracts/package.json
+
+# Generated Prisma client (created in the builder via db:generate).
+COPY --from=builder --chown=nestjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nestjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder --chown=nestjs:nodejs /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder --chown=nestjs:nodejs /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
+
+# Compiled app + prisma schema/migrations + package.json
 COPY --from=builder --chown=nestjs:nodejs /app/apps/backend/dist ./apps/backend/dist
 COPY --from=builder --chown=nestjs:nodejs /app/apps/backend/prisma ./apps/backend/prisma
 COPY --from=builder --chown=nestjs:nodejs /app/apps/backend/package.json ./apps/backend/package.json
