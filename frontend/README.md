@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VMS Frontend
 
-## Getting Started
+The Next.js frontend for the [AATC Visitor Management System](../README.md).
+Built with TypeScript, the App Router, and Tailwind CSS, it talks to the NestJS
+backend over HTTP.
 
-First, run the development server:
+> **npm only.** Use npm for every command — not yarn, pnpm, or bun.
+
+## Prerequisites
+
+- Node `20.11.0` (run `nvm use` from the repo root to pick it up from `.nvmrc`)
+- The backend running and reachable (see [`../backend/README.md`](../backend/README.md)),
+  or the whole stack via Docker Compose from the repo root.
+
+## Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env     # then edit values as needed
+npm install
+npm run dev              # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The dev server runs on <http://localhost:3000>. Edit `app/page.tsx` (and other
+files under `app/`) and the page hot-reloads.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Task        | Command         |
+| ----------- | --------------- |
+| Dev server  | `npm run dev`   |
+| Build       | `npm run build` |
+| Start prod  | `npm start`     |
+| Lint        | `npm run lint`  |
 
-## Learn More
+The build uses Next.js standalone output (`output: "standalone"` in
+`next.config.ts`), which is what the Docker image and the Terraform EC2
+frontend run in production.
 
-To learn more about Next.js, take a look at the following resources:
+## Environment variables
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+`.env` is gitignored; only `.env.example` is checked in. Copy it before running:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+cp .env.example .env
+```
 
-## Deploy on Vercel
+Both variables use the `NEXT_PUBLIC_` prefix, so they are inlined into the
+client bundle at build time (do not put secrets here):
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `NEXT_PUBLIC_APP_URL` — public URL of the frontend.
+- `NEXT_PUBLIC_API_BASE_URL` — public URL of the backend (e.g.
+  `http://localhost:4000`).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Health check
+
+`GET /api/health` → `{ status: "ok", timestamp: <ISO> }`
+(`app/api/health/route.ts`). It is marked `dynamic = "force-dynamic"` so the
+timestamp isn't statically cached.
+
+## How it fits with the backend
+
+The frontend calls the NestJS backend at `NEXT_PUBLIC_API_BASE_URL`. The runtime
+request flow is:
+
+```
+Browser → Next.js (3000) → NestJS (4000) → Postgres (5432)
+```
+
+For the full stack in one command (Postgres + backend + frontend + Adminer), use
+Docker Compose from the repo root — see the [root README](../README.md).
