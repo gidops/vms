@@ -19,6 +19,8 @@ export const buttonVariants = tv({
     intent: {
       primary:
         "[--btn:var(--color-primary)] [--btn-fg:var(--color-primary-fg)] [--btn-subtle:var(--color-primary-subtle)]",
+      accent:
+        "[--btn:var(--color-accent)] [--btn-fg:var(--color-accent-fg)] [--btn-subtle:var(--color-accent-subtle)]",
       neutral:
         "[--btn:var(--color-fg)] [--btn-fg:var(--color-surface)] [--btn-subtle:var(--color-surface-muted)]",
       success:

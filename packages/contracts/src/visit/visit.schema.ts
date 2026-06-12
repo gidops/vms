@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { RiskLevel, VisitStatus, VisitType } from "../common/enums.js";
 import { Visitor } from "../visitor/visitor.schema.js";
+import { HostWithUser } from "../host/host.schema.js";
+import { Note } from "../note/note.schema.js";
 
 /**
  * The ordered lifecycle a visit moves through. The UI Timeline/stepper and the
@@ -51,3 +53,28 @@ export const DenyVisitInput = z.object({
   reason: z.string().min(1),
 });
 export type DenyVisitInput = z.infer<typeof DenyVisitInput>;
+
+/**
+ * Full visit-request detail powering the "Visit Request Details" drawer —
+ * visit + visitor + host(+user) + notes, plus origin (who created it, source).
+ */
+export const VisitRequestDetail = Visit.extend({
+  visitor: Visitor,
+  host: HostWithUser,
+  notes: z.array(Note).default([]),
+  source: z.string().nullable().optional(),
+  createdById: z.string().uuid().nullable().optional(),
+  createdByName: z.string().nullable().optional(),
+});
+export type VisitRequestDetail = z.infer<typeof VisitRequestDetail>;
+
+/** Reception edit of a pending request (purpose / schedule). */
+export const UpdateVisitRequestInput = z
+  .object({
+    purpose: z.string().min(1).optional(),
+    scheduledAt: z.coerce.date().optional(),
+  })
+  .refine((v) => v.purpose !== undefined || v.scheduledAt !== undefined, {
+    message: "Provide at least one field to update",
+  });
+export type UpdateVisitRequestInput = z.infer<typeof UpdateVisitRequestInput>;

@@ -8,4 +8,8 @@ export * from "./user/user.schema.js";
 export * from "./auth/auth.schema.js";
 export * from "./auth/rbac.schema.js";
 export * from "./visitor/visitor.schema.js";
+export * from "./host/host.schema.js";
 export * from "./visit/visit.schema.js";
+export * from "./note/note.schema.js";
+export * from "./alert/alert.schema.js";
+export * from "./inbox/inbox.schema.js";

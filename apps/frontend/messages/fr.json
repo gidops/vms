@@ -22,29 +22,112 @@
     "okta": "Se connecter avec Okta SSO"
   },
   "dashboard": {
-    "welcome": "Bienvenue, {name}",
-    "subtitle": "Voici ce qui se passe à l'entrée aujourd'hui.",
-    "createVisit": "Créer une visite",
-    "search": "Rechercher visiteur, hôte, étage, ID de pass",
+    "hub": "VMC HUB",
+    "welcome": "Bienvenue {name}",
     "records": "Registre des visiteurs",
-    "searchRecords": "Rechercher dans le registre",
-    "searchAction": "Rechercher",
+    "selectAll": "Tout sélectionner",
+    "filters": {
+      "searchPlaceholder": "Rechercher visiteur, hôte, étage, ID de pass",
+      "allVisitTypes": "Tous les types de visite",
+      "allPurpose": "Tous les motifs",
+      "search": "Rechercher"
+    },
     "stats": {
-      "today": "Visiteurs aujourd'hui",
-      "onsite": "Actuellement sur site",
-      "overdue": "Sorties en retard",
-      "overdueHint": "au-delà de l'heure prévue"
+      "onsite": "Visiteurs sur site",
+      "checkedIn": "Arrivées aujourd'hui",
+      "checkedOut": "Sorties aujourd'hui"
+    },
+    "quickActions": {
+      "title": "Actions rapides",
+      "registerWalkIn": "Enregistrer une arrivée",
+      "newInvite": "Nouvelle invitation"
+    },
+    "range": {
+      "today": "Aujourd'hui",
+      "last7": "7 derniers jours",
+      "custom": "Personnalisé"
+    },
+    "channel": {
+      "invited": "Invité",
+      "walkIn": "Sans rendez-vous"
+    },
+    "actions": {
+      "checkIn": "Arrivée",
+      "checkOut": "Sortie",
+      "viewDetails": "Voir les détails"
     },
     "columns": {
       "visitor": "Visiteur",
-      "host": "Hôte / Étage",
-      "checkin": "Arrivée",
-      "status": "Statut"
+      "channel": "Canal",
+      "hostUnit": "Hôte / Étage / Unité",
+      "purpose": "Motif",
+      "timeCreated": "Heure de création",
+      "status": "Statut",
+      "action": "Action"
     }
   },
   "common": {
     "notifications": "Notifications",
     "logout": "Se déconnecter",
     "allStatus": "Tous les statuts"
+  },
+  "requests": {
+    "title": "Demandes et alertes",
+    "tabs": { "all": "Tout", "requests": "Demandes", "alerts": "Alertes" },
+    "typeRequest": "Demande de visite",
+    "typeAlert": "Alertes",
+    "createdBy": "Créé par",
+    "notesCount": "{count} notes",
+    "empty": "Aucune demande ni alerte",
+    "detailTitle": "Détails de la demande de visite",
+    "alertDetailTitle": "Détails de l'alerte",
+    "visitorAwaiting": "En attente d'approbation",
+    "vmcReception": "Réception VMC",
+    "noNotes": "Aucune remarque pour l'instant.",
+    "addNotePlaceholder": "Ajouter une note…",
+    "status": {
+      "awaitingApproval": "En attente d'approbation du CSO",
+      "approvedByCso": "Approuvé par le CSO",
+      "deniedByCso": "Refusé par le CSO",
+      "cancelled": "Annulé",
+      "onsite": "Sur site",
+      "checkedOut": "Sorti",
+      "expired": "Expiré",
+      "open": "Ouvert",
+      "acknowledged": "Pris en compte",
+      "resolved": "Résolu",
+      "dismissed": "Rejeté"
+    },
+    "timeline": {
+      "inviteCreated": "Invitation créée",
+      "awaitingApproval": "En attente d'approbation du CSO",
+      "checkedIn": "Entré",
+      "passIssued": "Pass émis",
+      "checkedOut": "Sorti"
+    },
+    "sections": {
+      "hostDetails": "Détails hôte / unité / étage",
+      "floor": "Étage",
+      "visitorInfo": "Informations sur le visiteur",
+      "trackStatus": "Suivi de la demande",
+      "purposeOfVisit": "Objet de la visite",
+      "purposeCategory": "Catégorie d'objet",
+      "scheduledFor": "Prévu pour",
+      "origin": "Origine de la demande",
+      "createdByLabel": "Créé par",
+      "timeCreated": "Date de création",
+      "source": "Source",
+      "role": "Rôle",
+      "remarks": "Remarques / notes",
+      "reason": "Motif"
+    },
+    "actions": {
+      "cancelRequest": "Annuler la demande",
+      "addNote": "Ajouter une note",
+      "editRequest": "Modifier la demande",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "resolve": "Résoudre"
+    }
   }
 }

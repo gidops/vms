@@ -123,6 +123,8 @@ model User {
   refreshTokens RefreshToken[]
   auditLogs     AuditLog[]
   host          Host?
+  createdVisits Visit[]        @relation("VisitCreatedBy")
+  authoredNotes Note[]
 
   @@index([tenantId])
 }
@@ -268,15 +270,20 @@ model Visit {
   checkOutAt   DateTime?
   approvedById String?
   deniedReason String?
+  // Origin of the request: who logged it and from which station/channel.
+  createdById  String?
+  source       String?     @default("VMC_STATION")
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
   visitor    Visitor     @relation(fields: [visitorId], references: [id], onDelete: Cascade)
   host       Host        @relation(fields: [hostId], references: [id], onDelete: Cascade)
   invitation Invitation? @relation(fields: [invitationId], references: [id])
+  createdBy  User?       @relation("VisitCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   pass       Pass?
   rating     Rating?
   alerts     Alert[]
+  notes      Note[]
   gateEvents GateEvent[]
 
   @@index([status])
@@ -355,9 +362,28 @@ model Alert {
 
   visit   Visit?   @relation(fields: [visitId], references: [id], onDelete: SetNull)
   visitor Visitor? @relation(fields: [visitorId], references: [id], onDelete: SetNull)
+  notes   Note[]
 
   @@index([status])
   @@index([visitId])
+}
+
+// Freeform remarks attached to a visit request or an alert (the "Remarks/notes"
+// and "Add Note" affordance). Polymorphic via nullable visit/alert FKs.
+model Note {
+  id        String   @id @default(uuid())
+  visitId   String?
+  alertId   String?
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+
+  visit  Visit? @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  alert  Alert? @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  author User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([visitId])
+  @@index([alertId])
 }
 
 model GateEvent {

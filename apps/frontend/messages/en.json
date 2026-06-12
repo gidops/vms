@@ -22,29 +22,112 @@
     "okta": "Login with Okta SSO"
   },
   "dashboard": {
-    "welcome": "Welcome, {name}",
-    "subtitle": "Here's what's happening at the gate today.",
-    "createVisit": "Create visit",
-    "search": "Search visitor, host, floor, pass id",
+    "hub": "VMC HUB",
+    "welcome": "Welcome {name}",
     "records": "Visitor Records",
-    "searchRecords": "Search visitor records",
-    "searchAction": "Search",
+    "selectAll": "Select all visitors",
+    "filters": {
+      "searchPlaceholder": "Search visitor, host, floor, pass id",
+      "allVisitTypes": "All Visit types",
+      "allPurpose": "All Purpose",
+      "search": "Search"
+    },
     "stats": {
-      "today": "Visitors today",
-      "onsite": "Currently on-site",
-      "overdue": "Overdue checkout",
-      "overdueHint": "past expected time"
+      "onsite": "Onsite Visitors",
+      "checkedIn": "Checked-in Today",
+      "checkedOut": "Checked-Out Today"
+    },
+    "quickActions": {
+      "title": "Quick actions",
+      "registerWalkIn": "Register Walk-In",
+      "newInvite": "New Invite Request"
+    },
+    "range": {
+      "today": "Today",
+      "last7": "Last 7 days",
+      "custom": "Custom"
+    },
+    "channel": {
+      "invited": "Invited",
+      "walkIn": "Walk-in"
+    },
+    "actions": {
+      "checkIn": "Check-In",
+      "checkOut": "Check-Out",
+      "viewDetails": "View Details"
     },
     "columns": {
       "visitor": "Visitor",
-      "host": "Host / Floor",
-      "checkin": "Check-in",
-      "status": "Status"
+      "channel": "Channel",
+      "hostUnit": "Host / Floor / Unit",
+      "purpose": "Purpose",
+      "timeCreated": "Time Created",
+      "status": "Status",
+      "action": "Action"
     }
   },
   "common": {
     "notifications": "Notifications",
     "logout": "Log out",
     "allStatus": "All Status"
+  },
+  "requests": {
+    "title": "Requests & Alerts",
+    "tabs": { "all": "All", "requests": "Requests", "alerts": "Alerts" },
+    "typeRequest": "Visit Request",
+    "typeAlert": "Alerts",
+    "createdBy": "Created by",
+    "notesCount": "{count} notes",
+    "empty": "No requests or alerts",
+    "detailTitle": "Visit Request Details",
+    "alertDetailTitle": "Alert Details",
+    "visitorAwaiting": "Awaiting Approval",
+    "vmcReception": "VMC Reception",
+    "noNotes": "No remarks yet.",
+    "addNotePlaceholder": "Add a note…",
+    "status": {
+      "awaitingApproval": "Awaiting CSO Approval",
+      "approvedByCso": "Approved by CSO",
+      "deniedByCso": "Denied by CSO",
+      "cancelled": "Cancelled",
+      "onsite": "Onsite",
+      "checkedOut": "Checked Out",
+      "expired": "Expired",
+      "open": "Open",
+      "acknowledged": "Acknowledged",
+      "resolved": "Resolved",
+      "dismissed": "Dismissed"
+    },
+    "timeline": {
+      "inviteCreated": "Invite Created",
+      "awaitingApproval": "Awaiting CSO Approval",
+      "checkedIn": "Checked In",
+      "passIssued": "Pass Issued",
+      "checkedOut": "Checked out"
+    },
+    "sections": {
+      "hostDetails": "Host/Unit /Floor Details",
+      "floor": "Floor",
+      "visitorInfo": "Visitor Information",
+      "trackStatus": "Track request status",
+      "purposeOfVisit": "Purpose of visit",
+      "purposeCategory": "Purpose Category",
+      "scheduledFor": "Scheduled for",
+      "origin": "Request origin",
+      "createdByLabel": "Created by",
+      "timeCreated": "Time Created",
+      "source": "Source",
+      "role": "Role",
+      "remarks": "Remarks/notes",
+      "reason": "Reason"
+    },
+    "actions": {
+      "cancelRequest": "Cancel Request",
+      "addNote": "Add Note",
+      "editRequest": "Edit Request",
+      "save": "Save",
+      "cancel": "Cancel",
+      "resolve": "Resolve"
+    }
   }
 }

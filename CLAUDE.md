@@ -4,280 +4,194 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-AATC Visitor Management System (VMS) — tracks visitors at AATC. A typed full-stack monorepo with reproducible local development and one-command cloud provisioning.
+AATC Visitor Management System (VMS) — enterprise visitor management for a diplomatic/banking environment. A typed full-stack **Turborepo** monorepo: a NestJS modular-monolith backend and a Next.js (App Router) frontend sharing zod contracts and a Storybook-backed design system. Security-first (RBAC, audit logging, refresh-token rotation), event-driven (transactional outbox), observable (structured logs + correlation IDs), and internationalized (English / French / Arabic + RTL).
 
-## What's built
-
-Concrete capabilities present in the repo today:
-
-- **Typed full-stack monorepo** — Next.js (TS, App Router) frontend and NestJS (TS) backend, each independently buildable and Dockerised.
-- **Persisted Visitor records** — Postgres-backed `Visitor` model (name, email, phone, host, purpose, check-in/check-out, timestamps) accessed via Prisma. Schema is versioned through Prisma migrations.
-- **DB-aware health endpoint** — `GET /health` on the backend pings the database with `SELECT 1` and reports `connected` / `disconnected`. The frontend exposes its own `GET /api/health`.
-- **Reproducible local dev with one command** — `docker compose up --build` brings up Postgres, the backend, the frontend, and Adminer (a web DB browser) on a shared network.
-- **Self-migrating backend container** — on every start the backend waits for the DB to be reachable, runs `prisma migrate deploy`, then execs Node. No manual migration step.
-- **CI gates** — GitHub Actions lints and builds both apps on every push / PR to `develop`, `staging`, `main`.
-- **One-command AWS provisioning** — Terraform builds VPC + 2 subnets, two EC2 instances (frontend on port 80, backend on port 4000), an RDS Postgres 16 instance, security groups, and a generated DB password. Each EC2 boots, clones `develop`, builds, and starts.
-- **Reproducible toolchain** — Node `20.11.0` pinned via `.nvmrc`; both apps declare `engines.node >=20.11.0` and `engines.npm >=10.0.0`.
+> **Deep docs live in [`docs/`](./docs/README.md).** This file is the orientation map and gotchas list; `docs/` is the authoritative reference. When a section here says "see docs/…", read it before doing non-trivial work in that area.
+> - [`docs/architecture.md`](./docs/architecture.md) — monorepo, modular monolith & layering, events/outbox, auth/RBAC, observability, data model, frontend layering
+> - [`docs/runbook.md`](./docs/runbook.md) — running locally & in Docker, env vars, migrations, deployment, troubleshooting
+> - [`docs/api.md`](./docs/api.md) — endpoints, auth flow, request/response shapes, correlation IDs
+> - [`docs/design-system.md`](./docs/design-system.md) — tokens, component catalogue, Storybook, dark mode & RTL
 
 ## Stack
 
-- **Frontend:** Next.js (TypeScript, App Router, Tailwind CSS), standalone output mode
-- **Backend:** NestJS (TypeScript, REST API)
-- **ORM:** Prisma 6 (`prisma-client-js` generator)
-- **Database:** PostgreSQL 16
-- **DB browser (dev):** Adminer
-- **Monorepo:** Turborepo + npm workspaces. Apps in `apps/*`, shared packages in `packages/*`. Single root lockfile; run tasks from the root via `turbo`.
-- **Shared contracts:** `packages/contracts` — zod schemas + types (dual ESM/CJS build via tsup) consumed by both apps.
-- **Infra:** Docker Compose for local dev, Terraform (AWS) for cloud
-- **CI:** GitHub Actions
+- **Frontend:** Next.js 16 (TypeScript, App Router), React 19, Tailwind **v4** (CSS-first `@theme`), next-intl (i18n + RTL), TanStack Query. Standalone output.
+- **Backend:** NestJS 11 (TypeScript) modular monolith — argon2 auth, JWT + opaque refresh tokens, RBAC, transactional outbox (EventEmitter2), audit log, pino logging with correlation IDs, AES-256-GCM column encryption.
+- **Shared contracts:** `@vms/contracts` — zod schemas + types (dual ESM/CJS build via tsup).
+- **Design system:** `@vms/ui` (Radix UI / React Aria + tailwind-variants, Storybook 9) and `@vms/tokens` (Tailwind v4 design tokens).
+- **ORM / DB:** Prisma `^6.19.3` + PostgreSQL 16.
+- **Monorepo:** Turborepo + npm workspaces. `apps/*` + `packages/*`, single root lockfile + hoisted `node_modules`.
+- **Infra:** Docker Compose (local), Terraform/AWS (cloud, ECR-based deploy). CI: GitHub Actions.
+
+## Monorepo workspaces
+
+```
+apps/
+  frontend/   @vms/frontend   Next.js app (login + dashboard, i18n, auth)
+  backend/    @vms/backend    NestJS modular monolith
+packages/
+  contracts/  @vms/contracts  shared zod schemas/types (dual ESM/CJS via tsup)
+  ui/         @vms/ui         design system + Storybook
+  tokens/     @vms/tokens     Tailwind v4 @theme design tokens
+  config/     @vms/config     shared eslint/tsconfig presets
+```
+
+**Internal packages are consumed as TypeScript source** (`@vms/ui`, `@vms/tokens` via Next `transpilePackages` / Vite). Consequence: imports between/into those packages are **extensionless** (`./foundations/index`, not `.js`) — Turbopack/Vite do not rewrite `.js`→`.ts`. The exception is **`@vms/contracts`**, which also ships a built `dist` because the bundler-less NestJS backend imports it — its internal `index.ts` uses `.js` extensions (ESM). Match the convention of the package you're editing.
+
+Run tasks from the repo root via Turbo (respects the dependency graph — e.g. `@vms/contracts` builds before its consumers), or scope to one workspace with `-w`:
+
+```bash
+npx turbo run build                                  # build all workspaces
+npx turbo run lint:check typecheck build build-storybook test   # the full CI gate set
+npm run <script> -w @vms/backend                     # single workspace
+```
 
 ## Local quickstart
 
-From a fresh clone:
+DB in Docker, apps with hot reload (matches the README):
 
 ```bash
-nvm use                                        # picks Node 20.11.0 from .nvmrc
-npm install                                    # single root install (npm workspaces)
-cp apps/frontend/.env.example apps/frontend/.env
-cp apps/backend/.env.example apps/backend/.env
-docker compose up --build                      # postgres + backend + frontend + adminer
+nvm use                                              # Node 20.11.0 from .nvmrc
+npm install                                          # single root install
+npx turbo run build                                  # build shared packages (contracts dist, etc.)
+docker compose up -d postgres adminer                # Postgres + Adminer
+cd apps/backend && npx prisma migrate deploy && cd ../..
+npm run start:dev -w @vms/backend                    # → http://localhost:4000 (seeds admin on first boot)
+npm run dev -w @vms/frontend                         # → http://localhost:3000
 ```
 
-For non-Docker local dev, run tasks from the repo root with Turbo:
+`.env` files are gitignored; copies for local dev already exist in the repo. Sign in at <http://localhost:3000> with `admin@aatc.org` / `Passw0rd!` (seeded on first backend boot). Full-Docker alternative (`docker compose up --build`) requires switching `DATABASE_URL`'s host to `postgres` first — see [docs/runbook.md](./docs/runbook.md).
 
-```bash
-npx turbo run build                            # build all workspaces (contracts → apps)
-npx turbo run dev                              # run app dev servers
-npx turbo run lint:check typecheck test        # the CI gates
-```
-
-Then:
-- Frontend: <http://localhost:3000>
-- Backend health: <http://localhost:4000/health>
-- Adminer (DB browser): <http://localhost:8080> — system **PostgreSQL**, server **postgres**, user/pass/db **vms/vms/vms**
-
-Migrations run automatically on backend start, so the `Visitor` table will exist by the time the API is up.
-
-## Architecture overview
-
-Request flow at runtime:
-
-```
-Browser → Next.js (3000) → NestJS (4000) → PrismaService → Postgres (5432)
-                                         ↘ GET /health pings the DB
-```
-
-The backend's `AppController` injects `PrismaService`, which extends `PrismaClient` and binds `$connect` / `$disconnect` to the Nest lifecycle. `PrismaModule` exports it for other modules to consume.
-
-Deployment story:
-
-```
-push to develop
-   → CI: lint + build (frontend, backend)
-terraform apply
-   → VPC + 2 subnets + IGW + SGs
-   → RDS Postgres 16 (private)
-   → EC2 frontend (port 80) — user_data clones develop, builds, runs Next.js standalone
-   → EC2 backend  (port 4000) — user_data clones develop, builds, runs Nest with DATABASE_URL from RDS
-```
-
-In containerised environments (Compose or any orchestrator that runs the backend image), the entrypoint script handles schema convergence so every fresh start ends with the database matching `prisma/schema.prisma`.
-
-## Repo layout
-
-```
-vms/
-├── apps/
-│   ├── frontend/                   # Next.js app (App Router, Tailwind, @/* alias)
-│   │   ├── app/api/health/         # GET /api/health -> { status, timestamp }
-│   │   ├── next.config.ts          # standalone output + outputFileTracingRoot (monorepo)
-│   │   ├── Dockerfile              # root-context turbo-prune build → Next.js standalone
-│   │   └── .env.example            # NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_API_BASE_URL
-│   └── backend/                    # NestJS app (REST API)
-│       ├── src/app.controller.ts   # GET / and GET /health (DB-aware)
-│       ├── src/prisma/             # PrismaService + PrismaModule
-│       ├── prisma/schema.prisma    # Prisma schema (datasource + Visitor model)
-│       ├── prisma/migrations/      # SQL migration history
-│       ├── Dockerfile              # root-context turbo-prune build; runner + entrypoint
-│       ├── docker-entrypoint.sh    # waits for DB, runs migrate deploy, execs node
-│       └── .env.example            # DATABASE_URL, JWT_SECRET, JWT_EXPIRES_IN, PORT, NODE_ENV
-├── packages/
-│   ├── contracts/                  # @vms/contracts — shared zod schemas/types (tsup dual build)
-│   └── config/                     # @vms/config — shared tsconfig presets (eslint presets later)
-├── terraform/                      # AWS infra (VPC + 2 subnets, EC2 x2, RDS, SGs)
-├── turbo.json                      # Turborepo task pipeline
-├── package.json                    # root: workspaces + turbo scripts
-├── tsconfig.base.json              # base TS config extended across the repo
-├── .github/workflows/ci.yml        # CI: root npm ci + turbo lint:check/typecheck/build/test
-└── docker-compose.yml              # postgres + backend + frontend + adminer
-```
-
-The repo is npm workspaces + Turborepo: one root `package.json`, one root `package-lock.json`, one hoisted `node_modules`. Run tasks from the root via `turbo` (or scope to a workspace with `npm run <script> -w @vms/backend`). The backend Dockerfile (build context = repo root) uses `turbo prune @vms/backend --docker` and the runtime image bundles the Prisma CLI plus the `prisma/` folder so the entrypoint can run migrations on container start. The backend has a `postinstall` that runs `prisma generate`, so the client is generated on every install.
-
-## Branches
-
-- `main` — production
-- `staging` — pre-prod
-- `develop` — active development (default working branch)
-
-CI runs on push and PR to all three branches. As of writing, `main` and `staging` lag `develop` significantly — most of the project lives on `develop` and has not yet been promoted.
+Locales: `/` (en, no prefix), `/fr`, `/ar` (RTL). Storybook: `npm run storybook -w @vms/ui` (port 6006).
 
 ## Commands
 
-All workspace tasks can run from the repo root via Turbo (`npx turbo run <task>`), which respects the dependency graph (e.g. `@vms/contracts` builds before the apps that consume it). To run a single workspace's script directly, use `npm run <script> -w @vms/frontend` (or `-w @vms/backend`), or `cd` into the app folder as below.
+### Root (Turbo)
 
-### Frontend (`cd apps/frontend`)
+| Task | Command |
+| --- | --- |
+| Build all | `npx turbo run build` |
+| Lint (CI, no fix) | `npx turbo run lint:check` |
+| Typecheck | `npx turbo run typecheck` |
+| Test | `npx turbo run test` |
+| Build Storybook (CI gate) | `npx turbo run build-storybook` |
+| Format | `npm run format` (prettier) |
 
-| Task        | Command         |
-| ----------- | --------------- |
-| Dev server  | `npm run dev`   |
-| Build       | `npm run build` |
-| Start prod  | `npm start`     |
-| Lint        | `npm run lint`  |
+### Frontend (`-w @vms/frontend`)
 
-Dev server runs on `http://localhost:3000`. Turbopack is intentionally disabled.
+`dev` · `build` · `start` · `lint` / `lint:check` (eslint) · `typecheck` (`tsc --noEmit`). Dev server on `:3000`.
 
-### Backend (`cd apps/backend`)
+### Backend (`-w @vms/backend`)
 
-| Task                   | Command                                       |
-| ---------------------- | --------------------------------------------- |
-| Dev server (watch)     | `npm run start:dev`                           |
-| Start                  | `npm start`                                   |
-| Start prod             | `npm run start:prod`                          |
-| Build                  | `npm run build`                               |
-| Lint (auto-fix)        | `npm run lint`                                |
-| Lint (CI, no fix)      | `npm run lint:check`                          |
-| Unit tests             | `npm test`                                    |
-| Single test file       | `npm test -- path/to/file.spec.ts`            |
-| E2E tests              | `npm run test:e2e`                            |
-| Coverage               | `npm run test:cov`                            |
-| Prisma — generate      | `npx prisma generate`                         |
-| Prisma — migrate (dev) | `npx prisma migrate dev --name <name>`        |
-| Prisma — migrate (prod / CI) | `npx prisma migrate deploy`             |
-| Prisma — Studio        | `npx prisma studio`                           |
+`start:dev` (watch) · `start` · `start:prod` · `build` · `lint` (auto-fix) / `lint:check` (CI, no fix) · `typecheck` · `test` · `test:e2e` · `test:cov`. Single test file: `npm test -- path/to/file.spec.ts -w @vms/backend`.
 
-Nest listens on `process.env.PORT ?? 3000` (`apps/backend/src/main.ts:6`). When running directly alongside the frontend, set `PORT=4000` in `apps/backend/.env` to avoid clashing. In Docker the backend's `PORT` is `4000`.
+Backend listens on `PORT` (zod-defaulted to **4000** in `env.schema.ts`; `apps/backend/src/main.ts`). Env is **validated at boot** — a missing/typo'd var fails fast with a readable message rather than crashing later.
 
-CI uses `lint:check` (no `--fix`) so any lint finding fails the build — leave the `lint` script alone if you want auto-fix locally.
+Prisma: `npx prisma generate` · `migrate dev --name <name>` · `migrate deploy` (prod/CI) · `studio`. The backend `postinstall` runs `prisma generate` on every install.
 
-## Health checks
+### Design system (`-w @vms/ui`)
 
-- **Frontend:** `GET /api/health` → `{ status: "ok", timestamp: <ISO> }` (`apps/frontend/app/api/health/route.ts`). Marked `dynamic = "force-dynamic"` so the timestamp isn't statically cached.
-- **Backend:** `GET /health` (handler on `AppController`) pings the DB via ``prisma.$queryRaw`SELECT 1` `` inside a try/catch and returns:
-  - Success: `{ status: "ok", database: "connected", timestamp: <ISO> }`
-  - Failure: `{ status: "ok", database: "disconnected", error: <message>, timestamp: <ISO> }`
-  - `status` is intentionally `"ok"` in both branches — if you wire this into an external probe that needs to alert on DB outages, key off `database` (or change the failure branch's status).
+`storybook` (dev, :6006) · `build-storybook` (static, **a CI gate**) · `lint` / `lint:check` · `typecheck`.
 
-## Database (Prisma)
+## Backend architecture (modular monolith)
 
-Pinned to **Prisma `^6.19.3`** (`@prisma/client` runtime + `prisma` devDep). Prisma 7 was tried briefly but reverted — it requires Node ≥20.19, while the project pins 20.11.0 via `.nvmrc`.
+See [docs/architecture.md](./docs/architecture.md) for the full picture. Wired in `app.module.ts`: `ConfigModule`, `LoggingModule`, `PrismaModule`, `CryptoModule`, `EventsModule`, `AuditModule`, `IdentityModule`, `AuthModule`.
 
-- **Schema:** `apps/backend/prisma/schema.prisma`. Generator is `prisma-client-js`, default output to `node_modules/@prisma/client` (hoisted to the repo root; you still `import { PrismaClient } from '@prisma/client'`). Datasource is `postgresql` with `url = env("DATABASE_URL")`. The backend `postinstall` runs `prisma generate`.
-- **Models:** `Visitor` — `id` (Int, autoincrement PK), `fullName`, `email` (unique), `phone?`, `hostName`, `purpose`, `checkIn` (`@default(now())`), `checkOut?`, `createdAt` (`@default(now())`), `updatedAt` (`@updatedAt`).
-- **Migrations:** `apps/backend/prisma/migrations/`. Current history is one migration: `20260529110322_init_visitor`.
-- **PrismaService** (`apps/backend/src/prisma/prisma.service.ts`) extends `PrismaClient` and implements `OnModuleInit` / `OnModuleDestroy` to `$connect` / `$disconnect` with the Nest lifecycle.
-- **PrismaModule** (`apps/backend/src/prisma/prisma.module.ts`) provides and exports `PrismaService`; wired into `AppModule.imports`.
-- **Usage:** `constructor(private readonly prisma: PrismaService) {}` then `this.prisma.visitor.findMany()` etc.
-- **Tests:** Any spec that constructs a controller/provider that depends on `PrismaService` must register a mock provider. See `apps/backend/src/app.controller.spec.ts` — it registers `{ provide: PrismaService, useValue: { $queryRaw: jest.fn().mockResolvedValue([...]) } }`.
+```
+apps/backend/src/
+  shared/
+    config/    @nestjs/config + zod-validated env (env.schema.ts, fail-fast)
+    logging/   nestjs-pino structured JSON + nestjs-cls correlation IDs
+    crypto/    AES-256-GCM EncryptionService (PII / biometric refs)
+    events/    domain-event, EventPublisher→outbox, TransactionManager, OutboxRelay
+    audit/     AuditListener ('**') → append-only AuditLog
+    auth/      provider-agnostic auth, JWT, refresh rotation, RBAC guards, seeder
+    common/    zod validation pipe, RFC-7807 exception filter
+  modules/
+    identity/  users + GET /users/me
+  app.controller.ts   GET / and GET /health (DB-aware)
+```
+
+Key invariants to respect when extending the backend:
+
+- **Transactional outbox.** A use-case's state change **and** its domain event are appended to `OutboxEvent` in **one transaction** (`TransactionManager.run` + `EventPublisher.publish(tx, …)`). The polling `OutboxRelay` republishes onto the in-process EventEmitter2 bus. Don't emit domain events outside this path — handlers (audit, notifications) consume from the relay, and the relay is the only component that knows the transport (so a future swap to NATS is relay-only).
+- **Audit is event-driven.** One `AuditListener` (`@OnEvent('**')`) writes an `AuditLog` row per domain event. Business code never calls the audit log directly.
+- **Auth is provider-agnostic.** `AuthService` depends on a `CredentialAuthProvider` interface; `LocalAuthProvider` (email + argon2) is the only impl today. Short-lived JWT access token (claims include roles + permissions) + opaque refresh token stored as SHA-256 hash, grouped by rotation `family`; **reuse of a used refresh token revokes the whole family**. Routes: `POST /auth/login`, `/auth/refresh`, `/auth/logout`.
+- **Authorization.** Global `JwtAuthGuard` (opt out with `@Public()`) + global `PermissionsGuard` (`@RequirePermissions('visit:approve')`). Permissions ride in the token, so checks need no per-request DB hit.
+- **Errors / logging.** Global `AllExceptionsFilter` returns RFC-7807 problem responses; pino logs carry the correlation id from `x-correlation-id` (or generated). `main.ts` also wires helmet, CORS, and shutdown hooks.
+
+### Prisma / data model
+
+- **Schema:** `apps/backend/prisma/schema.prisma` — **20 models** across Identity/Auth/Audit (`User`, `Role`, `Permission`, `RolePermission`, `UserRole`, `Session`, `RefreshToken`, `AuditLog`), Domain (`Visitor`, `Host`, `Visit`, `Invitation`, `Pass`, `AccessCard`, `Rating`, `Alert`, `GateEvent`, `ShiftAttendance`, `Notification`), and Events (`OutboxEvent`). Enums mirror `@vms/contracts`.
+- **Migrations** (`apps/backend/prisma/migrations/`): `20260529110322_init_visitor`, `20260608105532_expand_domain_schema`.
+- **PII columns** (`Visitor.phone`, `nationalId`, `ShiftAttendance.fingerprintTemplateRef`) are intended for column encryption via the crypto module — biometrics stored only as an external reference/hash, never raw.
+- **PrismaService** extends `PrismaClient` and binds `$connect`/`$disconnect` to the Nest lifecycle; `PrismaModule` exports it. Generator output goes to the hoisted `node_modules/@prisma/client` — import `from '@prisma/client'`.
+- **Tests:** any spec constructing a provider that depends on `PrismaService` must register a mock — see `apps/backend/src/app.controller.spec.ts`.
+
+Pinned to Prisma `^6.19.3` deliberately: Prisma 7 needs Node ≥20.19, but the repo pins **20.11.0** via `.nvmrc`.
+
+## Frontend architecture (layered)
+
+```
+apps/frontend/
+  app/[locale]/   routing: login (/) + dashboard; <html lang dir>
+  data/           http client (auth header + correlation id + refresh-on-401), api modules
+  shared/         AuthContext (provider-agnostic), providers (TanStack Query), RouteGuard
+  i18n/ + messages/   next-intl config + en/fr/ar catalogs
+```
+
+Dependencies point downward (Presentation → Data → Shared). **The `data/` layer is the sole owner of `fetch`** — UI consumes typed `@vms/contracts`, never raw backend shapes. Server state via TanStack Query; auth is a React context orchestrating tokens + silent refresh on 401.
+
+- **i18n:** `middleware.ts` runs next-intl on all non-API/non-internal paths. `i18n/routing.ts` defines locales `["en","fr","ar"]`, `defaultLocale: "en"`, `localePrefix: "as-needed"` (en is unprefixed). `isRtl()` flags `ar`; components use **logical Tailwind properties** (`ms/me`, `ps/pe`, `start/end`, `text-start`) so layout flips for RTL.
+
+## Design system (`@vms/ui` + `@vms/tokens`)
+
+See [docs/design-system.md](./docs/design-system.md). Layered **foundations → primitives → components → patterns**, built on Radix UI / React Aria, styled with `tailwind-variants`. Every export has a Storybook story.
+
+- **Tokens** (`@vms/tokens`): Tailwind v4 CSS-first `@theme`, two tiers — a primitive palette and **semantic tokens** (`bg-canvas`, `bg-surface`, `text-fg`, `bg-primary`, `success`/`warning`/`danger`/`info`, …). **Components reference semantic tokens only, never the raw palette.** Dark mode swaps semantic values via `[data-theme="dark"]` on `<html>`. Apps and Storybook both `@import "tailwindcss"; @import "@vms/tokens/theme.css";` so they render identically.
+- **Conventions:** co-located `Component.tsx`, `Component.variants.ts`, `Component.stories.tsx`. Standardized variant axes: `intent`, `tone`, `size`. Status/lifecycle values come from `@vms/contracts` (e.g. `StatusBadge` maps `VisitStatus`) so the UI can't render a state the backend doesn't define.
+- **Storybook 9** + `@storybook/react-vite`; addons **a11y** (axe per story) and **themes** (light/dark via `data-theme` + LTR/RTL via a `dir` toolbar toggle). `build-storybook` is a CI gate.
 
 ## Environment variables
 
-`.env` files are gitignored; only `.env.example` is checked in. Copy them before running:
+`.env` files are gitignored (only `.env.example` checked in). Backend env is zod-validated (`apps/backend/src/shared/config/env.schema.ts`):
 
-```bash
-cp apps/frontend/.env.example apps/frontend/.env
-cp apps/backend/.env.example apps/backend/.env
-```
+- `DATABASE_URL` (required) — in Docker Compose use host `postgres`; for host-run Prisma CLI use `localhost`.
+- `JWT_SECRET` (required), `JWT_EXPIRES_IN` (default `1h`)
+- `ENCRYPTION_KEY` — base64 32-byte key for column encryption; derived from `JWT_SECRET` in dev if absent
+- `PORT` (default 4000), `NODE_ENV`, `LOG_LEVEL` (default `info`), `OUTBOX_POLL_INTERVAL_MS` (default 2000)
 
-**Frontend** (`apps/frontend/.env.example`):
-- `NEXT_PUBLIC_APP_URL` — public URL of the frontend
-- `NEXT_PUBLIC_API_BASE_URL` — public URL of the backend (e.g. `http://localhost:4000`)
+Frontend: `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_API_BASE_URL`.
 
-**Backend** (`apps/backend/.env.example`):
-- `DATABASE_URL` — Postgres connection string. Inside Docker Compose use the service hostname: `postgresql://vms:vms@postgres:5432/vms`. When running Prisma CLI on the host (e.g. `npx prisma migrate dev`), switch the host to `localhost`. `apps/backend/.env` carries a comment reminding of this.
-- `JWT_SECRET`, `JWT_EXPIRES_IN`
-- `PORT` — set to `4000` in Docker; can be any free port locally
-- `NODE_ENV`
+## Health checks
 
-Frontend's `.gitignore` has an explicit `!.env.example` exception because the broad `.env*` rule would otherwise hide it.
+- **Backend** `GET /health` pings the DB via ``prisma.$queryRaw`SELECT 1` `` and returns `{ status, database: "connected"|"disconnected", timestamp }`. `status` is intentionally `"ok"` in both branches — key external probes off `database`, not `status`.
+- **Frontend** `GET /api/health` → `{ status: "ok", timestamp }` (`force-dynamic`).
 
 ## Docker
 
-`docker-compose.yml` defines four services on the default Compose network:
+`docker-compose.yml` runs **postgres** (5432, healthchecked, volume `postgres_data`), **backend** (4000, waits for healthy DB), **frontend** (3000), **adminer** (8080). Postgres defaults user/pass/db `vms`. Both app images build with **repo root as context** (`dockerfile:` points at `apps/*/Dockerfile`) and use `turbo prune` for a focused workspace subset; both run non-root on Node 20.11.0-alpine.
 
-| Service  | Host port | Image / build         | Notes                                            |
-| -------- | --------- | --------------------- | ------------------------------------------------ |
-| postgres | 5432      | `postgres:16-alpine`  | named volume `postgres_data`; healthchecked      |
-| backend  | 4000      | root ctx, `apps/backend/Dockerfile`  | `env_file: ./apps/backend/.env`; waits for healthy DB |
-| frontend | 3000      | root ctx, `apps/frontend/Dockerfile` | `env_file: ./apps/frontend/.env`; depends on backend   |
-| adminer  | 8080      | `adminer` (official)  | depends on postgres; browse the DB at `:8080`    |
+The **backend entrypoint** (`apps/backend/docker-entrypoint.sh`) waits for the DB (TCP probe, 60×1s), runs `npx prisma migrate deploy`, then `exec node dist/main.js` (Node as PID 1). So every Compose start ends with the schema applied — no manual migrate step in containers. The runner image bundles the Prisma CLI + `prisma/` folder for this. The **frontend Dockerfile** bakes `NEXT_PUBLIC_API_BASE_URL` at build time via `ARG/ENV` (Next inlines public env at build).
 
-Both app images build with the repo root as context (`dockerfile:` points at `apps/*/Dockerfile`) and use `turbo prune` to produce a focused workspace subset. Postgres defaults: user `vms`, password `vms`, db `vms`. Match these in `apps/backend/.env`'s `DATABASE_URL`.
+## Terraform / deploy (`terraform/`)
 
-```bash
-docker compose up --build
-```
+Provisions the AWS stack (`var.region`, default `us-east-1`): `main.tf`, `ecr.tf`, `eip.tf`, `iam.tf`, `secrets.tf`, `provider.tf`, `variables.tf`, `outputs.tf`.
 
-Both app Dockerfiles run as non-root (`nextjs` / `nestjs` uid 1001) and use Node 20.11.0-alpine. Frontend uses Next.js standalone output (`output: "standalone"` in `next.config.ts`); the runner stage assembles `public/` and `.next/static` alongside `server.js`.
+**Deploy model: prebuilt ECR images** (not clone-and-build). `t2.micro` OOMs building the Next.js + turbo image, so:
+- `ecr.tf` — backend + frontend ECR repos. `iam.tf` — EC2 instance profile with ECR read-only. EC2 `user_data` does `docker login` + pull/run the prebuilt images at boot.
+- `eip.tf` — a stable backend Elastic IP so the frontend image can **bake `NEXT_PUBLIC_API_BASE_URL` at build time**.
+- `secrets.tf` — generates `JWT_SECRET` + 32-byte `ENCRYPTION_KEY`.
+- Network: VPC `10.0.0.0/16`, two public subnets (2 AZs — RDS subnet group needs ≥2). SGs: frontend (80/443/22), backend (4000/22), rds (5432 from backend SG only). RDS Postgres 16 (`db.t3.micro`, private, password from `random_password`).
 
-### Backend Dockerfile specifics
-
-- **`deps` and `prod-deps` stages** both set npm fetch tuning before `npm ci` to tolerate flaky network pulls: `fetch-retries=5`, `fetch-retry-mintimeout=20000`, `fetch-retry-maxtimeout=120000`, `fetch-timeout=600000`.
-- **`builder` stage** runs `npx prisma generate` after copying source so the generated client lands in `node_modules/.prisma/client` / `node_modules/@prisma/client`. `prisma/` is copied explicitly even though `COPY . .` already includes it.
-- **`runner` stage** starts from `prod-deps` for runtime `node_modules`, then overlays from `builder`: `node_modules/.prisma`, `node_modules/@prisma/client` (generated client), `node_modules/prisma` + `node_modules/.bin/prisma` (CLI — needed because `prisma` is a devDep and isn't in `prod-deps`), and the `prisma/` folder (schema + migrations).
-- The image's `ENTRYPOINT` is `/usr/local/bin/docker-entrypoint.sh`. There is no `CMD` — the script execs `node dist/main.js` itself.
-
-### Entrypoint behavior
-
-`backend/docker-entrypoint.sh`:
-
-1. Requires `DATABASE_URL` to be set; parses host/port out of the `postgresql://...` URL with POSIX shell expansion (no extra deps).
-2. Polls the DB with a small `node -e` TCP probe (2 s connect timeout) once per second, up to 60 attempts.
-3. Runs `npx prisma migrate deploy` against the running DB.
-4. `exec node dist/main.js` so Node becomes PID 1 and signals propagate.
-
-Consequence: every `docker compose up` ends with the schema applied automatically; no manual migrate step required.
-
-## Terraform (`terraform/`)
-
-Provisions the full VMS stack in AWS (region from `var.region`, default `us-east-1`).
-
-**Network**
-- VPC `10.0.0.0/16`, internet gateway, public route table.
-- Two public subnets in different AZs: `10.0.1.0/24` (`public`) and `10.0.2.0/24` (`public_b`). The second subnet exists because `aws_db_subnet_group` requires ≥2 AZs even though only `public` actually hosts EC2 workloads.
-
-**Security groups** (all egress open)
-- `frontend` — inbound `80`, `443`, `22` from `0.0.0.0/0`.
-- `backend` — inbound `4000`, `22` from `0.0.0.0/0`.
-- `rds` — inbound `5432` only from the `backend` SG.
-
-**EC2 (both `t2.micro`, latest Canonical Ubuntu 22.04, in subnet `public`)**
-- `frontend` — `user_data` installs Node 20, clones the `develop` branch into `/opt/vms`, builds the frontend, runs the Next.js standalone server on port 80.
-- `backend` — `user_data` installs Node 20, clones `develop` into `/opt/vms`, builds the backend, exports `DATABASE_URL` from the RDS endpoint, and runs `node dist/main.js` on port 4000 via `nohup`. `depends_on = [aws_db_instance.main]` so it doesn't start until RDS is ready.
-
-Note: the EC2 backend currently does **not** run `prisma migrate deploy` on its own. Auto-migration is a Docker-image behaviour only. If/when you containerise the EC2 backend (or move to ECS/Fargate), the same self-migrating entrypoint kicks in. Until then, run `npx prisma migrate deploy` manually against the RDS endpoint after `terraform apply` or extend the `user_data` to do it.
-
-**RDS**
-- `aws_db_instance.main` — Postgres 16, `db.t3.micro`, 20 GiB gp3, `db_name=vmsdb`, `username=vmsuser`, password from `random_password.db` (32-char alphanumeric — special chars excluded so the URL and bash interpolation in `user_data` stay clean), `publicly_accessible=false`, `skip_final_snapshot=true`.
-- `aws_db_subnet_group.main` spans both public subnets.
-
-**Providers, variables, outputs**
-- Providers: `hashicorp/aws ~> 5.0`, `hashicorp/random ~> 3.5`.
-- Variables (`variables.tf`): `region` (`us-east-1`), `instance_type` (`t2.micro`), `project_name` (`vms`), `key_name` (`vms-key`).
-- Outputs (`outputs.tf`): `public_ip` (frontend), `backend_public_ip`, `rds_endpoint`.
-
-**Prerequisites before `terraform apply`**
-- AWS credentials configured (env vars or `~/.aws/credentials`).
-- An EC2 key pair named `vms-key` (or whatever you set `-var key_name=…` to) must already exist in the target region — Terraform does not create it.
-- The GitHub repo must be reachable without auth for `user_data` to clone successfully; otherwise the build step fails silently and the instance will not serve.
-
-State is local (no remote backend configured). `terraform/.gitignore` excludes `.terraform/`, `terraform.tfstate`, `terraform.tfstate.backup`, and `*.tfvars`. Because `random_password.db.result` lives in state, switch to an encrypted remote backend before anyone else touches the state file.
-
-Both EC2 user_data scripts use `nohup`, not systemd — fine for a smoke test, not for anything durable. Add systemd units if you need restart-on-reboot.
+State is **local** (no remote backend); `random_password` result lives in state — switch to an encrypted remote backend before sharing state. An EC2 key pair named `vms-key` must already exist in the region (Terraform doesn't create it). See [docs/runbook.md](./docs/runbook.md) for the full deploy flow.
 
 ## CI (`.github/workflows/ci.yml`)
 
-Triggers on push and PR to `develop`, `staging`, `main`. Two parallel jobs on `ubuntu-latest`, Node 20.11.0, with npm cache keyed off each app's lockfile:
+Triggers on push/PR to `develop`, `staging`, `main`. Two jobs on `ubuntu-latest`, Node 20.11.0:
 
-1. **frontend** — `npm ci` → `npm run lint` → `npm run build`
-2. **backend** — `npm ci` → `npm run lint:check` → `npm run build`
+1. **apps** — `npm ci` (root) → `turbo run lint:check` → `typecheck` → `build` → `build-storybook` → `test`. CI uses `lint:check` (no `--fix`), so any lint finding fails — leave the auto-fixing `lint` script alone for local use.
+2. **terraform** — `terraform fmt -check` → `init -backend=false` → `validate`.
+
+## Branches
+
+`main` (production) · `staging` (pre-prod) · `develop` (active default working branch). CI runs on all three. `main`/`staging` may lag `develop`.

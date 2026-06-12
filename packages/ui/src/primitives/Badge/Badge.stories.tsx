@@ -8,7 +8,15 @@ const meta = {
   argTypes: {
     intent: {
       control: "select",
-      options: ["neutral", "primary", "success", "warning", "danger", "info"],
+      options: [
+        "neutral",
+        "primary",
+        "accent",
+        "success",
+        "warning",
+        "danger",
+        "info",
+      ],
     },
     tone: { control: "select", options: ["soft", "solid", "outline"] },
     size: { control: "select", options: ["sm", "md", "lg"] },
@@ -25,7 +33,15 @@ export const Intents: Story = {
   render: (args) => (
     <div className="flex flex-wrap items-center gap-2">
       {(
-        ["neutral", "primary", "success", "warning", "danger", "info"] as const
+        [
+          "neutral",
+          "primary",
+          "accent",
+          "success",
+          "warning",
+          "danger",
+          "info",
+        ] as const
       ).map((intent) => (
         <Badge key={intent} {...args} intent={intent} dot>
           {intent}

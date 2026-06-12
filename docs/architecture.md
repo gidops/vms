@@ -44,6 +44,10 @@ apps/backend/src/
     common/      # zod validation pipe, RFC-7807 exception filter
   modules/
     identity/    # users + GET /users/me
+    inbox/       # unified Requests & Alerts feed (GET /inbox?kind=)
+    visits/      # visit request detail + cancel/edit/approve/deny
+    alerts/      # alert detail + status (acknowledge/resolve/dismiss)
+    notes/       # add freeform notes to a visit/alert
   app.controller.ts   # GET / and GET /health (DB-aware)
 ```
 
@@ -92,12 +96,13 @@ carries the correlation id (and actor) captured from the request CLS.
 
 ### Data model (Prisma + Postgres 16)
 
-20 tables: **Identity/Auth/Audit** — `User`, `Role`, `Permission`,
+21 tables: **Identity/Auth/Audit** — `User`, `Role`, `Permission`,
 `RolePermission`, `UserRole`, `Session`, `RefreshToken`, `AuditLog`;
-**Domain** — `Visitor`, `Host`, `Visit`, `Invitation`, `Pass`, `AccessCard`,
-`Rating`, `Alert`, `GateEvent`, `ShiftAttendance`, `Notification`;
-**Events** — `OutboxEvent`. Enums mirror `@vms/contracts`. PII columns
-(`Visitor.phone`, `nationalId`) and `ShiftAttendance.fingerprintTemplateRef`
+**Domain** — `Visitor`, `Host`, `Visit` (with `createdById`/`source` for request
+origin), `Invitation`, `Pass`, `AccessCard`, `Rating`, `Alert`, `Note` (freeform
+remarks, polymorphic to visit/alert), `GateEvent`, `ShiftAttendance`,
+`Notification`; **Events** — `OutboxEvent`. Enums mirror `@vms/contracts`. PII
+columns (`Visitor.phone`, `nationalId`) and `ShiftAttendance.fingerprintTemplateRef`
 are intended for column encryption — biometrics stored only as an external
 reference/hash, never raw.
 
@@ -105,11 +110,16 @@ reference/hash, never raw.
 
 ```
 apps/frontend/
-  app/[locale]/      # routing: login (/) + dashboard; <html lang dir>
-  data/              # http client (auth header + correlation id + refresh-on-401), api modules
+  app/[locale]/      # routing: login (/), dashboard, requests; shared _components (AppTopNav)
+  data/              # http client (auth header + correlation id + refresh-on-401), api modules + TanStack Query hooks
   shared/            # AuthContext (provider-agnostic), providers (TanStack Query), RouteGuard
   i18n/ + messages/  # next-intl config + en/fr/ar catalogs
 ```
+
+Screens: **login** (`/`), **dashboard** (top‑nav layout, stat strip + visitor
+records), and **Requests & Alerts** (`/requests` — inbox card grid + a detail
+drawer driven by `/inbox`, `/visits/:id`, `/alerts/:id`). The shared `AppTopNav`
+routes between dashboard and requests via the segmented control.
 
 Dependencies point downward (Presentation → Application/Data → Shared). The data
 layer is the sole owner of `fetch`; the UI consumes typed contracts so it never

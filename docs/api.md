@@ -69,12 +69,61 @@ its session.
                   "alert:escalate"] }
 ```
 
+## Requests & Alerts
+
+The "Requests & Alerts" inbox unifies **visit requests** (a `Visit`) and
+**alerts** (a flagged‑visitor `Alert`). State‑changing routes go through the
+transactional outbox (→ audit log) and are permission‑guarded.
+
+### `GET /inbox?kind=all|requests|alerts&page&pageSize&search` — requires auth
+Unified, recency‑sorted, paginated feed. Returns `Paginated<InboxItem>` where each
+item is a discriminated union on `kind`:
+```json
+{ "items": [
+    { "kind": "request", "id": "<uuid>", "visitId": "<uuid>", "status": "PENDING",
+      "title": "Visit Request from Dr Alabi", "description": "Visit request for Mr Jude from",
+      "organization": "Standard Chartered Bank", "createdByName": "AATC Admin",
+      "notesCount": 2, "createdAt": "<ISO>" },
+    { "kind": "alert", "id": "<uuid>", "alertId": "<uuid>", "status": "OPEN",
+      "level": "HIGH", "title": "Flagged Visitor Match", "description": "…",
+      "organization": null, "createdByName": "AATC Admin", "notesCount": 0, "createdAt": "<ISO>" }
+  ], "page": 1, "pageSize": 20, "total": 5, "totalPages": 1 }
+```
+
+### `GET /visits/:id` — requires auth
+Full `VisitRequestDetail` (visit + visitor + host→user + notes + `createdByName`/`source`).
+
+### `POST /visits/:id/cancel` — `visit:cancel`
+Sets status `CANCELLED`; emits `visit.cancelled`. Returns the updated detail.
+
+### `PATCH /visits/:id` — `visit:edit`
+Body: `{ "purpose"?: string, "scheduledAt"?: <ISO> }`; emits `visit.updated`.
+
+### `POST /visits/:id/approve` — `visit:approve`
+Sets `APPROVED` + `approvedById`; emits `visit.approved`.
+
+### `POST /visits/:id/deny` — `visit:deny`
+Body: `{ "reason": string }` → `DENIED` + `deniedReason`; emits `visit.denied`.
+
+### `GET /alerts/:id` — requires auth
+`AlertWithVisitor` (+ notes).
+
+### `PATCH /alerts/:id` — `alert:resolve`
+Body: `{ "status": "ACKNOWLEDGED" | "RESOLVED" | "DISMISSED" }`; emits `alert.updated`.
+
+### `POST /notes` — `note:add`
+Body: `{ "visitId"?: <uuid>, "alertId"?: <uuid>, "body": string }` (exactly one
+target). Creates a `Note`; emits `note.added`.
+
 ## Permissions (seeded)
 
-`resource:action` keys; the `ADMIN` role holds all of them:
+`resource:action` keys. Seeded roles: **ADMIN** (all), **CSO** (`visit:approve`,
+`visit:deny`, `alert:resolve`, `alert:escalate`, `note:add`), **RECEPTION**
+(`visitor:register`, `invitation:create`, `visit:cancel`, `visit:edit`, `note:add`).
 
-`visit:approve`, `visit:deny`, `visit:check_in`, `visit:check_out`,
-`visitor:register`, `invitation:create`, `alert:escalate`.
+Full key set: `visit:approve`, `visit:deny`, `visit:cancel`, `visit:edit`,
+`visit:check_in`, `visit:check_out`, `visitor:register`, `invitation:create`,
+`alert:escalate`, `alert:resolve`, `note:add`.
 
 ## Example
 
@@ -91,6 +140,8 @@ curl -s http://localhost:4000/users/me \
 
 ## Roadmap
 
-Domain endpoints (Visitor Management, Gate Ops, Security, Staff/Host) are not yet
-implemented — they will follow the same layered pattern and emit domain events
-via the outbox. See [architecture.md](./architecture.md).
+The Requests & Alerts slice (inbox / visits / alerts / notes) is implemented.
+Remaining domain endpoints (visitor registration, gate ops, pass issuance, a
+visits **list** for the dashboard) are not yet built — they follow the same
+layered pattern and emit domain events via the outbox. See
+[architecture.md](./architecture.md).

@@ -10,6 +10,8 @@ export const badgeVariants = tv({
         "[--bdg:var(--color-fg-muted)] [--bdg-subtle:var(--color-surface-muted)]",
       primary:
         "[--bdg:var(--color-primary)] [--bdg-subtle:var(--color-primary-subtle)]",
+      accent:
+        "[--bdg:var(--color-accent-fg)] [--bdg-subtle:var(--color-accent)]",
       success:
         "[--bdg:var(--color-success)] [--bdg-subtle:var(--color-success-subtle)]",
       warning:

@@ -8,7 +8,7 @@ const meta = {
   argTypes: {
     intent: {
       control: "select",
-      options: ["primary", "neutral", "success", "warning", "danger"],
+      options: ["primary", "accent", "neutral", "success", "warning", "danger"],
     },
     tone: {
       control: "select",
@@ -30,6 +30,9 @@ export const Intents: Story = {
     <div className="flex flex-wrap items-center gap-3">
       <Button {...args} intent="primary">
         Primary
+      </Button>
+      <Button {...args} intent="accent">
+        Accent
       </Button>
       <Button {...args} intent="neutral">
         Neutral

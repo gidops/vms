@@ -22,29 +22,112 @@
     "okta": "تسجيل الدخول عبر Okta SSO"
   },
   "dashboard": {
-    "welcome": "مرحبًا، {name}",
-    "subtitle": "إليك ما يحدث عند البوابة اليوم.",
-    "createVisit": "إنشاء زيارة",
-    "search": "ابحث عن زائر أو مضيف أو طابق أو رقم تصريح",
+    "hub": "مركز VMC",
+    "welcome": "مرحبًا {name}",
     "records": "سجلات الزوّار",
-    "searchRecords": "ابحث في سجلات الزوّار",
-    "searchAction": "بحث",
+    "selectAll": "تحديد كل الزوّار",
+    "filters": {
+      "searchPlaceholder": "ابحث عن زائر أو مضيف أو طابق أو رقم تصريح",
+      "allVisitTypes": "كل أنواع الزيارة",
+      "allPurpose": "كل الأغراض",
+      "search": "بحث"
+    },
     "stats": {
-      "today": "زوّار اليوم",
-      "onsite": "متواجدون حاليًا",
-      "overdue": "تأخّر تسجيل الخروج",
-      "overdueHint": "تجاوز الوقت المتوقع"
+      "onsite": "الزوّار المتواجدون",
+      "checkedIn": "تسجيلات الدخول اليوم",
+      "checkedOut": "تسجيلات الخروج اليوم"
+    },
+    "quickActions": {
+      "title": "إجراءات سريعة",
+      "registerWalkIn": "تسجيل زائر بدون موعد",
+      "newInvite": "طلب دعوة جديد"
+    },
+    "range": {
+      "today": "اليوم",
+      "last7": "آخر 7 أيام",
+      "custom": "مخصّص"
+    },
+    "channel": {
+      "invited": "مدعو",
+      "walkIn": "بدون موعد"
+    },
+    "actions": {
+      "checkIn": "تسجيل الدخول",
+      "checkOut": "تسجيل الخروج",
+      "viewDetails": "عرض التفاصيل"
     },
     "columns": {
       "visitor": "الزائر",
-      "host": "المضيف / الطابق",
-      "checkin": "الدخول",
-      "status": "الحالة"
+      "channel": "القناة",
+      "hostUnit": "المضيف / الطابق / الوحدة",
+      "purpose": "الغرض",
+      "timeCreated": "وقت الإنشاء",
+      "status": "الحالة",
+      "action": "إجراء"
     }
   },
   "common": {
     "notifications": "الإشعارات",
     "logout": "تسجيل الخروج",
     "allStatus": "كل الحالات"
+  },
+  "requests": {
+    "title": "الطلبات والتنبيهات",
+    "tabs": { "all": "الكل", "requests": "الطلبات", "alerts": "التنبيهات" },
+    "typeRequest": "طلب زيارة",
+    "typeAlert": "تنبيهات",
+    "createdBy": "أنشأه",
+    "notesCount": "{count} ملاحظات",
+    "empty": "لا توجد طلبات أو تنبيهات",
+    "detailTitle": "تفاصيل طلب الزيارة",
+    "alertDetailTitle": "تفاصيل التنبيه",
+    "visitorAwaiting": "في انتظار الموافقة",
+    "vmcReception": "استقبال VMC",
+    "noNotes": "لا توجد ملاحظات بعد.",
+    "addNotePlaceholder": "أضف ملاحظة…",
+    "status": {
+      "awaitingApproval": "في انتظار موافقة CSO",
+      "approvedByCso": "تمت الموافقة من CSO",
+      "deniedByCso": "رُفض من CSO",
+      "cancelled": "أُلغي",
+      "onsite": "متواجد",
+      "checkedOut": "سجّل الخروج",
+      "expired": "منتهٍ",
+      "open": "مفتوح",
+      "acknowledged": "تم الاطلاع",
+      "resolved": "تم الحل",
+      "dismissed": "مرفوض"
+    },
+    "timeline": {
+      "inviteCreated": "تم إنشاء الدعوة",
+      "awaitingApproval": "في انتظار موافقة CSO",
+      "checkedIn": "تم الدخول",
+      "passIssued": "تم إصدار التصريح",
+      "checkedOut": "تم الخروج"
+    },
+    "sections": {
+      "hostDetails": "تفاصيل المضيف / الوحدة / الطابق",
+      "floor": "الطابق",
+      "visitorInfo": "معلومات الزائر",
+      "trackStatus": "تتبّع حالة الطلب",
+      "purposeOfVisit": "غرض الزيارة",
+      "purposeCategory": "فئة الغرض",
+      "scheduledFor": "مجدول لـ",
+      "origin": "مصدر الطلب",
+      "createdByLabel": "أنشأه",
+      "timeCreated": "وقت الإنشاء",
+      "source": "المصدر",
+      "role": "الدور",
+      "remarks": "ملاحظات",
+      "reason": "السبب"
+    },
+    "actions": {
+      "cancelRequest": "إلغاء الطلب",
+      "addNote": "إضافة ملاحظة",
+      "editRequest": "تعديل الطلب",
+      "save": "حفظ",
+      "cancel": "إلغاء",
+      "resolve": "حل"
+    }
   }
 }

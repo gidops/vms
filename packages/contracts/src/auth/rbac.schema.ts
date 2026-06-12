@@ -29,9 +29,13 @@ export type Role = z.infer<typeof Role>;
 export const PERMISSIONS = {
   VISIT_APPROVE: "visit:approve",
   VISIT_DENY: "visit:deny",
+  VISIT_CANCEL: "visit:cancel",
+  VISIT_EDIT: "visit:edit",
   VISIT_CHECK_IN: "visit:check_in",
   VISIT_CHECK_OUT: "visit:check_out",
   VISITOR_REGISTER: "visitor:register",
   INVITATION_CREATE: "invitation:create",
   ALERT_ESCALATE: "alert:escalate",
+  ALERT_RESOLVE: "alert:resolve",
+  NOTE_ADD: "note:add",
 } as const;

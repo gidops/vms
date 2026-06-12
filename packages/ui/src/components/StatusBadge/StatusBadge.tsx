@@ -10,11 +10,13 @@ type Intent = NonNullable<BadgeProps["intent"]>;
  */
 const STATUS_MAP: Record<VisitStatus, { intent: Intent; label: string }> = {
   PENDING: { intent: "warning", label: "Pending" },
-  APPROVED: { intent: "info", label: "Approved" },
+  // An approved, not-yet-arrived visit is shown to gate staff as "Expected".
+  APPROVED: { intent: "info", label: "Expected" },
   DENIED: { intent: "danger", label: "Denied" },
-  CHECKED_IN: { intent: "success", label: "Checked In" },
+  // A checked-in visitor is physically on site.
+  CHECKED_IN: { intent: "success", label: "Onsite" },
   CHECKED_OUT: { intent: "neutral", label: "Checked Out" },
-  CANCELLED: { intent: "neutral", label: "Cancelled" },
+  CANCELLED: { intent: "warning", label: "Cancelled" },
   EXPIRED: { intent: "neutral", label: "Expired" },
 };
 

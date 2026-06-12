@@ -23,7 +23,11 @@ export const EVENT_TYPES = {
   VisitorCheckedOut: 'visitor.checked_out',
   VisitApproved: 'visit.approved',
   VisitDenied: 'visit.denied',
+  VisitCancelled: 'visit.cancelled',
+  VisitUpdated: 'visit.updated',
   InvitationCreated: 'invitation.created',
+  AlertUpdated: 'alert.updated',
+  NoteAdded: 'note.added',
   VisitorRated: 'visitor.rated',
   UserLoggedIn: 'auth.user_logged_in',
 } as const;

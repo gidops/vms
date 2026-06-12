@@ -30,12 +30,21 @@ export function TableHeader({
   );
 }
 
-export function TableBody({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLTableSectionElement>) {
+export interface TableBodyProps extends React.HTMLAttributes<HTMLTableSectionElement> {
+  /** Apply zebra striping (alternating row backgrounds). */
+  striped?: boolean;
+}
+
+export function TableBody({ className, striped, ...props }: TableBodyProps) {
   return (
-    <tbody className={cn("[&_tr:last-child]:border-0", className)} {...props} />
+    <tbody
+      className={cn(
+        "[&_tr:last-child]:border-0",
+        striped && "[&>tr:nth-child(even)]:bg-surface-muted/50",
+        className,
+      )}
+      {...props}
+    />
   );
 }
 
