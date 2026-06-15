@@ -5,7 +5,11 @@
   "nav": {
     "schedule": "Programme du jour",
     "requests": "Demandes et alertes",
-    "visitors": "Visiteurs"
+    "visitors": "Visiteurs",
+    "switchAccount": "Changer de compte",
+    "accountSettings": "Paramètres du compte",
+    "help": "Aide / Support",
+    "logout": "Déconnexion"
   },
   "login": {
     "title": "Connexion",
@@ -19,7 +23,8 @@
     "signingIn": "Connexion…",
     "error": "E-mail ou mot de passe invalide.",
     "or": "ou",
-    "okta": "Se connecter avec Okta SSO"
+    "okta": "Se connecter avec Okta SSO",
+    "createFirstAdmin": "Configurer le premier compte administrateur"
   },
   "dashboard": {
     "hub": "VMC HUB",
@@ -128,6 +133,79 @@
       "save": "Enregistrer",
       "cancel": "Annuler",
       "resolve": "Résoudre"
+    }
+  },
+  "language": {
+    "select": "Choisir la langue",
+    "en": "Anglais",
+    "fr": "Français",
+    "ar": "Arabe"
+  },
+  "roles": {
+    "SUPER_ADMIN": "Super administrateur",
+    "ADMIN": "Administrateur",
+    "AUDITOR": "Auditeur",
+    "STAFF": "Personnel",
+    "VMC": "Réception VMC",
+    "GATE": "Portail"
+  },
+  "signup": {
+    "title": "Créer un compte administrateur",
+    "subtitle": "Configurez le premier administrateur du VMS",
+    "fullName": "Nom complet",
+    "fullNamePlaceholder": "Jean Dupont",
+    "email": "E-mail",
+    "emailPlaceholder": "nom@aatc.org",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "Au moins 8 caractères",
+    "submit": "Créer le compte",
+    "submitting": "Création…",
+    "error": "Impossible de créer le compte.",
+    "closedTitle": "Configuration terminée",
+    "closedSubtitle": "Un administrateur existe déjà. Veuillez vous connecter.",
+    "goToLogin": "Aller à la connexion"
+  },
+  "admin": {
+    "welcome": "Bienvenue {name}",
+    "subtitle": "Console d'administration",
+    "userManagement": "Gestion des utilisateurs",
+    "userManagementBody": "Consultez les utilisateurs, créez des comptes et attribuez des rôles.",
+    "manageUsers": "Gérer les utilisateurs"
+  },
+  "staff": {
+    "welcome": "Bienvenue {name}",
+    "subtitle": "Espace du personnel",
+    "placeholderTitle": "Tableau de bord du personnel",
+    "placeholderBody": "Ce tableau de bord est provisoire et sera développé bientôt."
+  },
+  "gate": {
+    "welcome": "Bienvenue {name}",
+    "subtitle": "Opérations de portail",
+    "placeholderTitle": "Tableau de bord du portail",
+    "placeholderBody": "Ce tableau de bord est provisoire et sera développé bientôt."
+  },
+  "users": {
+    "title": "Gestion des utilisateurs",
+    "newUser": "Nouvel utilisateur",
+    "empty": "Aucun utilisateur",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "editRoles": "Modifier les rôles",
+    "editRolesFor": "Modifier les rôles — {name}",
+    "columns": {
+      "user": "Utilisateur",
+      "roles": "Rôles",
+      "status": "Statut",
+      "created": "Créé le",
+      "actions": "Actions"
+    },
+    "form": {
+      "fullName": "Nom complet",
+      "email": "E-mail",
+      "password": "Mot de passe",
+      "roles": "Rôles",
+      "create": "Créer l'utilisateur",
+      "save": "Enregistrer"
     }
   }
 }

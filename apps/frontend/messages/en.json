@@ -5,7 +5,11 @@
   "nav": {
     "schedule": "Today's Schedule",
     "requests": "Requests & Alerts",
-    "visitors": "Visitors"
+    "visitors": "Visitors",
+    "switchAccount": "Switch Account",
+    "accountSettings": "Account Settings",
+    "help": "Help/Support",
+    "logout": "Logout"
   },
   "login": {
     "title": "Sign in",
@@ -19,7 +23,8 @@
     "signingIn": "Signing in…",
     "error": "Invalid email or password.",
     "or": "or",
-    "okta": "Login with Okta SSO"
+    "okta": "Login with Okta SSO",
+    "createFirstAdmin": "Set up the first admin account"
   },
   "dashboard": {
     "hub": "VMC HUB",
@@ -128,6 +133,79 @@
       "save": "Save",
       "cancel": "Cancel",
       "resolve": "Resolve"
+    }
+  },
+  "language": {
+    "select": "Select language",
+    "en": "English",
+    "fr": "French",
+    "ar": "Arabic"
+  },
+  "roles": {
+    "SUPER_ADMIN": "Super Admin",
+    "ADMIN": "Admin",
+    "AUDITOR": "Auditor",
+    "STAFF": "Staff",
+    "VMC": "VMC Reception",
+    "GATE": "Gate"
+  },
+  "signup": {
+    "title": "Create admin account",
+    "subtitle": "Set up the first administrator for the VMS",
+    "fullName": "Full name",
+    "fullNamePlaceholder": "Jane Doe",
+    "email": "Email",
+    "emailPlaceholder": "name@aatc.org",
+    "password": "Password",
+    "passwordPlaceholder": "At least 8 characters",
+    "submit": "Create account",
+    "submitting": "Creating…",
+    "error": "Could not create the account.",
+    "closedTitle": "Setup complete",
+    "closedSubtitle": "An admin already exists. Please sign in instead.",
+    "goToLogin": "Go to login"
+  },
+  "admin": {
+    "welcome": "Welcome {name}",
+    "subtitle": "Administration console",
+    "userManagement": "User Management",
+    "userManagementBody": "View users, create accounts and assign roles.",
+    "manageUsers": "Manage users"
+  },
+  "staff": {
+    "welcome": "Welcome {name}",
+    "subtitle": "Staff workspace",
+    "placeholderTitle": "Staff dashboard",
+    "placeholderBody": "This dashboard is a placeholder and will be built out soon."
+  },
+  "gate": {
+    "welcome": "Welcome {name}",
+    "subtitle": "Gate operations",
+    "placeholderTitle": "Gate dashboard",
+    "placeholderBody": "This dashboard is a placeholder and will be built out soon."
+  },
+  "users": {
+    "title": "User Management",
+    "newUser": "New user",
+    "empty": "No users yet",
+    "active": "Active",
+    "inactive": "Inactive",
+    "editRoles": "Edit roles",
+    "editRolesFor": "Edit roles — {name}",
+    "columns": {
+      "user": "User",
+      "roles": "Roles",
+      "status": "Status",
+      "created": "Created",
+      "actions": "Actions"
+    },
+    "form": {
+      "fullName": "Full name",
+      "email": "Email",
+      "password": "Password",
+      "roles": "Roles",
+      "create": "Create user",
+      "save": "Save changes"
     }
   }
 }

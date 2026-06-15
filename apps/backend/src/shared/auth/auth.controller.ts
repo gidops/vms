@@ -1,9 +1,9 @@
-import { Body, Controller, HttpCode, Post, Req } from '@nestjs/common';
-import { LoginInput } from '@vms/contracts';
+import { Body, Controller, Get, HttpCode, Post, Req } from '@nestjs/common';
+import { LoginInput, SignupInput, SwitchRoleInput } from '@vms/contracts';
 import type { Request } from 'express';
 import { z } from 'zod';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
-import { Public } from './auth.decorators';
+import { CurrentUser, Public, type AuthUser } from './auth.decorators';
 import { AuthService } from './auth.service';
 
 const RefreshBody = z.object({ refreshToken: z.string().min(1) });
@@ -25,6 +25,35 @@ export class AuthController {
       ip: req.ip,
       userAgent: req.headers['user-agent'],
     });
+  }
+
+  /** First-run only: bootstraps the initial SUPER_ADMIN account. */
+  @Public()
+  @Post('signup')
+  @HttpCode(201)
+  signup(
+    @Body(new ZodValidationPipe(SignupInput)) body: SignupInput,
+    @Req() req: Request,
+  ) {
+    return this.auth.signup(body, {
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+  }
+
+  @Public()
+  @Get('signup-available')
+  async signupAvailable() {
+    return { available: await this.auth.signupAvailable() };
+  }
+
+  @Post('switch-role')
+  @HttpCode(200)
+  switchRole(
+    @Body(new ZodValidationPipe(SwitchRoleInput)) body: SwitchRoleInput,
+    @CurrentUser() principal: AuthUser,
+  ) {
+    return this.auth.switchRole(principal.userId, principal.sid, body.role);
   }
 
   @Public()

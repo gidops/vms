@@ -33,3 +33,21 @@ export const RefreshInput = z.object({
   refreshToken: z.string().min(1).optional(),
 });
 export type RefreshInput = z.infer<typeof RefreshInput>;
+
+/**
+ * First-run signup — bootstraps the initial SUPER_ADMIN. The backend only
+ * honours this while no super admin exists; afterwards it returns 403 and all
+ * users are created via the admin User Management UI.
+ */
+export const SignupInput = z.object({
+  email: z.string().email(),
+  fullName: z.string().min(1),
+  password: z.string().min(8),
+});
+export type SignupInput = z.infer<typeof SignupInput>;
+
+/** Switch the active role profile for the current session. */
+export const SwitchRoleInput = z.object({
+  role: z.string().min(1),
+});
+export type SwitchRoleInput = z.infer<typeof SwitchRoleInput>;

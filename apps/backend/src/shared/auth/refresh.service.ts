@@ -17,10 +17,15 @@ export class RefreshTokenService {
   async issueForNewSession(
     tx: Prisma.TransactionClient,
     userId: string,
-    ctx: { ip?: string; userAgent?: string },
-  ): Promise<string> {
+    ctx: { ip?: string; userAgent?: string; activeRole?: string | null },
+  ): Promise<{ token: string; sessionId: string }> {
     const session = await tx.session.create({
-      data: { userId, ip: ctx.ip, userAgent: ctx.userAgent },
+      data: {
+        userId,
+        ip: ctx.ip,
+        userAgent: ctx.userAgent,
+        activeRole: ctx.activeRole ?? null,
+      },
     });
     const { token, hash } = this.tokens.generateRefreshToken();
     await tx.refreshToken.create({
@@ -32,14 +37,20 @@ export class RefreshTokenService {
         expiresAt: new Date(Date.now() + REFRESH_TTL_MS),
       },
     });
-    return token;
+    return { token, sessionId: session.id };
   }
 
   /** Rotate a refresh token; detect reuse of an already-used token. */
-  async rotate(rawToken: string): Promise<{ userId: string; token: string }> {
+  async rotate(rawToken: string): Promise<{
+    userId: string;
+    token: string;
+    sessionId: string;
+    activeRole: string | null;
+  }> {
     const tokenHash = this.tokens.hashRefreshToken(rawToken);
     const existing = await this.prisma.refreshToken.findUnique({
       where: { tokenHash },
+      include: { session: { select: { activeRole: true } } },
     });
     if (
       !existing ||
@@ -73,7 +84,20 @@ export class RefreshTokenService {
         where: { id: existing.id },
         data: { usedAt: new Date(), replacedById: created.id },
       });
-      return { userId: existing.userId, token };
+      return {
+        userId: existing.userId,
+        token,
+        sessionId: existing.sessionId,
+        activeRole: existing.session.activeRole,
+      };
+    });
+  }
+
+  /** Update the active role stored on a session (called by switch-role). */
+  async setSessionActiveRole(sessionId: string, role: string): Promise<void> {
+    await this.prisma.session.update({
+      where: { id: sessionId },
+      data: { activeRole: role },
     });
   }
 

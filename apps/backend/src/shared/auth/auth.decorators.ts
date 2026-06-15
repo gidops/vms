@@ -17,8 +17,14 @@ export const RequirePermissions = (...permissions: string[]) =>
 export interface AuthUser {
   userId: string;
   email: string;
+  /** All role names the user holds. */
   roles: string[];
+  /** The active role scoping this session (may be null on legacy tokens). */
+  activeRole?: string | null;
+  /** Permissions of the active role only. */
   permissions: string[];
+  /** Session id from the token (for switch-role). */
+  sid?: string;
   tenantId?: string | null;
 }
 

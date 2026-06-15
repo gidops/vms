@@ -159,8 +159,10 @@ model RolePermission {
 }
 
 model UserRole {
-  userId String
-  roleId String
+  userId     String
+  roleId     String
+  // Ordering for "first assigned role" → a user's default active role.
+  assignedAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
@@ -173,6 +175,8 @@ model Session {
   userId     String
   userAgent  String?
   ip         String?
+  // The role this session is currently acting as (scopes token permissions).
+  activeRole String?
   createdAt  DateTime  @default(now())
   lastSeenAt DateTime  @updatedAt
   revokedAt  DateTime?

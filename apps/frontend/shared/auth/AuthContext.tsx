@@ -21,7 +21,16 @@ export type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 interface AuthContextValue {
   user: MeResponse | null;
   status: AuthStatus;
-  login: (email: string, password: string) => Promise<void>;
+  /** The role currently scoping permissions + dashboard. */
+  activeRole: string | null;
+  login: (email: string, password: string) => Promise<MeResponse>;
+  signup: (
+    email: string,
+    fullName: string,
+    password: string,
+  ) => Promise<MeResponse>;
+  /** Switch the active role profile (re-mints a scoped token). */
+  switchRole: (role: string) => Promise<MeResponse>;
   logout: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
 }
@@ -95,9 +104,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const profile = await authApi.me();
       setUser(profile);
       setStatus("authenticated");
+      return profile;
     },
     [applyTokens],
   );
+
+  const signup = useCallback(
+    async (email: string, fullName: string, password: string) => {
+      applyTokens(await authApi.signup(email, fullName, password));
+      const profile = await authApi.me();
+      setUser(profile);
+      setStatus("authenticated");
+      return profile;
+    },
+    [applyTokens],
+  );
+
+  const switchRole = useCallback(async (role: string) => {
+    // switch-role re-mints only the access token; reuse the existing refresh.
+    const result = await authApi.switchRole(role);
+    tokenStore.setAccessToken(result.tokens.accessToken);
+    const profile = await authApi.me();
+    setUser(profile);
+    return profile;
+  }, []);
 
   const logout = useCallback(async () => {
     const refreshToken = tokenStore.getRefreshToken();
@@ -115,8 +145,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, status, login, logout, hasPermission }),
-    [user, status, login, logout, hasPermission],
+    () => ({
+      user,
+      status,
+      activeRole: user?.activeRole ?? null,
+      login,
+      signup,
+      switchRole,
+      logout,
+      hasPermission,
+    }),
+    [user, status, login, signup, switchRole, logout, hasPermission],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

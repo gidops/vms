@@ -38,4 +38,38 @@ export const PERMISSIONS = {
   ALERT_ESCALATE: "alert:escalate",
   ALERT_RESOLVE: "alert:resolve",
   NOTE_ADD: "note:add",
+  USER_READ: "user:read",
+  USER_CREATE: "user:create",
+  USER_UPDATE: "user:update",
+  ROLE_READ: "role:read",
 } as const;
+
+/**
+ * Canonical role names. Roles are stored as free strings in the DB, but these
+ * constants keep the seeder, guards, and frontend in sync. A user may hold many
+ * roles at once; the "active role" scopes the session's permissions + dashboard.
+ */
+export const ROLES = {
+  SUPER_ADMIN: "SUPER_ADMIN",
+  ADMIN: "ADMIN",
+  AUDITOR: "AUDITOR",
+  STAFF: "STAFF",
+  VMC: "VMC",
+  GATE: "GATE",
+} as const;
+export type RoleName = (typeof ROLES)[keyof typeof ROLES];
+
+/** Where each role lands after login / on role switch. */
+export const ROLE_HOME: Record<string, string> = {
+  [ROLES.SUPER_ADMIN]: "/admin",
+  [ROLES.ADMIN]: "/admin",
+  [ROLES.AUDITOR]: "/admin",
+  [ROLES.VMC]: "/dashboard",
+  [ROLES.STAFF]: "/staff",
+  [ROLES.GATE]: "/gate",
+};
+
+/** Resolve the home route for a role, falling back to the dashboard. */
+export function homeFor(role: string | null | undefined): string {
+  return (role && ROLE_HOME[role]) || "/dashboard";
+}

@@ -321,7 +321,7 @@ function Dashboard() {
 
 export default function DashboardPage() {
   return (
-    <RouteGuard>
+    <RouteGuard home="/dashboard">
       <Dashboard />
     </RouteGuard>
   );

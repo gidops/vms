@@ -7,8 +7,14 @@ import type { Env } from '../config/env.schema';
 export interface AccessTokenClaims {
   sub: string;
   email: string;
+  /** All role names the user holds (drives the role switcher). */
   roles: string[];
+  /** The role currently scoping this session. */
+  activeRole?: string | null;
+  /** Permissions of the active role only (not the union of all roles). */
   permissions: string[];
+  /** Session id — lets switch-role update the right session. */
+  sid?: string;
   tenantId?: string | null;
 }
 

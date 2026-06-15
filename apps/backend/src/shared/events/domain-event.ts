@@ -30,4 +30,6 @@ export const EVENT_TYPES = {
   NoteAdded: 'note.added',
   VisitorRated: 'visitor.rated',
   UserLoggedIn: 'auth.user_logged_in',
+  UserCreated: 'user.created',
+  UserRolesUpdated: 'user.roles_updated',
 } as const;

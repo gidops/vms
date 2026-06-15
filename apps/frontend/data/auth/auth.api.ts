@@ -1,16 +1,26 @@
 import { api } from "@/data/http/client";
 
-/** Matches the backend's auth response (LoginResponse + refreshToken). */
+interface UserPayload {
+  id: string;
+  email: string;
+  fullName: string;
+  preferredLocale: string;
+  roles: string[];
+  activeRole: string | null;
+  permissions: string[];
+}
+
+/** Matches the backend's auth response (login/signup). */
 export interface AuthResult {
-  user: {
-    id: string;
-    email: string;
-    fullName: string;
-    preferredLocale: string;
-    roles: string[];
-  };
+  user: UserPayload;
   tokens: { accessToken: string; expiresIn: number; tokenType: string };
   refreshToken: string;
+}
+
+/** switch-role re-mints the access token only (no new refresh token). */
+export interface SwitchRoleResult {
+  user: UserPayload;
+  tokens: { accessToken: string; expiresIn: number; tokenType: string };
 }
 
 export interface MeResponse {
@@ -19,6 +29,7 @@ export interface MeResponse {
   fullName: string;
   preferredLocale: string;
   roles: string[];
+  activeRole: string | null;
   permissions: string[];
 }
 
@@ -28,6 +39,28 @@ export const authApi = {
       method: "POST",
       body: { email, password },
       auth: false,
+    });
+  },
+  signup(
+    email: string,
+    fullName: string,
+    password: string,
+  ): Promise<AuthResult> {
+    return api<AuthResult>("/auth/signup", {
+      method: "POST",
+      body: { email, fullName, password },
+      auth: false,
+    });
+  },
+  signupAvailable(): Promise<{ available: boolean }> {
+    return api<{ available: boolean }>("/auth/signup-available", {
+      auth: false,
+    });
+  },
+  switchRole(role: string): Promise<SwitchRoleResult> {
+    return api<SwitchRoleResult>("/auth/switch-role", {
+      method: "POST",
+      body: { role },
     });
   },
   refresh(refreshToken: string): Promise<AuthResult> {

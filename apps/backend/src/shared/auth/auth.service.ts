@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { ROLES, type SignupInput } from '@vms/contracts';
 import {
   UsersService,
   type UserWithAccess,
@@ -15,16 +20,25 @@ export interface LoginContext {
   userAgent?: string;
 }
 
+interface AuthUserPayload {
+  id: string;
+  email: string;
+  fullName: string;
+  preferredLocale: string;
+  roles: string[];
+  activeRole: string | null;
+  permissions: string[];
+}
+
 export interface AuthResult {
-  user: {
-    id: string;
-    email: string;
-    fullName: string;
-    preferredLocale: string;
-    roles: string[];
-  };
+  user: AuthUserPayload;
   tokens: { accessToken: string; expiresIn: number; tokenType: 'Bearer' };
   refreshToken: string;
+}
+
+export interface SwitchRoleResult {
+  user: AuthUserPayload;
+  tokens: { accessToken: string; expiresIn: number; tokenType: 'Bearer' };
 }
 
 @Injectable()
@@ -43,15 +57,92 @@ export class AuthService {
     ctx: LoginContext,
   ): Promise<AuthResult> {
     const user = await this.local.authenticate(input);
+    return this.startSession(user, ctx);
+  }
 
-    // State change (session + refresh token) and the UserLoggedIn event are
-    // written in one transaction via the outbox.
-    const refreshToken = await this.txm.run(async (tx) => {
-      const token = await this.refreshTokens.issueForNewSession(
-        tx,
-        user.id,
-        ctx,
+  /** First-run signup — bootstraps the initial SUPER_ADMIN, then logs in. */
+  async signup(input: SignupInput, ctx: LoginContext): Promise<AuthResult> {
+    if (!(await this.signupAvailable())) {
+      throw new ForbiddenException(
+        'Signup is closed — an admin already exists',
       );
+    }
+    const user = await this.users.create({
+      email: input.email,
+      fullName: input.fullName,
+      password: input.password,
+      roles: [ROLES.SUPER_ADMIN],
+    });
+    return this.startSession(user, ctx);
+  }
+
+  /** Signup is open only until the first SUPER_ADMIN exists. */
+  async signupAvailable(): Promise<boolean> {
+    return !(await this.users.roleHasUsers(ROLES.SUPER_ADMIN));
+  }
+
+  async refresh(rawToken: string): Promise<AuthResult> {
+    const { userId, token, sessionId, activeRole } =
+      await this.refreshTokens.rotate(rawToken);
+    const user = await this.users.findByIdWithAccess(userId);
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+    // Preserve the session's active role; fall back if it was removed.
+    const effectiveRole =
+      activeRole && user.roles.includes(activeRole)
+        ? activeRole
+        : this.users.defaultRole(user);
+    const accessToken = await this.tokens.signAccessToken(
+      this.claims(user, effectiveRole, sessionId),
+    );
+    return this.result(user, accessToken, token, effectiveRole);
+  }
+
+  async logout(rawToken: string): Promise<void> {
+    await this.refreshTokens.revoke(rawToken);
+  }
+
+  /** Switch the active role for the current session and re-mint the token. */
+  async switchRole(
+    userId: string,
+    sessionId: string | undefined,
+    role: string,
+  ): Promise<SwitchRoleResult> {
+    const user = await this.users.findByIdWithAccess(userId);
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Not authenticated');
+    }
+    if (!user.roles.includes(role)) {
+      throw new ForbiddenException('You do not have that role');
+    }
+    if (sessionId) {
+      await this.refreshTokens.setSessionActiveRole(sessionId, role);
+    }
+    const accessToken = await this.tokens.signAccessToken(
+      this.claims(user, role, sessionId),
+    );
+    return {
+      user: this.userPayload(user, role),
+      tokens: {
+        accessToken,
+        expiresIn: this.tokens.accessTokenTtlSeconds(),
+        tokenType: 'Bearer',
+      },
+    };
+  }
+
+  /** Create the session, refresh token + login event, then mint a scoped token. */
+  private async startSession(
+    user: UserWithAccess,
+    ctx: LoginContext,
+  ): Promise<AuthResult> {
+    const activeRole = this.users.defaultRole(user);
+    const { token, sessionId } = await this.txm.run(async (tx) => {
+      const issued = await this.refreshTokens.issueForNewSession(tx, user.id, {
+        ...ctx,
+        activeRole,
+      });
       await this.events.publish(tx, {
         type: EVENT_TYPES.UserLoggedIn,
         aggregateType: 'User',
@@ -59,34 +150,43 @@ export class AuthService {
         payload: { email: user.email },
         metadata: { actorUserId: user.id },
       });
-      return token;
+      return issued;
     });
 
-    const accessToken = await this.tokens.signAccessToken(this.claims(user));
-    return this.result(user, accessToken, refreshToken);
+    const accessToken = await this.tokens.signAccessToken(
+      this.claims(user, activeRole, sessionId),
+    );
+    return this.result(user, accessToken, token, activeRole);
   }
 
-  async refresh(rawToken: string): Promise<AuthResult> {
-    const { userId, token } = await this.refreshTokens.rotate(rawToken);
-    const user = await this.users.findByIdWithAccess(userId);
-    if (!user || !user.isActive) {
-      throw new UnauthorizedException('Invalid refresh token');
-    }
-    const accessToken = await this.tokens.signAccessToken(this.claims(user));
-    return this.result(user, accessToken, token);
-  }
-
-  async logout(rawToken: string): Promise<void> {
-    await this.refreshTokens.revoke(rawToken);
-  }
-
-  private claims(user: UserWithAccess): AccessTokenClaims {
+  private claims(
+    user: UserWithAccess,
+    activeRole: string | null,
+    sid: string | undefined,
+  ): AccessTokenClaims {
     return {
       sub: user.id,
       email: user.email,
       roles: user.roles,
-      permissions: user.permissions,
+      activeRole,
+      permissions: this.users.permissionsForRole(user, activeRole),
+      sid,
       tenantId: user.tenantId,
+    };
+  }
+
+  private userPayload(
+    user: UserWithAccess,
+    activeRole: string | null,
+  ): AuthUserPayload {
+    return {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      preferredLocale: user.preferredLocale,
+      roles: user.roles,
+      activeRole,
+      permissions: this.users.permissionsForRole(user, activeRole),
     };
   }
 
@@ -94,15 +194,10 @@ export class AuthService {
     user: UserWithAccess,
     accessToken: string,
     refreshToken: string,
+    activeRole: string | null,
   ): AuthResult {
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        fullName: user.fullName,
-        preferredLocale: user.preferredLocale,
-        roles: user.roles,
-      },
+      user: this.userPayload(user, activeRole),
       tokens: {
         accessToken,
         expiresIn: this.tokens.accessTokenTtlSeconds(),

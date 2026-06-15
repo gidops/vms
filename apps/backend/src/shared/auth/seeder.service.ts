@@ -1,23 +1,41 @@
-import {
-  Injectable,
-  Logger,
-  type OnApplicationBootstrap,
-} from '@nestjs/common';
+import { Injectable, type OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PERMISSIONS } from '@vms/contracts';
+import { PERMISSIONS, ROLES } from '@vms/contracts';
 import type { Env } from '../config/env.schema';
 import { PrismaService } from '../../prisma/prisma.service';
-import { PasswordService } from './password.service';
 
-const ADMIN_EMAIL = 'admin@aatc.org';
-const ADMIN_PASSWORD = 'Passw0rd!';
-
-/** Roles beyond ADMIN, with their permission sets. */
-const ROLES: Record<string, { description: string; permissions: string[] }> = {
-  CSO: {
-    description:
-      'Chief Security Officer — approves/denies visits, resolves alerts',
+/**
+ * Scoped roles (SUPER_ADMIN gets every permission and is handled separately).
+ * VMC = the old RECEPTION ∪ CSO so the Requests & Alerts feature keeps working.
+ */
+const ROLE_DEFS: Record<
+  string,
+  { description: string; permissions: string[] }
+> = {
+  [ROLES.ADMIN]: {
+    description: 'Administrator — manage users and roles',
     permissions: [
+      PERMISSIONS.USER_READ,
+      PERMISSIONS.USER_CREATE,
+      PERMISSIONS.USER_UPDATE,
+      PERMISSIONS.ROLE_READ,
+    ],
+  },
+  [ROLES.AUDITOR]: {
+    description: 'Auditor — read-only access to users and records',
+    permissions: [PERMISSIONS.USER_READ, PERMISSIONS.ROLE_READ],
+  },
+  [ROLES.STAFF]: {
+    description: 'Staff member',
+    permissions: [],
+  },
+  [ROLES.VMC]: {
+    description: 'VMC Reception — registers visitors, logs & decides requests',
+    permissions: [
+      PERMISSIONS.VISITOR_REGISTER,
+      PERMISSIONS.INVITATION_CREATE,
+      PERMISSIONS.VISIT_CANCEL,
+      PERMISSIONS.VISIT_EDIT,
       PERMISSIONS.VISIT_APPROVE,
       PERMISSIONS.VISIT_DENY,
       PERMISSIONS.ALERT_RESOLVE,
@@ -25,15 +43,9 @@ const ROLES: Record<string, { description: string; permissions: string[] }> = {
       PERMISSIONS.NOTE_ADD,
     ],
   },
-  RECEPTION: {
-    description: 'VMC Reception — registers visitors and logs visit requests',
-    permissions: [
-      PERMISSIONS.VISITOR_REGISTER,
-      PERMISSIONS.INVITATION_CREATE,
-      PERMISSIONS.VISIT_CANCEL,
-      PERMISSIONS.VISIT_EDIT,
-      PERMISSIONS.NOTE_ADD,
-    ],
+  [ROLES.GATE]: {
+    description: 'Gate operative — checks visitors in and out',
+    permissions: [PERMISSIONS.VISIT_CHECK_IN, PERMISSIONS.VISIT_CHECK_OUT],
   },
 };
 
@@ -48,26 +60,29 @@ const ID = {
 };
 
 /**
- * Idempotent dev seeder: ensures the permission catalogue, the ADMIN/CSO/
- * RECEPTION roles, a default admin user, and a set of demo requests/alerts so
- * the Requests & Alerts screens render against real data. Skipped in production.
+ * Idempotent dev seeder: ensures the permission catalogue, the SUPER_ADMIN /
+ * ADMIN / AUDITOR / STAFF / VMC / GATE roles (in every environment). No admin
+ * user is seeded — the first SUPER_ADMIN is created via first-run /signup. Demo
+ * requests/alerts are seeded outside production so the screens render with data.
  */
 @Injectable()
 export class SeederService implements OnApplicationBootstrap {
-  private readonly logger = new Logger(SeederService.name);
-
   constructor(
     private readonly prisma: PrismaService,
-    private readonly passwords: PasswordService,
     private readonly config: ConfigService<Env, true>,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
-    if (this.config.get('NODE_ENV', { infer: true }) === 'production') return;
-    await this.seed();
+    // Roles + permissions are reference data — seeded in EVERY environment so
+    // the first-run /signup can assign SUPER_ADMIN. The admin USER is never
+    // seeded; the first one is created through /signup.
+    await this.seedRbac();
+    if (this.config.get('NODE_ENV', { infer: true }) !== 'production') {
+      await this.seedDemoData();
+    }
   }
 
-  private async seed(): Promise<void> {
+  private async seedRbac(): Promise<void> {
     for (const key of Object.values(PERMISSIONS)) {
       await this.prisma.permission.upsert({
         where: { key },
@@ -76,10 +91,11 @@ export class SeederService implements OnApplicationBootstrap {
       });
     }
 
-    const adminRole = await this.prisma.role.upsert({
-      where: { name: 'ADMIN' },
-      update: {},
-      create: { name: 'ADMIN', description: 'Full system access' },
+    // SUPER_ADMIN holds every permission.
+    const superAdminRole = await this.prisma.role.upsert({
+      where: { name: ROLES.SUPER_ADMIN },
+      update: { description: 'Full system access' },
+      create: { name: ROLES.SUPER_ADMIN, description: 'Full system access' },
     });
 
     const permissions = await this.prisma.permission.findMany();
@@ -87,18 +103,18 @@ export class SeederService implements OnApplicationBootstrap {
       await this.prisma.rolePermission.upsert({
         where: {
           roleId_permissionId: {
-            roleId: adminRole.id,
+            roleId: superAdminRole.id,
             permissionId: permission.id,
           },
         },
         update: {},
-        create: { roleId: adminRole.id, permissionId: permission.id },
+        create: { roleId: superAdminRole.id, permissionId: permission.id },
       });
     }
 
-    // Additional roles (CSO, Reception) with scoped permission sets.
+    // Scoped roles (Admin, Auditor, Staff, VMC, Gate).
     const permByKey = new Map(permissions.map((p) => [p.key, p.id]));
-    for (const [name, def] of Object.entries(ROLES)) {
+    for (const [name, def] of Object.entries(ROLE_DEFS)) {
       const role = await this.prisma.role.upsert({
         where: { name },
         update: { description: def.description },
@@ -117,31 +133,19 @@ export class SeederService implements OnApplicationBootstrap {
       }
     }
 
-    let adminUserId: string;
-    const existing = await this.prisma.user.findUnique({
-      where: { email: ADMIN_EMAIL },
+    // Drop legacy roles no longer in the canonical taxonomy (e.g. CSO,
+    // RECEPTION) — their user assignments cascade away.
+    const canonical = [ROLES.SUPER_ADMIN, ...Object.keys(ROLE_DEFS)];
+    await this.prisma.role.deleteMany({
+      where: { name: { notIn: canonical } },
     });
-    if (existing) {
-      adminUserId = existing.id;
-    } else {
-      const passwordHash = await this.passwords.hash(ADMIN_PASSWORD);
-      const user = await this.prisma.user.create({
-        data: { email: ADMIN_EMAIL, fullName: 'AATC Admin', passwordHash },
-      });
-      await this.prisma.userRole.create({
-        data: { userId: user.id, roleId: adminRole.id },
-      });
-      adminUserId = user.id;
-      this.logger.log(
-        `Seeded admin user ${ADMIN_EMAIL} (password: ${ADMIN_PASSWORD})`,
-      );
-    }
-
-    await this.seedDemoData(adminUserId);
   }
 
-  /** Idempotent demo requests + an alert so the inbox isn't empty in dev. */
-  private async seedDemoData(adminUserId: string): Promise<void> {
+  /**
+   * Idempotent demo requests + an alert so the inbox isn't empty in dev. Author
+   * is the seeded host user (Dr Alabi), so demo data needs no admin account.
+   */
+  private async seedDemoData(): Promise<void> {
     const hostUser = await this.prisma.user.upsert({
       where: { id: ID.hostUser },
       update: {},
@@ -220,7 +224,7 @@ export class SeederService implements OnApplicationBootstrap {
           status: seed.status,
           purpose: seed.purpose,
           source: 'VMC_STATION',
-          createdById: adminUserId,
+          createdById: hostUser.id,
           scheduledAt: new Date('2026-06-12T10:00:00Z'),
         },
       });
@@ -237,7 +241,7 @@ export class SeederService implements OnApplicationBootstrap {
         reason:
           'This visitor matches a flagged profile and requires CSO review.',
         category: 'Flagged Visitor Match',
-        raisedById: adminUserId,
+        raisedById: hostUser.id,
       },
     });
 
@@ -253,7 +257,7 @@ export class SeederService implements OnApplicationBootstrap {
         create: {
           id: ID.note(i),
           visitId: ID.visit(0),
-          authorId: adminUserId,
+          authorId: hostUser.id,
           body: noteBodies[i],
         },
       });

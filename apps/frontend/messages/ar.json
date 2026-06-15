@@ -5,7 +5,11 @@
   "nav": {
     "schedule": "جدول اليوم",
     "requests": "الطلبات والتنبيهات",
-    "visitors": "الزوّار"
+    "visitors": "الزوّار",
+    "switchAccount": "تبديل الحساب",
+    "accountSettings": "إعدادات الحساب",
+    "help": "المساعدة / الدعم",
+    "logout": "تسجيل الخروج"
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -19,7 +23,8 @@
     "signingIn": "جارٍ تسجيل الدخول…",
     "error": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
     "or": "أو",
-    "okta": "تسجيل الدخول عبر Okta SSO"
+    "okta": "تسجيل الدخول عبر Okta SSO",
+    "createFirstAdmin": "إعداد أول حساب مسؤول"
   },
   "dashboard": {
     "hub": "مركز VMC",
@@ -128,6 +133,79 @@
       "save": "حفظ",
       "cancel": "إلغاء",
       "resolve": "حل"
+    }
+  },
+  "language": {
+    "select": "اختر اللغة",
+    "en": "الإنجليزية",
+    "fr": "الفرنسية",
+    "ar": "العربية"
+  },
+  "roles": {
+    "SUPER_ADMIN": "مدير عام",
+    "ADMIN": "مدير",
+    "AUDITOR": "مدقق",
+    "STAFF": "موظف",
+    "VMC": "استقبال VMC",
+    "GATE": "البوابة"
+  },
+  "signup": {
+    "title": "إنشاء حساب مسؤول",
+    "subtitle": "قم بإعداد أول مسؤول للنظام",
+    "fullName": "الاسم الكامل",
+    "fullNamePlaceholder": "محمد أحمد",
+    "email": "البريد الإلكتروني",
+    "emailPlaceholder": "name@aatc.org",
+    "password": "كلمة المرور",
+    "passwordPlaceholder": "8 أحرف على الأقل",
+    "submit": "إنشاء الحساب",
+    "submitting": "جارٍ الإنشاء…",
+    "error": "تعذّر إنشاء الحساب.",
+    "closedTitle": "اكتمل الإعداد",
+    "closedSubtitle": "يوجد مسؤول بالفعل. يرجى تسجيل الدخول.",
+    "goToLogin": "الذهاب لتسجيل الدخول"
+  },
+  "admin": {
+    "welcome": "مرحبًا {name}",
+    "subtitle": "وحدة الإدارة",
+    "userManagement": "إدارة المستخدمين",
+    "userManagementBody": "عرض المستخدمين وإنشاء الحسابات وتعيين الأدوار.",
+    "manageUsers": "إدارة المستخدمين"
+  },
+  "staff": {
+    "welcome": "مرحبًا {name}",
+    "subtitle": "مساحة عمل الموظفين",
+    "placeholderTitle": "لوحة الموظفين",
+    "placeholderBody": "هذه اللوحة مؤقتة وسيتم تطويرها قريبًا."
+  },
+  "gate": {
+    "welcome": "مرحبًا {name}",
+    "subtitle": "عمليات البوابة",
+    "placeholderTitle": "لوحة البوابة",
+    "placeholderBody": "هذه اللوحة مؤقتة وسيتم تطويرها قريبًا."
+  },
+  "users": {
+    "title": "إدارة المستخدمين",
+    "newUser": "مستخدم جديد",
+    "empty": "لا يوجد مستخدمون بعد",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "editRoles": "تعديل الأدوار",
+    "editRolesFor": "تعديل الأدوار — {name}",
+    "columns": {
+      "user": "المستخدم",
+      "roles": "الأدوار",
+      "status": "الحالة",
+      "created": "تاريخ الإنشاء",
+      "actions": "إجراءات"
+    },
+    "form": {
+      "fullName": "الاسم الكامل",
+      "email": "البريد الإلكتروني",
+      "password": "كلمة المرور",
+      "roles": "الأدوار",
+      "create": "إنشاء المستخدم",
+      "save": "حفظ"
     }
   }
 }

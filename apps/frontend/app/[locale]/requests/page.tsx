@@ -180,7 +180,7 @@ function Requests() {
 
 export default function RequestsPage() {
   return (
-    <RouteGuard>
+    <RouteGuard home="/dashboard">
       <Requests />
     </RouteGuard>
   );

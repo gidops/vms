@@ -23,7 +23,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       userId: payload.sub,
       email: payload.email,
       roles: payload.roles ?? [],
+      // Legacy tokens (pre-RBAC-switch) default the active role to the first.
+      activeRole: payload.activeRole ?? payload.roles?.[0] ?? null,
       permissions: payload.permissions ?? [],
+      sid: payload.sid,
       tenantId: payload.tenantId ?? null,
     };
   }
