@@ -78,9 +78,10 @@ export class SeederService implements OnApplicationBootstrap {
     // the first-run /signup can assign SUPER_ADMIN. The admin USER is never
     // seeded; the first one is created through /signup.
     await this.seedRbac();
-    if (this.config.get('NODE_ENV', { infer: true }) !== 'production') {
-      await this.seedDemoData();
-    }
+    await this.seedDemoData();
+    // if (this.config.get('NODE_ENV', { infer: true }) !== 'production') {
+    //   await this.seedDemoData();
+    // }
   }
 
   private async seedRbac(): Promise<void> {
