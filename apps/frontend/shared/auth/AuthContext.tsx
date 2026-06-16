@@ -31,6 +31,8 @@ interface AuthContextValue {
   ) => Promise<MeResponse>;
   /** Switch the active role profile (re-mints a scoped token). */
   switchRole: (role: string) => Promise<MeResponse>;
+  /** Re-fetch the current profile (after a settings save) so the nav updates. */
+  refreshUser: () => Promise<MeResponse>;
   logout: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
 }
@@ -129,6 +131,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return profile;
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    const profile = await authApi.me();
+    setUser(profile);
+    return profile;
+  }, []);
+
   const logout = useCallback(async () => {
     const refreshToken = tokenStore.getRefreshToken();
     try {
@@ -152,10 +160,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login,
       signup,
       switchRole,
+      refreshUser,
       logout,
       hasPermission,
     }),
-    [user, status, login, signup, switchRole, logout, hasPermission],
+    [user, status, login, signup, switchRole, refreshUser, logout, hasPermission],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

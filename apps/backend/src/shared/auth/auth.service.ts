@@ -8,10 +8,12 @@ import {
   UsersService,
   type UserWithAccess,
 } from '../../modules/identity/users.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { EVENT_TYPES } from '../events/domain-event';
 import { EventPublisher } from '../events/event-publisher';
 import { TransactionManager } from '../events/transaction.manager';
 import { LocalAuthProvider } from './local-auth.provider';
+import { PasswordService } from './password.service';
 import { RefreshTokenService } from './refresh.service';
 import { type AccessTokenClaims, TokenService } from './token.service';
 
@@ -48,6 +50,8 @@ export class AuthService {
     private readonly tokens: TokenService,
     private readonly refreshTokens: RefreshTokenService,
     private readonly users: UsersService,
+    private readonly passwords: PasswordService,
+    private readonly prisma: PrismaService,
     private readonly txm: TransactionManager,
     private readonly events: EventPublisher,
   ) {}
@@ -60,13 +64,8 @@ export class AuthService {
     return this.startSession(user, ctx);
   }
 
-  /** First-run signup — bootstraps the initial SUPER_ADMIN, then logs in. */
+  /** Open signup — creates a SUPER_ADMIN and logs in. */
   async signup(input: SignupInput, ctx: LoginContext): Promise<AuthResult> {
-    if (!(await this.signupAvailable())) {
-      throw new ForbiddenException(
-        'Signup is closed — an admin already exists',
-      );
-    }
     const user = await this.users.create({
       email: input.email,
       fullName: input.fullName,
@@ -76,9 +75,9 @@ export class AuthService {
     return this.startSession(user, ctx);
   }
 
-  /** Signup is open only until the first SUPER_ADMIN exists. */
-  async signupAvailable(): Promise<boolean> {
-    return !(await this.users.roleHasUsers(ROLES.SUPER_ADMIN));
+  /** Signup is always available (the first-run lock is intentionally disabled). */
+  signupAvailable(): Promise<boolean> {
+    return Promise.resolve(true);
   }
 
   async refresh(rawToken: string): Promise<AuthResult> {
@@ -101,6 +100,38 @@ export class AuthService {
 
   async logout(rawToken: string): Promise<void> {
     await this.refreshTokens.revoke(rawToken);
+  }
+
+  /** Change password after verifying the current one; revokes all sessions. */
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.passwordHash) {
+      throw new UnauthorizedException('Password change not available');
+    }
+    const valid = await this.passwords.verify(
+      user.passwordHash,
+      currentPassword,
+    );
+    if (!valid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+    const passwordHash = await this.passwords.hash(newPassword);
+    await this.txm.run(async (tx) => {
+      await tx.user.update({ where: { id: userId }, data: { passwordHash } });
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.UserPasswordChanged,
+        aggregateType: 'User',
+        aggregateId: userId,
+        payload: {},
+        metadata: { actorUserId: userId },
+      });
+    });
+    // Force re-auth everywhere (matches the "logs you out of all sessions" copy).
+    await this.refreshTokens.revokeAllForUser(userId);
   }
 
   /** Switch the active role for the current session and re-mint the token. */

@@ -5,7 +5,8 @@ export const Note = z.object({
   id: z.string().uuid(),
   visitId: z.string().uuid().nullable().optional(),
   alertId: z.string().uuid().nullable().optional(),
-  authorId: z.string().uuid(),
+  // Null once the author's account is deleted; authorName is preserved.
+  authorId: z.string().uuid().nullable(),
   authorName: z.string().min(1),
   body: z.string().min(1),
   createdAt: z.coerce.date(),

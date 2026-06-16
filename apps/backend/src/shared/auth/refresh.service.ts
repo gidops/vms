@@ -93,6 +93,21 @@ export class RefreshTokenService {
     });
   }
 
+  /** Revoke every session + refresh token for a user (e.g. after a password change). */
+  async revokeAllForUser(userId: string): Promise<void> {
+    const now = new Date();
+    await this.prisma.$transaction([
+      this.prisma.refreshToken.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: now },
+      }),
+      this.prisma.session.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: now },
+      }),
+    ]);
+  }
+
   /** Update the active role stored on a session (called by switch-role). */
   async setSessionActiveRole(sessionId: string, role: string): Promise<void> {
     await this.prisma.session.update({

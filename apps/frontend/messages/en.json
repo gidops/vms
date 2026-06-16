@@ -192,6 +192,10 @@
     "inactive": "Inactive",
     "editRoles": "Edit roles",
     "editRolesFor": "Edit roles — {name}",
+    "delete": "Delete",
+    "deleteConfirmTitle": "Delete user",
+    "deleteConfirmBody": "Delete {name}? Their account is removed but the records and actions they created are kept.",
+    "deleteError": "Could not delete this user.",
     "columns": {
       "user": "User",
       "roles": "Roles",
@@ -205,7 +209,68 @@
       "password": "Password",
       "roles": "Roles",
       "create": "Create user",
+      "save": "Save changes",
+      "cancel": "Cancel"
+    }
+  },
+  "settings": {
+    "title": "Account Settings",
+    "tabs": {
+      "profile": "Profile Information",
+      "desk": "My Desk",
+      "preferences": "Security/Preferences"
+    },
+    "profile": {
+      "personalInfo": "Personal Information",
+      "personalInfoHelp": "Enter your personal information as it is on your valid ID card for verification.",
+      "editProfile": "Edit profile",
+      "uploadError": "Could not upload the image.",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email address",
+      "phone": "Phone number",
+      "role": "Role",
+      "station": "Station active",
       "save": "Save changes"
+    },
+    "password": {
+      "title": "Password",
+      "help": "Change your password at anytime to ensure your account is secure. Changing your password will log you out of all your active sessions.",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "change": "Change Password",
+      "error": "Could not change your password. Check your current password.",
+      "mismatch": "Passwords do not match."
+    },
+    "desk": {
+      "title": "Assigned Desk / Location",
+      "help": "All visiting records are tied to your assigned VMC Machine.",
+      "mainLobby": "Main Lobby"
+    },
+    "activity": {
+      "title": "Login Activity",
+      "help": "View your login activity, report any unusual login to admin immediately.",
+      "current": "Current session",
+      "previous": "Previous session",
+      "notYou": "Not you?",
+      "reportIssue": "Report issue"
+    },
+    "language": {
+      "title": "Global Language",
+      "help": "Change your language preference."
+    },
+    "region": {
+      "title": "Region, time and date",
+      "help": "Select your preferred region, date, and time."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "help": "Stay informed about your account activity.",
+      "newInviteRequest": "New invite request",
+      "csoDenied": "CSO denied request",
+      "csoApproved": "CSO approved request",
+      "flaggedVisitor": "Flagged visitor alert"
     }
   }
 }

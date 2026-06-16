@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+/** Treat blank .env values (`KEY=`) as unset so defaults/optional apply. */
+const emptyToUndefined = (v: unknown) => (v === '' ? undefined : v);
+
 /**
  * Environment contract for the backend. Validated at boot so the process fails
  * fast (with a readable message) rather than crashing later on a missing/typo'd
@@ -19,6 +22,16 @@ export const envSchema = z.object({
   // base64-encoded 32-byte key for column encryption; derived from JWT_SECRET in dev if absent.
   ENCRYPTION_KEY: z.string().optional(),
   OUTBOX_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(2000),
+  // S3 avatar uploads. Optional so the app boots without S3 configured (dev);
+  // the presign route errors clearly when S3_BUCKET is unset. AWS credentials
+  // come from the default provider chain (env vars locally, IAM role in prod).
+  // Blank values in .env are treated as unset (so defaults/optional apply).
+  AWS_REGION: z.preprocess(emptyToUndefined, z.string().default('us-east-1')),
+  S3_BUCKET: z.preprocess(emptyToUndefined, z.string().optional()),
+  S3_PRESIGN_EXPIRY: z.preprocess(
+    emptyToUndefined,
+    z.coerce.number().int().positive().default(300),
+  ),
 });
 
 export type Env = z.infer<typeof envSchema>;

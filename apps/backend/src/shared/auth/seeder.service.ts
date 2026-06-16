@@ -18,6 +18,7 @@ const ROLE_DEFS: Record<
       PERMISSIONS.USER_READ,
       PERMISSIONS.USER_CREATE,
       PERMISSIONS.USER_UPDATE,
+      PERMISSIONS.USER_DELETE,
       PERMISSIONS.ROLE_READ,
     ],
   },
@@ -225,6 +226,7 @@ export class SeederService implements OnApplicationBootstrap {
           purpose: seed.purpose,
           source: 'VMC_STATION',
           createdById: hostUser.id,
+          createdByName: hostUser.fullName,
           scheduledAt: new Date('2026-06-12T10:00:00Z'),
         },
       });
@@ -258,6 +260,7 @@ export class SeederService implements OnApplicationBootstrap {
           id: ID.note(i),
           visitId: ID.visit(0),
           authorId: hostUser.id,
+          authorName: hostUser.fullName,
           body: noteBodies[i],
         },
       });

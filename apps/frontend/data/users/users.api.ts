@@ -31,4 +31,7 @@ export const usersApi = {
   ): Promise<{ id: string; email: string; roles: string[] }> {
     return api(`/users/${id}/roles`, { method: "PATCH", body: { roles } });
   },
+  remove(id: string): Promise<void> {
+    return api<void>(`/users/${id}`, { method: "DELETE" });
+  },
 };

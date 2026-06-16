@@ -192,6 +192,10 @@
     "inactive": "Inactif",
     "editRoles": "Modifier les rôles",
     "editRolesFor": "Modifier les rôles — {name}",
+    "delete": "Supprimer",
+    "deleteConfirmTitle": "Supprimer l'utilisateur",
+    "deleteConfirmBody": "Supprimer {name} ? Le compte est supprimé, mais les enregistrements et actions créés sont conservés.",
+    "deleteError": "Impossible de supprimer cet utilisateur.",
     "columns": {
       "user": "Utilisateur",
       "roles": "Rôles",
@@ -205,7 +209,68 @@
       "password": "Mot de passe",
       "roles": "Rôles",
       "create": "Créer l'utilisateur",
+      "save": "Enregistrer",
+      "cancel": "Annuler"
+    }
+  },
+  "settings": {
+    "title": "Paramètres du compte",
+    "tabs": {
+      "profile": "Informations du profil",
+      "desk": "Mon poste",
+      "preferences": "Sécurité/Préférences"
+    },
+    "profile": {
+      "personalInfo": "Informations personnelles",
+      "personalInfoHelp": "Saisissez vos informations telles qu'elles figurent sur votre pièce d'identité pour vérification.",
+      "editProfile": "Modifier le profil",
+      "uploadError": "Impossible de téléverser l'image.",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "email": "Adresse e-mail",
+      "phone": "Numéro de téléphone",
+      "role": "Rôle",
+      "station": "Poste actif",
       "save": "Enregistrer"
+    },
+    "password": {
+      "title": "Mot de passe",
+      "help": "Changez votre mot de passe à tout moment. Cela vous déconnectera de toutes vos sessions actives.",
+      "current": "Mot de passe actuel",
+      "new": "Nouveau mot de passe",
+      "confirm": "Confirmer le nouveau mot de passe",
+      "change": "Changer le mot de passe",
+      "error": "Impossible de changer le mot de passe. Vérifiez votre mot de passe actuel.",
+      "mismatch": "Les mots de passe ne correspondent pas."
+    },
+    "desk": {
+      "title": "Poste / Emplacement assigné",
+      "help": "Tous les enregistrements de visite sont liés à votre machine VMC assignée.",
+      "mainLobby": "Hall principal"
+    },
+    "activity": {
+      "title": "Activité de connexion",
+      "help": "Consultez votre activité de connexion ; signalez immédiatement toute connexion suspecte.",
+      "current": "Session actuelle",
+      "previous": "Session précédente",
+      "notYou": "Pas vous ?",
+      "reportIssue": "Signaler"
+    },
+    "language": {
+      "title": "Langue globale",
+      "help": "Changez votre préférence de langue."
+    },
+    "region": {
+      "title": "Région, heure et date",
+      "help": "Sélectionnez votre région, date et heure préférées."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "help": "Restez informé de l'activité de votre compte.",
+      "newInviteRequest": "Nouvelle demande d'invitation",
+      "csoDenied": "Demande refusée par le CSO",
+      "csoApproved": "Demande approuvée par le CSO",
+      "flaggedVisitor": "Alerte visiteur signalé"
     }
   }
 }

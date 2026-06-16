@@ -23,10 +23,24 @@ export interface SwitchRoleResult {
   tokens: { accessToken: string; expiresIn: number; tokenType: string };
 }
 
+export interface NotificationPrefs {
+  newInviteRequest: boolean;
+  csoDenied: boolean;
+  csoApproved: boolean;
+  flaggedVisitor: boolean;
+}
+
 export interface MeResponse {
   id: string;
   email: string;
   fullName: string;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+  avatarKey: string | null;
+  timezone: string | null;
+  assignedDesk: string | null;
+  notificationPrefs: NotificationPrefs | null;
   preferredLocale: string;
   roles: string[];
   activeRole: string | null;

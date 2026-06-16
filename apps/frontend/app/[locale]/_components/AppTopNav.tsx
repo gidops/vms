@@ -27,6 +27,8 @@ export interface AppTopNavProps {
   active?: "schedule" | "requests";
   /** Count shown on the "Requests & Alerts" pill. */
   requestsCount?: number;
+  /** Static centered pill label (e.g. "Account Settings") when there's no toggle. */
+  centerLabel?: string;
 }
 
 /**
@@ -34,7 +36,11 @@ export interface AppTopNavProps {
  * the shared control cluster (role switcher, language, account menu). Used by
  * every dashboard so the nav stays identical and in sync.
  */
-export function AppTopNav({ active, requestsCount }: AppTopNavProps) {
+export function AppTopNav({
+  active,
+  requestsCount,
+  centerLabel,
+}: AppTopNavProps) {
   const tNav = useTranslations("nav");
   const router = useRouter();
 
@@ -59,6 +65,10 @@ export function AppTopNav({ active, requestsCount }: AppTopNavProps) {
               },
             ]}
           />
+        ) : centerLabel ? (
+          <span className="inline-flex items-center rounded-full border border-accent px-4 py-1.5 text-sm font-medium text-emphasis-fg">
+            {centerLabel}
+          </span>
         ) : undefined
       }
       end={

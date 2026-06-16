@@ -137,7 +137,7 @@ export class VisitsService {
       updatedAt: visit.updatedAt,
       source: visit.source,
       createdById: visit.createdById,
-      createdByName: visit.createdBy?.fullName ?? null,
+      createdByName: visit.createdByName ?? visit.createdBy?.fullName ?? null,
       visitor: visit.visitor,
       host: {
         id: visit.host.id,
@@ -157,7 +157,7 @@ export class VisitsService {
         visitId: note.visitId,
         alertId: note.alertId,
         authorId: note.authorId,
-        authorName: note.author.fullName,
+        authorName: note.authorName,
         body: note.body,
         createdAt: note.createdAt,
       })),

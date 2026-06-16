@@ -96,7 +96,7 @@ export class InboxService {
         ? `Visit request for ${r.visitor.fullName} from`
         : `Visit request for ${r.visitor.fullName}`,
       organization: org,
-      createdByName: r.createdBy?.fullName ?? null,
+      createdByName: r.createdByName ?? r.createdBy?.fullName ?? null,
       notesCount: r._count.notes,
       createdAt: r.createdAt,
     };

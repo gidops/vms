@@ -21,17 +21,20 @@ import {
   TableRow,
   TopNavShell,
 } from "@vms/ui";
-import { Users } from "lucide-react";
+import { Trash2, Users } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
+import { ApiError } from "@/data/http/client";
 import {
   useCreateUser,
+  useDeleteUser,
   useRoles,
   useUpdateUserRoles,
   useUsers,
 } from "@/data/users/queries";
 import type { UserListItem } from "@/data/users/users.api";
+import { useAuth } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
 import { roleLabel } from "@/shared/auth/roleLabels";
 
@@ -64,6 +67,7 @@ function Users_() {
   const t = useTranslations("users");
   const tRoles = useTranslations("roles");
   const format = useFormatter();
+  const { user } = useAuth();
   const { data, isLoading } = useUsers();
   const { data: roles = [] } = useRoles();
   const createUser = useCreateUser();
@@ -71,6 +75,7 @@ function Users_() {
 
   const [createOpen, setCreateOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<UserListItem | null>(null);
+  const [deleting, setDeleting] = React.useState<UserListItem | null>(null);
 
   const items = data?.items ?? [];
 
@@ -134,14 +139,26 @@ function Users_() {
                       })}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        intent="neutral"
-                        tone="outline"
-                        size="sm"
-                        onClick={() => setEditing(u)}
-                      >
-                        {t("editRoles")}
-                      </Button>
+                      <span className="flex items-center gap-2">
+                        <Button
+                          intent="neutral"
+                          tone="outline"
+                          size="sm"
+                          onClick={() => setEditing(u)}
+                        >
+                          {t("editRoles")}
+                        </Button>
+                        <Button
+                          intent="danger"
+                          tone="ghost"
+                          size="sm"
+                          aria-label={t("delete")}
+                          disabled={u.id === user?.id}
+                          onClick={() => setDeleting(u)}
+                        >
+                          <Trash2 className="size-4" aria-hidden="true" />
+                        </Button>
+                      </span>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -171,6 +188,11 @@ function Users_() {
             { onSuccess: () => setEditing(null) },
           )
         }
+      />
+      <DeleteUserDialog
+        user={deleting}
+        onOpenChange={(open) => !open && setDeleting(null)}
+        onDeleted={() => setDeleting(null)}
       />
     </TopNavShell>
   );
@@ -362,6 +384,68 @@ function EditRolesForm({
         </Button>
       </DialogFooter>
     </div>
+  );
+}
+
+function DeleteUserDialog({
+  user,
+  onOpenChange,
+  onDeleted,
+}: {
+  user: UserListItem | null;
+  onOpenChange: (open: boolean) => void;
+  onDeleted: () => void;
+}) {
+  const t = useTranslations("users");
+  const deleteUser = useDeleteUser();
+  const [error, setError] = React.useState<string | null>(null);
+
+  function confirm() {
+    if (!user) return;
+    setError(null);
+    deleteUser.mutate(user.id, {
+      onSuccess: onDeleted,
+      onError: (e) =>
+        setError(e instanceof ApiError ? e.message : t("deleteError")),
+    });
+  }
+
+  return (
+    <Dialog
+      open={!!user}
+      onOpenChange={(open) => {
+        setError(null);
+        onOpenChange(open);
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t("deleteConfirmTitle")}</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-fg-muted">
+            {t("deleteConfirmBody", { name: user?.fullName ?? "" })}
+          </p>
+          {error ? <p className="text-sm text-danger">{error}</p> : null}
+          <DialogFooter>
+            <Button
+              intent="neutral"
+              tone="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              {t("form.cancel")}
+            </Button>
+            <Button
+              intent="danger"
+              disabled={deleteUser.isPending}
+              onClick={confirm}
+            >
+              {t("delete")}
+            </Button>
+          </DialogFooter>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

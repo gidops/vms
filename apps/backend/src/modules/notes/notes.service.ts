@@ -27,15 +27,21 @@ export class NotesService {
       if (count === 0) throw new NotFoundException('Alert not found');
     }
 
+    const author = await this.prisma.user.findUnique({
+      where: { id: authorId },
+      select: { fullName: true },
+    });
+
     const note = await this.txm.run(async (tx) => {
       const created = await tx.note.create({
         data: {
           visitId: input.visitId ?? null,
           alertId: input.alertId ?? null,
           authorId,
+          // Denormalized so the note keeps attribution if the author is deleted.
+          authorName: author?.fullName ?? '',
           body: input.body,
         },
-        include: { author: true },
       });
       await this.events.publish(tx, {
         type: EVENT_TYPES.NoteAdded,
@@ -52,7 +58,7 @@ export class NotesService {
       visitId: note.visitId,
       alertId: note.alertId,
       authorId: note.authorId,
-      authorName: note.author.fullName,
+      authorName: note.authorName,
       body: note.body,
       createdAt: note.createdAt,
     };

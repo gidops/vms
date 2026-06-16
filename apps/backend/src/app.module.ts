@@ -13,6 +13,7 @@ import { ConfigModule } from './shared/config/config.module';
 import { CryptoModule } from './shared/crypto/crypto.module';
 import { EventsModule } from './shared/events/events.module';
 import { LoggingModule } from './shared/logging/logging.module';
+import { StorageModule } from './shared/storage/storage.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { LoggingModule } from './shared/logging/logging.module';
     LoggingModule,
     PrismaModule,
     CryptoModule,
+    StorageModule,
     EventsModule,
     AuditModule,
     IdentityModule,

@@ -32,4 +32,7 @@ export const EVENT_TYPES = {
   UserLoggedIn: 'auth.user_logged_in',
   UserCreated: 'user.created',
   UserRolesUpdated: 'user.roles_updated',
+  UserProfileUpdated: 'user.profile_updated',
+  UserPasswordChanged: 'user.password_changed',
+  UserDeleted: 'user.deleted',
 } as const;

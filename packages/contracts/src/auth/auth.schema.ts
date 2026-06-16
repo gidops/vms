@@ -51,3 +51,10 @@ export const SwitchRoleInput = z.object({
   role: z.string().min(1),
 });
 export type SwitchRoleInput = z.infer<typeof SwitchRoleInput>;
+
+/** Change the current user's password (revokes all their sessions). */
+export const ChangePasswordInput = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8),
+});
+export type ChangePasswordInput = z.infer<typeof ChangePasswordInput>;

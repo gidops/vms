@@ -4,11 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import type {
-  CreateUserInput,
-  Paginated,
-  PaginationQuery,
-  UserListItem,
+import {
+  ROLES,
+  type CreateUserInput,
+  type LoginActivityItem,
+  type Paginated,
+  type PaginationQuery,
+  type UpdateMeInput,
+  type UserListItem,
 } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
@@ -190,6 +193,134 @@ export class UsersService {
     return updated;
   }
 
+  /** Self-service profile + preferences update (Account Settings). */
+  async updateMe(
+    userId: string,
+    input: UpdateMeInput,
+  ): Promise<UserWithAccess> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const data: Prisma.UserUpdateInput = {};
+    if (input.firstName !== undefined) data.firstName = input.firstName;
+    if (input.lastName !== undefined) data.lastName = input.lastName;
+    if (input.phone !== undefined) data.phone = input.phone;
+    if (input.preferredLocale !== undefined)
+      data.preferredLocale = input.preferredLocale;
+    if (input.timezone !== undefined) data.timezone = input.timezone;
+    if (input.assignedDesk !== undefined)
+      data.assignedDesk = input.assignedDesk;
+
+    // Keep fullName in sync when either name part changes.
+    if (input.firstName !== undefined || input.lastName !== undefined) {
+      const first = input.firstName ?? user.firstName ?? '';
+      const last = input.lastName ?? user.lastName ?? '';
+      const full = `${first} ${last}`.trim();
+      if (full) data.fullName = full;
+    }
+
+    // Merge notification prefs over the existing object.
+    if (input.notificationPrefs !== undefined) {
+      const existing =
+        (user.notificationPrefs as Record<string, boolean> | null) ?? {};
+      data.notificationPrefs = {
+        ...existing,
+        ...input.notificationPrefs,
+      };
+    }
+
+    await this.txm.run(async (tx) => {
+      await tx.user.update({ where: { id: userId }, data });
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.UserProfileUpdated,
+        aggregateType: 'User',
+        aggregateId: userId,
+        payload: { fields: Object.keys(data) },
+        metadata: { actorUserId: userId },
+      });
+    });
+
+    const fresh = await this.findByIdWithAccess(userId);
+    if (!fresh) throw new NotFoundException('User not found');
+    return fresh;
+  }
+
+  /** Persist a freshly-uploaded avatar's S3 object key. */
+  async setAvatar(userId: string, avatarKey: string): Promise<UserWithAccess> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { avatarKey },
+    });
+    const fresh = await this.findByIdWithAccess(userId);
+    if (!fresh) throw new NotFoundException('User not found');
+    return fresh;
+  }
+
+  /** Active sessions for the "Login Activity" list (most recent first). */
+  async listSessions(
+    userId: string,
+    currentSessionId: string | undefined,
+  ): Promise<LoginActivityItem[]> {
+    const sessions = await this.prisma.session.findMany({
+      where: { userId, revokedAt: null },
+      orderBy: { lastSeenAt: 'desc' },
+    });
+    return sessions.map((s) => {
+      const { os, browser } = parseUserAgent(s.userAgent);
+      return {
+        id: s.id,
+        os,
+        browser,
+        location: s.ip ?? null,
+        lastSeenAt: s.lastSeenAt,
+        current: s.id === currentSessionId,
+      };
+    });
+  }
+
+  /**
+   * Hard-delete a user. Records they created are preserved (FK SetNull /
+   * plain-UUID actor columns + denormalized author/creator names). Blocked for
+   * self, the last Super Admin, and users who are hosts (would erase visits).
+   */
+  async deleteUser(id: string, actorUserId: string): Promise<void> {
+    if (id === actorUserId) {
+      throw new BadRequestException('You cannot delete your own account');
+    }
+    const target = await this.prisma.user.findUnique({
+      where: { id },
+      include: { host: true, userRoles: { include: { role: true } } },
+    });
+    if (!target) throw new NotFoundException('User not found');
+    if (target.host) {
+      throw new BadRequestException(
+        'This user is a host with visit records and cannot be deleted',
+      );
+    }
+    const isSuperAdmin = target.userRoles.some(
+      (ur) => ur.role.name === ROLES.SUPER_ADMIN,
+    );
+    if (isSuperAdmin) {
+      const superAdmins = await this.prisma.userRole.count({
+        where: { role: { name: ROLES.SUPER_ADMIN } },
+      });
+      if (superAdmins <= 1) {
+        throw new BadRequestException('Cannot delete the last Super Admin');
+      }
+    }
+
+    await this.txm.run(async (tx) => {
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.UserDeleted,
+        aggregateType: 'User',
+        aggregateId: id,
+        payload: { email: target.email },
+        metadata: { actorUserId },
+      });
+      await tx.user.delete({ where: { id } });
+    });
+  }
+
   private async resolveRoleIds(names: string[]): Promise<string[]> {
     const roles = await this.prisma.role.findMany({
       where: { name: { in: names } },
@@ -218,4 +349,30 @@ export class UsersService {
     const permissions = [...new Set(Object.values(rolePermissions).flat())];
     return { ...user, roles, permissions, rolePermissions };
   }
+}
+
+/** Best-effort OS + browser extraction from a User-Agent string. */
+function parseUserAgent(ua: string | null): { os: string; browser: string } {
+  if (!ua) return { os: 'Unknown', browser: 'Unknown' };
+  const os = /Windows/i.test(ua)
+    ? 'Windows'
+    : /Mac OS X|Macintosh/i.test(ua)
+      ? 'macOS'
+      : /Android/i.test(ua)
+        ? 'Android'
+        : /iPhone|iPad|iOS/i.test(ua)
+          ? 'iOS'
+          : /Linux/i.test(ua)
+            ? 'Linux'
+            : 'Unknown';
+  const browser = /Edg\//i.test(ua)
+    ? 'Edge'
+    : /Chrome|CriOS/i.test(ua)
+      ? 'Chrome'
+      : /Firefox/i.test(ua)
+        ? 'Firefox'
+        : /Safari/i.test(ua)
+          ? 'Safari'
+          : 'Unknown';
+  return { os, browser };
 }

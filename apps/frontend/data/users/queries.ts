@@ -30,3 +30,11 @@ export function useUpdateUserRoles() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["users"] }),
   });
 }
+
+export function useDeleteUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => usersApi.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["users"] }),
+  });
+}

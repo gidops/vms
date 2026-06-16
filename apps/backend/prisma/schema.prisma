@@ -112,6 +112,16 @@ model User {
   externalSubjectId String?      @unique // e.g. Okta `sub`
   tenantId          String? // multi-tenant prep
   fullName          String
+  firstName         String?
+  lastName          String?
+  phone             String?
+  // S3 object key for the avatar (e.g. avatars/<id>/<uuid>.jpg). The public URL
+  // is composed on the frontend from NEXT_PUBLIC_S3_BASE_URL — never stored here.
+  avatarKey         String?
+  timezone          String? // IANA-ish identifier for region/time preference
+  assignedDesk      String? // VMC reception desk/location label
+  // Per-channel notification toggles, e.g. { newInviteRequest, csoDenied, ... }.
+  notificationPrefs Json?
   isActive          Boolean      @default(true)
   preferredLocale   Locale       @default(EN)
   mfaEnabled        Boolean      @default(false)
@@ -276,6 +286,8 @@ model Visit {
   deniedReason String?
   // Origin of the request: who logged it and from which station/channel.
   createdById  String?
+  // Denormalized creator name, preserved if the creator's account is deleted.
+  createdByName String?
   source       String?     @default("VMC_STATION")
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
@@ -375,16 +387,19 @@ model Alert {
 // Freeform remarks attached to a visit request or an alert (the "Remarks/notes"
 // and "Add Note" affordance). Polymorphic via nullable visit/alert FKs.
 model Note {
-  id        String   @id @default(uuid())
-  visitId   String?
-  alertId   String?
-  authorId  String
-  body      String
-  createdAt DateTime @default(now())
+  id      String  @id @default(uuid())
+  visitId String?
+  alertId String?
+  // Author link is SetNull on user deletion; authorName is denormalized so the
+  // note keeps its attribution even after the author's account is removed.
+  authorId   String?
+  authorName String   @default("")
+  body       String
+  createdAt  DateTime @default(now())
 
   visit  Visit? @relation(fields: [visitId], references: [id], onDelete: Cascade)
   alert  Alert? @relation(fields: [alertId], references: [id], onDelete: Cascade)
-  author User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author User?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
   @@index([visitId])
   @@index([alertId])

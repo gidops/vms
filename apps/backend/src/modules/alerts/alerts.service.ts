@@ -79,7 +79,7 @@ export class AlertsService {
         visitId: note.visitId,
         alertId: note.alertId,
         authorId: note.authorId,
-        authorName: note.author.fullName,
+        authorName: note.authorName,
         body: note.body,
         createdAt: note.createdAt,
       })),

@@ -1,5 +1,10 @@
 import { Body, Controller, Get, HttpCode, Post, Req } from '@nestjs/common';
-import { LoginInput, SignupInput, SwitchRoleInput } from '@vms/contracts';
+import {
+  ChangePasswordInput,
+  LoginInput,
+  SignupInput,
+  SwitchRoleInput,
+} from '@vms/contracts';
 import type { Request } from 'express';
 import { z } from 'zod';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
@@ -54,6 +59,19 @@ export class AuthController {
     @CurrentUser() principal: AuthUser,
   ) {
     return this.auth.switchRole(principal.userId, principal.sid, body.role);
+  }
+
+  @Post('change-password')
+  @HttpCode(204)
+  async changePassword(
+    @Body(new ZodValidationPipe(ChangePasswordInput)) body: ChangePasswordInput,
+    @CurrentUser() principal: AuthUser,
+  ) {
+    await this.auth.changePassword(
+      principal.userId,
+      body.currentPassword,
+      body.newPassword,
+    );
   }
 
   @Public()

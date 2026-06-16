@@ -13,3 +13,4 @@ export * from "./visit/visit.schema.js";
 export * from "./note/note.schema.js";
 export * from "./alert/alert.schema.js";
 export * from "./inbox/inbox.schema.js";
+export * from "./upload/upload.schema.js";
