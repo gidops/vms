@@ -121,7 +121,7 @@ locals {
     apt-get install -y docker.io awscli
     systemctl enable --now docker
     aws ecr get-login-password --region ${var.region} | docker login --username AWS --password-stdin ${aws_ecr_repository.frontend.repository_url}
-    docker run -d --name vms-frontend --restart unless-stopped -p 80:3000 ${aws_ecr_repository.frontend.repository_url}:latest
+    docker run -d --name vms-frontend --restart unless-stopped -p 80:3000 ${aws_ecr_repository.frontend.repository_url}:${var.frontend_image_tag}
   EOT
 }
 
@@ -273,7 +273,7 @@ locals {
       -e DATABASE_URL="postgres://${aws_db_instance.main.username}:${random_password.db.result}@${aws_db_instance.main.address}:5432/${aws_db_instance.main.db_name}" \
       -e JWT_SECRET="${random_password.jwt_secret.result}" \
       -e ENCRYPTION_KEY="${random_bytes.encryption_key.base64}" \
-      ${aws_ecr_repository.backend.repository_url}:latest
+      ${aws_ecr_repository.backend.repository_url}:${var.backend_image_tag}
   EOT
 }
 

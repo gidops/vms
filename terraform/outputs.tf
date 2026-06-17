@@ -12,3 +12,13 @@ output "rds_endpoint" {
   description = "Connection endpoint (host:port) of the RDS Postgres instance."
   value       = aws_db_instance.main.endpoint
 }
+
+output "backend_image_tag" {
+  description = "Image tag (git SHA) currently deployed for the backend."
+  value       = var.backend_image_tag
+}
+
+output "frontend_image_tag" {
+  description = "Image tag (git SHA) currently deployed for the frontend."
+  value       = var.frontend_image_tag
+}
