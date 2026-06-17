@@ -31,6 +31,9 @@ npm-debug.log*
 # TypeScript build info
 *.tsbuildinfo
 
+
 # Terraform state (never commit — may contain secrets)
 *.tfstate
 *.tfstate.*
+**/.terraform/
+
