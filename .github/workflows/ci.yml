@@ -7,12 +7,23 @@ on:
     branches: [develop, staging, main]
 
 jobs:
-  frontend:
-    name: Frontend (lint + build)
+  apps:
+    name: Apps (lint + typecheck + build)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: vms
+          POSTGRES_PASSWORD: vms
+          POSTGRES_DB: vms
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U vms -d vms"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,42 +33,36 @@ jobs:
         with:
           node-version: 20.11.0
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install dependencies
+      - name: Install dependencies (workspace root)
         run: npm ci
 
       - name: Lint
-        run: npm run lint
+        run: npx turbo run lint:check
+
+      - name: Typecheck
+        run: npx turbo run typecheck
 
       - name: Build
-        run: npm run build
+        run: npx turbo run build
 
-  backend:
-    name: Backend (lint + build)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Build Storybook
+        run: npx turbo run build-storybook
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.11.0
-          cache: npm
-          cache-dependency-path: backend/package-lock.json
+      - name: Test
+        run: npx turbo run test
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Backend coverage gate
+        run: npm run test:cov -w @vms/backend
 
-      - name: Lint
-        run: npm run lint:check
-
-      - name: Build
-        run: npm run build
+      - name: Test (e2e — auth + audit trail)
+        env:
+          DATABASE_URL: postgresql://vms:vms@localhost:5432/vms
+          JWT_SECRET: ci-test-jwt-secret-ci-test-jwt-secret
+        run: |
+          npx prisma migrate deploy --schema apps/backend/prisma/schema.prisma
+          npm run test:e2e -w @vms/backend
 
   terraform:
     name: Terraform (fmt + validate)

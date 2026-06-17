@@ -1,0 +1,381 @@
+/*
+ * VMS design tokens — single source of truth (Tailwind v4 CSS-first).
+ *
+ * Layering:
+ *   1. @theme            → primitive scales (palette, type, spacing, radii, shadow).
+ *                          These generate Tailwind utilities (bg-teal-600, etc.).
+ *   2. @theme inline      → semantic aliases (bg-canvas, text-muted, bg-primary…).
+ *                          "inline" makes utilities reference the CSS var directly,
+ *                          so they follow the [data-theme] swap below.
+ *   3. :root / [data-theme=dark] → the actual semantic values per theme.
+ *
+ * Components consume SEMANTIC tokens only (never raw primitives) so dark mode
+ * and rebrands are a config-only change. Direction is handled by logical
+ * properties in components, not here — these tokens are direction-agnostic.
+ */
+
+/* Attribute-based dark mode: `dark:` variants key off [data-theme="dark"]. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  /* ---- Primitive palette ------------------------------------------------ */
+  /* Teal — brand / primary */
+  --color-teal-50: #f0fdfa;
+  --color-teal-100: #ccfbf1;
+  --color-teal-200: #99f6e4;
+  --color-teal-300: #5eead4;
+  --color-teal-400: #2dd4bf;
+  --color-teal-500: #14b8a6;
+  --color-teal-600: #0d9488;
+  --color-teal-700: #0f766e;
+  --color-teal-800: #115e59;
+  --color-teal-900: #134e4a;
+  --color-teal-950: #042f2e;
+
+  /* Brand — deep Afreximbank green (emphasis surfaces: top nav, promo panels) */
+  --color-brand-50: #e7f2ef;
+  --color-brand-100: #c3ddd6;
+  --color-brand-200: #9bc7bb;
+  --color-brand-300: #6fafa0;
+  --color-brand-400: #3f8f7d;
+  --color-brand-500: #16786a;
+  --color-brand-600: #0f6457;
+  --color-brand-700: #0d5c4f;
+  --color-brand-800: #0a4d44;
+  --color-brand-900: #073a33;
+  --color-brand-950: #052b26;
+
+  /* Orange — warning / alerts */
+  --color-orange-50: #fff7ed;
+  --color-orange-100: #ffedd5;
+  --color-orange-200: #fed7aa;
+  --color-orange-300: #fdba74;
+  --color-orange-400: #fb923c;
+  --color-orange-500: #f97316;
+  --color-orange-600: #ea580c;
+  --color-orange-700: #c2410c;
+  --color-orange-800: #9a3412;
+  --color-orange-900: #7c2d12;
+  --color-orange-950: #431407;
+
+  /* Green — success */
+  --color-green-50: #f0fdf4;
+  --color-green-100: #dcfce7;
+  --color-green-200: #bbf7d0;
+  --color-green-300: #86efac;
+  --color-green-400: #4ade80;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+  --color-green-700: #15803d;
+  --color-green-800: #166534;
+  --color-green-900: #14532d;
+  --color-green-950: #052e16;
+
+  /* Red — danger */
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
+  --color-red-200: #fecaca;
+  --color-red-300: #fca5a5;
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-red-800: #991b1b;
+  --color-red-900: #7f1d1d;
+  --color-red-950: #450a0a;
+
+  /* Amber — accent (avatars, floor badges) */
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-200: #fde68a;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
+  --color-amber-900: #78350f;
+  --color-amber-950: #451a03;
+
+  /* Gold — Afreximbank accent (primary CTAs on emphasis surfaces) */
+  --color-gold-200: #fbe9a8;
+  --color-gold-300: #f7d774;
+  --color-gold-400: #f4c430;
+  --color-gold-500: #e0ab1d;
+  --color-gold-600: #c08f15;
+  --color-gold-700: #98700f;
+
+  /* Blue — info */
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+
+  /* Neutral (slate) */
+  --color-neutral-50: #f8fafc;
+  --color-neutral-100: #f1f5f9;
+  --color-neutral-200: #e2e8f0;
+  --color-neutral-300: #cbd5e1;
+  --color-neutral-400: #94a3b8;
+  --color-neutral-500: #64748b;
+  --color-neutral-600: #475569;
+  --color-neutral-700: #334155;
+  --color-neutral-800: #1e293b;
+  --color-neutral-900: #0f172a;
+  --color-neutral-950: #020617;
+
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  /* ---- Typography ------------------------------------------------------- */
+  --font-sans:
+    var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono:
+    var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, Monaco, Consolas,
+    monospace;
+
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.25rem;
+
+  /* ---- Radii ------------------------------------------------------------ */
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
+
+  /* ---- Elevation -------------------------------------------------------- */
+  --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+  --shadow-sm:
+    0 1px 3px 0 rgb(15 23 42 / 0.1), 0 1px 2px -1px rgb(15 23 42 / 0.1);
+  --shadow-md:
+    0 4px 6px -1px rgb(15 23 42 / 0.1), 0 2px 4px -2px rgb(15 23 42 / 0.1);
+  --shadow-lg:
+    0 10px 15px -3px rgb(15 23 42 / 0.1), 0 4px 6px -4px rgb(15 23 42 / 0.1);
+  --shadow-xl:
+    0 20px 25px -5px rgb(15 23 42 / 0.1), 0 8px 10px -6px rgb(15 23 42 / 0.1);
+
+  /* ---- Z-index scale (overlays) ---------------------------------------- */
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-drawer: 1200;
+  --z-modal: 1300;
+  --z-popover: 1400;
+  --z-toast: 1500;
+  --z-tooltip: 1600;
+}
+
+/* ---- Semantic aliases (utilities follow the [data-theme] swap) --------- */
+@theme inline {
+  --color-canvas: var(--vms-canvas);
+  --color-surface: var(--vms-surface);
+  --color-surface-muted: var(--vms-surface-muted);
+  --color-surface-inset: var(--vms-surface-inset);
+
+  --color-border: var(--vms-border);
+  --color-border-strong: var(--vms-border-strong);
+
+  --color-fg: var(--vms-fg);
+  --color-fg-muted: var(--vms-fg-muted);
+  --color-fg-subtle: var(--vms-fg-subtle);
+  --color-fg-on-emphasis: var(--vms-fg-on-emphasis);
+
+  --color-primary: var(--vms-primary);
+  --color-primary-hover: var(--vms-primary-hover);
+  --color-primary-subtle: var(--vms-primary-subtle);
+  --color-primary-fg: var(--vms-primary-fg);
+
+  /* Emphasis — deep brand-green surfaces (top nav, quick-actions panel). */
+  --color-emphasis: var(--vms-emphasis);
+  --color-emphasis-fg: var(--vms-emphasis-fg);
+  --color-emphasis-muted: var(--vms-emphasis-muted);
+  --color-emphasis-border: var(--vms-emphasis-border);
+
+  /* Accent — gold CTA, primarily used on emphasis surfaces. */
+  --color-accent: var(--vms-accent);
+  --color-accent-hover: var(--vms-accent-hover);
+  --color-accent-subtle: var(--vms-accent-subtle);
+  --color-accent-fg: var(--vms-accent-fg);
+
+  --color-success: var(--vms-success);
+  --color-success-subtle: var(--vms-success-subtle);
+  --color-success-fg: var(--vms-success-fg);
+
+  --color-warning: var(--vms-warning);
+  --color-warning-subtle: var(--vms-warning-subtle);
+  --color-warning-fg: var(--vms-warning-fg);
+
+  --color-danger: var(--vms-danger);
+  --color-danger-hover: var(--vms-danger-hover);
+  --color-danger-subtle: var(--vms-danger-subtle);
+  --color-danger-fg: var(--vms-danger-fg);
+
+  --color-info: var(--vms-info);
+  --color-info-subtle: var(--vms-info-subtle);
+  --color-info-fg: var(--vms-info-fg);
+
+  --color-ring: var(--vms-ring);
+}
+
+/* ---- Light theme (default) -------------------------------------------- */
+:root,
+[data-theme="light"] {
+  --vms-canvas: var(--color-neutral-50);
+  --vms-surface: var(--color-white);
+  --vms-surface-muted: var(--color-neutral-100);
+  --vms-surface-inset: var(--color-neutral-100);
+
+  --vms-border: var(--color-neutral-200);
+  --vms-border-strong: var(--color-neutral-300);
+
+  --vms-fg: var(--color-neutral-900);
+  --vms-fg-muted: var(--color-neutral-600);
+  --vms-fg-subtle: var(--color-neutral-400);
+  --vms-fg-on-emphasis: var(--color-white);
+
+  --vms-primary: var(--color-teal-700);
+  --vms-primary-hover: var(--color-teal-800);
+  --vms-primary-subtle: var(--color-teal-50);
+  --vms-primary-fg: var(--color-white);
+
+  --vms-emphasis: var(--color-brand-800);
+  --vms-emphasis-fg: var(--color-white);
+  --vms-emphasis-muted: color-mix(
+    in oklab,
+    var(--color-white) 70%,
+    var(--color-brand-800)
+  );
+  --vms-emphasis-border: color-mix(
+    in oklab,
+    var(--color-white) 18%,
+    transparent
+  );
+
+  --vms-accent: var(--color-gold-400);
+  --vms-accent-hover: var(--color-gold-500);
+  --vms-accent-subtle: color-mix(
+    in oklab,
+    var(--color-gold-400) 20%,
+    transparent
+  );
+  --vms-accent-fg: var(--color-brand-900);
+
+  --vms-success: var(--color-green-600);
+  --vms-success-subtle: var(--color-green-50);
+  --vms-success-fg: var(--color-white);
+
+  --vms-warning: var(--color-orange-500);
+  --vms-warning-subtle: var(--color-orange-50);
+  --vms-warning-fg: var(--color-white);
+
+  --vms-danger: var(--color-red-600);
+  --vms-danger-hover: var(--color-red-700);
+  --vms-danger-subtle: var(--color-red-50);
+  --vms-danger-fg: var(--color-white);
+
+  --vms-info: var(--color-blue-600);
+  --vms-info-subtle: var(--color-blue-50);
+  --vms-info-fg: var(--color-white);
+
+  --vms-ring: var(--color-teal-600);
+}
+
+/* ---- Dark theme ------------------------------------------------------- */
+[data-theme="dark"] {
+  --vms-canvas: var(--color-neutral-950);
+  --vms-surface: var(--color-neutral-900);
+  --vms-surface-muted: var(--color-neutral-800);
+  --vms-surface-inset: var(--color-neutral-800);
+
+  --vms-border: var(--color-neutral-800);
+  --vms-border-strong: var(--color-neutral-700);
+
+  --vms-fg: var(--color-neutral-100);
+  --vms-fg-muted: var(--color-neutral-400);
+  --vms-fg-subtle: var(--color-neutral-500);
+  --vms-fg-on-emphasis: var(--color-white);
+
+  --vms-primary: var(--color-teal-500);
+  --vms-primary-hover: var(--color-teal-400);
+  --vms-primary-subtle: color-mix(
+    in oklab,
+    var(--color-teal-500) 18%,
+    transparent
+  );
+  --vms-primary-fg: var(--color-neutral-950);
+
+  /* Emphasis surfaces stay a deep brand green in both themes (it is a brand
+   * surface, not a neutral one); only the line/secondary mixes shift. */
+  --vms-emphasis: var(--color-brand-900);
+  --vms-emphasis-fg: var(--color-white);
+  --vms-emphasis-muted: color-mix(
+    in oklab,
+    var(--color-white) 62%,
+    var(--color-brand-900)
+  );
+  --vms-emphasis-border: color-mix(
+    in oklab,
+    var(--color-white) 16%,
+    transparent
+  );
+
+  --vms-accent: var(--color-gold-400);
+  --vms-accent-hover: var(--color-gold-300);
+  --vms-accent-subtle: color-mix(
+    in oklab,
+    var(--color-gold-400) 22%,
+    transparent
+  );
+  --vms-accent-fg: var(--color-brand-900);
+
+  --vms-success: var(--color-green-500);
+  --vms-success-subtle: color-mix(
+    in oklab,
+    var(--color-green-500) 18%,
+    transparent
+  );
+  --vms-success-fg: var(--color-neutral-950);
+
+  --vms-warning: var(--color-orange-400);
+  --vms-warning-subtle: color-mix(
+    in oklab,
+    var(--color-orange-400) 18%,
+    transparent
+  );
+  --vms-warning-fg: var(--color-neutral-950);
+
+  --vms-danger: var(--color-red-500);
+  --vms-danger-hover: var(--color-red-400);
+  --vms-danger-subtle: color-mix(
+    in oklab,
+    var(--color-red-500) 18%,
+    transparent
+  );
+  --vms-danger-fg: var(--color-neutral-950);
+
+  --vms-info: var(--color-blue-500);
+  --vms-info-subtle: color-mix(
+    in oklab,
+    var(--color-blue-500) 18%,
+    transparent
+  );
+  --vms-info-fg: var(--color-neutral-950);
+
+  --vms-ring: var(--color-teal-400);
+}

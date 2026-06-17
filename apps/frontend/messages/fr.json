@@ -1,0 +1,276 @@
+{
+  "app": {
+    "name": "AATC VMS"
+  },
+  "nav": {
+    "schedule": "Programme du jour",
+    "requests": "Demandes et alertes",
+    "visitors": "Visiteurs",
+    "switchAccount": "Changer de compte",
+    "accountSettings": "Paramètres du compte",
+    "help": "Aide / Support",
+    "logout": "Déconnexion"
+  },
+  "login": {
+    "title": "Connexion",
+    "subtitle": "Accéder au système de gestion des visiteurs",
+    "email": "E-mail",
+    "emailPlaceholder": "nom@aatc.org",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "Saisissez votre mot de passe",
+    "forgot": "Mot de passe oublié ?",
+    "submit": "Se connecter",
+    "signingIn": "Connexion…",
+    "error": "E-mail ou mot de passe invalide.",
+    "or": "ou",
+    "okta": "Se connecter avec Okta SSO",
+    "createFirstAdmin": "Configurer le premier compte administrateur"
+  },
+  "dashboard": {
+    "hub": "VMC HUB",
+    "welcome": "Bienvenue {name}",
+    "records": "Registre des visiteurs",
+    "selectAll": "Tout sélectionner",
+    "filters": {
+      "searchPlaceholder": "Rechercher visiteur, hôte, étage, ID de pass",
+      "allVisitTypes": "Tous les types de visite",
+      "allPurpose": "Tous les motifs",
+      "search": "Rechercher"
+    },
+    "stats": {
+      "onsite": "Visiteurs sur site",
+      "checkedIn": "Arrivées aujourd'hui",
+      "checkedOut": "Sorties aujourd'hui"
+    },
+    "quickActions": {
+      "title": "Actions rapides",
+      "registerWalkIn": "Enregistrer une arrivée",
+      "newInvite": "Nouvelle invitation"
+    },
+    "range": {
+      "today": "Aujourd'hui",
+      "last7": "7 derniers jours",
+      "custom": "Personnalisé"
+    },
+    "channel": {
+      "invited": "Invité",
+      "walkIn": "Sans rendez-vous"
+    },
+    "actions": {
+      "checkIn": "Arrivée",
+      "checkOut": "Sortie",
+      "viewDetails": "Voir les détails"
+    },
+    "columns": {
+      "visitor": "Visiteur",
+      "channel": "Canal",
+      "hostUnit": "Hôte / Étage / Unité",
+      "purpose": "Motif",
+      "timeCreated": "Heure de création",
+      "status": "Statut",
+      "action": "Action"
+    }
+  },
+  "common": {
+    "notifications": "Notifications",
+    "logout": "Se déconnecter",
+    "allStatus": "Tous les statuts"
+  },
+  "requests": {
+    "title": "Demandes et alertes",
+    "tabs": { "all": "Tout", "requests": "Demandes", "alerts": "Alertes" },
+    "typeRequest": "Demande de visite",
+    "typeAlert": "Alertes",
+    "createdBy": "Créé par",
+    "notesCount": "{count} notes",
+    "empty": "Aucune demande ni alerte",
+    "detailTitle": "Détails de la demande de visite",
+    "alertDetailTitle": "Détails de l'alerte",
+    "visitorAwaiting": "En attente d'approbation",
+    "vmcReception": "Réception VMC",
+    "noNotes": "Aucune remarque pour l'instant.",
+    "addNotePlaceholder": "Ajouter une note…",
+    "status": {
+      "awaitingApproval": "En attente d'approbation du CSO",
+      "approvedByCso": "Approuvé par le CSO",
+      "deniedByCso": "Refusé par le CSO",
+      "cancelled": "Annulé",
+      "onsite": "Sur site",
+      "checkedOut": "Sorti",
+      "expired": "Expiré",
+      "open": "Ouvert",
+      "acknowledged": "Pris en compte",
+      "resolved": "Résolu",
+      "dismissed": "Rejeté"
+    },
+    "timeline": {
+      "inviteCreated": "Invitation créée",
+      "awaitingApproval": "En attente d'approbation du CSO",
+      "checkedIn": "Entré",
+      "passIssued": "Pass émis",
+      "checkedOut": "Sorti"
+    },
+    "sections": {
+      "hostDetails": "Détails hôte / unité / étage",
+      "floor": "Étage",
+      "visitorInfo": "Informations sur le visiteur",
+      "trackStatus": "Suivi de la demande",
+      "purposeOfVisit": "Objet de la visite",
+      "purposeCategory": "Catégorie d'objet",
+      "scheduledFor": "Prévu pour",
+      "origin": "Origine de la demande",
+      "createdByLabel": "Créé par",
+      "timeCreated": "Date de création",
+      "source": "Source",
+      "role": "Rôle",
+      "remarks": "Remarques / notes",
+      "reason": "Motif"
+    },
+    "actions": {
+      "cancelRequest": "Annuler la demande",
+      "addNote": "Ajouter une note",
+      "editRequest": "Modifier la demande",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "resolve": "Résoudre"
+    }
+  },
+  "language": {
+    "select": "Choisir la langue",
+    "en": "Anglais",
+    "fr": "Français",
+    "ar": "Arabe"
+  },
+  "roles": {
+    "SUPER_ADMIN": "Super administrateur",
+    "ADMIN": "Administrateur",
+    "AUDITOR": "Auditeur",
+    "STAFF": "Personnel",
+    "VMC": "Réception VMC",
+    "GATE": "Portail"
+  },
+  "signup": {
+    "title": "Créer un compte administrateur",
+    "subtitle": "Configurez le premier administrateur du VMS",
+    "fullName": "Nom complet",
+    "fullNamePlaceholder": "Jean Dupont",
+    "email": "E-mail",
+    "emailPlaceholder": "nom@aatc.org",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "Au moins 8 caractères",
+    "submit": "Créer le compte",
+    "submitting": "Création…",
+    "error": "Impossible de créer le compte.",
+    "closedTitle": "Configuration terminée",
+    "closedSubtitle": "Un administrateur existe déjà. Veuillez vous connecter.",
+    "goToLogin": "Aller à la connexion"
+  },
+  "admin": {
+    "welcome": "Bienvenue {name}",
+    "subtitle": "Console d'administration",
+    "userManagement": "Gestion des utilisateurs",
+    "userManagementBody": "Consultez les utilisateurs, créez des comptes et attribuez des rôles.",
+    "manageUsers": "Gérer les utilisateurs"
+  },
+  "staff": {
+    "welcome": "Bienvenue {name}",
+    "subtitle": "Espace du personnel",
+    "placeholderTitle": "Tableau de bord du personnel",
+    "placeholderBody": "Ce tableau de bord est provisoire et sera développé bientôt."
+  },
+  "gate": {
+    "welcome": "Bienvenue {name}",
+    "subtitle": "Opérations de portail",
+    "placeholderTitle": "Tableau de bord du portail",
+    "placeholderBody": "Ce tableau de bord est provisoire et sera développé bientôt."
+  },
+  "users": {
+    "title": "Gestion des utilisateurs",
+    "newUser": "Nouvel utilisateur",
+    "empty": "Aucun utilisateur",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "editRoles": "Modifier les rôles",
+    "editRolesFor": "Modifier les rôles — {name}",
+    "delete": "Supprimer",
+    "deleteConfirmTitle": "Supprimer l'utilisateur",
+    "deleteConfirmBody": "Supprimer {name} ? Le compte est supprimé, mais les enregistrements et actions créés sont conservés.",
+    "deleteError": "Impossible de supprimer cet utilisateur.",
+    "columns": {
+      "user": "Utilisateur",
+      "roles": "Rôles",
+      "status": "Statut",
+      "created": "Créé le",
+      "actions": "Actions"
+    },
+    "form": {
+      "fullName": "Nom complet",
+      "email": "E-mail",
+      "password": "Mot de passe",
+      "roles": "Rôles",
+      "create": "Créer l'utilisateur",
+      "save": "Enregistrer",
+      "cancel": "Annuler"
+    }
+  },
+  "settings": {
+    "title": "Paramètres du compte",
+    "tabs": {
+      "profile": "Informations du profil",
+      "desk": "Mon poste",
+      "preferences": "Sécurité/Préférences"
+    },
+    "profile": {
+      "personalInfo": "Informations personnelles",
+      "personalInfoHelp": "Saisissez vos informations telles qu'elles figurent sur votre pièce d'identité pour vérification.",
+      "editProfile": "Modifier le profil",
+      "uploadError": "Impossible de téléverser l'image.",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "email": "Adresse e-mail",
+      "phone": "Numéro de téléphone",
+      "role": "Rôle",
+      "station": "Poste actif",
+      "save": "Enregistrer"
+    },
+    "password": {
+      "title": "Mot de passe",
+      "help": "Changez votre mot de passe à tout moment. Cela vous déconnectera de toutes vos sessions actives.",
+      "current": "Mot de passe actuel",
+      "new": "Nouveau mot de passe",
+      "confirm": "Confirmer le nouveau mot de passe",
+      "change": "Changer le mot de passe",
+      "error": "Impossible de changer le mot de passe. Vérifiez votre mot de passe actuel.",
+      "mismatch": "Les mots de passe ne correspondent pas."
+    },
+    "desk": {
+      "title": "Poste / Emplacement assigné",
+      "help": "Tous les enregistrements de visite sont liés à votre machine VMC assignée.",
+      "mainLobby": "Hall principal"
+    },
+    "activity": {
+      "title": "Activité de connexion",
+      "help": "Consultez votre activité de connexion ; signalez immédiatement toute connexion suspecte.",
+      "current": "Session actuelle",
+      "previous": "Session précédente",
+      "notYou": "Pas vous ?",
+      "reportIssue": "Signaler"
+    },
+    "language": {
+      "title": "Langue globale",
+      "help": "Changez votre préférence de langue."
+    },
+    "region": {
+      "title": "Région, heure et date",
+      "help": "Sélectionnez votre région, date et heure préférées."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "help": "Restez informé de l'activité de votre compte.",
+      "newInviteRequest": "Nouvelle demande d'invitation",
+      "csoDenied": "Demande refusée par le CSO",
+      "csoApproved": "Demande approuvée par le CSO",
+      "flaggedVisitor": "Alerte visiteur signalé"
+    }
+  }
+}
