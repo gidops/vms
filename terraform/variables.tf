@@ -21,3 +21,13 @@ variable "key_name" {
   type        = string
   default     = "vms-key"
 }
+
+variable "backend_image_tag" {
+  description = "Image tag (git SHA) for the backend image."
+  type        = string
+}
+
+variable "frontend_image_tag" {
+  description = "Image tag (git SHA) for the frontend image."
+  type        = string
+}

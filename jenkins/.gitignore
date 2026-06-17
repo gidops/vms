@@ -1,0 +1,7 @@
+# Terraform working dir + state (state may contain secrets — never commit)
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# .terraform.lock.hcl is intentionally NOT ignored — the app stack (../terraform)
+# commits its lock file, so we match that choice and commit ours too.
