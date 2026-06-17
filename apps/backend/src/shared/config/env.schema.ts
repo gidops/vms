@@ -22,6 +22,11 @@ export const envSchema = z.object({
   // base64-encoded 32-byte key for column encryption; derived from JWT_SECRET in dev if absent.
   ENCRYPTION_KEY: z.string().optional(),
   OUTBOX_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(2000),
+  // Seq structured-log / audit mirror (optional). When SEQ_URL is set, audit
+  // events are mirrored to Seq for searchable trails; PostgreSQL stays the
+  // source of truth. Blank values are treated as unset (mirroring disabled).
+  SEQ_URL: z.preprocess(emptyToUndefined, z.string().url().optional()),
+  SEQ_API_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
   // S3 avatar uploads. Optional so the app boots without S3 configured (dev);
   // the presign route errors clearly when S3_BUCKET is unset. AWS credentials
   // come from the default provider chain (env vars locally, IAM role in prod).

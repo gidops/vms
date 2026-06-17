@@ -87,12 +87,21 @@ carries the correlation id (and actor) captured from the request CLS.
 
 - **Audit** is fed by the event stream: one `AuditListener` (`@OnEvent('**')`)
   writes an append‑only `AuditLog` row for every domain event — business code
-  never calls the audit log directly.
+  never calls the audit log directly. Security events that have no successful
+  business transaction (failed login, logout, token refresh, **refresh‑token
+  reuse**, permission denial, role switch) are recorded directly via
+  `SecurityAuditService` (still `AuditLog` + Seq, but outside the outbox).
+- **`ip` / `userAgent`** are captured into the request CLS and stamped onto
+  every domain event's metadata, so each audit row records "who, from where".
 - **Logging**: `nestjs-pino` structured JSON, with **correlation IDs** from
   `nestjs-cls` (taken from the inbound `x-correlation-id` header or generated)
   stamped on every log line. Sensitive fields are redacted.
+- **Seq audit mirror**: when `SEQ_URL` is set, `SeqService` mirrors every audit
+  event to [Seq](https://datalust.co/seq) as a CLEF event for searchable trails.
+  PostgreSQL `AuditLog` remains the **system of record**; mirroring is
+  best‑effort and fire‑and‑forget (a Seq outage never breaks the audit write).
 - **Errors**: a global exception filter returns RFC‑7807‑style problem responses
-  and logs 5xx with the correlation id. (Designed to ship logs to SEQ later.)
+  and logs 5xx with the correlation id.
 
 ### Data model (Prisma + Postgres 16)
 

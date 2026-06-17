@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { ClsService } from 'nestjs-cls';
 import { randomUUID } from 'node:crypto';
+import { CLS_IP, CLS_USER_AGENT } from '../logging/cls-keys';
 import type { DomainEvent, EventMetadata } from './domain-event';
 import { OutboxRepository } from './outbox.repository';
 
@@ -37,6 +38,8 @@ export class EventPublisher {
       payload: params.payload,
       metadata: {
         correlationId: this.cls.getId(),
+        ip: this.cls.get<string | undefined>(CLS_IP),
+        userAgent: this.cls.get<string | undefined>(CLS_USER_AGENT),
         ...params.metadata,
       },
       occurredAt: new Date().toISOString(),

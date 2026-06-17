@@ -9,6 +9,7 @@ import {
   type UserWithAccess,
 } from '../../modules/identity/users.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { SecurityAuditService } from '../audit/security-audit.service';
 import { EVENT_TYPES } from '../events/domain-event';
 import { EventPublisher } from '../events/event-publisher';
 import { TransactionManager } from '../events/transaction.manager';
@@ -54,13 +55,27 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly txm: TransactionManager,
     private readonly events: EventPublisher,
+    private readonly security: SecurityAuditService,
   ) {}
 
   async login(
     input: { email: string; password: string },
     ctx: LoginContext,
   ): Promise<AuthResult> {
-    const user = await this.local.authenticate(input);
+    let user: UserWithAccess;
+    try {
+      user = await this.local.authenticate(input);
+    } catch (err) {
+      // Failed credentials leave no business transaction — audit directly so
+      // brute-force / credential-stuffing attempts are visible in the trail.
+      await this.security.record({
+        action: EVENT_TYPES.LoginFailed,
+        entityType: 'User',
+        level: 'Warning',
+        metadata: { email: input.email },
+      });
+      throw err;
+    }
     return this.startSession(user, ctx);
   }
 
@@ -95,11 +110,24 @@ export class AuthService {
     const accessToken = await this.tokens.signAccessToken(
       this.claims(user, effectiveRole, sessionId),
     );
+    await this.security.record({
+      action: EVENT_TYPES.TokenRefreshed,
+      entityType: 'Session',
+      entityId: sessionId,
+      actorUserId: userId,
+      level: 'Information',
+    });
     return this.result(user, accessToken, token, effectiveRole);
   }
 
   async logout(rawToken: string): Promise<void> {
-    await this.refreshTokens.revoke(rawToken);
+    const userId = await this.refreshTokens.revoke(rawToken);
+    await this.security.record({
+      action: EVENT_TYPES.Logout,
+      entityType: 'Session',
+      actorUserId: userId ?? undefined,
+      level: 'Information',
+    });
   }
 
   /** Change password after verifying the current one; revokes all sessions. */
@@ -153,6 +181,14 @@ export class AuthService {
     const accessToken = await this.tokens.signAccessToken(
       this.claims(user, role, sessionId),
     );
+    await this.security.record({
+      action: EVENT_TYPES.RoleSwitched,
+      entityType: 'User',
+      entityId: userId,
+      actorUserId: userId,
+      level: 'Information',
+      metadata: { role, sessionId },
+    });
     return {
       user: this.userPayload(user, role),
       tokens: {

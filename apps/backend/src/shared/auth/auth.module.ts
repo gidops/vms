@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { IdentityModule } from '../../modules/identity/identity.module';
 import { PrismaModule } from '../../prisma/prisma.module';
+import { AuditModule } from '../audit/audit.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard, PermissionsGuard } from './guards';
@@ -18,6 +19,7 @@ import { TokenService } from './token.service';
   imports: [
     PrismaModule,
     IdentityModule,
+    AuditModule,
     PassportModule,
     JwtModule.register({}),
   ],
