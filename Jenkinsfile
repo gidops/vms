@@ -83,6 +83,7 @@ pipeline {
     // ---------------- CD (host agent with docker + aws + terraform) ----------------
     stage('Deploy') {
       when {
+        beforeAgent true
         allOf {
           expression { return params.DEPLOY }
           anyOf { branch 'main'; branch 'staging' }
