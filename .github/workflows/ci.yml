@@ -10,6 +10,20 @@ jobs:
   apps:
     name: Apps (lint + typecheck + build)
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: vms
+          POSTGRES_PASSWORD: vms
+          POSTGRES_DB: vms
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U vms -d vms"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,6 +52,17 @@ jobs:
 
       - name: Test
         run: npx turbo run test
+
+      - name: Backend coverage gate
+        run: npm run test:cov -w @vms/backend
+
+      - name: Test (e2e — auth + audit trail)
+        env:
+          DATABASE_URL: postgresql://vms:vms@localhost:5432/vms
+          JWT_SECRET: ci-test-jwt-secret-ci-test-jwt-secret
+        run: |
+          npx prisma migrate deploy --schema apps/backend/prisma/schema.prisma
+          npm run test:e2e -w @vms/backend
 
   terraform:
     name: Terraform (fmt + validate)

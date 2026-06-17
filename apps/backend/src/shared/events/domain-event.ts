@@ -4,6 +4,9 @@ export interface EventMetadata {
   actorUserId?: string;
   tenantId?: string;
   locale?: string;
+  /** Request origin, captured from the CLS context for the audit trail. */
+  ip?: string;
+  userAgent?: string;
 }
 
 /** A fact that happened in the domain. Persisted to the outbox, then relayed. */
@@ -35,4 +38,12 @@ export const EVENT_TYPES = {
   UserProfileUpdated: 'user.profile_updated',
   UserPasswordChanged: 'user.password_changed',
   UserDeleted: 'user.deleted',
+  // Security events recorded directly (no successful business transaction to
+  // ride the outbox), via SecurityAuditService → AuditLog + Seq.
+  LoginFailed: 'auth.login_failed',
+  Logout: 'auth.logout',
+  TokenRefreshed: 'auth.token_refreshed',
+  RefreshReuseDetected: 'auth.refresh_reuse_detected',
+  RoleSwitched: 'auth.role_switched',
+  PermissionDenied: 'authz.permission_denied',
 } as const;

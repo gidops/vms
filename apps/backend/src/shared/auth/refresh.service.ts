@@ -2,6 +2,8 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service';
+import { SecurityAuditService } from '../audit/security-audit.service';
+import { EVENT_TYPES } from '../events/domain-event';
 import { TokenService } from './token.service';
 
 const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -11,6 +13,7 @@ export class RefreshTokenService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tokens: TokenService,
+    private readonly security: SecurityAuditService,
   ) {}
 
   /** Create a session + first refresh token (within the caller's transaction). */
@@ -65,6 +68,15 @@ export class RefreshTokenService {
         where: { family: existing.family },
         data: { revokedAt: new Date() },
       });
+      // High-severity security signal — surface it in the audit trail + Seq.
+      await this.security.record({
+        action: EVENT_TYPES.RefreshReuseDetected,
+        entityType: 'Session',
+        entityId: existing.sessionId,
+        actorUserId: existing.userId,
+        level: 'Error',
+        metadata: { family: existing.family },
+      });
       throw new UnauthorizedException('Refresh token reuse detected');
     }
 
@@ -116,13 +128,16 @@ export class RefreshTokenService {
     });
   }
 
-  /** Revoke the family + session behind a refresh token (logout). */
-  async revoke(rawToken: string): Promise<void> {
+  /**
+   * Revoke the family + session behind a refresh token (logout). Returns the
+   * owning user id (or null if the token is unknown) so the caller can audit it.
+   */
+  async revoke(rawToken: string): Promise<string | null> {
     const tokenHash = this.tokens.hashRefreshToken(rawToken);
     const existing = await this.prisma.refreshToken.findUnique({
       where: { tokenHash },
     });
-    if (!existing) return;
+    if (!existing) return null;
     await this.prisma.$transaction([
       this.prisma.refreshToken.updateMany({
         where: { family: existing.family },
@@ -133,5 +148,6 @@ export class RefreshTokenService {
         data: { revokedAt: new Date() },
       }),
     ]);
+    return existing.userId;
   }
 }

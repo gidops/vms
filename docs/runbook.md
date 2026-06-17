@@ -40,7 +40,34 @@ non‑production (idempotent) — so the Requests & Alerts inbox renders with da
 | Dashboard | <http://localhost:3000/dashboard> |
 | Backend health | <http://localhost:4000/health> |
 | Adminer | <http://localhost:8080> — System **PostgreSQL**, server **postgres**, user/pass/db **vms/vms/vms** |
+| Seq (audit/log search) | <http://localhost:8081> — ingestion on `:5341` (CLEF) |
 | Storybook | `npm run storybook -w @vms/ui` |
+
+### Seq (structured-log + audit mirror)
+
+Seq gives a searchable view of the audit trail (PostgreSQL stays the source of
+truth). Mirroring is enabled by setting `SEQ_URL`; without it the app behaves
+exactly as before.
+
+```bash
+docker compose up -d postgres seq                 # start Seq (UI :8081, ingest :5341)
+# Host-run backend → mirror to the local Seq:
+SEQ_URL=http://localhost:5341 npm run start:dev -w @vms/backend
+# (In full Docker, the backend service already sets SEQ_URL=http://seq:5341.)
+```
+
+Then generate and verify events:
+
+1. Open Seq at <http://localhost:8081> (local dev runs with auth disabled).
+2. Sign in (or sign up) at <http://localhost:3000>, then try a **wrong password**,
+   a **logout**, and a **refresh-token reuse** (replay an already-used refresh token).
+3. In Seq, filter `audit = true` (or `action = 'auth.login_failed'`). Each event
+   carries `correlationId`, `ip`, `userAgent`, `actorUserId`, and `metadata`.
+4. Cross-check the system of record in Adminer: `select * from "AuditLog" order by "createdAt" desc`.
+
+> Note: outbox-driven events (e.g. `user.created`, `auth.user_logged_in`) appear
+> after the `OutboxRelay` poll (default 2s); direct security events
+> (`auth.login_failed`, `auth.refresh_reuse_detected`, …) appear immediately.
 
 ## Full Docker (one command)
 

@@ -16,6 +16,19 @@ services:
       timeout: 5s
       retries: 10
 
+  seq:
+    image: datalust/seq:latest
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      # Local dev only: open the UI/ingestion without authentication.
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
+    ports:
+      - "8081:80" # Seq UI
+      - "5341:5341" # ingestion (CLEF)
+    volumes:
+      - seq_data:/data
+
   backend:
     build:
       context: .
@@ -23,11 +36,16 @@ services:
     restart: unless-stopped
     env_file:
       - ./apps/backend/.env
+    environment:
+      # Mirror audit events to the Seq container (service-name host on the Compose network).
+      SEQ_URL: http://seq:5341
     ports:
       - "4000:4000"
     depends_on:
       postgres:
         condition: service_healthy
+      seq:
+        condition: service_started
 
   frontend:
     build:
@@ -51,3 +69,4 @@ services:
 
 volumes:
   postgres_data:
+  seq_data:

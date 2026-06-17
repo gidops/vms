@@ -42,7 +42,7 @@ DB in Docker, apps with hot reload:
 
 ```bash
 # Start PostgreSQL (+ Adminer DB browser)
-docker compose up -d postgres adminer
+docker compose up -d postgres adminer seq
 
 # Apply database migrations
 cd apps/backend && npx prisma migrate deploy && cd ../..
