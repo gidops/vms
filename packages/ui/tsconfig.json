@@ -1,0 +1,9 @@
+{
+  "extends": "@vms/config/tsconfig/react-lib.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false,
+    "types": ["react", "react-dom"]
+  },
+  "include": ["src"]
+}

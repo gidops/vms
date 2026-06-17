@@ -1,0 +1,17 @@
+/* Style entry for environments that bundle the design system standalone
+ * (e.g. Storybook). Apps import Tailwind + tokens via their own globals.css.
+ * Keeping the same two imports here guarantees Storybook and the app render
+ * identically from the single token source of truth. */
+@import "tailwindcss";
+@import "@vms/tokens/theme.css";
+
+/* Tailwind only generates utilities it sees used. Storybook renders component
+ * source from this package, so scan it for class names. */
+@source "../src";
+
+/* Canvas styling for the Storybook preview body. */
+body {
+  background: var(--color-canvas);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+}

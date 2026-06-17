@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Turborepo
+.turbo/
+
+# Build outputs
+dist/
+.next/
+out/
+build/
+storybook-static/
+
+# Test/coverage
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Env files (each app keeps its own .env.example)
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+
+# TypeScript build info
+*.tsbuildinfo
