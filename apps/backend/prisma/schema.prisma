@@ -282,6 +282,8 @@ model Visit {
   type         VisitType
   status       VisitStatus @default(PENDING)
   purpose      String
+  // Per-visit floor/department selected at request time (distinct from Host.office).
+  floor        String?
   riskLevel    RiskLevel?
   scheduledAt  DateTime?
   checkInAt    DateTime?

@@ -7,6 +7,7 @@ import {
   DetailDrawer,
   DetailSection,
   Spinner,
+  Textarea,
   Timeline,
   type TimelineStep,
 } from "@vms/ui";
@@ -18,9 +19,12 @@ import type { AlertDetail } from "@/data/alerts/alerts.api";
 import {
   useAddNote,
   useAlert,
+  useApproveVisit,
   useCancelVisit,
+  useDenyVisit,
   useVisitRequest,
 } from "@/data/requests/queries";
+import { useAuth } from "@/shared/auth/AuthContext";
 
 export interface SelectedItem {
   kind: "request" | "alert";
@@ -134,6 +138,55 @@ function AddNoteForm({
   );
 }
 
+function DenyForm({
+  onSubmit,
+  onCancel,
+  pending,
+}: {
+  onSubmit: (reason: string) => void;
+  onCancel: () => void;
+  pending: boolean;
+}) {
+  const t = useTranslations("requests");
+  const [reason, setReason] = React.useState("");
+  return (
+    <form
+      className="flex flex-col gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!reason.trim()) return;
+        onSubmit(reason.trim());
+      }}
+    >
+      <Textarea
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        placeholder={t("denyReasonPlaceholder")}
+        rows={3}
+      />
+      <div className="flex items-center gap-2">
+        <Button
+          type="submit"
+          intent="danger"
+          size="sm"
+          disabled={pending || !reason.trim()}
+        >
+          {t("actions.confirmDeny")}
+        </Button>
+        <Button
+          type="button"
+          intent="neutral"
+          tone="ghost"
+          size="sm"
+          onClick={onCancel}
+        >
+          {t("actions.cancel")}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
 function RequestDetailBody({
   data,
   onClose,
@@ -143,8 +196,16 @@ function RequestDetailBody({
 }) {
   const t = useTranslations("requests");
   const format = useFormatter();
+  const { hasPermission } = useAuth();
   const [showNote, setShowNote] = React.useState(false);
+  const [showDeny, setShowDeny] = React.useState(false);
   const cancel = useCancelVisit(data.id);
+  const approve = useApproveVisit(data.id);
+  const deny = useDenyVisit(data.id);
+
+  const isPending = data.status === "PENDING";
+  const canApprove = isPending && hasPermission("visit:approve");
+  const canDeny = isPending && hasPermission("visit:deny");
 
   const stepLabels = {
     inviteCreated: t("timeline.inviteCreated"),
@@ -162,6 +223,27 @@ function RequestDetailBody({
       title={t("detailTitle")}
       footer={
         <>
+          {canApprove ? (
+            <Button
+              intent="success"
+              size="sm"
+              onClick={() => approve.mutate()}
+              disabled={approve.isPending}
+            >
+              {t("actions.approve")}
+            </Button>
+          ) : null}
+          {canDeny ? (
+            <Button
+              intent="danger"
+              tone="outline"
+              size="sm"
+              onClick={() => setShowDeny((s) => !s)}
+              disabled={deny.isPending}
+            >
+              {t("actions.deny")}
+            </Button>
+          ) : null}
           <Button
             intent="danger"
             tone="outline"
@@ -179,13 +261,20 @@ function RequestDetailBody({
           >
             {t("actions.addNote")}
           </Button>
-          {/* Edit flow is out of scope for this pass; button present per design. */}
-          <Button intent="neutral" tone="outline" size="sm" disabled>
-            {t("actions.editRequest")}
-          </Button>
         </>
       }
     >
+      {showDeny ? (
+        <DetailSection title={t("actions.deny")}>
+          <DenyForm
+            onSubmit={(reason) =>
+              deny.mutate(reason, { onSuccess: () => setShowDeny(false) })
+            }
+            onCancel={() => setShowDeny(false)}
+            pending={deny.isPending}
+          />
+        </DetailSection>
+      ) : null}
       <DetailSection title={t("sections.hostDetails")}>
         <div className="flex items-center justify-between gap-3 rounded-lg bg-emphasis p-4 text-emphasis-fg">
           <div className="flex items-center gap-3">

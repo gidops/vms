@@ -1,3 +1,5 @@
+import { BadRequestException } from '@nestjs/common';
+import type { CreateVisitsInput } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
 import { EventPublisher } from '../../shared/events/event-publisher';
@@ -81,6 +83,92 @@ describe('VisitsService lifecycle', () => {
     expect(publish).toHaveBeenCalledWith(
       tx,
       expect.objectContaining({ type: EVENT_TYPES.VisitorCheckedOut }),
+    );
+  });
+});
+
+describe('VisitsService.createVisits', () => {
+  function setup(staff: boolean) {
+    const tx = {
+      host: { upsert: jest.fn().mockResolvedValue({ id: 'host1' }) },
+      visitor: { upsert: jest.fn().mockResolvedValue({ id: 'vis1' }) },
+      visit: {
+        create: jest.fn().mockResolvedValue({ id: 'v1', scheduledAt: null }),
+      },
+      note: { create: jest.fn().mockResolvedValue({}) },
+      pass: { upsert: jest.fn().mockResolvedValue({}) },
+    };
+    const prisma = {
+      user: {
+        findFirst: jest.fn().mockResolvedValue(staff ? { id: 'staff1' } : null),
+        findUnique: jest.fn().mockResolvedValue({ fullName: 'VMC Clerk' }),
+      },
+    } as unknown as PrismaService;
+    const txm = {
+      run: (fn: (t: typeof tx) => unknown) => fn(tx),
+    } as unknown as TransactionManager;
+    const publish = jest.fn().mockResolvedValue({});
+    const events = { publish } as unknown as EventPublisher;
+    const service = new VisitsService(prisma, txm, events);
+    jest.spyOn(service, 'getDetail').mockResolvedValue({ id: 'v1' } as never);
+    return { service, tx, publish };
+  }
+
+  const baseInput = (over: Partial<CreateVisitsInput>): CreateVisitsInput => ({
+    type: 'PRE_INVITED',
+    hostUserId: '00000000-0000-4000-8000-000000000002',
+    floor: 'Floor Mezzanine',
+    purpose: 'Client Meeting',
+    visitors: [{ fullName: 'Daniel', email: 'd@x.com' }],
+    ...over,
+  });
+
+  it('creates a PENDING invite per visitor and emits VisitRequested (no pass)', async () => {
+    const { service, tx, publish } = setup(true);
+    await service.createVisits(
+      baseInput({
+        visitors: [
+          { fullName: 'A', email: 'a@x.com' },
+          { fullName: 'B', email: 'b@x.com' },
+        ],
+      }),
+      'actor',
+    );
+    expect(tx.visit.create).toHaveBeenCalledTimes(2);
+    expect(tx.visit.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: 'PENDING',
+          floor: 'Floor Mezzanine',
+        }),
+      }),
+    );
+    expect(tx.pass.upsert).not.toHaveBeenCalled();
+    expect(publish).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({ type: EVENT_TYPES.VisitRequested }),
+    );
+  });
+
+  it('auto-approves a walk-in: mints a pass and emits VisitApproved', async () => {
+    const { service, tx, publish } = setup(true);
+    await service.createVisits(baseInput({ type: 'WALK_IN' }), 'actor');
+    expect(tx.visit.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: 'APPROVED' }),
+      }),
+    );
+    expect(tx.pass.upsert).toHaveBeenCalled();
+    expect(publish).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({ type: EVENT_TYPES.VisitApproved }),
+    );
+  });
+
+  it('rejects a host that is not a STAFF user', async () => {
+    const { service } = setup(false);
+    await expect(service.createVisits(baseInput({}), 'actor')).rejects.toThrow(
+      BadRequestException,
     );
   });
 });

@@ -120,6 +120,12 @@ export class UsersController {
     return this.users.listRoleNames();
   }
 
+  /** Selectable hosts (STAFF users) for the invite / walk-in forms. */
+  @Get('hosts')
+  listHosts() {
+    return this.users.listHosts();
+  }
+
   /** Build the self-profile payload (roles + active-role-scoped permissions). */
   private profile(user: UserWithAccess, activeRole: string | null) {
     return {

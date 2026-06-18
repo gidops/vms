@@ -45,7 +45,12 @@
     "quickActions": {
       "title": "Actions rapides",
       "registerWalkIn": "Enregistrer une arrivée",
-      "newInvite": "Nouvelle invitation"
+      "newInvite": "Nouvelle invitation",
+      "formComingSoonTitle": "Bientôt disponible",
+      "formComingSoon": "Ce formulaire est en cours de création et sera bientôt disponible."
+    },
+    "activity": {
+      "title": "Voir votre activité"
     },
     "range": {
       "today": "Aujourd'hui",
@@ -132,8 +137,12 @@
       "editRequest": "Modifier la demande",
       "save": "Enregistrer",
       "cancel": "Annuler",
-      "resolve": "Résoudre"
-    }
+      "resolve": "Résoudre",
+      "approve": "Approuver",
+      "deny": "Refuser",
+      "confirmDeny": "Confirmer le refus"
+    },
+    "denyReasonPlaceholder": "Motif du refus"
   },
   "language": {
     "select": "Choisir la langue",
@@ -165,12 +174,72 @@
     "closedSubtitle": "Un administrateur existe déjà. Veuillez vous connecter.",
     "goToLogin": "Aller à la connexion"
   },
+  "invite": {
+    "titleInvite": "Créer une demande d'invitation",
+    "titleWalkin": "Créer une visite sans rendez-vous",
+    "subtitle": "Remplissez le formulaire ci-dessous pour inviter vos invités",
+    "steps": {
+      "visitor": "Détails du visiteur",
+      "host": "Détails de l'hôte",
+      "visit": "Détails de la visite",
+      "summary": "Récapitulatif"
+    },
+    "sections": {
+      "visitorDetails": "Détails du visiteur",
+      "visitPurpose": "Objet de la visite",
+      "hostDetails": "Détails de l'hôte"
+    },
+    "importCsv": "Importer des invités (CSV)",
+    "downloadTemplate": "Télécharger le modèle CSV",
+    "addVisitor": "Ajouter un visiteur",
+    "removeVisitor": "Retirer",
+    "fields": {
+      "fullName": "Nom complet du visiteur",
+      "fullNamePlaceholder": "Saisir le nom complet",
+      "email": "E-mail du visiteur",
+      "emailPlaceholder": "ex. david@gmail.com",
+      "organization": "Organisation",
+      "organizationPlaceholder": "Saisir l'organisation",
+      "phone": "Téléphone du visiteur",
+      "phonePlaceholder": "+234 000-00-000",
+      "host": "Sélectionner un hôte/employé",
+      "hostPlaceholder": "Ajouter un employé / hôte",
+      "floor": "Étage/Département",
+      "floorPlaceholder": "Sélectionner l'étage",
+      "purpose": "Objet de la visite",
+      "purposePlaceholder": "Sélectionner une catégorie",
+      "dateTime": "Date et heure de la visite",
+      "notes": "Notes de visite",
+      "notesPlaceholder": "Saisir les notes de visite"
+    },
+    "summary": {
+      "host": "Hôte/Employé",
+      "dateTime": "Date et heure de la visite",
+      "clearance": "Autorisation de visite",
+      "pending": "En attente",
+      "approved": "Approuvée"
+    },
+    "showAllVisitors": "Afficher tous les visiteurs ({count})",
+    "showLessVisitors": "Afficher moins de visiteurs",
+    "goToHost": "Détails de l'hôte",
+    "review": "Vérifier les détails",
+    "submitInvite": "Envoyer la demande d'invitation",
+    "submitWalkin": "Créer la visite",
+    "submitting": "Envoi…",
+    "back": "Retour",
+    "cancel": "Annuler",
+    "submitError": "Une erreur s'est produite. Veuillez réessayer."
+  },
   "admin": {
     "welcome": "Bienvenue {name}",
     "subtitle": "Console d'administration",
     "userManagement": "Gestion des utilisateurs",
     "userManagementBody": "Consultez les utilisateurs, créez des comptes et attribuez des rôles.",
-    "manageUsers": "Gérer les utilisateurs"
+    "manageUsers": "Gérer les utilisateurs",
+    "pendingTitle": "Demandes en attente",
+    "pendingBody": "Examinez et décidez des demandes de visite en attente d'approbation.",
+    "pendingEmpty": "Aucune demande en attente d'approbation.",
+    "pendingCount": "{count} en attente d'approbation"
   },
   "staff": {
     "welcome": "Bienvenue {name}",

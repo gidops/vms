@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { CreateVisitsInput } from "@vms/contracts";
 import { alertsApi, type AlertStatusAction } from "@/data/alerts/alerts.api";
 import { inboxApi, type InboxKind } from "@/data/inbox/inbox.api";
 import { notesApi } from "@/data/notes/notes.api";
@@ -8,6 +9,7 @@ const keys = {
   inbox: (kind: InboxKind) => ["inbox", kind] as const,
   visit: (id: string) => ["visit", id] as const,
   alert: (id: string) => ["alert", id] as const,
+  pendingVisits: ["visits", "PENDING"] as const,
 };
 
 export function useInbox(kind: InboxKind) {
@@ -33,13 +35,49 @@ export function useAlert(id: string | null) {
   });
 }
 
-/** Invalidate every inbox slice + the affected detail after a write. */
+/** Pending visit requests for the admin approval queue. */
+export function usePendingVisits() {
+  return useQuery({
+    queryKey: keys.pendingVisits,
+    queryFn: () => visitsApi.list({ status: "PENDING", pageSize: 100 }),
+  });
+}
+
+/** Invalidate every inbox + visits slice + the affected detail after a write. */
 function useInvalidate() {
   const qc = useQueryClient();
   return (detailKey?: readonly unknown[]) => {
     void qc.invalidateQueries({ queryKey: ["inbox"] });
+    void qc.invalidateQueries({ queryKey: ["visits"] });
     if (detailKey) void qc.invalidateQueries({ queryKey: detailKey });
   };
+}
+
+/** VMC creates invite(s) / walk-in(s). */
+export function useCreateVisits() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (input: CreateVisitsInput) => visitsApi.createVisits(input),
+    onSuccess: () => invalidate(),
+  });
+}
+
+/** Admin/super-admin approves a pending request. */
+export function useApproveVisit(id: string) {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: () => visitsApi.approve(id),
+    onSuccess: () => invalidate(keys.visit(id)),
+  });
+}
+
+/** Admin/super-admin denies a pending request with a reason. */
+export function useDenyVisit(id: string) {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (reason: string) => visitsApi.deny(id, reason),
+    onSuccess: () => invalidate(keys.visit(id)),
+  });
 }
 
 export function useCancelVisit(id: string) {

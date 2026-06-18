@@ -13,13 +13,16 @@ const ROLE_DEFS: Record<
   { description: string; permissions: string[] }
 > = {
   [ROLES.ADMIN]: {
-    description: 'Administrator — manage users and roles',
+    description:
+      'Administrator — manage users and roles, decide visit requests',
     permissions: [
       PERMISSIONS.USER_READ,
       PERMISSIONS.USER_CREATE,
       PERMISSIONS.USER_UPDATE,
       PERMISSIONS.USER_DELETE,
       PERMISSIONS.ROLE_READ,
+      PERMISSIONS.VISIT_APPROVE,
+      PERMISSIONS.VISIT_DENY,
     ],
   },
   [ROLES.AUDITOR]: {
@@ -54,6 +57,8 @@ const ROLE_DEFS: Record<
 const ID = {
   hostUser: '00000000-0000-4000-8000-000000000001',
   host: '00000000-0000-4000-8000-000000000010',
+  sarahUser: '00000000-0000-4000-8000-000000000002',
+  sarahHost: '00000000-0000-4000-8000-000000000011',
   visitor: (n: number) => `00000000-0000-4000-8000-0000000000${20 + n}`,
   visit: (n: number) => `00000000-0000-4000-8000-0000000000${30 + n}`,
   alert: '00000000-0000-4000-8000-000000000040',
@@ -168,6 +173,34 @@ export class SeederService implements OnApplicationBootstrap {
       },
     });
 
+    // Host users must carry the STAFF role to appear in the invite host picker.
+    const staffRole = await this.prisma.role.findUnique({
+      where: { name: ROLES.STAFF },
+    });
+    if (staffRole) await this.assignRole(hostUser.id, staffRole.id);
+
+    // A second STAFF host so the host dropdown has options (matches the mockups).
+    const sarah = await this.prisma.user.upsert({
+      where: { id: ID.sarahUser },
+      update: {},
+      create: {
+        id: ID.sarahUser,
+        email: 'sarah.lee@aatc.org',
+        fullName: 'Sarah Lee',
+      },
+    });
+    await this.prisma.host.upsert({
+      where: { id: ID.sarahHost },
+      update: {},
+      create: {
+        id: ID.sarahHost,
+        userId: sarah.id,
+        department: 'Finance',
+        office: 'Floor Mezzanine',
+      },
+    });
+    if (staffRole) await this.assignRole(sarah.id, staffRole.id);
+
     const visitorSeeds = [
       {
         fullName: 'Sophia Davis',
@@ -266,5 +299,14 @@ export class SeederService implements OnApplicationBootstrap {
         },
       });
     }
+  }
+
+  /** Idempotently grant a role to a user (composite-key upsert). */
+  private async assignRole(userId: string, roleId: string): Promise<void> {
+    await this.prisma.userRole.upsert({
+      where: { userId_roleId: { userId, roleId } },
+      update: {},
+      create: { userId, roleId },
+    });
   }
 }

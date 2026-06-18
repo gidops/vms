@@ -1,4 +1,27 @@
+import type { CreateVisitsInput, VisitStatus } from "@vms/contracts";
 import { api } from "@/data/http/client";
+
+export interface Paginated<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+/** A row in the admin approval queue. */
+export interface VisitListItem {
+  id: string;
+  type: string;
+  status: VisitRequestDetail["status"];
+  purpose: string;
+  floor?: string | null;
+  scheduledAt?: string | null;
+  createdAt: string;
+  createdByName?: string | null;
+  visitor: { id: string; fullName: string; email: string };
+  host: { id: string; user: { id: string; fullName: string; email: string } };
+}
 
 export interface VisitNote {
   id: string;
@@ -45,6 +68,23 @@ export interface VisitRequestDetail {
 export const visitsApi = {
   get(id: string): Promise<VisitRequestDetail> {
     return api<VisitRequestDetail>(`/visits/${id}`);
+  },
+  /** Create invite(s) / walk-in(s) — one visit per visitor. */
+  createVisits(input: CreateVisitsInput): Promise<VisitRequestDetail[]> {
+    return api<VisitRequestDetail[]>(`/visits`, { method: "POST", body: input });
+  },
+  /** Visit list for the admin approval queue (optionally filtered by status). */
+  list(params?: {
+    status?: VisitStatus;
+    page?: number;
+    pageSize?: number;
+  }): Promise<Paginated<VisitListItem>> {
+    const q = new URLSearchParams();
+    if (params?.status) q.set("status", params.status);
+    if (params?.page) q.set("page", String(params.page));
+    if (params?.pageSize) q.set("pageSize", String(params.pageSize));
+    const qs = q.toString();
+    return api<Paginated<VisitListItem>>(`/visits${qs ? `?${qs}` : ""}`);
   },
   cancel(id: string): Promise<VisitRequestDetail> {
     return api<VisitRequestDetail>(`/visits/${id}/cancel`, { method: "POST" });
