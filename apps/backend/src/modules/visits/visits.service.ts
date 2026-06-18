@@ -4,10 +4,24 @@ import type {
   UpdateVisitRequestInput,
   VisitRequestDetail,
 } from '@vms/contracts';
+import { randomInt } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
 import { EventPublisher } from '../../shared/events/event-publisher';
 import { TransactionManager } from '../../shared/events/transaction.manager';
+
+const PASS_TTL_MS = 24 * 60 * 60 * 1000;
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+/** Human-friendly access code, e.g. "4486-BC9C" (digits-dash-alnum). */
+function generateAccessCode(): string {
+  const digits = String(randomInt(1000, 10000));
+  let suffix = '';
+  for (let i = 0; i < 4; i++) {
+    suffix += CODE_ALPHABET[randomInt(0, CODE_ALPHABET.length)];
+  }
+  return `${digits}-${suffix}`;
+}
 
 const detailInclude = Prisma.validator<Prisma.VisitInclude>()({
   visitor: true,
@@ -31,7 +45,7 @@ export class VisitsService {
       where: { id },
       include: detailInclude,
     });
-    if (!visit) throw new NotFoundException('Visit not found');
+    if (!visit) throw new NotFoundException('errors.visit.notFound');
     return this.toDetail(visit);
   }
 
@@ -76,14 +90,99 @@ export class VisitsService {
   }
 
   async approve(id: string, actorUserId: string): Promise<VisitRequestDetail> {
-    await this.ensureExists(id);
+    const visit = await this.prisma.visit.findUnique({
+      where: { id },
+      select: { id: true, scheduledAt: true },
+    });
+    if (!visit) throw new NotFoundException('errors.visit.notFound');
+
+    // Mint the access pass (code + expiry) atomically with the approval, so the
+    // VisitApproved notification can include the code + QR. Idempotent on
+    // re-approval: the existing code is preserved.
+    const expiresAt = new Date(
+      (visit.scheduledAt ?? new Date()).getTime() + PASS_TTL_MS,
+    );
     await this.txm.run(async (tx) => {
       await tx.visit.update({
         where: { id },
         data: { status: 'APPROVED', approvedById: actorUserId },
       });
+      await tx.pass.upsert({
+        where: { visitId: id },
+        create: {
+          visitId: id,
+          code: generateAccessCode(),
+          status: 'ISSUED',
+          expiresAt,
+        },
+        update: { status: 'ISSUED', expiresAt },
+      });
       await this.events.publish(tx, {
         type: EVENT_TYPES.VisitApproved,
+        aggregateType: 'Visit',
+        aggregateId: id,
+        payload: { visitId: id },
+        metadata: { actorUserId },
+      });
+    });
+    return this.getDetail(id);
+  }
+
+  /** Gate check-in: mark the visitor on-site, activate the pass, log the gate event. */
+  async checkIn(id: string, actorUserId: string): Promise<VisitRequestDetail> {
+    await this.ensureExists(id);
+    await this.txm.run(async (tx) => {
+      await tx.visit.update({
+        where: { id },
+        data: { status: 'CHECKED_IN', checkInAt: new Date() },
+      });
+      await tx.pass.updateMany({
+        where: { visitId: id },
+        data: { status: 'ACTIVE' },
+      });
+      await tx.gateEvent.create({
+        data: {
+          visitId: id,
+          gateId: 'MAIN',
+          type: 'ACCESS_GRANTED',
+          operativeUserId: actorUserId,
+          result: 'CHECKED_IN',
+        },
+      });
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.VisitorCheckedIn,
+        aggregateType: 'Visit',
+        aggregateId: id,
+        payload: { visitId: id },
+        metadata: { actorUserId },
+      });
+    });
+    return this.getDetail(id);
+  }
+
+  /** Gate check-out: mark the visitor off-site, return the pass, log the gate event. */
+  async checkOut(id: string, actorUserId: string): Promise<VisitRequestDetail> {
+    await this.ensureExists(id);
+    await this.txm.run(async (tx) => {
+      await tx.visit.update({
+        where: { id },
+        data: { status: 'CHECKED_OUT', checkOutAt: new Date() },
+      });
+      await tx.pass.updateMany({
+        where: { visitId: id },
+        data: { status: 'RETURNED', returnedAt: new Date() },
+      });
+      await tx.gateEvent.create({
+        data: {
+          visitId: id,
+          gateId: 'MAIN',
+          type: 'ACCESS_GRANTED',
+          operativeUserId: actorUserId,
+          result: 'CHECKED_OUT',
+        },
+      });
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.VisitorCheckedOut,
         aggregateType: 'Visit',
         aggregateId: id,
         payload: { visitId: id },
@@ -117,7 +216,7 @@ export class VisitsService {
 
   private async ensureExists(id: string): Promise<void> {
     const count = await this.prisma.visit.count({ where: { id } });
-    if (count === 0) throw new NotFoundException('Visit not found');
+    if (count === 0) throw new NotFoundException('errors.visit.notFound');
   }
 
   private toDetail(visit: VisitDetailRow): VisitRequestDetail {

@@ -8,6 +8,12 @@ readiness, testing, and key risks. Findings are verified against source on `deve
 > Companion document: [api-inventory.md](./api-inventory.md) (complete endpoint catalogue).
 > Background: [architecture.md](./architecture.md), [runbook.md](./runbook.md).
 
+> **Update (2026-06-18):** The backend localization + notification gaps identified below (§A and risk
+> #3) have since been **closed** — see [notifications.md](./notifications.md). The backend now has an
+> i18n catalog layer, localized API error/validation responses, and a full In-App/Email/SMS/WhatsApp
+> notification system rendered per-recipient locale, plus the completed check-in/check-out lifecycle.
+> The text below preserves the original inspection findings.
+
 ---
 
 ## A. i18n / Localization State
@@ -216,9 +222,9 @@ frontend are untested**. The Jest coverage threshold is set low (`statements 32%
    are exercised only incidentally (if at all). Highest-value, lowest-coverage area.
 2. **Zero frontend tests.** Auth context, silent-refresh-on-401, RouteGuard, the `data/` fetch
    layer, and i18n rendering have no automated coverage.
-3. **Backend notification/localization pipeline is schema-only.** The data model and event metadata
-   advertise locale-aware notifications, but no mailer/template/handler exists — a capability gap
-   that may read as "implemented" from the schema alone.
+3. ~~**Backend notification/localization pipeline is schema-only.**~~ **Resolved (2026-06-18)** — a
+   full notification system (In-App/Email/SMS/WhatsApp) + backend i18n (localized errors, validation,
+   and per-recipient notification rendering) now exists. See [notifications.md](./notifications.md).
 4. **Low coverage threshold (32%) masks the gap in CI.** Green builds do not imply the domain layer
    is tested.
 5. **Single shared Postgres is the structural blocker** to microservice extraction; domain

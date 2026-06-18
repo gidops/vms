@@ -16,6 +16,8 @@ export interface AccessTokenClaims {
   /** Session id — lets switch-role update the right session. */
   sid?: string;
   tenantId?: string | null;
+  /** User's preferred language (drives server-side localized rendering). */
+  preferredLocale?: string;
 }
 
 const UNIT_SECONDS: Record<string, number> = { s: 1, m: 60, h: 3600, d: 86400 };

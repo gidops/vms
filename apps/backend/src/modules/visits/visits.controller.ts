@@ -53,4 +53,16 @@ export class VisitsController {
   ) {
     return this.visits.deny(id, input.reason, principal.userId);
   }
+
+  @Post(':id/check-in')
+  @RequirePermissions(PERMISSIONS.VISIT_CHECK_IN)
+  checkIn(@Param('id') id: string, @CurrentUser() principal: AuthUser) {
+    return this.visits.checkIn(id, principal.userId);
+  }
+
+  @Post(':id/check-out')
+  @RequirePermissions(PERMISSIONS.VISIT_CHECK_OUT)
+  checkOut(@Param('id') id: string, @CurrentUser() principal: AuthUser) {
+    return this.visits.checkOut(id, principal.userId);
+  }
 }

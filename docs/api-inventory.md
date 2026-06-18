@@ -4,9 +4,9 @@ A complete, Postman-ready catalogue of the VMS backend HTTP API (NestJS, default
 `http://localhost:4000`). This is the source list for building a Postman collection and
 generating API reference docs. Request/response shapes derive from `@vms/contracts` (zod).
 
-> **Status as of 2026-06-17 (`develop`).** 28 implemented endpoints across 7 controllers.
+> **Status as of 2026-06-18 (`develop`).** 33 implemented endpoints across 8 controllers.
 > See [api.md](./api.md) for narrative examples and [architecture.md](./architecture.md) for
-> the auth/event model.
+> the auth/event model, and [notifications.md](./notifications.md) for the notification system.
 
 ## Conventions (apply to every request)
 
@@ -78,6 +78,11 @@ generating API reference docs. Request/response shapes derive from `@vms/contrac
 | 22 | `PATCH` | `/visits/:id` | Bearer | `visit:edit` | `UpdateVisitRequestInput` `{ purpose?, scheduledAt? }` (≥1 field) | `VisitRequestDetail`; emits `visit.updated` | ✅ Implemented |
 | 23 | `POST` | `/visits/:id/approve` | Bearer | `visit:approve` | — | `VisitRequestDetail` (`APPROVED` + `approvedById`); emits `visit.approved` | ✅ Implemented |
 | 24 | `POST` | `/visits/:id/deny` | Bearer | `visit:deny` | `DenyVisitInput` `{ reason }` | `VisitRequestDetail` (`DENIED` + `deniedReason`); emits `visit.denied` | ✅ Implemented |
+| 24a | `POST` | `/visits/:id/check-in` | Bearer | `visit:check_in` | — | `VisitRequestDetail` (`CHECKED_IN`); activates pass, logs gate event, emits `visitor.checked_in` | ✅ Implemented |
+| 24b | `POST` | `/visits/:id/check-out` | Bearer | `visit:check_out` | — | `VisitRequestDetail` (`CHECKED_OUT`); returns pass, emits `visitor.checked_out` | ✅ Implemented |
+
+> Note: `/visits/:id/approve` now also **mints a `Pass`** (access code) atomically, enabling the
+> approval notification's code + QR.
 
 ### Alerts — `modules/alerts/alerts.controller.ts` (base `/alerts`)
 
@@ -97,6 +102,17 @@ generating API reference docs. Request/response shapes derive from `@vms/contrac
 | # | Method | Path | Auth | Permission | Request (query) | Response | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 28 | `GET` | `/inbox` | Bearer | — | `InboxQuery` `{ kind: all\|requests\|alerts, search?, page, pageSize, sortBy?, sortDir }` | `Paginated<InboxItem>` (discriminated union on `kind`) | ✅ Implemented |
+
+### Notifications (in-app) — `modules/notifications/notifications.controller.ts` (base `/notifications`)
+
+| # | Method | Path | Auth | Permission | Request | Response | Status |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 29 | `GET` | `/notifications` | Bearer | — | `NotificationQuery` `{ unreadOnly?, page, pageSize, sortBy?, sortDir }` | `Paginated<NotificationItem>` (current user's IN_APP notifications) | ✅ Implemented |
+| 30 | `PATCH` | `/notifications/:id/read` | Bearer | — | — | `{ id }` (marks one read) | ✅ Implemented |
+| 31 | `POST` | `/notifications/read-all` | Bearer | — | — | `{ updated: number }` | ✅ Implemented |
+
+> Email/SMS/WhatsApp notifications are delivered out-of-band by the dispatcher (not via REST). See
+> [notifications.md](./notifications.md).
 
 ---
 

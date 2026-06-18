@@ -72,5 +72,13 @@ export const AttendanceType = z.enum([
 ]);
 export type AttendanceType = z.infer<typeof AttendanceType>;
 
-export const NotificationChannel = z.enum(["EMAIL", "SMS", "IN_APP"]);
+export const NotificationChannel = z.enum([
+  "EMAIL",
+  "SMS",
+  "WHATSAPP",
+  "IN_APP",
+]);
 export type NotificationChannel = z.infer<typeof NotificationChannel>;
+
+export const NotificationStatus = z.enum(["PENDING", "SENT", "FAILED"]);
+export type NotificationStatus = z.infer<typeof NotificationStatus>;

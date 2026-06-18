@@ -1,0 +1,100 @@
+{
+  "brand": {
+    "name": "AATC VMS",
+    "fullName": "نظام إدارة الزوار AATC"
+  },
+  "email": {
+    "common": {
+      "greeting": "عزيزي/عزيزتي {name}،",
+      "automated": "هذه رسالة آلية. يُرجى عدم الرد عليها.",
+      "footer": "© {year} نظام إدارة الزوار AATC. جميع الحقوق محفوظة.",
+      "regards": "مع خالص التقدير،",
+      "team": "فريق AATC"
+    },
+    "labels": {
+      "visitorName": "اسم الزائر",
+      "visitDate": "تاريخ الزيارة",
+      "time": "الوقت",
+      "purpose": "الغرض",
+      "host": "المضيف",
+      "uniqueCode": "الرمز الفريد"
+    },
+    "visitApproved": {
+      "subject": "تم تأكيد زيارتك!",
+      "heading": "تم تأكيد زيارتك!",
+      "intro": "تم تأكيد زيارتك. إليك تفاصيل الزيارة:",
+      "qrInstruction": "أظهر رمز الاستجابة السريعة هذا عند البوابة:",
+      "instructions": "يُرجى الحضور في الوقت المحدد. إذا تعذّر عليك الحضور، يُرجى إبلاغ مضيفك مسبقًا."
+    },
+    "visitorArrived": {
+      "subject": "وصل ضيفك",
+      "heading": "وصل ضيفك",
+      "intro": "قام {visitorName} بتسجيل الوصول عند البوابة وهو في انتظارك.",
+      "details": "تم تسجيل الوصول في {time}."
+    },
+    "thankYou": {
+      "subject": "شكرًا لزيارتك AATC",
+      "heading": "شكرًا لزيارتك AATC",
+      "intro": "عزيزي/عزيزتي {name}، شكرًا لزيارتك AATC. نأمل أن تكون تجربتك ممتعة.",
+      "ratingPrompt": "يسعدنا تلقّي ملاحظاتك. يُرجى تخصيص لحظة لتقييم زيارتك:",
+      "ratingButton": "قيّم زيارتك"
+    }
+  },
+  "sms": {
+    "visitApproved": "AATC: مرحبًا {visitorName}، تم تأكيد زيارتك في {visitDate} الساعة {time} مع {host}. رمز الدخول الخاص بك هو {code}. يُرجى الحضور في الوقت المحدد.",
+    "visitorArrived": "AATC: وصل ضيفك {visitorName} إلى البوابة وهو في انتظارك.",
+    "thankYou": "AATC: شكرًا لزيارتك، {visitorName}. يسعدنا تلقّي ملاحظاتك: {ratingUrl}"
+  },
+  "whatsapp": {
+    "visitApproved": "*تم تأكيد زيارة AATC*\n\nمرحبًا {visitorName}، تم تأكيد زيارتك في {visitDate} الساعة {time} مع {host}.\nرمز الدخول: *{code}*\n\nيُرجى الحضور في الوقت المحدد.",
+    "visitorArrived": "*AATC* — وصل ضيفك *{visitorName}* إلى البوابة وهو في انتظارك.",
+    "thankYou": "*AATC* — شكرًا لزيارتك، {visitorName}. يسعدنا تلقّي ملاحظاتك: {ratingUrl}"
+  },
+  "inapp": {
+    "visitApproved": {
+      "title": "تمت الموافقة على الزيارة",
+      "body": "تمت الموافقة على زيارة {visitorName}."
+    },
+    "visitorArrived": {
+      "title": "وصل الضيف",
+      "body": "قام {visitorName} بتسجيل الوصول عند البوابة."
+    },
+    "thankYou": {
+      "title": "اكتملت الزيارة",
+      "body": "قام {visitorName} بتسجيل المغادرة."
+    }
+  },
+  "errors": {
+    "internal": "خطأ داخلي في الخادم",
+    "unauthorized": "غير مصرّح",
+    "forbidden": "ليس لديك إذن لتنفيذ هذا الإجراء.",
+    "validationFailed": "فشل التحقق",
+    "visit": {
+      "notFound": "الزيارة غير موجودة",
+      "invalidState": "الزيارة ليست في حالة صالحة لهذا الإجراء."
+    },
+    "alert": {
+      "notFound": "التنبيه غير موجود"
+    },
+    "user": {
+      "notFound": "المستخدم غير موجود"
+    },
+    "notification": {
+      "notFound": "الإشعار غير موجود"
+    },
+    "auth": {
+      "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة."
+    }
+  },
+  "validation": {
+    "failed": "فشل التحقق",
+    "required": "{path} مطلوب",
+    "invalid_type": "{path} غير صالح",
+    "invalid_string": "{path} غير صالح",
+    "invalid_enum_value": "{path} يحتوي على قيمة غير صالحة",
+    "too_small": "{path} قصير جدًا",
+    "too_big": "{path} طويل جدًا",
+    "custom": "{path} غير صالح",
+    "unrecognized_keys": "تم تقديم حقول غير متوقعة"
+  }
+}

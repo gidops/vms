@@ -3,6 +3,15 @@ import { z } from 'zod';
 /** Treat blank .env values (`KEY=`) as unset so defaults/optional apply. */
 const emptyToUndefined = (v: unknown) => (v === '' ? undefined : v);
 
+/** A boolean feature flag from env ("true"/"false"), with a default. */
+const boolEnv = (def: boolean) =>
+  z
+    .preprocess(
+      (v) => (v === '' || v == null ? String(def) : v),
+      z.enum(['true', 'false']),
+    )
+    .transform((v) => v === 'true');
+
 /**
  * Environment contract for the backend. Validated at boot so the process fails
  * fast (with a readable message) rather than crashing later on a missing/typo'd
@@ -37,6 +46,47 @@ export const envSchema = z.object({
     emptyToUndefined,
     z.coerce.number().int().positive().default(300),
   ),
+
+  // ── Notifications ──────────────────────────────────────────────────────────
+  // Per-channel feature toggles. A disabled channel is never enqueued or sent;
+  // an enabled-but-unconfigured channel logs instead of failing (LogTransport).
+  EMAIL_ENABLED: boolEnv(false),
+  SMS_ENABLED: boolEnv(false),
+  WHATSAPP_ENABLED: boolEnv(false),
+  INAPP_ENABLED: boolEnv(true),
+  // Polling dispatcher (Notification table acts as the durable queue).
+  NOTIFICATION_POLL_INTERVAL_MS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(5000),
+  NOTIFICATION_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
+  NOTIFICATIONS_DEFAULT_LOCALE: z.enum(['EN', 'FR', 'AR']).default('EN'),
+  // Public URL of the frontend (used to build the rating/feedback link).
+  APP_PUBLIC_URL: z.preprocess(
+    emptyToUndefined,
+    z.string().url().default('http://localhost:3000'),
+  ),
+
+  // Email transport. EMAIL_PROVIDER selects the implementation; falls back to a
+  // log transport when the chosen provider isn't configured.
+  EMAIL_PROVIDER: z.enum(['smtp', 'sendgrid']).default('smtp'),
+  EMAIL_FROM: z.preprocess(emptyToUndefined, z.string().optional()),
+  SMTP_HOST: z.preprocess(emptyToUndefined, z.string().optional()),
+  SMTP_PORT: z.preprocess(
+    emptyToUndefined,
+    z.coerce.number().int().positive().default(587),
+  ),
+  SMTP_SECURE: boolEnv(false),
+  SMTP_USER: z.preprocess(emptyToUndefined, z.string().optional()),
+  SMTP_PASS: z.preprocess(emptyToUndefined, z.string().optional()),
+  SENDGRID_API_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
+
+  // SMS + WhatsApp via Twilio (one account serves both channels).
+  TWILIO_ACCOUNT_SID: z.preprocess(emptyToUndefined, z.string().optional()),
+  TWILIO_AUTH_TOKEN: z.preprocess(emptyToUndefined, z.string().optional()),
+  TWILIO_SMS_FROM: z.preprocess(emptyToUndefined, z.string().optional()),
+  TWILIO_WHATSAPP_FROM: z.preprocess(emptyToUndefined, z.string().optional()),
 });
 
 export type Env = z.infer<typeof envSchema>;

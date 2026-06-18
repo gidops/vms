@@ -28,6 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       permissions: payload.permissions ?? [],
       sid: payload.sid,
       tenantId: payload.tenantId ?? null,
+      preferredLocale: payload.preferredLocale,
     };
   }
 }
