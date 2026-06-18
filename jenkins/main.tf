@@ -121,6 +121,10 @@ resource "aws_instance" "jenkins" {
   tags = {
     Name = var.project_name
   }
+
+  lifecycle {
+    ignore_changes = [user_data]
+  }
 }
 
 # ---------------- Stable public address ----------------
@@ -148,34 +152,25 @@ locals {
 
     export DEBIAN_FRONTEND=noninteractive
 
-    # 1. Base + Java 17 (Jenkins LTS runtime)
+    # 1. Base + Java 21 (current Jenkins LTS runtime).
     apt-get update -y
-    apt-get install -y openjdk-17-jre ca-certificates curl gnupg unzip apt-transport-https
+    apt-get install -y openjdk-21-jre ca-certificates curl gnupg unzip apt-transport-https lsb-release
+    update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
 
-    # 2. Jenkins LTS — official Debian-stable apt repo
-    install -m 0755 -d /usr/share/keyrings
-    curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key \
-      | tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
-    echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/" \
-      > /etc/apt/sources.list.d/jenkins.list
-    apt-get update -y
-    apt-get install -y jenkins
-
-    # 3. Docker — lets Jenkins build images. Adding the `jenkins` user to the
-    #    `docker` group is effectively root on this box, which is exactly why the
-    #    security group is locked to a single IP.
+    # 2. Docker FIRST — installed before Jenkins so the `jenkins` user can be added
+    #    to the `docker` group once Jenkins creates it. Adding that user to `docker`
+    #    is effectively root on this box, which is why the SG is locked to one IP.
     apt-get install -y docker.io
-    usermod -aG docker jenkins
     systemctl enable --now docker
 
-    # 4. AWS CLI v2 — official zip installer (apt ships v1, which is too old).
+    # 3. AWS CLI v2 — official zip installer (apt ships v1, which is too old).
     ARCH="$${ARCH:-$(uname -m)}"
     curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-$${ARCH}.zip" -o /tmp/awscliv2.zip
     unzip -q /tmp/awscliv2.zip -d /tmp
     /tmp/aws/install
     rm -rf /tmp/aws /tmp/awscliv2.zip
 
-    # 5. Terraform — HashiCorp's official apt repo.
+    # 4. Terraform — HashiCorp's official apt repo.
     curl -fsSL https://apt.releases.hashicorp.com/gpg \
       | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
@@ -183,7 +178,22 @@ locals {
     apt-get update -y
     apt-get install -y terraform
 
-    # 6. Start Jenkins (after docker group membership is set).
-    systemctl enable --now jenkins
+    # 5. Jenkins LAST — official Debian-stable apt repo. The signing key is
+    #    DEARMORED to a binary .gpg keyring; an armored .asc key can't be verified
+    #    by apt and breaks `apt-get install jenkins`.
+    install -m 0755 -d /usr/share/keyrings
+    curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key \
+      | gpg --dearmor \
+      | tee /usr/share/keyrings/jenkins-keyring.gpg > /dev/null
+    echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.gpg] https://pkg.jenkins.io/debian-stable binary/" \
+      > /etc/apt/sources.list.d/jenkins.list
+    apt-get update -y
+    apt-get install -y jenkins
+
+    # 6. Now that the `jenkins` user exists, grant Docker access and restart so the
+    #    new group membership takes effect.
+    usermod -aG docker jenkins
+    systemctl enable jenkins
+    systemctl restart jenkins
   EOF
 }
