@@ -25,6 +25,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "pretest:e2e": "ts-node test/ensure-test-db.ts && prisma migrate deploy",
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
@@ -68,7 +69,9 @@
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^17.0.0",
+    "@types/pg": "^8.11.10",
     "jest": "^30.0.0",
+    "pg": "^8.13.1",
     "pino-pretty": "^13.0.0",
     "prettier": "^3.4.2",
     "prisma": "^6.19.3",
