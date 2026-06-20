@@ -80,6 +80,17 @@ pipeline {
       }
     }
 
+    // ---------------- TEMP DEBUG: print branch vars unconditionally ----------------
+    // No when{} gate, so this runs every build to reveal the real branch values the
+    // Deploy gate sees. agent any is required because the pipeline is `agent none`.
+    // Remove once the Deploy when{} gate is confirmed working.
+    stage('Debug branch') {
+      agent any
+      steps {
+        echo "GIT_BRANCH=[${env.GIT_BRANCH}] BRANCH_NAME=[${env.BRANCH_NAME}] DEPLOY=[${params.DEPLOY}]"
+      }
+    }
+
     // ---------------- CD (host agent with docker + aws + terraform) ----------------
     stage('Deploy') {
       when {
