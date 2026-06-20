@@ -86,7 +86,12 @@ pipeline {
         beforeAgent true
         allOf {
           expression { return params.DEPLOY }
-          anyOf { branch 'main'; branch 'staging' }
+          expression {
+            // Read GIT_BRANCH (set by plain Pipeline jobs, e.g. "origin/staging"),
+            // falling back to BRANCH_NAME so this also works under Multibranch.
+            def b = env.GIT_BRANCH ?: env.BRANCH_NAME ?: ''
+            return b ==~ /(origin\/)?(main|staging)/
+          }
         }
       }
       agent { label 'vms-deploy' }
