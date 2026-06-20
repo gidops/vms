@@ -279,6 +279,14 @@ do_redeploy() {
 
 [ -d terraform ] || die "No ./terraform directory here. Run from the repo root."
 
+# Initialize the S3 backend BEFORE any terraform command. The app stack uses a
+# remote S3 backend, so a fresh Jenkins workspace has no .terraform/ and every
+# `terraform output/plan/apply` — including the Phase A bootstrap below — would
+# fail with "Backend initialization required, please run terraform init".
+# Plain init suffices (no local state to migrate; the S3 backend auto-configures);
+# -input=false so it never blocks on a prompt in non-interactive CI.
+$TF init -input=false
+
 # Tag every image for this run by git short SHA (+ -dirty if the tree is unclean).
 TAG="$(git describe --always --dirty)"
 case "$TAG" in
