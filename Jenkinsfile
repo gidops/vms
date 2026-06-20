@@ -97,18 +97,15 @@ pipeline {
       }
       steps {
         // Manual approval — last chance to read what is about to be deployed.
-        // NOTE: terraform here uses LOCAL state (terraform/terraform.tfstate). For
-        // Jenkins-driven deploys to be safe/repeatable, migrate to a remote backend
-        // (S3 + DynamoDB lock) first — see the notes at the bottom of this file.
+        // NOTE: state is in S3 (see provider.tf backend blocks); the vms-deploy
+        // agent's instance profile provides AWS access.
         input message: "Deploy '${params.DEPLOY_TARGET}' from ${env.BRANCH_NAME} @ ${env.GIT_COMMIT?.take(8)}?",
               ok: 'Deploy'
 
-        withCredentials([[
-          $class: 'AmazonWebServicesCredentialsBinding',
-          credentialsId: 'aws-vms'   // Jenkins "AWS Credentials" entry
-        ]]) {
-          sh './vms-deploy.sh --deploy ${DEPLOY_TARGET}'
-        }
+        // No withCredentials binding: the vms-deploy agent runs on an EC2 host
+        // whose instance profile (role vms-jenkins-role) grants AWS access, so
+        // the AWS CLI / Terraform inherit credentials automatically.
+        sh './vms-deploy.sh --deploy ${DEPLOY_TARGET}'
       }
     }
   }
@@ -122,7 +119,8 @@ pipeline {
 // ──────────────────────────── Jenkins setup ────────────────────────────
 // One-time configuration needed for this pipeline:
 //
-// Plugins:  Docker Pipeline, Pipeline: AWS Steps (or AWS Credentials), Git.
+// Plugins:  Docker Pipeline, Git. (No AWS plugin needed — the deploy shells out to
+//   the raw aws CLI + terraform on the agent, which use the instance-profile creds.)
 //
 // CI / validate stages:  any agent with Docker available (the controller or a
 //   build node where the `jenkins` user is in the `docker` group).
@@ -130,16 +128,16 @@ pipeline {
 // Deploy agent:  a node labelled `vms-deploy` with Docker, AWS CLI v2 and
 //   Terraform >= 1.9 installed, and the Docker daemon reachable.
 //
-// Credentials:  add an "AWS Credentials" item with ID `aws-vms` (an IAM user/role
-//   that can push to ECR + run the Terraform-managed resources). The
-//   AmazonWebServicesCredentialsBinding above exports AWS_ACCESS_KEY_ID /
-//   AWS_SECRET_ACCESS_KEY for the duration of the deploy.
+// Credentials:  none stored in Jenkins. The vms-deploy agent runs on an EC2 host
+//   whose instance profile (role vms-jenkins-role) grants AWS access, so the AWS
+//   CLI / Terraform inherit credentials automatically — no aws-vms entry or
+//   AmazonWebServicesCredentialsBinding is needed.
 //
-// Terraform state ⚠:  vms-deploy.sh runs `terraform output`/`apply` against state
-//   in ./terraform. Today that state is LOCAL (no backend block) and lives on the
-//   developer's machine — a fresh Jenkins workspace has none, so a deploy would try
-//   to recreate the whole stack. Before enabling CD, move state to a remote backend
-//   (S3 bucket + DynamoDB lock table) so Jenkins and humans share one source of truth.
+// Terraform state:  vms-deploy.sh runs `terraform output`/`apply` against state
+//   in ./terraform, which is now stored remotely in S3 with a DynamoDB lock table
+//   (see the backend "s3" blocks in terraform/provider.tf and jenkins/provider.tf).
+//   Jenkins and humans share one source of truth, so a fresh Jenkins workspace
+//   reads existing state instead of trying to recreate the stack.
 //
 // Pipeline job:  create a Multibranch Pipeline (or Pipeline-from-SCM) pointing at
 //   this repo; the Jenkinsfile path is the repo root.

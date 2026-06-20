@@ -88,12 +88,43 @@ resource "aws_iam_role" "jenkins" {
   })
 }
 
-# ECR push/pull so CI can build and publish the app images. Broader deploy perms
-# (EC2/RDS/VPC for `terraform apply`) are added LATER when CD is enabled — least
-# privilege for now.
+# ECR push/pull so CI can build and publish the app images. Now redundant —
+# PowerUserAccess (below) already includes ECR — but left in place deliberately;
+# removing an attachment is a separate cleanup that could surface ordering churn.
 resource "aws_iam_role_policy_attachment" "ecr" {
   role       = aws_iam_role.jenkins.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
+}
+
+# Full access to all services EXCEPT IAM/Organizations — covers the app-stack
+# deploy surface (EC2, VPC, RDS, ECR, S3, DynamoDB) and remote-state access.
+resource "aws_iam_role_policy_attachment" "poweruser" {
+  role       = aws_iam_role.jenkins.name
+  policy_arn = "arn:aws:iam::aws:policy/PowerUserAccess"
+}
+
+# PowerUser excludes IAM, but the app stack creates its own role + instance
+# profile and passes the role to EC2. Scoped IAM actions to cover that lifecycle
+# (incl. PassRole) without granting full IAM admin.
+resource "aws_iam_role_policy" "deploy_iam" {
+  name = "vms-jenkins-deploy-iam"
+  role = aws_iam_role.jenkins.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:PassRole",
+        "iam:CreateInstanceProfile", "iam:DeleteInstanceProfile", "iam:GetInstanceProfile",
+        "iam:AddRoleToInstanceProfile", "iam:RemoveRoleFromInstanceProfile",
+        "iam:AttachRolePolicy", "iam:DetachRolePolicy", "iam:ListRolePolicies",
+        "iam:ListAttachedRolePolicies", "iam:ListInstanceProfilesForRole",
+        "iam:CreatePolicy", "iam:DeletePolicy", "iam:GetPolicy", "iam:GetPolicyVersion",
+        "iam:TagRole", "iam:TagInstanceProfile", "iam:TagPolicy"
+      ]
+      Resource = "*"
+    }]
+  })
 }
 
 resource "aws_iam_instance_profile" "jenkins" {
