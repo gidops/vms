@@ -77,7 +77,10 @@ pipeline {
     stage('Terraform validate') {
       agent {
         docker {
-          image 'hashicorp/terraform:1.9'
+          // Pin to the same Terraform the deploy box runs (1.15.6). A 1.9 container
+          // can't decode the 1.15.6-written backend cache ("unsupported attribute
+          // use_lockfile"), and they share the Jenkins workspace.
+          image 'hashicorp/terraform:1.15.6'
           // The image's entrypoint is `terraform`; clear it so `sh` can run.
           args  '--entrypoint='
         }
@@ -85,6 +88,10 @@ pipeline {
       steps {
         dir('terraform') {
           sh 'terraform fmt -check'
+          // Drop any .terraform left by the host deploy (shared workspace) so this
+          // validate is self-contained — it's only a local cache, and the
+          // -backend=false init below recreates what validate needs.
+          sh 'rm -rf .terraform'
           sh 'terraform init -backend=false'
           sh 'terraform validate'
         }
