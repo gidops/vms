@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, staging, main]
+  pull_request:
+    branches: [develop, staging, main]
+
+jobs:
+  apps:
+    name: Apps (lint + typecheck + build)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: vms
+          POSTGRES_PASSWORD: vms
+          POSTGRES_DB: vms_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U vms -d vms_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.11.0
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies (workspace root)
+        run: npm ci
+
+      - name: Lint
+        run: npx turbo run lint:check
+
+      - name: Typecheck
+        run: npx turbo run typecheck
+
+      - name: Build
+        run: npx turbo run build
+
+      - name: Build Storybook
+        run: npx turbo run build-storybook
+
+      - name: Test
+        run: npx turbo run test
+
+      - name: Backend coverage gate
+        run: npm run test:cov -w @vms/backend
+
+      # Single self-provisioning command: `pretest:e2e` (auto-run by npm) creates
+      # the test DB against the Postgres service container — CREATE DATABASE is
+      # idempotent (the container pre-creates vms_test; the script swallows the
+      # "already exists" error) — then runs `prisma migrate deploy`. test:e2e's
+      # global-setup then truncates and the suite seeds a clean slate.
+      - name: Test (e2e — auth + audit trail)
+        env:
+          # Test-named DB so global-setup.ts's truncate guard permits the wipe.
+          DATABASE_URL: postgresql://vms:vms@localhost:5432/vms_test
+          JWT_SECRET: ci-test-jwt-secret-ci-test-jwt-secret
+        run: npm run test:e2e -w @vms/backend
+
+  terraform:
+    name: Terraform (fmt + validate)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform fmt
+        run: terraform fmt -check
+
+      - name: Terraform init
+        run: terraform init -backend=false
+
+      - name: Terraform validate
+        run: terraform validate

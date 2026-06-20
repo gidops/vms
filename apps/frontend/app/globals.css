@@ -1,0 +1,13 @@
+@import "tailwindcss";
+@import "@vms/tokens/theme.css";
+
+/* Tailwind v4 auto-detects content in this app, but not sibling workspace
+ * packages. Scan the design system source so utilities used inside @vms/ui
+ * components are generated. */
+@source "../../../packages/ui/src";
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+}

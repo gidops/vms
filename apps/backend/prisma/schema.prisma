@@ -1,0 +1,469 @@
+// VMS Prisma schema. Enums mirror @vms/contracts so DB ↔ API ↔ UI never drift.
+// Identity/Auth/Audit + Outbox underpin every domain module; domain models
+// follow. Actor references on audit-style rows (approvedById, raisedById, …)
+// are plain UUID columns (indexed) rather than FK relations to keep the User
+// model from accruing a back-relation for every action.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums (kept in sync with packages/contracts/src/common/enums.ts)
+// ---------------------------------------------------------------------------
+enum Locale {
+  EN
+  FR
+  AR
+}
+
+enum AuthProvider {
+  LOCAL
+  OIDC
+}
+
+enum VisitType {
+  WALK_IN
+  PRE_INVITED
+  APPOINTMENT
+}
+
+enum VisitStatus {
+  PENDING
+  APPROVED
+  DENIED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  EXPIRED
+}
+
+enum PassStatus {
+  ISSUED
+  ACTIVE
+  RETURNED
+  REVOKED
+  EXPIRED
+}
+
+enum InvitationStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+  DISMISSED
+}
+
+enum GateEventType {
+  QR_SCAN
+  APPOINTMENT_VERIFY
+  INVITATION_VERIFY
+  ACCESS_GRANTED
+  ACCESS_DENIED
+}
+
+enum AttendanceType {
+  SHIFT_START
+  SHIFT_END
+  BREAK_START
+  BREAK_END
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  IN_APP
+}
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  PUBLISHED
+  FAILED
+}
+
+// ---------------------------------------------------------------------------
+// Identity / Auth / Audit
+// ---------------------------------------------------------------------------
+model User {
+  id                String       @id @default(uuid())
+  email             String       @unique
+  passwordHash      String? // null for SSO-only users
+  authProvider      AuthProvider @default(LOCAL)
+  externalSubjectId String?      @unique // e.g. Okta `sub`
+  tenantId          String? // multi-tenant prep
+  fullName          String
+  firstName         String?
+  lastName          String?
+  phone             String?
+  // S3 object key for the avatar (e.g. avatars/<id>/<uuid>.jpg). The public URL
+  // is composed on the frontend from NEXT_PUBLIC_S3_BASE_URL — never stored here.
+  avatarKey         String?
+  timezone          String? // IANA-ish identifier for region/time preference
+  assignedDesk      String? // VMC reception desk/location label
+  // Per-channel notification toggles, e.g. { newInviteRequest, csoDenied, ... }.
+  notificationPrefs Json?
+  isActive          Boolean      @default(true)
+  preferredLocale   Locale       @default(EN)
+  mfaEnabled        Boolean      @default(false)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  userRoles     UserRole[]
+  sessions      Session[]
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+  host          Host?
+  createdVisits Visit[]        @relation("VisitCreatedBy")
+  authoredNotes Note[]
+
+  @@index([tenantId])
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+}
+
+model Permission {
+  id          String  @id @default(uuid())
+  key         String  @unique // e.g. "visit:approve"
+  description String?
+
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model UserRole {
+  userId     String
+  roleId     String
+  // Ordering for "first assigned role" → a user's default active role.
+  assignedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}
+
+model Session {
+  id         String    @id @default(uuid())
+  userId     String
+  userAgent  String?
+  ip         String?
+  // The role this session is currently acting as (scopes token permissions).
+  activeRole String?
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @updatedAt
+  revokedAt  DateTime?
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokens RefreshToken[]
+
+  @@index([userId])
+}
+
+model RefreshToken {
+  id           String    @id @default(uuid())
+  sessionId    String
+  userId       String
+  tokenHash    String    @unique
+  family       String // rotation family; reuse of a used token revokes the family
+  prevTokenId  String?
+  replacedById String?
+  expiresAt    DateTime
+  usedAt       DateTime?
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([family])
+  @@index([userId])
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  actorUserId   String?
+  action        String
+  entityType    String
+  entityId      String?
+  eventType     String?
+  correlationId String?
+  ip            String?
+  userAgent     String?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  actor User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId])
+  @@index([entityType, entityId])
+  @@index([correlationId])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Domain
+// ---------------------------------------------------------------------------
+model Visitor {
+  id           String   @id @default(uuid())
+  fullName     String
+  email        String   @unique
+  phone        String? // encrypted at rest (application layer)
+  nationalId   String? // encrypted at rest (application layer)
+  organization String?
+  photoUrl     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  visits  Visit[]
+  ratings Rating[]
+  alerts  Alert[]
+}
+
+model Host {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  department String?
+  office     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invitations Invitation[]
+  visits      Visit[]
+}
+
+model Visit {
+  id           String      @id @default(uuid())
+  visitorId    String
+  hostId       String
+  invitationId String?     @unique
+  type         VisitType
+  status       VisitStatus @default(PENDING)
+  purpose      String
+  riskLevel    RiskLevel?
+  scheduledAt  DateTime?
+  checkInAt    DateTime?
+  checkOutAt   DateTime?
+  approvedById String?
+  deniedReason String?
+  // Origin of the request: who logged it and from which station/channel.
+  createdById  String?
+  // Denormalized creator name, preserved if the creator's account is deleted.
+  createdByName String?
+  source       String?     @default("VMC_STATION")
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  visitor    Visitor     @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  host       Host        @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  invitation Invitation? @relation(fields: [invitationId], references: [id])
+  createdBy  User?       @relation("VisitCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  pass       Pass?
+  rating     Rating?
+  alerts     Alert[]
+  notes      Note[]
+  gateEvents GateEvent[]
+
+  @@index([status])
+  @@index([visitorId])
+  @@index([hostId])
+}
+
+model Invitation {
+  id           String           @id @default(uuid())
+  hostId       String
+  visitorEmail String
+  status       InvitationStatus @default(DRAFT)
+  qrCode       String           @unique
+  token        String           @unique
+  validFrom    DateTime
+  validTo      DateTime
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  host  Host   @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  visit Visit?
+
+  @@index([hostId])
+}
+
+model Pass {
+  id         String     @id @default(uuid())
+  visitId    String     @unique
+  code       String     @unique
+  status     PassStatus @default(ISSUED)
+  issuedAt   DateTime   @default(now())
+  expiresAt  DateTime?
+  returnedAt DateTime?
+
+  visit      Visit       @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  accessCard AccessCard?
+}
+
+model AccessCard {
+  id         String    @id @default(uuid())
+  cardNumber String    @unique
+  passId     String?   @unique
+  assignedAt DateTime?
+  returnedAt DateTime?
+  isActive   Boolean   @default(true)
+
+  pass Pass? @relation(fields: [passId], references: [id], onDelete: SetNull)
+}
+
+model Rating {
+  id        String   @id @default(uuid())
+  visitId   String   @unique
+  visitorId String
+  score     Int // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  visit   Visit   @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  visitor Visitor @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+
+  @@index([visitorId])
+}
+
+model Alert {
+  id           String      @id @default(uuid())
+  visitId      String?
+  visitorId    String?
+  level        RiskLevel
+  status       AlertStatus @default(OPEN)
+  reason       String
+  category     String?
+  raisedById   String?
+  resolvedById String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  visit   Visit?   @relation(fields: [visitId], references: [id], onDelete: SetNull)
+  visitor Visitor? @relation(fields: [visitorId], references: [id], onDelete: SetNull)
+  notes   Note[]
+
+  @@index([status])
+  @@index([visitId])
+}
+
+// Freeform remarks attached to a visit request or an alert (the "Remarks/notes"
+// and "Add Note" affordance). Polymorphic via nullable visit/alert FKs.
+model Note {
+  id      String  @id @default(uuid())
+  visitId String?
+  alertId String?
+  // Author link is SetNull on user deletion; authorName is denormalized so the
+  // note keeps its attribution even after the author's account is removed.
+  authorId   String?
+  authorName String   @default("")
+  body       String
+  createdAt  DateTime @default(now())
+
+  visit  Visit? @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  alert  Alert? @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  author User?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([visitId])
+  @@index([alertId])
+}
+
+model GateEvent {
+  id              String        @id @default(uuid())
+  visitId         String?
+  gateId          String
+  type            GateEventType
+  operativeUserId String?
+  result          String?
+  metadata        Json?
+  occurredAt      DateTime      @default(now())
+
+  visit Visit? @relation(fields: [visitId], references: [id], onDelete: SetNull)
+
+  @@index([gateId])
+  @@index([occurredAt])
+}
+
+model ShiftAttendance {
+  id                     String         @id @default(uuid())
+  operativeUserId        String
+  type                   AttendanceType
+  // Reference/hash to an external biometric vault — never raw template data.
+  fingerprintTemplateRef String?
+  gateId                 String?
+  recordedAt             DateTime       @default(now())
+
+  @@index([operativeUserId])
+  @@index([recordedAt])
+}
+
+model Notification {
+  id           String              @id @default(uuid())
+  userId       String?
+  visitorEmail String?
+  channel      NotificationChannel
+  locale       Locale              @default(EN)
+  templateKey  String
+  payload      Json?
+  status       String              @default("PENDING")
+  sentAt       DateTime?
+  createdAt    DateTime            @default(now())
+
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Event infrastructure (transactional outbox)
+// ---------------------------------------------------------------------------
+model OutboxEvent {
+  id            String       @id @default(uuid())
+  aggregateType String
+  aggregateId   String
+  eventType     String
+  payload       Json
+  metadata      Json?
+  status        OutboxStatus @default(PENDING)
+  attempts      Int          @default(0)
+  availableAt   DateTime     @default(now())
+  publishedAt   DateTime?
+  createdAt     DateTime     @default(now())
+
+  @@index([status, availableAt])
+}

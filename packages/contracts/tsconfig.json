@@ -1,0 +1,10 @@
+{
+  "extends": "@vms/config/tsconfig/base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "noEmit": true,
+    "incremental": false
+  },
+  "include": ["src"]
+}

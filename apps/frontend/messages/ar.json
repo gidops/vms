@@ -1,0 +1,276 @@
+{
+  "app": {
+    "name": "AATC VMS"
+  },
+  "nav": {
+    "schedule": "جدول اليوم",
+    "requests": "الطلبات والتنبيهات",
+    "visitors": "الزوّار",
+    "switchAccount": "تبديل الحساب",
+    "accountSettings": "إعدادات الحساب",
+    "help": "المساعدة / الدعم",
+    "logout": "تسجيل الخروج"
+  },
+  "login": {
+    "title": "تسجيل الدخول",
+    "subtitle": "الوصول إلى نظام إدارة الزوّار",
+    "email": "البريد الإلكتروني",
+    "emailPlaceholder": "name@aatc.org",
+    "password": "كلمة المرور",
+    "passwordPlaceholder": "أدخل كلمة المرور",
+    "forgot": "هل نسيت كلمة المرور؟",
+    "submit": "تسجيل الدخول",
+    "signingIn": "جارٍ تسجيل الدخول…",
+    "error": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+    "or": "أو",
+    "okta": "تسجيل الدخول عبر Okta SSO",
+    "createFirstAdmin": "إعداد أول حساب مسؤول"
+  },
+  "dashboard": {
+    "hub": "مركز VMC",
+    "welcome": "مرحبًا {name}",
+    "records": "سجلات الزوّار",
+    "selectAll": "تحديد كل الزوّار",
+    "filters": {
+      "searchPlaceholder": "ابحث عن زائر أو مضيف أو طابق أو رقم تصريح",
+      "allVisitTypes": "كل أنواع الزيارة",
+      "allPurpose": "كل الأغراض",
+      "search": "بحث"
+    },
+    "stats": {
+      "onsite": "الزوّار المتواجدون",
+      "checkedIn": "تسجيلات الدخول اليوم",
+      "checkedOut": "تسجيلات الخروج اليوم"
+    },
+    "quickActions": {
+      "title": "إجراءات سريعة",
+      "registerWalkIn": "تسجيل زائر بدون موعد",
+      "newInvite": "طلب دعوة جديد"
+    },
+    "range": {
+      "today": "اليوم",
+      "last7": "آخر 7 أيام",
+      "custom": "مخصّص"
+    },
+    "channel": {
+      "invited": "مدعو",
+      "walkIn": "بدون موعد"
+    },
+    "actions": {
+      "checkIn": "تسجيل الدخول",
+      "checkOut": "تسجيل الخروج",
+      "viewDetails": "عرض التفاصيل"
+    },
+    "columns": {
+      "visitor": "الزائر",
+      "channel": "القناة",
+      "hostUnit": "المضيف / الطابق / الوحدة",
+      "purpose": "الغرض",
+      "timeCreated": "وقت الإنشاء",
+      "status": "الحالة",
+      "action": "إجراء"
+    }
+  },
+  "common": {
+    "notifications": "الإشعارات",
+    "logout": "تسجيل الخروج",
+    "allStatus": "كل الحالات"
+  },
+  "requests": {
+    "title": "الطلبات والتنبيهات",
+    "tabs": { "all": "الكل", "requests": "الطلبات", "alerts": "التنبيهات" },
+    "typeRequest": "طلب زيارة",
+    "typeAlert": "تنبيهات",
+    "createdBy": "أنشأه",
+    "notesCount": "{count} ملاحظات",
+    "empty": "لا توجد طلبات أو تنبيهات",
+    "detailTitle": "تفاصيل طلب الزيارة",
+    "alertDetailTitle": "تفاصيل التنبيه",
+    "visitorAwaiting": "في انتظار الموافقة",
+    "vmcReception": "استقبال VMC",
+    "noNotes": "لا توجد ملاحظات بعد.",
+    "addNotePlaceholder": "أضف ملاحظة…",
+    "status": {
+      "awaitingApproval": "في انتظار موافقة CSO",
+      "approvedByCso": "تمت الموافقة من CSO",
+      "deniedByCso": "رُفض من CSO",
+      "cancelled": "أُلغي",
+      "onsite": "متواجد",
+      "checkedOut": "سجّل الخروج",
+      "expired": "منتهٍ",
+      "open": "مفتوح",
+      "acknowledged": "تم الاطلاع",
+      "resolved": "تم الحل",
+      "dismissed": "مرفوض"
+    },
+    "timeline": {
+      "inviteCreated": "تم إنشاء الدعوة",
+      "awaitingApproval": "في انتظار موافقة CSO",
+      "checkedIn": "تم الدخول",
+      "passIssued": "تم إصدار التصريح",
+      "checkedOut": "تم الخروج"
+    },
+    "sections": {
+      "hostDetails": "تفاصيل المضيف / الوحدة / الطابق",
+      "floor": "الطابق",
+      "visitorInfo": "معلومات الزائر",
+      "trackStatus": "تتبّع حالة الطلب",
+      "purposeOfVisit": "غرض الزيارة",
+      "purposeCategory": "فئة الغرض",
+      "scheduledFor": "مجدول لـ",
+      "origin": "مصدر الطلب",
+      "createdByLabel": "أنشأه",
+      "timeCreated": "وقت الإنشاء",
+      "source": "المصدر",
+      "role": "الدور",
+      "remarks": "ملاحظات",
+      "reason": "السبب"
+    },
+    "actions": {
+      "cancelRequest": "إلغاء الطلب",
+      "addNote": "إضافة ملاحظة",
+      "editRequest": "تعديل الطلب",
+      "save": "حفظ",
+      "cancel": "إلغاء",
+      "resolve": "حل"
+    }
+  },
+  "language": {
+    "select": "اختر اللغة",
+    "en": "الإنجليزية",
+    "fr": "الفرنسية",
+    "ar": "العربية"
+  },
+  "roles": {
+    "SUPER_ADMIN": "مدير عام",
+    "ADMIN": "مدير",
+    "AUDITOR": "مدقق",
+    "STAFF": "موظف",
+    "VMC": "استقبال VMC",
+    "GATE": "البوابة"
+  },
+  "signup": {
+    "title": "إنشاء حساب مسؤول",
+    "subtitle": "قم بإعداد أول مسؤول للنظام",
+    "fullName": "الاسم الكامل",
+    "fullNamePlaceholder": "محمد أحمد",
+    "email": "البريد الإلكتروني",
+    "emailPlaceholder": "name@aatc.org",
+    "password": "كلمة المرور",
+    "passwordPlaceholder": "8 أحرف على الأقل",
+    "submit": "إنشاء الحساب",
+    "submitting": "جارٍ الإنشاء…",
+    "error": "تعذّر إنشاء الحساب.",
+    "closedTitle": "اكتمل الإعداد",
+    "closedSubtitle": "يوجد مسؤول بالفعل. يرجى تسجيل الدخول.",
+    "goToLogin": "الذهاب لتسجيل الدخول"
+  },
+  "admin": {
+    "welcome": "مرحبًا {name}",
+    "subtitle": "وحدة الإدارة",
+    "userManagement": "إدارة المستخدمين",
+    "userManagementBody": "عرض المستخدمين وإنشاء الحسابات وتعيين الأدوار.",
+    "manageUsers": "إدارة المستخدمين"
+  },
+  "staff": {
+    "welcome": "مرحبًا {name}",
+    "subtitle": "مساحة عمل الموظفين",
+    "placeholderTitle": "لوحة الموظفين",
+    "placeholderBody": "هذه اللوحة مؤقتة وسيتم تطويرها قريبًا."
+  },
+  "gate": {
+    "welcome": "مرحبًا {name}",
+    "subtitle": "عمليات البوابة",
+    "placeholderTitle": "لوحة البوابة",
+    "placeholderBody": "هذه اللوحة مؤقتة وسيتم تطويرها قريبًا."
+  },
+  "users": {
+    "title": "إدارة المستخدمين",
+    "newUser": "مستخدم جديد",
+    "empty": "لا يوجد مستخدمون بعد",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "editRoles": "تعديل الأدوار",
+    "editRolesFor": "تعديل الأدوار — {name}",
+    "delete": "حذف",
+    "deleteConfirmTitle": "حذف المستخدم",
+    "deleteConfirmBody": "حذف {name}؟ سيُحذف الحساب، لكن تبقى السجلات والإجراءات التي أنشأها.",
+    "deleteError": "تعذّر حذف هذا المستخدم.",
+    "columns": {
+      "user": "المستخدم",
+      "roles": "الأدوار",
+      "status": "الحالة",
+      "created": "تاريخ الإنشاء",
+      "actions": "إجراءات"
+    },
+    "form": {
+      "fullName": "الاسم الكامل",
+      "email": "البريد الإلكتروني",
+      "password": "كلمة المرور",
+      "roles": "الأدوار",
+      "create": "إنشاء المستخدم",
+      "save": "حفظ",
+      "cancel": "إلغاء"
+    }
+  },
+  "settings": {
+    "title": "إعدادات الحساب",
+    "tabs": {
+      "profile": "معلومات الملف الشخصي",
+      "desk": "مكتبي",
+      "preferences": "الأمان/التفضيلات"
+    },
+    "profile": {
+      "personalInfo": "المعلومات الشخصية",
+      "personalInfoHelp": "أدخل معلوماتك الشخصية كما هي في بطاقة هويتك للتحقق.",
+      "editProfile": "تعديل الملف الشخصي",
+      "uploadError": "تعذّر رفع الصورة.",
+      "firstName": "الاسم الأول",
+      "lastName": "اسم العائلة",
+      "email": "البريد الإلكتروني",
+      "phone": "رقم الهاتف",
+      "role": "الدور",
+      "station": "المحطة النشطة",
+      "save": "حفظ"
+    },
+    "password": {
+      "title": "كلمة المرور",
+      "help": "غيّر كلمة المرور في أي وقت. سيؤدي تغييرها إلى تسجيل خروجك من جميع الجلسات النشطة.",
+      "current": "كلمة المرور الحالية",
+      "new": "كلمة المرور الجديدة",
+      "confirm": "تأكيد كلمة المرور الجديدة",
+      "change": "تغيير كلمة المرور",
+      "error": "تعذّر تغيير كلمة المرور. تحقّق من كلمة المرور الحالية.",
+      "mismatch": "كلمتا المرور غير متطابقتين."
+    },
+    "desk": {
+      "title": "المكتب / الموقع المخصّص",
+      "help": "ترتبط جميع سجلات الزيارة بجهاز VMC المخصّص لك.",
+      "mainLobby": "البهو الرئيسي"
+    },
+    "activity": {
+      "title": "نشاط تسجيل الدخول",
+      "help": "اطّلع على نشاط تسجيل دخولك، وأبلغ عن أي دخول غير معتاد فورًا.",
+      "current": "الجلسة الحالية",
+      "previous": "الجلسة السابقة",
+      "notYou": "ألست أنت؟",
+      "reportIssue": "إبلاغ"
+    },
+    "language": {
+      "title": "اللغة العامة",
+      "help": "غيّر تفضيل اللغة."
+    },
+    "region": {
+      "title": "المنطقة والوقت والتاريخ",
+      "help": "اختر منطقتك وتاريخك ووقتك المفضّل."
+    },
+    "notifications": {
+      "title": "الإشعارات",
+      "help": "ابقَ على اطّلاع بنشاط حسابك.",
+      "newInviteRequest": "طلب دعوة جديد",
+      "csoDenied": "طلب مرفوض من CSO",
+      "csoApproved": "طلب موافَق عليه من CSO",
+      "flaggedVisitor": "تنبيه زائر مُعلَّم"
+    }
+  }
+}
