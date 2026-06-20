@@ -53,7 +53,18 @@ pipeline {
         }
       }
       stages {
-        stage('Install')   { steps { sh 'npm ci' } }                         // postinstall runs `prisma generate`
+        stage('Install') {
+          steps {
+            // Capture the branch into a GLOBAL env var while the SCM checkout is in
+            // scope here, so the Deploy gate (beforeAgent true) can read it later —
+            // at that point Deploy's own agent/checkout hasn't run, so GIT_BRANCH
+            // isn't yet populated there. Strip any "origin/" prefix to a bare name.
+            script {
+              env.DEPLOY_BRANCH = (env.GIT_BRANCH ?: env.BRANCH_NAME ?: '').replaceAll('^origin/', '')
+            }
+            sh 'npm ci'   // postinstall runs `prisma generate`
+          }
+        }
         stage('Lint')      { steps { sh 'npx turbo run lint:check' } }
         stage('Typecheck') { steps { sh 'npx turbo run typecheck' } }
         stage('Build')     { steps { sh 'npx turbo run build' } }
@@ -80,29 +91,15 @@ pipeline {
       }
     }
 
-    // ---------------- TEMP DEBUG: print branch vars unconditionally ----------------
-    // No when{} gate, so this runs every build to reveal the real branch values the
-    // Deploy gate sees. agent any is required because the pipeline is `agent none`.
-    // Remove once the Deploy when{} gate is confirmed working.
-    stage('Debug branch') {
-      agent any
-      steps {
-        echo "GIT_BRANCH=[${env.GIT_BRANCH}] BRANCH_NAME=[${env.BRANCH_NAME}] DEPLOY=[${params.DEPLOY}]"
-      }
-    }
-
     // ---------------- CD (host agent with docker + aws + terraform) ----------------
     stage('Deploy') {
       when {
         beforeAgent true
         allOf {
           expression { return params.DEPLOY }
-          expression {
-            // Read GIT_BRANCH (set by plain Pipeline jobs, e.g. "origin/staging"),
-            // falling back to BRANCH_NAME so this also works under Multibranch.
-            def b = env.GIT_BRANCH ?: env.BRANCH_NAME ?: ''
-            return b ==~ /(origin\/)?(main|staging)/
-          }
+          // env.DEPLOY_BRANCH is set in the CI stage's Install step, so it already
+          // exists when this gate evaluates (even with beforeAgent true).
+          expression { return ['main', 'staging'].contains(env.DEPLOY_BRANCH) }
         }
       }
       agent { label 'vms-deploy' }
