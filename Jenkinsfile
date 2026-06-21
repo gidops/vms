@@ -73,6 +73,25 @@ pipeline {
       }
     }
 
+    // ---------------- SonarCloud analysis (sonar-scanner-cli container) ----------------
+    // Runs on every CI build (not gated behind the Deploy params). Scan only for
+    // now — no quality-gate stage yet.
+    stage('SonarCloud analysis') {
+      agent {
+        docker {
+          image 'sonarsource/sonar-scanner-cli:latest'
+          args  '--entrypoint='
+        }
+      }
+      environment {
+        SONAR_TOKEN    = credentials('sonarcloud-token')
+        SONAR_HOST_URL = 'https://sonarcloud.io'
+      }
+      steps {
+        sh 'sonar-scanner'
+      }
+    }
+
     // ---------------- Terraform validate (hashicorp/terraform container) ----------------
     stage('Terraform validate') {
       agent {
