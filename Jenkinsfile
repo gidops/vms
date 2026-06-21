@@ -86,6 +86,10 @@ pipeline {
       environment {
         SONAR_TOKEN    = credentials('sonarcloud-token')
         SONAR_HOST_URL = 'https://sonarcloud.io'
+        // The container runs as the jenkins UID, which can't write the scanner's
+        // default cache at /opt/sonar-scanner/.sonar (root-owned in the image).
+        // Point SONAR_USER_HOME at the workspace (jenkins-owned, writable).
+        SONAR_USER_HOME = "${WORKSPACE}/.sonar"
       }
       steps {
         sh 'sonar-scanner'
