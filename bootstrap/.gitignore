@@ -1,0 +1,6 @@
+# Bootstrap uses LOCAL state. This state is low-risk and secret-free (it only
+# describes an S3 bucket + a lock table), so we may choose to commit it later to
+# make the bootstrap reproducible. Ignored by default for now.
+.terraform/
+*.tfstate
+*.tfstate.*

@@ -57,6 +57,17 @@ set -euo pipefail
 REGION="us-east-1"
 TF="terraform -chdir=terraform"
 
+# Approval flags applied to EVERY `terraform apply`. In CI (Jenkins sets
+# VMS_AUTO_APPROVE=1) there is no TTY, so terraform's own "Do you want to perform
+# these actions?" prompt hits stdin EOF and dies — the human approval already
+# happened at the upstream Jenkins `input` gate. When VMS_AUTO_APPROVE=1, run
+# every apply with -auto-approve -input=false. Left empty otherwise so local,
+# interactive runs still get terraform's normal confirmation prompt.
+APPLY_FLAGS=()
+if [ "${VMS_AUTO_APPROVE:-0}" = "1" ]; then
+  APPLY_FLAGS=(-input=false -auto-approve)
+fi
+
 # ---------- helpers ----------
 
 die() { echo "ERROR: $*" >&2; exit 1; }
@@ -115,7 +126,7 @@ require_outputs() {
 # Lets --deploy work from a fully destroyed state. Both tag vars are required.
 bootstrap_phase_a() {
   echo "=== Phase A: ECR repos + EIP not found — creating them first ==="
-  $TF apply \
+  $TF apply "${APPLY_FLAGS[@]}" \
     -var="backend_image_tag=$TAG" \
     -var="frontend_image_tag=$TAG" \
     -target=aws_ecr_repository.backend \
@@ -242,7 +253,7 @@ do_deploy() {
   echo ">>> Only the app(s) whose tag changed get replaced; the other stays pinned."
   $TF plan -var="backend_image_tag=$backend_tag" -var="frontend_image_tag=$frontend_tag"
   confirm_plan
-  $TF apply -var="backend_image_tag=$backend_tag" -var="frontend_image_tag=$frontend_tag"
+  $TF apply "${APPLY_FLAGS[@]}" -var="backend_image_tag=$backend_tag" -var="frontend_image_tag=$frontend_tag"
 
   check_eip_held "$eip_before"
   echo
@@ -270,7 +281,7 @@ do_redeploy() {
   echo "    (Use this to recover a crash-looping box when the image hasn't changed.)"
   $TF plan -var="backend_image_tag=$CURRENT_BACKEND" -var="frontend_image_tag=$CURRENT_FRONTEND" "${replace_args[@]}"
   confirm_plan
-  $TF apply -var="backend_image_tag=$CURRENT_BACKEND" -var="frontend_image_tag=$CURRENT_FRONTEND" "${replace_args[@]}"
+  $TF apply "${APPLY_FLAGS[@]}" -var="backend_image_tag=$CURRENT_BACKEND" -var="frontend_image_tag=$CURRENT_FRONTEND" "${replace_args[@]}"
 
   check_eip_held "$eip_before"
 }
@@ -278,6 +289,14 @@ do_redeploy() {
 # ---------- entry ----------
 
 [ -d terraform ] || die "No ./terraform directory here. Run from the repo root."
+
+# Initialize the S3 backend BEFORE any terraform command. The app stack uses a
+# remote S3 backend, so a fresh Jenkins workspace has no .terraform/ and every
+# `terraform output/plan/apply` — including the Phase A bootstrap below — would
+# fail with "Backend initialization required, please run terraform init".
+# Plain init suffices (no local state to migrate; the S3 backend auto-configures);
+# -input=false so it never blocks on a prompt in non-interactive CI.
+$TF init -input=false
 
 # Tag every image for this run by git short SHA (+ -dirty if the tree is unclean).
 TAG="$(git describe --always --dirty)"
