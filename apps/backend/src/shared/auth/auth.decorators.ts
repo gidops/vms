@@ -26,6 +26,8 @@ export interface AuthUser {
   /** Session id from the token (for switch-role). */
   sid?: string;
   tenantId?: string | null;
+  /** User's preferred language (EN | FR | AR), for server-side localization. */
+  preferredLocale?: string;
 }
 
 export const CurrentUser = createParamDecorator(

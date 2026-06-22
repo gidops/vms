@@ -1,0 +1,12 @@
+<mj-section background-color="#ffffff" border-radius="8px" padding="24px">
+  <mj-column>
+    <mj-text font-size="22px" font-weight="bold" color="#1a1a2e">
+      {{t 'email.visitorArrived.heading'}}
+    </mj-text>
+    <mj-text>{{t 'email.common.greeting' name=hostName}}</mj-text>
+    <mj-text>{{t 'email.visitorArrived.intro' visitorName=visitorName}}</mj-text>
+    {{#if time}}
+      <mj-text color="#8a8a9a">{{t 'email.visitorArrived.details' time=time}}</mj-text>
+    {{/if}}
+  </mj-column>
+</mj-section>

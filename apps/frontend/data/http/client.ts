@@ -23,6 +23,25 @@ export function setUnauthorizedHandler(
   unauthorizedHandler = handler;
 }
 
+/**
+ * Best-effort current locale for outgoing requests. next-intl persists the
+ * active locale in the `NEXT_LOCALE` cookie; we fall back to the first path
+ * segment, then to "en". Backend normalizes (en → EN) and defaults to EN.
+ */
+function currentLocale(): string {
+  if (typeof document !== "undefined") {
+    const cookie = document.cookie
+      .split("; ")
+      .find((c) => c.startsWith("NEXT_LOCALE="));
+    if (cookie) return cookie.split("=")[1] ?? "en";
+  }
+  if (typeof location !== "undefined") {
+    const seg = location.pathname.split("/")[1];
+    if (seg === "fr" || seg === "ar") return seg;
+  }
+  return "en";
+}
+
 export interface ApiOptions {
   method?: string;
   body?: unknown;
@@ -41,6 +60,9 @@ export async function api<T>(
 ): Promise<T> {
   const headers: Record<string, string> = {
     "x-correlation-id": crypto.randomUUID(),
+    // Tell the backend which language to render server-side content in (API
+    // errors, validation messages, and any notifications it triggers).
+    "x-locale": currentLocale(),
   };
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
 

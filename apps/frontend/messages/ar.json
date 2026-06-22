@@ -45,7 +45,12 @@
     "quickActions": {
       "title": "إجراءات سريعة",
       "registerWalkIn": "تسجيل زائر بدون موعد",
-      "newInvite": "طلب دعوة جديد"
+      "newInvite": "طلب دعوة جديد",
+      "formComingSoonTitle": "قريبًا",
+      "formComingSoon": "هذا النموذج قيد الإنشاء وسيتوفر قريبًا."
+    },
+    "activity": {
+      "title": "عرض نشاطك"
     },
     "range": {
       "today": "اليوم",
@@ -132,8 +137,12 @@
       "editRequest": "تعديل الطلب",
       "save": "حفظ",
       "cancel": "إلغاء",
-      "resolve": "حل"
-    }
+      "resolve": "حل",
+      "approve": "الموافقة",
+      "deny": "الرفض",
+      "confirmDeny": "تأكيد الرفض"
+    },
+    "denyReasonPlaceholder": "سبب الرفض"
   },
   "language": {
     "select": "اختر اللغة",
@@ -165,12 +174,72 @@
     "closedSubtitle": "يوجد مسؤول بالفعل. يرجى تسجيل الدخول.",
     "goToLogin": "الذهاب لتسجيل الدخول"
   },
+  "invite": {
+    "titleInvite": "إنشاء طلب دعوة",
+    "titleWalkin": "إنشاء زيارة بدون موعد",
+    "subtitle": "املأ النموذج أدناه لإرسال الدعوة إلى ضيوفك",
+    "steps": {
+      "visitor": "تفاصيل الزائر",
+      "host": "تفاصيل المضيف",
+      "visit": "تفاصيل الزيارة",
+      "summary": "الملخص"
+    },
+    "sections": {
+      "visitorDetails": "تفاصيل الزائر",
+      "visitPurpose": "غرض الزيارة",
+      "hostDetails": "تفاصيل المضيف"
+    },
+    "importCsv": "استيراد الضيوف من CSV",
+    "downloadTemplate": "تنزيل قالب CSV",
+    "addVisitor": "إضافة زائر",
+    "removeVisitor": "إزالة",
+    "fields": {
+      "fullName": "الاسم الكامل للزائر",
+      "fullNamePlaceholder": "أدخل الاسم الكامل",
+      "email": "البريد الإلكتروني للزائر",
+      "emailPlaceholder": "مثال: david@gmail.com",
+      "organization": "المؤسسة",
+      "organizationPlaceholder": "أدخل اسم المؤسسة",
+      "phone": "هاتف الزائر",
+      "phonePlaceholder": "+234 000-00-000",
+      "host": "اختر المضيف/الموظف",
+      "hostPlaceholder": "أضف موظفًا / مضيفًا",
+      "floor": "الطابق/القسم",
+      "floorPlaceholder": "اختر الطابق",
+      "purpose": "غرض الزيارة",
+      "purposePlaceholder": "اختر فئة الزيارة",
+      "dateTime": "تاريخ ووقت الزيارة",
+      "notes": "ملاحظات الزيارة",
+      "notesPlaceholder": "أدخل ملاحظات الزيارة"
+    },
+    "summary": {
+      "host": "المضيف/الموظف",
+      "dateTime": "تاريخ ووقت الزيارة",
+      "clearance": "تصريح الزيارة",
+      "pending": "قيد الانتظار",
+      "approved": "تمت الموافقة"
+    },
+    "showAllVisitors": "عرض كل الزوار ({count})",
+    "showLessVisitors": "عرض عدد أقل من الزوار",
+    "goToHost": "تفاصيل المضيف",
+    "review": "مراجعة التفاصيل",
+    "submitInvite": "إرسال طلب الدعوة",
+    "submitWalkin": "إنشاء الزيارة",
+    "submitting": "جارٍ الإرسال…",
+    "back": "رجوع",
+    "cancel": "إلغاء",
+    "submitError": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+  },
   "admin": {
     "welcome": "مرحبًا {name}",
     "subtitle": "وحدة الإدارة",
     "userManagement": "إدارة المستخدمين",
     "userManagementBody": "عرض المستخدمين وإنشاء الحسابات وتعيين الأدوار.",
-    "manageUsers": "إدارة المستخدمين"
+    "manageUsers": "إدارة المستخدمين",
+    "pendingTitle": "الطلبات المعلّقة",
+    "pendingBody": "راجع وقرّر طلبات الزيارة التي تنتظر الموافقة.",
+    "pendingEmpty": "لا توجد طلبات تنتظر الموافقة.",
+    "pendingCount": "{count} بانتظار الموافقة"
   },
   "staff": {
     "welcome": "مرحبًا {name}",

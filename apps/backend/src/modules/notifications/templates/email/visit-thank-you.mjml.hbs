@@ -1,0 +1,14 @@
+<mj-section background-color="#ffffff" border-radius="8px" padding="24px">
+  <mj-column>
+    <mj-text font-size="22px" font-weight="bold" color="#1a1a2e">
+      {{t 'email.thankYou.heading'}}
+    </mj-text>
+    <mj-text>{{t 'email.thankYou.intro' name=visitorName}}</mj-text>
+    <mj-text>{{t 'email.thankYou.ratingPrompt'}}</mj-text>
+    {{#if ratingUrl}}
+      <mj-button href="{{ratingUrl}}" background-color="#1a1a2e" border-radius="6px" align="left">
+        {{t 'email.thankYou.ratingButton'}}
+      </mj-button>
+    {{/if}}
+  </mj-column>
+</mj-section>

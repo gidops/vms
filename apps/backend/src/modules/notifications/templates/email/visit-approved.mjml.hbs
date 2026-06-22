@@ -1,0 +1,23 @@
+<mj-section background-color="#ffffff" border-radius="8px" padding="24px">
+  <mj-column>
+    <mj-text font-size="22px" font-weight="bold" color="#1a1a2e">
+      {{t 'email.visitApproved.heading'}}
+    </mj-text>
+    <mj-text>{{t 'email.common.greeting' name=visitorName}}</mj-text>
+    <mj-text>{{t 'email.visitApproved.intro'}}</mj-text>
+
+    <mj-table css-class="vms-table">
+      <tr><td>{{t 'email.labels.visitorName'}}</td><td>{{visitorName}}</td></tr>
+      <tr><td>{{t 'email.labels.visitDate'}}</td><td>{{visitDate}}</td></tr>
+      <tr><td>{{t 'email.labels.time'}}</td><td>{{time}}</td></tr>
+      <tr><td>{{t 'email.labels.purpose'}}</td><td>{{purpose}}</td></tr>
+      <tr><td>{{t 'email.labels.host'}}</td><td>{{host}}</td></tr>
+      <tr><td>{{t 'email.labels.uniqueCode'}}</td><td><strong>{{code}}</strong></td></tr>
+    </mj-table>
+
+    <mj-text padding-top="16px">{{t 'email.visitApproved.qrInstruction'}}</mj-text>
+    <mj-image src="cid:qr" width="180px" align="left" alt="QR" padding="8px 0" />
+
+    <mj-text padding-top="8px">{{t 'email.visitApproved.instructions'}}</mj-text>
+  </mj-column>
+</mj-section>

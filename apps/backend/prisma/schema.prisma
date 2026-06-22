@@ -91,6 +91,7 @@ enum AttendanceType {
 enum NotificationChannel {
   EMAIL
   SMS
+  WHATSAPP
   IN_APP
 }
 
@@ -249,6 +250,9 @@ model Visitor {
   nationalId   String? // encrypted at rest (application layer)
   organization String?
   photoUrl     String?
+  // Preferred language for visitor-facing notifications. Defaults to EN until
+  // captured (e.g. at invitation/registration time).
+  preferredLocale Locale @default(EN)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -278,6 +282,8 @@ model Visit {
   type         VisitType
   status       VisitStatus @default(PENDING)
   purpose      String
+  // Per-visit floor/department selected at request time (distinct from Host.office).
+  floor        String?
   riskLevel    RiskLevel?
   scheduledAt  DateTime?
   checkInAt    DateTime?
@@ -438,15 +444,27 @@ model Notification {
   id           String              @id @default(uuid())
   userId       String?
   visitorEmail String?
+  // Resolved delivery target for the channel (email address or phone number).
+  // For IN_APP, recipient is the userId; for EMAIL/SMS/WHATSAPP it's the address.
+  recipient    String?
   channel      NotificationChannel
   locale       Locale              @default(EN)
   templateKey  String
   payload      Json?
+  // Lifecycle: PENDING -> SENT | FAILED. Drives the polling dispatcher.
   status       String              @default("PENDING")
+  attempts     Int                 @default(0)
+  availableAt  DateTime            @default(now())
+  error        String?
+  // Read receipt for IN_APP notifications (null = unread).
+  readAt       DateTime?
+  // Optional back-reference to the visit that triggered this notification.
+  visitId      String?
   sentAt       DateTime?
   createdAt    DateTime            @default(now())
 
-  @@index([status])
+  @@index([status, availableAt])
+  @@index([userId, readAt])
 }
 
 // ---------------------------------------------------------------------------

@@ -29,6 +29,7 @@ export const EVENT_TYPES = {
   VisitCancelled: 'visit.cancelled',
   VisitUpdated: 'visit.updated',
   InvitationCreated: 'invitation.created',
+  VisitRequested: 'visit.requested',
   AlertUpdated: 'alert.updated',
   NoteAdded: 'note.added',
   VisitorRated: 'visitor.rated',

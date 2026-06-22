@@ -11,6 +11,7 @@ import {
 import { Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
+import { PendingRequests } from "@/app/[locale]/admin/_components/PendingRequests";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
@@ -27,6 +28,8 @@ function Admin() {
           </h1>
           <p className="text-fg-muted">{t("subtitle")}</p>
         </div>
+
+        {hasPermission("visit:approve") ? <PendingRequests /> : null}
 
         {hasPermission("user:read") ? (
           <Card>

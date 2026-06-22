@@ -1,0 +1,100 @@
+{
+  "brand": {
+    "name": "AATC VMS",
+    "fullName": "Gestion des visiteurs AATC"
+  },
+  "email": {
+    "common": {
+      "greeting": "Cher/Chère {name},",
+      "automated": "Ceci est un message automatique. Merci de ne pas y répondre.",
+      "footer": "© {year} Gestion des visiteurs AATC. Tous droits réservés.",
+      "regards": "Cordialement,",
+      "team": "L'équipe AATC"
+    },
+    "labels": {
+      "visitorName": "Nom du visiteur",
+      "visitDate": "Date de la visite",
+      "time": "Heure",
+      "purpose": "Objet",
+      "host": "Hôte",
+      "uniqueCode": "Code unique"
+    },
+    "visitApproved": {
+      "subject": "Votre visite a été confirmée !",
+      "heading": "Votre visite a été confirmée !",
+      "intro": "Votre visite a été confirmée. Voici les détails de la visite :",
+      "qrInstruction": "Présentez ce code QR à l'entrée :",
+      "instructions": "Veuillez arriver à l'heure. Si vous ne pouvez pas venir, merci d'en informer votre hôte à l'avance."
+    },
+    "visitorArrived": {
+      "subject": "Votre invité est arrivé",
+      "heading": "Votre invité est arrivé",
+      "intro": "{visitorName} s'est présenté(e) à l'entrée et vous attend.",
+      "details": "Arrivée enregistrée à {time}."
+    },
+    "thankYou": {
+      "subject": "Merci de votre visite à l'AATC",
+      "heading": "Merci de votre visite à l'AATC",
+      "intro": "Cher/Chère {name}, merci de votre visite à l'AATC. Nous espérons que votre expérience a été agréable.",
+      "ratingPrompt": "Votre avis nous intéresse. Veuillez prendre un instant pour évaluer votre visite :",
+      "ratingButton": "Évaluer votre visite"
+    }
+  },
+  "sms": {
+    "visitApproved": "AATC : Bonjour {visitorName}, votre visite le {visitDate} à {time} avec {host} est confirmée. Votre code d'accès est {code}. Merci d'arriver à l'heure.",
+    "visitorArrived": "AATC : Votre invité {visitorName} est arrivé à l'entrée et vous attend.",
+    "thankYou": "AATC : Merci de votre visite, {visitorName}. Votre avis nous intéresse : {ratingUrl}"
+  },
+  "whatsapp": {
+    "visitApproved": "*Visite AATC confirmée*\n\nBonjour {visitorName}, votre visite le {visitDate} à {time} avec {host} est confirmée.\nCode d'accès : *{code}*\n\nMerci d'arriver à l'heure.",
+    "visitorArrived": "*AATC* — Votre invité *{visitorName}* est arrivé à l'entrée et vous attend.",
+    "thankYou": "*AATC* — Merci de votre visite, {visitorName}. Votre avis nous intéresse : {ratingUrl}"
+  },
+  "inapp": {
+    "visitApproved": {
+      "title": "Visite approuvée",
+      "body": "La visite de {visitorName} a été approuvée."
+    },
+    "visitorArrived": {
+      "title": "Invité arrivé",
+      "body": "{visitorName} s'est présenté(e) à l'entrée."
+    },
+    "thankYou": {
+      "title": "Visite terminée",
+      "body": "{visitorName} a quitté les lieux."
+    }
+  },
+  "errors": {
+    "internal": "Erreur interne du serveur",
+    "unauthorized": "Non autorisé",
+    "forbidden": "Vous n'avez pas la permission d'effectuer cette action.",
+    "validationFailed": "Échec de la validation",
+    "visit": {
+      "notFound": "Visite introuvable",
+      "invalidState": "La visite n'est pas dans un état valide pour cette action."
+    },
+    "alert": {
+      "notFound": "Alerte introuvable"
+    },
+    "user": {
+      "notFound": "Utilisateur introuvable"
+    },
+    "notification": {
+      "notFound": "Notification introuvable"
+    },
+    "auth": {
+      "invalidCredentials": "E-mail ou mot de passe invalide."
+    }
+  },
+  "validation": {
+    "failed": "Échec de la validation",
+    "required": "{path} est requis",
+    "invalid_type": "{path} est invalide",
+    "invalid_string": "{path} est invalide",
+    "invalid_enum_value": "{path} a une valeur invalide",
+    "too_small": "{path} est trop court",
+    "too_big": "{path} est trop long",
+    "custom": "{path} est invalide",
+    "unrecognized_keys": "Des champs inattendus ont été fournis"
+  }
+}

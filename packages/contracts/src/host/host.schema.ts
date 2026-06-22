@@ -20,3 +20,16 @@ export const HostWithUser = Host.extend({
   }),
 });
 export type HostWithUser = z.infer<typeof HostWithUser>;
+
+/**
+ * A selectable host in the invite/walk-in forms — a user with the STAFF role.
+ * `userId` is the User id (a Host row is ensured server-side on submit).
+ */
+export const HostOption = z.object({
+  userId: z.string().uuid(),
+  fullName: z.string().min(1),
+  email: z.string().email(),
+  department: z.string().nullable().optional(),
+  office: z.string().nullable().optional(),
+});
+export type HostOption = z.infer<typeof HostOption>;

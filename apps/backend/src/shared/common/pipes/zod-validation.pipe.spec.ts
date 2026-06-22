@@ -31,10 +31,13 @@ describe('ZodValidationPipe', () => {
     }
     const body = captured?.getResponse() as {
       message: string;
-      errors: { path: string; message: string }[];
+      errors: { path: string; code: string; message: string }[];
     };
-    expect(body.message).toBe('Validation failed');
+    // The pipe emits a localization key + structured, code-tagged issues; the
+    // global exception filter turns them into localized strings.
+    expect(body.message).toBe('errors.validationFailed');
     expect(body.errors.length).toBeGreaterThan(0);
     expect(body.errors[0]).toHaveProperty('path');
+    expect(body.errors[0]).toHaveProperty('code');
   });
 });

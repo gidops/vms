@@ -239,6 +239,7 @@ export class AuthService {
       permissions: this.users.permissionsForRole(user, activeRole),
       sid,
       tenantId: user.tenantId,
+      preferredLocale: user.preferredLocale,
     };
   }
 
