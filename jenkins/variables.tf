@@ -7,7 +7,7 @@ variable "instance_type" {
   type = string
   # Jenkins + docker image builds need RAM; t2.micro is too small (OOMs on the
   # Next.js/turbo image build, same reason the app stack uses prebuilt ECR images).
-  default = "t3.medium"
+  default = "t3.large"
 }
 
 variable "key_name" {
