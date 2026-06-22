@@ -37,4 +37,5 @@ npm-debug.log*
 *.tfstate.*
 **/.terraform/
 
+# CLAUDE
 CLAUDE.md
