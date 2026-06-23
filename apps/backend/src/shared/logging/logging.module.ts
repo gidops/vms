@@ -5,9 +5,23 @@ import { randomUUID } from 'node:crypto';
 import { LoggerModule } from 'nestjs-pino';
 import type { IncomingMessage } from 'node:http';
 import type { Env } from '../config/env.schema';
-import { CLS_IP, CLS_USER_AGENT } from './cls-keys';
+import { normalizeLocale } from '../i18n/i18n.service';
+import { CLS_IP, CLS_LOCALE, CLS_USER_AGENT } from './cls-keys';
 
 const CORRELATION_HEADER = 'x-correlation-id';
+
+/** First value of a possibly-repeated header. */
+function headerValue(v: string | string[] | undefined): string | undefined {
+  return Array.isArray(v) ? v[0] : v;
+}
+
+/** Resolve the request locale from the explicit header, then Accept-Language. */
+function requestLocale(req: IncomingMessage): string {
+  const explicit = headerValue(req.headers['x-locale']);
+  if (explicit) return normalizeLocale(explicit);
+  const accept = headerValue(req.headers['accept-language']);
+  return normalizeLocale(accept?.split(',')[0]);
+}
 
 /** Best-effort client IP from proxy headers, falling back to the socket. */
 function clientIp(req: IncomingMessage & { ip?: string }): string | undefined {
@@ -43,6 +57,7 @@ function clientIp(req: IncomingMessage & { ip?: string }): string | undefined {
         setup: (cls, req: IncomingMessage & { ip?: string }) => {
           cls.set(CLS_IP, clientIp(req));
           cls.set(CLS_USER_AGENT, req.headers['user-agent']);
+          cls.set(CLS_LOCALE, requestLocale(req));
         },
       },
     }),

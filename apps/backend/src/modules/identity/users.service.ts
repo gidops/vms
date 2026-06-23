@@ -7,6 +7,7 @@ import { Prisma } from '@prisma/client';
 import {
   ROLES,
   type CreateUserInput,
+  type HostOption,
   type LoginActivityItem,
   type Paginated,
   type PaginationQuery,
@@ -107,6 +108,33 @@ export class UsersService {
       total,
       totalPages: Math.max(1, Math.ceil(total / query.pageSize)),
     };
+  }
+
+  /**
+   * Selectable hosts for the invite/walk-in forms — users with the STAFF role,
+   * joined to their Host record (department/office may be null until set).
+   */
+  async listHosts(): Promise<HostOption[]> {
+    const users = await this.prisma.user.findMany({
+      where: {
+        isActive: true,
+        userRoles: { some: { role: { name: ROLES.STAFF } } },
+      },
+      orderBy: { fullName: 'asc' },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        host: { select: { department: true, office: true } },
+      },
+    });
+    return users.map((u) => ({
+      userId: u.id,
+      fullName: u.fullName,
+      email: u.email,
+      department: u.host?.department ?? null,
+      office: u.host?.office ?? null,
+    }));
   }
 
   /** All role names (for the create/edit role multi-select). */

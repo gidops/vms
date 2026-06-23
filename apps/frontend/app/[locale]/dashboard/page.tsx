@@ -6,7 +6,6 @@ import {
   Button,
   Checkbox,
   FilterBar,
-  QuickActionsPanel,
   RecordTable,
   SearchInput,
   SegmentedControl,
@@ -15,7 +14,6 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  StatStrip,
   StatusBadge,
   Table,
   TableBody,
@@ -29,6 +27,11 @@ import { SquareActivity } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
+import {
+  QuickActionSheet,
+  type QuickActionMode,
+} from "@/app/[locale]/dashboard/_components/QuickActionSheet";
+import { VmcOverview } from "@/app/[locale]/dashboard/_components/VmcOverview";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
 
@@ -123,6 +126,9 @@ function Dashboard() {
   const { user } = useAuth();
 
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
+  const [quickAction, setQuickAction] = React.useState<QuickActionMode | null>(
+    null,
+  );
 
   const allSelected = selected.size === ROWS.length && ROWS.length > 0;
   const headerState: boolean | "indeterminate" = allSelected
@@ -211,30 +217,15 @@ function Dashboard() {
           </h1>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]">
-          <StatStrip
-            items={[
-              { label: t("stats.onsite"), value: 12 },
-              { label: t("stats.checkedIn"), value: 28 },
-              { label: t("stats.checkedOut"), value: 16 },
-            ]}
-          />
-          <QuickActionsPanel
-            title={t("quickActions.title")}
-            logo={
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src="/brand/afreximbank.svg"
-                alt=""
-                className="size-8"
-                aria-hidden="true"
-              />
-            }
-          >
-            <Button intent="primary">{t("quickActions.registerWalkIn")}</Button>
-            <Button intent="accent">{t("quickActions.newInvite")}</Button>
-          </QuickActionsPanel>
-        </div>
+        <VmcOverview
+          stats={[
+            { label: t("stats.onsite"), value: 12 },
+            { label: t("stats.checkedIn"), value: 28 },
+            { label: t("stats.checkedOut"), value: 16 },
+          ]}
+          onRegisterWalkIn={() => setQuickAction("walkin")}
+          onNewInvite={() => setQuickAction("invite")}
+        />
 
         <RecordTable
           toolbar={
@@ -315,6 +306,11 @@ function Dashboard() {
           </Table>
         </RecordTable>
       </div>
+
+      <QuickActionSheet
+        mode={quickAction}
+        onClose={() => setQuickAction(null)}
+      />
     </TopNavShell>
   );
 }

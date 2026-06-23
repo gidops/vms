@@ -45,7 +45,12 @@
     "quickActions": {
       "title": "Quick actions",
       "registerWalkIn": "Register Walk-In",
-      "newInvite": "New Invite Request"
+      "newInvite": "New Invite Request",
+      "formComingSoonTitle": "Coming soon",
+      "formComingSoon": "This form is being built and will be available shortly."
+    },
+    "activity": {
+      "title": "View your activity"
     },
     "range": {
       "today": "Today",
@@ -132,8 +137,12 @@
       "editRequest": "Edit Request",
       "save": "Save",
       "cancel": "Cancel",
-      "resolve": "Resolve"
-    }
+      "resolve": "Resolve",
+      "approve": "Approve",
+      "deny": "Deny",
+      "confirmDeny": "Confirm denial"
+    },
+    "denyReasonPlaceholder": "Reason for denial"
   },
   "language": {
     "select": "Select language",
@@ -165,12 +174,72 @@
     "closedSubtitle": "An admin already exists. Please sign in instead.",
     "goToLogin": "Go to login"
   },
+  "invite": {
+    "titleInvite": "Create Invite Request",
+    "titleWalkin": "Create Walk-In Visit",
+    "subtitle": "Fill out the form below to send invitation to your guests",
+    "steps": {
+      "visitor": "Visitor Details",
+      "host": "Host Details",
+      "visit": "Visit Details",
+      "summary": "Summary"
+    },
+    "sections": {
+      "visitorDetails": "Visitor details",
+      "visitPurpose": "Visit Purpose",
+      "hostDetails": "Host details"
+    },
+    "importCsv": "Import guests from CSV",
+    "downloadTemplate": "Download CSV Template",
+    "addVisitor": "Add Visitor",
+    "removeVisitor": "Remove",
+    "fields": {
+      "fullName": "Enter Visitors Full name",
+      "fullNamePlaceholder": "Enter fullname",
+      "email": "Visitor Email",
+      "emailPlaceholder": "e.g. david@gmail.com",
+      "organization": "Organization",
+      "organizationPlaceholder": "Enter organization",
+      "phone": "Visitor Phone",
+      "phonePlaceholder": "+234 000-00-000",
+      "host": "Select Host/Staff",
+      "hostPlaceholder": "Add a staff / host",
+      "floor": "Floor/Department",
+      "floorPlaceholder": "Select floor",
+      "purpose": "Visit Purpose",
+      "purposePlaceholder": "Select visit category",
+      "dateTime": "Visit Date and Time",
+      "notes": "Visit notes",
+      "notesPlaceholder": "Enter visit notes"
+    },
+    "summary": {
+      "host": "Select Host/Staff",
+      "dateTime": "Visit Date and Time",
+      "clearance": "Visit Clearance",
+      "pending": "Pending",
+      "approved": "Approved"
+    },
+    "showAllVisitors": "Show All Visitors ({count})",
+    "showLessVisitors": "Show Less Visitors",
+    "goToHost": "Go to Host details",
+    "review": "Review Details",
+    "submitInvite": "Send Invite Request",
+    "submitWalkin": "Create Walk-In Visit",
+    "submitting": "Submitting…",
+    "back": "Back",
+    "cancel": "Cancel",
+    "submitError": "Something went wrong. Please try again."
+  },
   "admin": {
     "welcome": "Welcome {name}",
     "subtitle": "Administration console",
     "userManagement": "User Management",
     "userManagementBody": "View users, create accounts and assign roles.",
-    "manageUsers": "Manage users"
+    "manageUsers": "Manage users",
+    "pendingTitle": "Pending Requests",
+    "pendingBody": "Review and decide visit requests awaiting approval.",
+    "pendingEmpty": "No requests awaiting approval.",
+    "pendingCount": "{count} awaiting approval"
   },
   "staff": {
     "welcome": "Welcome {name}",

@@ -1,0 +1,100 @@
+{
+  "brand": {
+    "name": "AATC VMS",
+    "fullName": "AATC Visitor Management"
+  },
+  "email": {
+    "common": {
+      "greeting": "Dear {name},",
+      "automated": "This is an automated message. Please do not reply.",
+      "footer": "© {year} AATC Visitor Management. All rights reserved.",
+      "regards": "Kind regards,",
+      "team": "The AATC Team"
+    },
+    "labels": {
+      "visitorName": "Visitor Name",
+      "visitDate": "Visit Date",
+      "time": "Time",
+      "purpose": "Purpose",
+      "host": "Host",
+      "uniqueCode": "Unique Code"
+    },
+    "visitApproved": {
+      "subject": "Your Visit has been Confirmed!",
+      "heading": "Your Visit has been Confirmed!",
+      "intro": "Your visit has been confirmed. Here are the visit details:",
+      "qrInstruction": "Show this QR code at the gate:",
+      "instructions": "Please arrive on time. If you cannot attend, kindly inform your host in advance."
+    },
+    "visitorArrived": {
+      "subject": "Your guest has arrived",
+      "heading": "Your guest has arrived",
+      "intro": "{visitorName} has checked in at the gate and is waiting to see you.",
+      "details": "Checked in at {time}."
+    },
+    "thankYou": {
+      "subject": "Thank you for visiting AATC",
+      "heading": "Thank you for visiting AATC",
+      "intro": "Dear {name}, thank you for visiting AATC. We hope you had a pleasant experience.",
+      "ratingPrompt": "We would love your feedback. Please take a moment to rate your visit:",
+      "ratingButton": "Rate your visit"
+    }
+  },
+  "sms": {
+    "visitApproved": "AATC: Hi {visitorName}, your visit on {visitDate} at {time} with {host} is confirmed. Your access code is {code}. Please arrive on time.",
+    "visitorArrived": "AATC: Your guest {visitorName} has arrived at the gate and is waiting to see you.",
+    "thankYou": "AATC: Thank you for visiting, {visitorName}. We'd love your feedback: {ratingUrl}"
+  },
+  "whatsapp": {
+    "visitApproved": "*AATC Visit Confirmed*\n\nHi {visitorName}, your visit on {visitDate} at {time} with {host} is confirmed.\nAccess code: *{code}*\n\nPlease arrive on time.",
+    "visitorArrived": "*AATC* — Your guest *{visitorName}* has arrived at the gate and is waiting to see you.",
+    "thankYou": "*AATC* — Thank you for visiting, {visitorName}. We'd love your feedback: {ratingUrl}"
+  },
+  "inapp": {
+    "visitApproved": {
+      "title": "Visit approved",
+      "body": "The visit for {visitorName} has been approved."
+    },
+    "visitorArrived": {
+      "title": "Guest arrived",
+      "body": "{visitorName} has checked in at the gate."
+    },
+    "thankYou": {
+      "title": "Visit completed",
+      "body": "{visitorName} has checked out."
+    }
+  },
+  "errors": {
+    "internal": "Internal server error",
+    "unauthorized": "Unauthorized",
+    "forbidden": "You do not have permission to perform this action.",
+    "validationFailed": "Validation failed",
+    "visit": {
+      "notFound": "Visit not found",
+      "invalidState": "The visit is not in a valid state for this action."
+    },
+    "alert": {
+      "notFound": "Alert not found"
+    },
+    "user": {
+      "notFound": "User not found"
+    },
+    "notification": {
+      "notFound": "Notification not found"
+    },
+    "auth": {
+      "invalidCredentials": "Invalid email or password."
+    }
+  },
+  "validation": {
+    "failed": "Validation failed",
+    "required": "{path} is required",
+    "invalid_type": "{path} is invalid",
+    "invalid_string": "{path} is invalid",
+    "invalid_enum_value": "{path} has an invalid value",
+    "too_small": "{path} is too short",
+    "too_big": "{path} is too long",
+    "custom": "{path} is invalid",
+    "unrecognized_keys": "Unexpected fields were provided"
+  }
+}

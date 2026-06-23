@@ -17,6 +17,7 @@ export * from "./primitives/Select/index";
 export * from "./primitives/Skeleton/index";
 export * from "./primitives/Spinner/index";
 export * from "./primitives/Switch/index";
+export * from "./primitives/Textarea/index";
 export * from "./primitives/Tabs/index";
 export * from "./primitives/Tooltip/index";
 

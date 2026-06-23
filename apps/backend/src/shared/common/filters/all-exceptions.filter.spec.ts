@@ -5,6 +5,8 @@ import {
   Logger,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
+import type { ClsService } from 'nestjs-cls';
+import { I18nService } from '../../i18n/i18n.service';
 import { AllExceptionsFilter } from './all-exceptions.filter';
 
 function makeHost(req: unknown, res: unknown): ArgumentsHost {
@@ -19,9 +21,12 @@ describe('AllExceptionsFilter', () => {
 
   beforeEach(() => {
     reply = jest.fn();
-    filter = new AllExceptionsFilter({
-      httpAdapter: { reply },
-    } as unknown as HttpAdapterHost);
+    const cls = { get: () => undefined } as unknown as ClsService;
+    filter = new AllExceptionsFilter(
+      { httpAdapter: { reply } } as unknown as HttpAdapterHost,
+      new I18nService(),
+      cls,
+    );
   });
 
   afterEach(() => jest.restoreAllMocks());
