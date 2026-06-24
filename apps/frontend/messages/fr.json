@@ -4,6 +4,7 @@
   },
   "nav": {
     "schedule": "Programme du jour",
+    "myVisits": "Mes visites",
     "requests": "Demandes et alertes",
     "visitors": "Visiteurs",
     "switchAccount": "Changer de compte",
@@ -97,6 +98,7 @@
     "addNotePlaceholder": "Ajouter une note…",
     "status": {
       "awaitingApproval": "En attente d'approbation du CSO",
+      "needsMoreInfo": "Informations requises",
       "approvedByCso": "Approuvé par le CSO",
       "deniedByCso": "Refusé par le CSO",
       "cancelled": "Annulé",
@@ -140,6 +142,7 @@
       "resolve": "Résoudre",
       "approve": "Approuver",
       "deny": "Refuser",
+      "resubmit": "Renvoyer la demande",
       "confirmDeny": "Confirmer le refus"
     },
     "denyReasonPlaceholder": "Motif du refus"
@@ -242,10 +245,72 @@
     "pendingCount": "{count} en attente d'approbation"
   },
   "staff": {
+    "hub": "ESPACE PERSONNEL",
     "welcome": "Bienvenue {name}",
-    "subtitle": "Espace du personnel",
-    "placeholderTitle": "Tableau de bord du personnel",
-    "placeholderBody": "Ce tableau de bord est provisoire et sera développé bientôt."
+    "recentVisitors": "Visiteurs récents",
+    "myVisits": { "title": "Mes visites" },
+    "noVisits": "Aucune visite à afficher.",
+    "overview": {
+      "officeFloor": "Étage du bureau",
+      "bookTitle": "Réservez des visiteurs dans les installations AATC d'Abuja",
+      "newInvite": "Nouvelle demande d'invitation"
+    },
+    "stats": {
+      "expectedToday": "Attendus aujourd'hui",
+      "awaitingApproval": "En attente d'approbation",
+      "onsite": "Sur site"
+    },
+    "range": {
+      "today": "Aujourd'hui",
+      "last7": "7 derniers jours",
+      "custom": "Personnalisé",
+      "upcoming": "À venir",
+      "yesterday": "Hier"
+    },
+    "filters": {
+      "searchPlaceholder": "Rechercher visiteur, organisation, objet, n° de demande"
+    },
+    "columns": {
+      "visitor": "Visiteur",
+      "organization": "Organisation",
+      "purpose": "Objet",
+      "timeCreated": "Date de création",
+      "status": "Statut",
+      "action": "Action"
+    },
+    "actions": {
+      "viewDetails": "Voir les détails",
+      "update": "Mettre à jour"
+    },
+    "status": {
+      "PENDING": "En attente d'approbation",
+      "NEEDS_MORE_INFO": "Informations requises",
+      "APPROVED": "Attendu",
+      "DENIED": "Refusé",
+      "CHECKED_IN": "Sur site",
+      "CHECKED_OUT": "Sorti",
+      "CANCELLED": "Annulé",
+      "EXPIRED": "Expiré"
+    },
+    "visitType": {
+      "PRE_INVITED": "Pré-invité",
+      "WALK_IN": "Sans rendez-vous",
+      "APPOINTMENT": "Rendez-vous"
+    },
+    "updates": {
+      "title": "Mises à jour récentes",
+      "seeAll": "Tout voir",
+      "empty": "Aucune mise à jour récente.",
+      "viewUpdate": "Voir la mise à jour",
+      "viewDetails": "Voir les détails",
+      "category": {
+        "ARRIVAL_UPDATE": "Mise à jour d'arrivée",
+        "CSO_FEEDBACK": "Retour du CSO",
+        "REQUEST_UPDATE": "Mise à jour de demande",
+        "VISIT_STATUS": "Statut de visite",
+        "SECURITY_ALERT": "Alertes de sécurité"
+      }
+    }
   },
   "gate": {
     "welcome": "Bienvenue {name}",

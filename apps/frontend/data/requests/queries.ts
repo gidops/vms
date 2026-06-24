@@ -1,21 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CreateVisitsInput } from "@vms/contracts";
+import type { CreateVisitsInput, VisitStatus, VisitType } from "@vms/contracts";
 import { alertsApi, type AlertStatusAction } from "@/data/alerts/alerts.api";
 import { inboxApi, type InboxKind } from "@/data/inbox/inbox.api";
 import { notesApi } from "@/data/notes/notes.api";
 import { visitsApi } from "@/data/visits/visits.api";
 
+type InboxScope = "all" | "mine";
+
 const keys = {
-  inbox: (kind: InboxKind) => ["inbox", kind] as const,
+  inbox: (kind: InboxKind, scope: InboxScope) => ["inbox", scope, kind] as const,
   visit: (id: string) => ["visit", id] as const,
   alert: (id: string) => ["alert", id] as const,
   pendingVisits: ["visits", "PENDING"] as const,
 };
 
-export function useInbox(kind: InboxKind) {
+export function useInbox(kind: InboxKind, opts?: { scope?: InboxScope }) {
+  const scope = opts?.scope ?? "all";
   return useQuery({
-    queryKey: keys.inbox(kind),
-    queryFn: () => inboxApi.list(kind),
+    queryKey: keys.inbox(kind, scope),
+    queryFn: () => inboxApi.list(kind, { scope }),
   });
 }
 
@@ -40,6 +43,24 @@ export function usePendingVisits() {
   return useQuery({
     queryKey: keys.pendingVisits,
     queryFn: () => visitsApi.list({ status: "PENDING", pageSize: 100 }),
+  });
+}
+
+export interface MyVisitsParams {
+  status?: VisitStatus;
+  type?: VisitType;
+  purpose?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+/** Host-scoped visit list powering "My Visits" / "Recent Visitors". */
+export function useMyVisits(params: MyVisitsParams = {}) {
+  return useQuery({
+    queryKey: ["visits", "mine", params] as const,
+    queryFn: () => visitsApi.list({ ...params, scope: "mine" }),
   });
 }
 
@@ -84,6 +105,16 @@ export function useCancelVisit(id: string) {
   const invalidate = useInvalidate();
   return useMutation({
     mutationFn: () => visitsApi.cancel(id),
+    onSuccess: () => invalidate(keys.visit(id)),
+  });
+}
+
+/** Host edits & resubmits a NEEDS_MORE_INFO request → back to PENDING. */
+export function useResubmitVisit(id: string) {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (input: { purpose?: string; scheduledAt?: string } = {}) =>
+      visitsApi.resubmit(id, input),
     onSuccess: () => invalidate(keys.visit(id)),
   });
 }

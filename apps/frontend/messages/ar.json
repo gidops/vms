@@ -4,6 +4,7 @@
   },
   "nav": {
     "schedule": "جدول اليوم",
+    "myVisits": "زياراتي",
     "requests": "الطلبات والتنبيهات",
     "visitors": "الزوّار",
     "switchAccount": "تبديل الحساب",
@@ -97,6 +98,7 @@
     "addNotePlaceholder": "أضف ملاحظة…",
     "status": {
       "awaitingApproval": "في انتظار موافقة CSO",
+      "needsMoreInfo": "يلزم مزيد من المعلومات",
       "approvedByCso": "تمت الموافقة من CSO",
       "deniedByCso": "رُفض من CSO",
       "cancelled": "أُلغي",
@@ -140,6 +142,7 @@
       "resolve": "حل",
       "approve": "الموافقة",
       "deny": "الرفض",
+      "resubmit": "إعادة إرسال الطلب",
       "confirmDeny": "تأكيد الرفض"
     },
     "denyReasonPlaceholder": "سبب الرفض"
@@ -242,10 +245,72 @@
     "pendingCount": "{count} بانتظار الموافقة"
   },
   "staff": {
+    "hub": "مساحة الموظفين",
     "welcome": "مرحبًا {name}",
-    "subtitle": "مساحة عمل الموظفين",
-    "placeholderTitle": "لوحة الموظفين",
-    "placeholderBody": "هذه اللوحة مؤقتة وسيتم تطويرها قريبًا."
+    "recentVisitors": "الزوّار الأخيرون",
+    "myVisits": { "title": "زياراتي" },
+    "noVisits": "لا توجد زيارات لعرضها.",
+    "overview": {
+      "officeFloor": "طابق المكتب",
+      "bookTitle": "احجز الزوّار في منشآت AATC بأبوجا",
+      "newInvite": "طلب دعوة جديد"
+    },
+    "stats": {
+      "expectedToday": "متوقعون اليوم",
+      "awaitingApproval": "في انتظار الموافقة",
+      "onsite": "متواجدون"
+    },
+    "range": {
+      "today": "اليوم",
+      "last7": "آخر 7 أيام",
+      "custom": "مخصّص",
+      "upcoming": "القادمة",
+      "yesterday": "أمس"
+    },
+    "filters": {
+      "searchPlaceholder": "ابحث عن زائر أو منظمة أو غرض أو رقم طلب"
+    },
+    "columns": {
+      "visitor": "الزائر",
+      "organization": "المنظمة",
+      "purpose": "الغرض",
+      "timeCreated": "وقت الإنشاء",
+      "status": "الحالة",
+      "action": "إجراء"
+    },
+    "actions": {
+      "viewDetails": "عرض التفاصيل",
+      "update": "تحديث"
+    },
+    "status": {
+      "PENDING": "في انتظار الموافقة",
+      "NEEDS_MORE_INFO": "يلزم مزيد من المعلومات",
+      "APPROVED": "متوقع",
+      "DENIED": "مرفوض",
+      "CHECKED_IN": "متواجد",
+      "CHECKED_OUT": "سجّل الخروج",
+      "CANCELLED": "أُلغي",
+      "EXPIRED": "منتهٍ"
+    },
+    "visitType": {
+      "PRE_INVITED": "مدعو مسبقًا",
+      "WALK_IN": "بدون موعد",
+      "APPOINTMENT": "موعد"
+    },
+    "updates": {
+      "title": "التحديثات الأخيرة",
+      "seeAll": "عرض الكل",
+      "empty": "لا توجد تحديثات حديثة.",
+      "viewUpdate": "عرض التحديث",
+      "viewDetails": "عرض التفاصيل",
+      "category": {
+        "ARRIVAL_UPDATE": "تحديث الوصول",
+        "CSO_FEEDBACK": "ملاحظات CSO",
+        "REQUEST_UPDATE": "تحديث الطلب",
+        "VISIT_STATUS": "حالة الزيارة",
+        "SECURITY_ALERT": "تنبيهات أمنية"
+      }
+    }
   },
   "gate": {
     "welcome": "مرحبًا {name}",

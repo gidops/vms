@@ -22,6 +22,7 @@ import {
   useApproveVisit,
   useCancelVisit,
   useDenyVisit,
+  useResubmitVisit,
   useVisitRequest,
 } from "@/data/requests/queries";
 import { useAuth } from "@/shared/auth/AuthContext";
@@ -45,6 +46,7 @@ function timelineFor(
   ] as const;
   const progress: Record<string, number> = {
     PENDING: 1,
+    NEEDS_MORE_INFO: 1,
     DENIED: 1,
     CANCELLED: 1,
     EXPIRED: 1,
@@ -196,16 +198,20 @@ function RequestDetailBody({
 }) {
   const t = useTranslations("requests");
   const format = useFormatter();
-  const { hasPermission } = useAuth();
+  const { hasPermission, user } = useAuth();
   const [showNote, setShowNote] = React.useState(false);
   const [showDeny, setShowDeny] = React.useState(false);
   const cancel = useCancelVisit(data.id);
   const approve = useApproveVisit(data.id);
   const deny = useDenyVisit(data.id);
+  const resubmit = useResubmitVisit(data.id);
 
   const isPending = data.status === "PENDING";
   const canApprove = isPending && hasPermission("visit:approve");
   const canDeny = isPending && hasPermission("visit:deny");
+  // The host can resubmit their own request once the CSO bounced it back.
+  const canResubmit =
+    data.status === "NEEDS_MORE_INFO" && data.host.user.id === user?.id;
 
   const stepLabels = {
     inviteCreated: t("timeline.inviteCreated"),
@@ -223,6 +229,16 @@ function RequestDetailBody({
       title={t("detailTitle")}
       footer={
         <>
+          {canResubmit ? (
+            <Button
+              intent="primary"
+              size="sm"
+              onClick={() => resubmit.mutate({})}
+              disabled={resubmit.isPending}
+            >
+              {t("actions.resubmit")}
+            </Button>
+          ) : null}
           {canApprove ? (
             <Button
               intent="success"

@@ -9,6 +9,8 @@ export type InboxKind = z.infer<typeof InboxKind>;
 export const InboxQuery = PaginationQuery.extend({
   kind: InboxKind.default("all"),
   search: z.string().optional(),
+  /** `mine` restricts requests to the host's own visits (+ their visitors' alerts). */
+  scope: z.enum(["all", "mine"]).default("all"),
 });
 export type InboxQuery = z.infer<typeof InboxQuery>;
 

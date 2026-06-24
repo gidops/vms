@@ -28,16 +28,35 @@ type AlertRow = Prisma.AlertGetPayload<{ include: typeof alertInclude }>;
 export class InboxService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async list(query: InboxQuery): Promise<Paginated<InboxItem>> {
+  async list(
+    query: InboxQuery,
+    currentUserId: string,
+  ): Promise<Paginated<InboxItem>> {
     const wantRequests = query.kind === 'all' || query.kind === 'requests';
     const wantAlerts = query.kind === 'all' || query.kind === 'alerts';
 
+    // `scope=mine` restricts to the signed-in host: their own visit requests, and
+    // alerts raised against any visitor they host.
+    const mine = query.scope === 'mine';
+    const requestWhere: Prisma.VisitWhereInput = mine
+      ? { host: { userId: currentUserId } }
+      : {};
+    const alertWhere: Prisma.AlertWhereInput = mine
+      ? { visitor: { visits: { some: { host: { userId: currentUserId } } } } }
+      : {};
+
     const [requests, alerts] = await Promise.all([
       wantRequests
-        ? this.prisma.visit.findMany({ include: requestInclude })
+        ? this.prisma.visit.findMany({
+            where: requestWhere,
+            include: requestInclude,
+          })
         : Promise.resolve([] as RequestRow[]),
       wantAlerts
-        ? this.prisma.alert.findMany({ include: alertInclude })
+        ? this.prisma.alert.findMany({
+            where: alertWhere,
+            include: alertInclude,
+          })
         : Promise.resolve([] as AlertRow[]),
     ]);
 

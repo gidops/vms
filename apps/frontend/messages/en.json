@@ -4,6 +4,7 @@
   },
   "nav": {
     "schedule": "Today's Schedule",
+    "myVisits": "My Visits",
     "requests": "Requests & Alerts",
     "visitors": "Visitors",
     "switchAccount": "Switch Account",
@@ -97,6 +98,7 @@
     "addNotePlaceholder": "Add a note…",
     "status": {
       "awaitingApproval": "Awaiting CSO Approval",
+      "needsMoreInfo": "Needs More Info",
       "approvedByCso": "Approved by CSO",
       "deniedByCso": "Denied by CSO",
       "cancelled": "Cancelled",
@@ -140,6 +142,7 @@
       "resolve": "Resolve",
       "approve": "Approve",
       "deny": "Deny",
+      "resubmit": "Resubmit Request",
       "confirmDeny": "Confirm denial"
     },
     "denyReasonPlaceholder": "Reason for denial"
@@ -242,10 +245,72 @@
     "pendingCount": "{count} awaiting approval"
   },
   "staff": {
+    "hub": "STAFF HUB",
     "welcome": "Welcome {name}",
-    "subtitle": "Staff workspace",
-    "placeholderTitle": "Staff dashboard",
-    "placeholderBody": "This dashboard is a placeholder and will be built out soon."
+    "recentVisitors": "Recent Visitors",
+    "myVisits": { "title": "My Visits" },
+    "noVisits": "No visits to show.",
+    "overview": {
+      "officeFloor": "Office Floor",
+      "bookTitle": "Book visitors into Abuja AATC facilities",
+      "newInvite": "New Invite Request"
+    },
+    "stats": {
+      "expectedToday": "Expected Today",
+      "awaitingApproval": "Awaiting Approval",
+      "onsite": "Onsite"
+    },
+    "range": {
+      "today": "Today",
+      "last7": "Last 7 days",
+      "custom": "Custom",
+      "upcoming": "Upcoming",
+      "yesterday": "Yesterday"
+    },
+    "filters": {
+      "searchPlaceholder": "Search visitor, organization, purpose, request id"
+    },
+    "columns": {
+      "visitor": "Visitor",
+      "organization": "Organization",
+      "purpose": "Purpose",
+      "timeCreated": "Time Created",
+      "status": "Status",
+      "action": "Action"
+    },
+    "actions": {
+      "viewDetails": "View Details",
+      "update": "Update"
+    },
+    "status": {
+      "PENDING": "Awaiting Approval",
+      "NEEDS_MORE_INFO": "Needs More Info",
+      "APPROVED": "Expected",
+      "DENIED": "Denied",
+      "CHECKED_IN": "Onsite",
+      "CHECKED_OUT": "Checked Out",
+      "CANCELLED": "Cancelled",
+      "EXPIRED": "Expired"
+    },
+    "visitType": {
+      "PRE_INVITED": "Pre-invited",
+      "WALK_IN": "Walk-in",
+      "APPOINTMENT": "Appointment"
+    },
+    "updates": {
+      "title": "Recent Updates",
+      "seeAll": "See all",
+      "empty": "No recent updates.",
+      "viewUpdate": "View Update",
+      "viewDetails": "View Details",
+      "category": {
+        "ARRIVAL_UPDATE": "Arrival Update",
+        "CSO_FEEDBACK": "CSO Feedback",
+        "REQUEST_UPDATE": "Request Update",
+        "VISIT_STATUS": "Visit Status",
+        "SECURITY_ALERT": "Security Alerts"
+      }
+    }
   },
   "gate": {
     "welcome": "Welcome {name}",

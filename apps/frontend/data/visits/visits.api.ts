@@ -1,4 +1,4 @@
-import type { CreateVisitsInput, VisitStatus } from "@vms/contracts";
+import type { CreateVisitsInput, VisitStatus, VisitType } from "@vms/contracts";
 import { api } from "@/data/http/client";
 
 export interface Paginated<T> {
@@ -19,7 +19,12 @@ export interface VisitListItem {
   scheduledAt?: string | null;
   createdAt: string;
   createdByName?: string | null;
-  visitor: { id: string; fullName: string; email: string };
+  visitor: {
+    id: string;
+    fullName: string;
+    email: string;
+    organization?: string | null;
+  };
   host: { id: string; user: { id: string; fullName: string; email: string } };
 }
 
@@ -38,6 +43,7 @@ export interface VisitRequestDetail {
   type: string;
   status:
     | "PENDING"
+    | "NEEDS_MORE_INFO"
     | "APPROVED"
     | "DENIED"
     | "CHECKED_IN"
@@ -73,14 +79,27 @@ export const visitsApi = {
   createVisits(input: CreateVisitsInput): Promise<VisitRequestDetail[]> {
     return api<VisitRequestDetail[]>(`/visits`, { method: "POST", body: input });
   },
-  /** Visit list for the admin approval queue (optionally filtered by status). */
+  /**
+   * Visit list. The admin queue filters by status; the staff dashboard passes
+   * `scope: "mine"` (host-scoped) plus the type/purpose/date facets.
+   */
   list(params?: {
     status?: VisitStatus;
+    scope?: "all" | "mine";
+    type?: VisitType;
+    purpose?: string;
+    dateFrom?: string;
+    dateTo?: string;
     page?: number;
     pageSize?: number;
   }): Promise<Paginated<VisitListItem>> {
     const q = new URLSearchParams();
     if (params?.status) q.set("status", params.status);
+    if (params?.scope) q.set("scope", params.scope);
+    if (params?.type) q.set("type", params.type);
+    if (params?.purpose) q.set("purpose", params.purpose);
+    if (params?.dateFrom) q.set("dateFrom", params.dateFrom);
+    if (params?.dateTo) q.set("dateTo", params.dateTo);
     if (params?.page) q.set("page", String(params.page));
     if (params?.pageSize) q.set("pageSize", String(params.pageSize));
     const qs = q.toString();
@@ -104,6 +123,16 @@ export const visitsApi = {
   ): Promise<VisitRequestDetail> {
     return api<VisitRequestDetail>(`/visits/${id}`, {
       method: "PATCH",
+      body: input,
+    });
+  },
+  /** Host edits & resubmits a NEEDS_MORE_INFO request → back to PENDING. */
+  resubmit(
+    id: string,
+    input: { purpose?: string; scheduledAt?: string } = {},
+  ): Promise<VisitRequestDetail> {
+    return api<VisitRequestDetail>(`/visits/${id}/resubmit`, {
+      method: "POST",
       body: input,
     });
   },

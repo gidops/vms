@@ -104,11 +104,30 @@ export const CreateVisitsInput = z.object({
 });
 export type CreateVisitsInput = z.infer<typeof CreateVisitsInput>;
 
-/** List visits for the admin approval queue (filter by status, paginated). */
+/**
+ * List visits for the admin approval queue (paginated). With `scope: "mine"` the
+ * result is restricted server-side to visits the requesting user hosts — this
+ * powers the staff "My Visits" / "Recent Visitors" screens. `type`, `purpose`
+ * and the `dateFrom`/`dateTo` window are the staff filter-bar facets.
+ */
 export const VisitListQuery = PaginationQuery.extend({
   status: VisitStatus.optional(),
+  scope: z.enum(["all", "mine"]).default("all"),
+  type: VisitType.optional(),
+  purpose: z.string().min(1).optional(),
+  dateFrom: z.coerce.date().optional(),
+  dateTo: z.coerce.date().optional(),
 });
 export type VisitListQuery = z.infer<typeof VisitListQuery>;
+
+/** Host resubmits a NEEDS_MORE_INFO visit after editing — transitions back to PENDING. */
+export const ResubmitVisitInput = z
+  .object({
+    purpose: z.string().min(1).optional(),
+    scheduledAt: z.coerce.date().optional(),
+  })
+  .default({});
+export type ResubmitVisitInput = z.infer<typeof ResubmitVisitInput>;
 
 export const DenyVisitInput = z.object({
   reason: z.string().min(1),

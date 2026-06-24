@@ -45,6 +45,9 @@ export interface MeResponse {
   roles: string[];
   activeRole: string | null;
   permissions: string[];
+  /** Host office/department, when the user receives visitors (STAFF). */
+  hostOffice: string | null;
+  hostDepartment: string | null;
 }
 
 export const authApi = {

@@ -45,10 +45,11 @@ export interface Paginated<T> {
 export const inboxApi = {
   list(
     kind: InboxKind = "all",
-    search?: string,
+    opts?: { search?: string; scope?: "all" | "mine" },
   ): Promise<Paginated<InboxItem>> {
     const params = new URLSearchParams({ kind });
-    if (search) params.set("search", search);
+    if (opts?.search) params.set("search", opts.search);
+    if (opts?.scope) params.set("scope", opts.scope);
     return api<Paginated<InboxItem>>(`/inbox?${params.toString()}`);
   },
 };
