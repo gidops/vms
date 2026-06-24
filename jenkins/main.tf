@@ -180,51 +180,70 @@ locals {
     #!/usr/bin/env bash
     set -euxo pipefail
     exec > >(tee -a /var/log/user-data.log) 2>&1
-
     export DEBIAN_FRONTEND=noninteractive
-
     # 1. Base + Java 21 (current Jenkins LTS runtime).
     apt-get update -y
     apt-get install -y openjdk-21-jre ca-certificates curl gnupg unzip apt-transport-https lsb-release
     update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
-
-    # 2. Docker FIRST — installed before Jenkins so the `jenkins` user can be added
-    #    to the `docker` group once Jenkins creates it. Adding that user to `docker`
-    #    is effectively root on this box, which is why the SG is locked to one IP.
+    # 2. Docker FIRST — so the `jenkins` user can be added to the `docker` group later.
     apt-get install -y docker.io
     systemctl enable --now docker
-
-    # 3. AWS CLI v2 — official zip installer (apt ships v1, which is too old).
+    # 3. AWS CLI v2.
     ARCH="$${ARCH:-$(uname -m)}"
     curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-$${ARCH}.zip" -o /tmp/awscliv2.zip
     unzip -q /tmp/awscliv2.zip -d /tmp
     /tmp/aws/install
     rm -rf /tmp/aws /tmp/awscliv2.zip
-
-    # 4. Terraform — HashiCorp's official apt repo.
+    # 4. Terraform — HashiCorp apt repo.
     curl -fsSL https://apt.releases.hashicorp.com/gpg \
       | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
       > /etc/apt/sources.list.d/hashicorp.list
     apt-get update -y
     apt-get install -y terraform
-
-    # 5. Jenkins LAST — official Debian-stable apt repo. The signing key is
-    #    DEARMORED to a binary .gpg keyring; an armored .asc key can't be verified
-    #    by apt and breaks `apt-get install jenkins`.
+    # 5. Jenkins repo key — fetched from the Ubuntu keyserver by key ID. More robust
+    #    than pinning a dated .key file URL, which breaks when Jenkins rotates its
+    #    signing key (the NO_PUBKEY 7198F4B714ABFC68 failure we hit on rebuild).
+    #    If Jenkins rotates the key again, update the ID on the two lines below.
     install -m 0755 -d /usr/share/keyrings
-    curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key \
-      | gpg --dearmor \
-      | tee /usr/share/keyrings/jenkins-keyring.gpg > /dev/null
+    JENKINS_KEY_ID="7198F4B714ABFC68"
+    fetch_jenkins_key() {
+      local ks
+      for ks in keyserver.ubuntu.com keys.openpgp.org pgp.mit.edu; do
+        for attempt in 1 2 3; do
+          if gpg --batch --keyserver "$${ks}" --recv-keys "$${JENKINS_KEY_ID}"; then
+            return 0
+          fi
+          sleep 5
+        done
+      done
+      return 1
+    }
+    fetch_jenkins_key
+    gpg --export "$${JENKINS_KEY_ID}" > /usr/share/keyrings/jenkins-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.gpg] https://pkg.jenkins.io/debian-stable binary/" \
       > /etc/apt/sources.list.d/jenkins.list
     apt-get update -y
+    # 6. Install Jenkins, but stop it so we can seed plugins before first start.
     apt-get install -y jenkins
-
-    # 6. Now that the `jenkins` user exists, grant Docker access and restart so the
-    #    new group membership takes effect.
+    systemctl stop jenkins || true
+    # 7. Seed plugins with the standalone plugin-installation-manager-tool (the Debian
+    #    package does not ship jenkins-plugin-cli). docker-workflow = "Docker Pipeline",
+    #    needed by the Jenkinsfile's agent{docker{}}; github-branch-source = Multibranch.
+    #    Non-fatal: if the download fails, Jenkins still boots and plugins can be added via UI.
+    JENKINS_VERSION="$$(dpkg-query -W -f='$${Version}' jenkins | sed 's/[^0-9.]*//')"
+    curl -fsSL -o /usr/local/bin/jenkins-plugin-cli.jar \
+      "https://github.com/jenkinsci/plugin-installation-manager-tool/releases/download/2.13.2/jenkins-plugin-manager-2.13.2.jar" || true
+    install -d -o jenkins -g jenkins /var/lib/jenkins/plugins
+    java -jar /usr/local/bin/jenkins-plugin-cli.jar \
+      --jenkins-version "$${JENKINS_VERSION}" \
+      --plugin-download-directory /var/lib/jenkins/plugins \
+      --plugins docker-workflow workflow-aggregator git github-branch-source pipeline-stage-view \
+      || echo "WARN: plugin seeding failed; install plugins via the Jenkins UI after boot"
+    chown -R jenkins:jenkins /var/lib/jenkins/plugins
+    # 8. Grant Docker access to the jenkins user, then start Jenkins.
     usermod -aG docker jenkins
     systemctl enable jenkins
-    systemctl restart jenkins
+    systemctl start jenkins
   EOF
 }
