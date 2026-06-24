@@ -52,9 +52,15 @@ function visitorValid(v: VisitorEntry): boolean {
 export function VisitRequestForm({
   mode,
   onClose,
+  fixedHostUserId,
+  fixedHostName,
 }: {
   mode: VisitFormMode;
   onClose: () => void;
+  /** When set, the host is pinned to this user (e.g. a staff self-invite) and
+   * the host picker is shown read-only. */
+  fixedHostUserId?: string;
+  fixedHostName?: string;
 }) {
   const t = useTranslations("invite");
   const format = useFormatter();
@@ -75,7 +81,7 @@ export function VisitRequestForm({
   const [visitors, setVisitors] = React.useState<VisitorEntry[]>([
     blankVisitor(),
   ]);
-  const [hostUserId, setHostUserId] = React.useState("");
+  const [hostUserId, setHostUserId] = React.useState(fixedHostUserId ?? "");
   const [floor, setFloor] = React.useState("");
   const [purpose, setPurpose] = React.useState("");
   const [scheduledAt, setScheduledAt] = React.useState("");
@@ -84,7 +90,10 @@ export function VisitRequestForm({
   const pane = panes[step];
   const isLast = step === panes.length - 1;
   const hostList = hosts.data ?? [];
-  const hostName = hostList.find((h) => h.userId === hostUserId)?.fullName ?? "";
+  const hostName =
+    fixedHostName ??
+    hostList.find((h) => h.userId === hostUserId)?.fullName ??
+    "";
 
   const visitorsValid = visitors.every(visitorValid);
   const detailsValid =
@@ -262,6 +271,7 @@ export function VisitRequestForm({
                   hostList={hostList}
                   hostUserId={hostUserId}
                   setHostUserId={setHostUserId}
+                  lockedHostName={fixedHostName}
                   floor={floor}
                   setFloor={setFloor}
                   purpose={purpose}
@@ -283,6 +293,7 @@ export function VisitRequestForm({
             hostList={hostList}
             hostUserId={hostUserId}
             setHostUserId={setHostUserId}
+            lockedHostName={fixedHostName}
             floor={floor}
             setFloor={setFloor}
             purpose={purpose}
@@ -432,6 +443,8 @@ function HostVisitFields(props: {
   hostList: { userId: string; fullName: string; email: string }[];
   hostUserId: string;
   setHostUserId: (v: string) => void;
+  /** When set, the host is pinned (staff self-invite) and shown read-only. */
+  lockedHostName?: string;
   floor: string;
   setFloor: (v: string) => void;
   purpose: string;
@@ -448,6 +461,7 @@ function HostVisitFields(props: {
     hostList,
     hostUserId,
     setHostUserId,
+    lockedHostName,
     floor,
     setFloor,
     purpose,
@@ -465,20 +479,28 @@ function HostVisitFields(props: {
         <Label>
           {t("fields.host")} <span className="text-danger">*</span>
         </Label>
-        <Select value={hostUserId} onValueChange={setHostUserId}>
-          <SelectTrigger
-            className={"w-full" + (showErrors && !hostUserId ? " border-danger" : "")}
-          >
-            <SelectValue placeholder={t("fields.hostPlaceholder")} />
-          </SelectTrigger>
-          <SelectContent>
-            {hostList.map((h) => (
-              <SelectItem key={h.userId} value={h.userId}>
-                {h.fullName}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {lockedHostName ? (
+          <div className="flex h-10 items-center rounded-md border border-border bg-surface-muted px-3 text-sm text-fg">
+            {lockedHostName}
+          </div>
+        ) : (
+          <Select value={hostUserId} onValueChange={setHostUserId}>
+            <SelectTrigger
+              className={
+                "w-full" + (showErrors && !hostUserId ? " border-danger" : "")
+              }
+            >
+              <SelectValue placeholder={t("fields.hostPlaceholder")} />
+            </SelectTrigger>
+            <SelectContent>
+              {hostList.map((h) => (
+                <SelectItem key={h.userId} value={h.userId}>
+                  {h.fullName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       <div className="flex flex-col gap-1.5">

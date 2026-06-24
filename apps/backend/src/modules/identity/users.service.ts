@@ -26,6 +26,9 @@ const accessInclude = Prisma.validator<Prisma.UserInclude>()({
       role: { include: { rolePermissions: { include: { permission: true } } } },
     },
   },
+  // The user's Host row (when they receive visitors) surfaces office/department
+  // on the self-profile for the staff dashboard's "Office Floor" panel.
+  host: { select: { department: true, office: true } },
 });
 
 type UserWithRoles = Prisma.UserGetPayload<{ include: typeof accessInclude }>;

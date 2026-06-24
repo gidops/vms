@@ -143,6 +143,8 @@ export class UsersController {
       roles: user.roles,
       activeRole,
       permissions: this.users.permissionsForRole(user, activeRole),
+      hostOffice: user.host?.office ?? null,
+      hostDepartment: user.host?.department ?? null,
     };
   }
 }

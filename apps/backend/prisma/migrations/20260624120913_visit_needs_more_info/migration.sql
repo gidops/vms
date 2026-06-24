@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "VisitStatus" ADD VALUE 'NEEDS_MORE_INFO';

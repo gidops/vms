@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -7,6 +8,7 @@ import { Prisma } from '@prisma/client';
 import type {
   CreateVisitsInput,
   Paginated,
+  ResubmitVisitInput,
   UpdateVisitRequestInput,
   VisitListItem,
   VisitListQuery,
@@ -91,6 +93,47 @@ export class VisitsService {
         aggregateType: 'Visit',
         aggregateId: id,
         payload: { visitId: id, ...input },
+        metadata: { actorUserId },
+      });
+    });
+    return this.getDetail(id);
+  }
+
+  /**
+   * Host edits & resubmits a request the CSO bounced back (NEEDS_MORE_INFO) —
+   * optionally updating purpose/schedule — moving it back to PENDING for review.
+   * Authorized by host ownership so STAFF needs no global visit:edit permission.
+   */
+  async resubmit(
+    id: string,
+    input: ResubmitVisitInput,
+    actorUserId: string,
+  ): Promise<VisitRequestDetail> {
+    const visit = await this.prisma.visit.findUnique({
+      where: { id },
+      select: { id: true, status: true, host: { select: { userId: true } } },
+    });
+    if (!visit) throw new NotFoundException('errors.visit.notFound');
+    if (visit.host.userId !== actorUserId) {
+      throw new ForbiddenException('errors.visit.notOwner');
+    }
+    if (visit.status !== 'NEEDS_MORE_INFO') {
+      throw new BadRequestException('errors.visit.notResubmittable');
+    }
+    await this.txm.run(async (tx) => {
+      await tx.visit.update({
+        where: { id },
+        data: {
+          status: 'PENDING',
+          ...(input.purpose ? { purpose: input.purpose } : {}),
+          ...(input.scheduledAt ? { scheduledAt: input.scheduledAt } : {}),
+        },
+      });
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.VisitRequested,
+        aggregateType: 'Visit',
+        aggregateId: id,
+        payload: { visitId: id, resubmitted: true },
         metadata: { actorUserId },
       });
     });
@@ -219,11 +262,27 @@ export class VisitsService {
     return Promise.all(createdIds.map((id) => this.getDetail(id)));
   }
 
-  /** Paginated visit list for the admin approval queue (newest first). */
-  async list(query: VisitListQuery): Promise<Paginated<VisitListItem>> {
-    const where: Prisma.VisitWhereInput = query.status
-      ? { status: query.status }
-      : {};
+  /**
+   * Paginated visit list (newest first). The admin approval queue passes no
+   * scope; the staff dashboard passes `scope: "mine"` to restrict the result to
+   * visits the requesting user hosts. `type`/`purpose` and the
+   * `dateFrom`/`dateTo` window (over the scheduled date) are the staff facets.
+   */
+  async list(
+    query: VisitListQuery,
+    currentUserId: string,
+  ): Promise<Paginated<VisitListItem>> {
+    const where: Prisma.VisitWhereInput = {};
+    if (query.status) where.status = query.status;
+    if (query.type) where.type = query.type;
+    if (query.purpose) where.purpose = query.purpose;
+    if (query.scope === 'mine') where.host = { userId: currentUserId };
+    if (query.dateFrom || query.dateTo) {
+      where.scheduledAt = {
+        ...(query.dateFrom ? { gte: query.dateFrom } : {}),
+        ...(query.dateTo ? { lte: query.dateTo } : {}),
+      };
+    }
     const [rows, total] = await this.prisma.$transaction([
       this.prisma.visit.findMany({
         where,

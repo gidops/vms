@@ -30,8 +30,15 @@ const ROLE_DEFS: Record<
     permissions: [PERMISSIONS.USER_READ, PERMISSIONS.ROLE_READ],
   },
   [ROLES.STAFF]: {
-    description: 'Staff member',
-    permissions: [],
+    description: 'Staff member — hosts visitors, self-serves invite requests',
+    permissions: [
+      // Self-serve host: raise own invite requests, annotate, cancel, and
+      // edit/resubmit a "needs more info" request. Host-ownership is enforced
+      // in the services so these grants never reach another host's visits.
+      PERMISSIONS.INVITATION_CREATE,
+      PERMISSIONS.NOTE_ADD,
+      PERMISSIONS.VISIT_CANCEL,
+    ],
   },
   [ROLES.VMC]: {
     description: 'VMC Reception — registers visitors, logs & decides requests',
@@ -63,6 +70,7 @@ const ID = {
   visit: (n: number) => `00000000-0000-4000-8000-0000000000${30 + n}`,
   alert: '00000000-0000-4000-8000-000000000040',
   note: (n: number) => `00000000-0000-4000-8000-0000000000${50 + n}`,
+  audit: (n: number) => `00000000-0000-4000-8000-0000000000${60 + n}`,
 };
 
 /**
@@ -236,21 +244,45 @@ export class SeederService implements OnApplicationBootstrap {
       );
     }
 
+    // A spread of statuses (all hosted by Dr Alabi) so the staff dashboard's
+    // stats, My Visits filters and the lifecycle stepper all have data. `today`
+    // schedules the visit for now so "Expected Today" / date filters are non-empty.
     const visitSeeds: {
       visitorIdx: number;
-      status: 'PENDING' | 'APPROVED' | 'DENIED' | 'CANCELLED';
+      status:
+        | 'PENDING'
+        | 'NEEDS_MORE_INFO'
+        | 'APPROVED'
+        | 'DENIED'
+        | 'CHECKED_IN'
+        | 'CHECKED_OUT'
+        | 'CANCELLED';
       purpose: string;
+      today?: boolean;
     }[] = [
       { visitorIdx: 1, status: 'PENDING', purpose: 'Private Meeting' },
-      { visitorIdx: 0, status: 'APPROVED', purpose: 'Client Meeting' },
-      { visitorIdx: 2, status: 'PENDING', purpose: 'General Enquiry' },
+      {
+        visitorIdx: 0,
+        status: 'APPROVED',
+        purpose: 'Client Meeting',
+        today: true,
+      },
+      { visitorIdx: 2, status: 'NEEDS_MORE_INFO', purpose: 'General Enquiry' },
       { visitorIdx: 3, status: 'DENIED', purpose: 'Client Meeting' },
+      { visitorIdx: 0, status: 'CHECKED_IN', purpose: 'Official', today: true },
+      { visitorIdx: 1, status: 'CHECKED_OUT', purpose: 'Delivery' },
     ];
     for (let i = 0; i < visitSeeds.length; i++) {
       const seed = visitSeeds[i];
+      const scheduledAt = seed.today
+        ? new Date()
+        : new Date('2026-06-12T10:00:00Z');
+      const checkInAt = seed.status === 'CHECKED_IN' ? new Date() : null;
       await this.prisma.visit.upsert({
         where: { id: ID.visit(i) },
-        update: {},
+        // Demo rows are owned by the seeder: refresh their status/schedule on
+        // every boot so taxonomy changes (e.g. NEEDS_MORE_INFO) take effect.
+        update: { status: seed.status, scheduledAt, checkInAt },
         create: {
           id: ID.visit(i),
           visitorId: visitors[seed.visitorIdx].id,
@@ -261,7 +293,8 @@ export class SeederService implements OnApplicationBootstrap {
           source: 'VMC_STATION',
           createdById: hostUser.id,
           createdByName: hostUser.fullName,
-          scheduledAt: new Date('2026-06-12T10:00:00Z'),
+          checkInAt,
+          scheduledAt,
         },
       });
     }
@@ -296,6 +329,45 @@ export class SeederService implements OnApplicationBootstrap {
           authorId: hostUser.id,
           authorName: hostUser.fullName,
           body: noteBodies[i],
+        },
+      });
+    }
+
+    // Seed audit rows so the staff "Recent Updates" feed (read from AuditLog)
+    // renders in dev. In normal operation these are written by the AuditListener
+    // as events flow; demo data is inserted directly so it needs them explicitly.
+    const auditSeeds: {
+      action: string;
+      entityType: string;
+      entityId: string;
+    }[] = [
+      { action: 'visit.approved', entityType: 'Visit', entityId: ID.visit(1) },
+      {
+        action: 'visitor.checked_in',
+        entityType: 'Visit',
+        entityId: ID.visit(4),
+      },
+      {
+        action: 'visitor.checked_out',
+        entityType: 'Visit',
+        entityId: ID.visit(5),
+      },
+      { action: 'visit.denied', entityType: 'Visit', entityId: ID.visit(3) },
+      { action: 'note.added', entityType: 'Visit', entityId: ID.visit(2) },
+      { action: 'alert.updated', entityType: 'Alert', entityId: ID.alert },
+    ];
+    for (let i = 0; i < auditSeeds.length; i++) {
+      const seed = auditSeeds[i];
+      await this.prisma.auditLog.upsert({
+        where: { id: ID.audit(i) },
+        update: {},
+        create: {
+          id: ID.audit(i),
+          action: seed.action,
+          eventType: seed.action,
+          entityType: seed.entityType,
+          entityId: seed.entityId,
+          actorUserId: hostUser.id,
         },
       });
     }

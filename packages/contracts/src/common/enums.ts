@@ -17,6 +17,8 @@ export type VisitType = z.infer<typeof VisitType>;
 
 export const VisitStatus = z.enum([
   "PENDING",
+  /** CSO asked the host for more details; the host edits & resubmits to PENDING. */
+  "NEEDS_MORE_INFO",
   "APPROVED",
   "DENIED",
   "CHECKED_IN",

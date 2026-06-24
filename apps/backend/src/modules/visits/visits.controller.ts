@@ -11,6 +11,7 @@ import {
   CreateVisitsInput,
   DenyVisitInput,
   PERMISSIONS,
+  ResubmitVisitInput,
   UpdateVisitRequestInput,
   VisitListQuery,
 } from '@vms/contracts';
@@ -26,10 +27,17 @@ import { VisitsService } from './visits.service';
 export class VisitsController {
   constructor(private readonly visits: VisitsService) {}
 
-  /** Admin approval queue / visit list (filter by status). */
+  /**
+   * Visit list. The admin approval queue (filter by status) and — with
+   * `scope=mine` — the staff "My Visits" / "Recent Visitors" views, which are
+   * restricted to the requesting user's hosted visits.
+   */
   @Get()
-  list(@Query(new ZodValidationPipe(VisitListQuery)) query: VisitListQuery) {
-    return this.visits.list(query);
+  list(
+    @Query(new ZodValidationPipe(VisitListQuery)) query: VisitListQuery,
+    @CurrentUser() principal: AuthUser,
+  ) {
+    return this.visits.list(query, principal.userId);
   }
 
   /** VMC creates invite(s) / walk-in(s) for a host (one visit per visitor). */
@@ -62,6 +70,20 @@ export class VisitsController {
     @CurrentUser() principal: AuthUser,
   ) {
     return this.visits.update(id, input, principal.userId);
+  }
+
+  /**
+   * Host edits & resubmits a NEEDS_MORE_INFO request → back to PENDING. Authorized
+   * by host ownership in the service (the host needs no global visit:edit grant).
+   */
+  @Post(':id/resubmit')
+  @RequirePermissions(PERMISSIONS.INVITATION_CREATE)
+  resubmit(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(ResubmitVisitInput)) input: ResubmitVisitInput,
+    @CurrentUser() principal: AuthUser,
+  ) {
+    return this.visits.resubmit(id, input, principal.userId);
   }
 
   @Post(':id/approve')

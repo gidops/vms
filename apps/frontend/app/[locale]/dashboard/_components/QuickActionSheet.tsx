@@ -13,9 +13,14 @@ export type QuickActionMode = "walkin" | "invite";
 export function QuickActionSheet({
   mode,
   onClose,
+  fixedHostUserId,
+  fixedHostName,
 }: {
   mode: QuickActionMode | null;
   onClose: () => void;
+  /** Pin the host (e.g. a staff member inviting visitors to themselves). */
+  fixedHostUserId?: string;
+  fixedHostName?: string;
 }) {
   const t = useTranslations("invite");
   if (!mode) return null;
@@ -30,7 +35,12 @@ export function QuickActionSheet({
         <DrawerTitle className="sr-only">
           {mode === "walkin" ? t("titleWalkin") : t("titleInvite")}
         </DrawerTitle>
-        <VisitRequestForm mode={mode} onClose={onClose} />
+        <VisitRequestForm
+          mode={mode}
+          onClose={onClose}
+          fixedHostUserId={fixedHostUserId}
+          fixedHostName={fixedHostName}
+        />
       </DrawerContent>
     </Drawer>
   );

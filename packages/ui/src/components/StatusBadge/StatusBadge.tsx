@@ -9,7 +9,9 @@ type Intent = NonNullable<BadgeProps["intent"]>;
  * package, the UI can never render a status the backend doesn't define.
  */
 const STATUS_MAP: Record<VisitStatus, { intent: Intent; label: string }> = {
-  PENDING: { intent: "warning", label: "Pending" },
+  PENDING: { intent: "warning", label: "Awaiting Approval" },
+  // The CSO bounced the request back to the host for more detail.
+  NEEDS_MORE_INFO: { intent: "danger", label: "Needs More Info" },
   // An approved, not-yet-arrived visit is shown to gate staff as "Expected".
   APPROVED: { intent: "info", label: "Expected" },
   DENIED: { intent: "danger", label: "Denied" },

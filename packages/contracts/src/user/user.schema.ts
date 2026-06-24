@@ -46,6 +46,10 @@ export const UserProfile = User.pick({
   timezone: z.string().nullable().optional(),
   assignedDesk: z.string().nullable().optional(),
   notificationPrefs: NotificationPrefs.nullable().optional(),
+  /** The user's Host office/department, when they host visitors (STAFF). Drives
+   * the staff dashboard's "Office Floor" panel. */
+  hostOffice: z.string().nullable().optional(),
+  hostDepartment: z.string().nullable().optional(),
 });
 export type UserProfile = z.infer<typeof UserProfile>;
 

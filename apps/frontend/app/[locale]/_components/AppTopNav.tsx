@@ -23,8 +23,13 @@ function BrandMark() {
 }
 
 export interface AppTopNavProps {
-  /** VMC-only primary view toggle; omit on other dashboards. */
-  active?: "schedule" | "requests";
+  /**
+   * Primary view toggle. The VMC dashboard toggles schedule/requests; the staff
+   * dashboard adds "visits". Omit on dashboards with no toggle.
+   */
+  active?: "schedule" | "visits" | "requests";
+  /** Which app's nav segments + routes to render (default "vmc"). */
+  app?: "vmc" | "staff";
   /** Count shown on the "Requests & Alerts" pill. */
   requestsCount?: number;
   /** Static centered pill label (e.g. "Account Settings") when there's no toggle. */
@@ -32,17 +37,41 @@ export interface AppTopNavProps {
 }
 
 /**
- * Shared application top bar: brand + an optional VMC schedule/requests toggle +
- * the shared control cluster (role switcher, language, account menu). Used by
- * every dashboard so the nav stays identical and in sync.
+ * Shared application top bar: brand + an optional primary view toggle + the
+ * shared control cluster (role switcher, language, account menu). Used by every
+ * dashboard so the nav stays identical and in sync. The `app` prop selects the
+ * VMC (schedule/requests) or staff (schedule/visits/requests) segment set.
  */
 export function AppTopNav({
   active,
+  app = "vmc",
   requestsCount,
   centerLabel,
 }: AppTopNavProps) {
   const tNav = useTranslations("nav");
   const router = useRouter();
+
+  const options =
+    app === "staff"
+      ? [
+          { value: "schedule", label: tNav("schedule"), route: "/staff" },
+          { value: "visits", label: tNav("myVisits"), route: "/staff/visits" },
+          {
+            value: "requests",
+            label: tNav("requests"),
+            route: "/staff/requests",
+            count: requestsCount,
+          },
+        ]
+      : [
+          { value: "schedule", label: tNav("schedule"), route: "/dashboard" },
+          {
+            value: "requests",
+            label: tNav("requests"),
+            route: "/requests",
+            count: requestsCount,
+          },
+        ];
 
   return (
     <TopNav
@@ -53,17 +82,15 @@ export function AppTopNav({
             variant="onEmphasis"
             aria-label={tNav("schedule")}
             value={active}
-            onValueChange={(value) =>
-              router.push(value === "requests" ? "/requests" : "/dashboard")
-            }
-            options={[
-              { value: "schedule", label: tNav("schedule") },
-              {
-                value: "requests",
-                label: tNav("requests"),
-                count: requestsCount,
-              },
-            ]}
+            onValueChange={(value) => {
+              const target = options.find((o) => o.value === value);
+              if (target) router.push(target.route);
+            }}
+            options={options.map(({ value, label, count }) => ({
+              value,
+              label,
+              count,
+            }))}
           />
         ) : centerLabel ? (
           <span className="inline-flex items-center rounded-full border border-accent px-4 py-1.5 text-sm font-medium text-emphasis-fg">

@@ -7,6 +7,7 @@ import { IdentityModule } from './modules/identity/identity.module';
 import { InboxModule } from './modules/inbox/inbox.module';
 import { NotesModule } from './modules/notes/notes.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { StaffModule } from './modules/staff/staff.module';
 import { VisitsModule } from './modules/visits/visits.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuditModule } from './shared/audit/audit.module';
@@ -36,6 +37,7 @@ import { StorageModule } from './shared/storage/storage.module';
     AlertsModule,
     NotesModule,
     NotificationsModule,
+    StaffModule,
   ],
   controllers: [AppController],
   // AllExceptionsFilter is registered here (not in main.ts) so it can inject

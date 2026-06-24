@@ -1,5 +1,5 @@
-import { BadRequestException } from '@nestjs/common';
-import type { CreateVisitsInput } from '@vms/contracts';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import type { CreateVisitsInput, VisitListQuery } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
 import { EventPublisher } from '../../shared/events/event-publisher';
@@ -169,6 +169,111 @@ describe('VisitsService.createVisits', () => {
     const { service } = setup(false);
     await expect(service.createVisits(baseInput({}), 'actor')).rejects.toThrow(
       BadRequestException,
+    );
+  });
+});
+
+describe('VisitsService.resubmit', () => {
+  function setup(visit: { status: string; hostUserId: string } | null) {
+    const tx = { visit: { update: jest.fn().mockResolvedValue({}) } };
+    const prisma = {
+      visit: {
+        findUnique: jest.fn().mockResolvedValue(
+          visit
+            ? {
+                id: 'v1',
+                status: visit.status,
+                host: { userId: visit.hostUserId },
+              }
+            : null,
+        ),
+      },
+    } as unknown as PrismaService;
+    const txm = {
+      run: (fn: (t: typeof tx) => unknown) => fn(tx),
+    } as unknown as TransactionManager;
+    const publish = jest.fn().mockResolvedValue({});
+    const events = { publish } as unknown as EventPublisher;
+    const service = new VisitsService(prisma, txm, events);
+    jest.spyOn(service, 'getDetail').mockResolvedValue({ id: 'v1' } as never);
+    return { service, tx, publish };
+  }
+
+  it('moves a NEEDS_MORE_INFO request owned by the actor back to PENDING', async () => {
+    const { service, tx, publish } = setup({
+      status: 'NEEDS_MORE_INFO',
+      hostUserId: 'me',
+    });
+    await service.resubmit('v1', { purpose: 'Updated' }, 'me');
+    expect(tx.visit.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: 'PENDING',
+          purpose: 'Updated',
+        }),
+      }),
+    );
+    expect(publish).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({ type: EVENT_TYPES.VisitRequested }),
+    );
+  });
+
+  it('forbids resubmitting a request the actor does not host', async () => {
+    const { service } = setup({
+      status: 'NEEDS_MORE_INFO',
+      hostUserId: 'other',
+    });
+    await expect(service.resubmit('v1', {}, 'me')).rejects.toThrow(
+      ForbiddenException,
+    );
+  });
+
+  it('rejects resubmitting a request that is not NEEDS_MORE_INFO', async () => {
+    const { service } = setup({ status: 'PENDING', hostUserId: 'me' });
+    await expect(service.resubmit('v1', {}, 'me')).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+});
+
+describe('VisitsService.list scoping', () => {
+  function setup() {
+    const findMany = jest.fn().mockResolvedValue([]);
+    const count = jest.fn().mockResolvedValue(0);
+    const prisma = {
+      visit: { findMany, count },
+      $transaction: (ops: unknown[]) => Promise.all(ops as Promise<unknown>[]),
+    } as unknown as PrismaService;
+    const service = new VisitsService(
+      prisma,
+      {} as TransactionManager,
+      {} as EventPublisher,
+    );
+    return { service, findMany };
+  }
+
+  const query = (over: Partial<VisitListQuery>): VisitListQuery => ({
+    page: 1,
+    pageSize: 20,
+    sortDir: 'desc',
+    scope: 'all',
+    ...over,
+  });
+
+  it('scopes to the current user as host when scope=mine', async () => {
+    const { service, findMany } = setup();
+    await service.list(query({ scope: 'mine' }), 'me');
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { host: { userId: 'me' } } }),
+    );
+  });
+
+  it('does not host-scope the admin queue (scope=all)', async () => {
+    const { service, findMany } = setup();
+    await service.list(query({ status: 'PENDING' }), 'me');
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { status: 'PENDING' } }),
     );
   });
 });
