@@ -75,7 +75,7 @@ jobs:
       # the action's latest major at github.com/SonarSource/sonarqube-scan-action.
       - name: SonarCloud Scan
         continue-on-error: true
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
