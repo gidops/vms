@@ -68,6 +68,17 @@ jobs:
           JWT_SECRET: ci-test-jwt-secret-ci-test-jwt-secret
         run: npm run test:e2e -w @vms/backend
 
+      # ---- SonarCloud analysis (advisory) ----
+      # Advisory (continue-on-error): reports to SonarCloud and decorates the PR
+      # but never fails CI, matching the branch-protection policy. Reads config
+      # from sonar-project.properties; needs the SONAR_TOKEN repo secret. Verify
+      # the action's latest major at github.com/SonarSource/sonarqube-scan-action.
+      - name: SonarCloud Scan
+        continue-on-error: true
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
   terraform:
     name: Terraform (fmt + validate)
     runs-on: ubuntu-latest
