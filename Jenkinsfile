@@ -1,16 +1,14 @@
-// VMS — Jenkins CI + CD pipeline.
+// VMS — Jenkins CD pipeline (deploy only).
 //
-// Mirrors .github/workflows/ci.yml (which stays in place) and adds an optional
-// CD stage that wraps ./vms-deploy.sh (build + push ECR images, terraform apply).
+// CI (install/lint/typecheck/build/test + SonarCloud + terraform validate) now
+// runs in GitHub Actions (.github/workflows/ci.yml). The CI stages below are
+// COMMENTED OUT (not deleted) so Jenkins CI can be restored by uncommenting if
+// ever needed as a fallback.
 //
-// Agent model:
-//   - CI + Terraform-validate stages run inside throwaway Docker containers
-//     (node:20.11.0 and hashicorp/terraform), so the Jenkins host only needs Docker.
-//   - The Deploy stage builds Docker images and runs Terraform/AWS, so it runs on a
-//     host agent labelled `vms-deploy` that has Docker, the AWS CLI v2 and Terraform
-//     installed (building images inside a container is awkward; a tooled host is cleaner).
-//
-// Prerequisites on the Jenkins host — see the "Jenkins setup" notes at the bottom.
+// This pipeline is CD only: a manual, approval-gated deploy that wraps
+// ./vms-deploy.sh (build + push ECR images, terraform apply). It runs on a host
+// agent labelled `vms-deploy` whose EC2 instance profile (role vms-jenkins-role)
+// provides AWS credentials — nothing is stored in Jenkins.
 
 pipeline {
   agent none
@@ -43,6 +41,9 @@ pipeline {
   }
 
   stages {
+    // ---- CI stages disabled: CI now runs in GitHub Actions (.github/workflows/ci.yml). ----
+    // ---- Left commented (not deleted) so Jenkins CI can be restored by uncommenting. ----
+    /*
     // ---------------- CI gate (node:20.11.0 container) ----------------
     stage('CI') {
       agent {
@@ -120,6 +121,7 @@ pipeline {
         }
       }
     }
+    */
 
     // ---------------- CD (host agent with docker + aws + terraform) ----------------
     stage('Deploy') {
@@ -127,9 +129,9 @@ pipeline {
         beforeAgent true
         allOf {
           expression { return params.DEPLOY }
-          // env.DEPLOY_BRANCH is set in the CI stage's Install step, so it already
-          // exists when this gate evaluates (even with beforeAgent true).
-          expression { return ['main', 'staging'].contains(env.DEPLOY_BRANCH) }
+          // env.BRANCH_NAME is provided by the Multibranch job and is available
+          // without the (now-commented-out) CI stage that used to set DEPLOY_BRANCH.
+          expression { return ['main', 'staging'].contains(env.BRANCH_NAME) }
         }
       }
       agent { label 'vms-deploy' }
@@ -162,11 +164,11 @@ pipeline {
 // ──────────────────────────── Jenkins setup ────────────────────────────
 // One-time configuration needed for this pipeline:
 //
-// Plugins:  Docker Pipeline, Git. (No AWS plugin needed — the deploy shells out to
-//   the raw aws CLI + terraform on the agent, which use the instance-profile creds.)
-//
-// CI / validate stages:  any agent with Docker available (the controller or a
-//   build node where the `jenkins` user is in the `docker` group).
+// Plugins:  Git. (Docker Pipeline is no longer required by the active stages —
+//   the docker-agent CI stages are commented out — but it's harmless if it stays
+//   installed, and is needed again if those CI stages are ever restored. No AWS
+//   plugin needed: the deploy shells out to the raw aws CLI + terraform on the
+//   agent, which use the instance-profile creds.)
 //
 // Deploy agent:  a node labelled `vms-deploy` with Docker, AWS CLI v2 and
 //   Terraform >= 1.9 installed, and the Docker daemon reachable.
@@ -182,5 +184,6 @@ pipeline {
 //   Jenkins and humans share one source of truth, so a fresh Jenkins workspace
 //   reads existing state instead of trying to recreate the stack.
 //
-// Pipeline job:  create a Multibranch Pipeline (or Pipeline-from-SCM) pointing at
-//   this repo; the Jenkinsfile path is the repo root.
+// Pipeline job:  a Multibranch Pipeline is REQUIRED (not plain Pipeline-from-SCM):
+//   the Deploy gate reads env.BRANCH_NAME, which only a Multibranch job populates.
+//   Point it at this repo; the Jenkinsfile path is the repo root.
