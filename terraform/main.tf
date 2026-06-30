@@ -134,6 +134,9 @@ resource "aws_instance" "frontend" {
   key_name                    = var.key_name
   iam_instance_profile        = aws_iam_instance_profile.ec2_ecr.name
   user_data                   = local.user_data
+  # user_data runs only on first boot, so an in-place update would NOT redeploy
+  # the new image. Force a replacement when user_data changes (e.g. a new tag).
+  user_data_replace_on_change = true
 
   tags = {
     Name = "${var.project_name}-frontend"
@@ -286,6 +289,9 @@ resource "aws_instance" "backend" {
   key_name                    = var.key_name
   iam_instance_profile        = aws_iam_instance_profile.ec2_ecr.name
   user_data                   = local.backend_user_data
+  # user_data runs only on first boot, so an in-place update would NOT redeploy
+  # the new image. Force a replacement when user_data changes (e.g. a new tag).
+  user_data_replace_on_change = true
 
   depends_on = [aws_db_instance.main]
 
