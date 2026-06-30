@@ -1,4 +1,5 @@
 import type { VisitStatus } from "@vms/contracts";
+import { cn } from "../../foundations/cn";
 import { Badge, type BadgeProps } from "../../primitives/Badge/index";
 
 type Intent = NonNullable<BadgeProps["intent"]>;
@@ -31,12 +32,22 @@ export interface StatusBadgeProps extends Omit<
 
 export function StatusBadge({
   status,
-  dot = true,
+  dot = false,
+  className,
   ...props
 }: StatusBadgeProps) {
   const { intent, label } = STATUS_MAP[status];
+  // Design status pills are a neutral grey pill (#f4f5f7 / #dddfe2 border) with
+  // the status colour carried by the text only, and no leading dot. `soft` keeps
+  // the intent-coloured text; the className overrides the tinted fill to neutral.
   return (
-    <Badge intent={intent} dot={dot} {...props}>
+    <Badge
+      intent={intent}
+      tone="soft"
+      dot={dot}
+      className={cn("border-[#dddfe2] bg-[#f4f5f7] text-[13px]", className)}
+      {...props}
+    >
       {label}
     </Badge>
   );

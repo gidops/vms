@@ -2,8 +2,16 @@
 
 import {
   Avatar,
+  Button,
+  cn,
+  FilterBar,
+  Input,
   RecordTable,
-  SegmentedControl,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Spinner,
   StatusBadge,
   Table,
@@ -14,7 +22,6 @@ import {
   TableRow,
   TopNavShell,
 } from "@vms/ui";
-import { CalendarClock } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
@@ -47,6 +54,7 @@ function rangeBounds(range: Range): { dateFrom?: string; dateTo?: string } {
 
 function Staff() {
   const t = useTranslations("staff");
+  const tCommon = useTranslations("common");
   const { user } = useAuth();
 
   const [range, setRange] = React.useState<Range>("today");
@@ -65,19 +73,56 @@ function Staff() {
   };
 
   return (
-    <TopNavShell nav={<AppTopNav app="staff" active="schedule" requestsCount={undefined} />}>
+    <TopNavShell
+      nav={<AppTopNav app="staff" active="schedule" requestsCount={undefined} />}
+      filterBar={
+        <FilterBar
+          actions={
+            <Button size="lg" className="h-12 rounded-lg px-9 font-semibold">
+              {t("filters.search")}
+            </Button>
+          }
+        >
+          {/* Search scales ~2:1 against the dropdowns (the design's ratio) so the
+              row keeps the design's proportions at every width and "All Visit
+              types" stays under the nav's "Updates" tab — a fixed px width drifts
+              at non-1440 viewports. */}
+          <div className="w-full sm:flex-[2]">
+            <Input
+              className="h-12 rounded-lg border-[#d9d9d9] px-4 text-base text-[#1e1e1e] placeholder:text-[#1e1e1e]"
+              placeholder={t("filters.searchPlaceholder")}
+            />
+          </div>
+          <Select defaultValue="all">
+            <SelectTrigger className="h-12 flex-1 rounded-lg text-base">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{tCommon("allStatus")}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select defaultValue="all">
+            <SelectTrigger className="h-12 flex-1 rounded-lg text-base">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("filters.allVisitTypes")}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select defaultValue="all">
+            <SelectTrigger className="h-12 flex-1 rounded-lg text-base">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("filters.allPurpose")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterBar>
+      }
+    >
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <span className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-primary">
-            <CalendarClock className="size-4" aria-hidden="true" />
-            {t("hub")}
-          </span>
-          <h1 className="text-3xl font-semibold text-fg">
-            {t("welcome", { name: user?.fullName ?? "" })}
-          </h1>
-        </div>
-
         <StaffOverview
+          welcome={t("welcome", { name: user?.fullName ?? "" })}
           office={user?.hostOffice}
           onNewInvite={() => setInvite(true)}
           stats={[
@@ -90,23 +135,49 @@ function Staff() {
           ]}
         />
 
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
+        {/* Right column fr (1.5) MUST match StaffOverview's book-panel column so
+            Recent Updates lines up under it. lg:gap-x-0 + the table's lg:me-6 keep
+            the right track partitioning the full width exactly like the overview bar. */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(300px,1.5fr)] lg:gap-x-0">
           <RecordTable
+            className="lg:me-6"
             toolbar={
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-xl font-semibold text-primary">
+                <h2 className="text-2xl font-semibold text-black">
                   {t("recentVisitors")}
                 </h2>
-                <SegmentedControl
+                <div
+                  role="radiogroup"
                   aria-label={t("recentVisitors")}
-                  value={range}
-                  onValueChange={(v) => setRange(v as Range)}
-                  options={[
-                    { value: "today", label: t("range.today") },
-                    { value: "7d", label: t("range.last7") },
-                    { value: "custom", label: t("range.custom") },
-                  ]}
-                />
+                  className="flex items-center gap-2"
+                >
+                  {(
+                    [
+                      { value: "today", label: t("range.today") },
+                      { value: "7d", label: t("range.last7") },
+                      { value: "custom", label: t("range.custom") },
+                    ] as const
+                  ).map((opt) => {
+                    const active = range === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        onClick={() => setRange(opt.value)}
+                        className={cn(
+                          "inline-flex h-[35px] items-center justify-center rounded-full bg-white text-base tracking-[-0.48px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]",
+                          active
+                            ? "border-2 border-[#00736e] px-6 font-semibold text-[#00736e]"
+                            : "border border-[#e6e9ee] px-3 font-medium text-[#858d9d] hover:text-[#00736e]",
+                        )}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             }
           >
@@ -160,7 +231,12 @@ function Staff() {
                           {row.purpose}
                         </TableCell>
                         <TableCell>
-                          <StatusBadge status={row.status} />
+                          <StatusBadge
+                            status={row.status}
+                            tone="outline"
+                            dot={false}
+                            className="border-[#e6e9ee] bg-white"
+                          />
                         </TableCell>
                       </TableRow>
                     ))

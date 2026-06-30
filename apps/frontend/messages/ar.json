@@ -6,8 +6,10 @@
     "schedule": "جدول اليوم",
     "myVisits": "زياراتي",
     "requests": "الطلبات والتنبيهات",
+    "updates": "التحديثات",
     "visitors": "الزوّار",
-    "switchAccount": "تبديل الحساب",
+    "switchToStaff": "التبديل إلى الموظفين",
+    "switchToVmc": "التبديل إلى VMC",
     "accountSettings": "إعدادات الحساب",
     "help": "المساعدة / الدعم",
     "logout": "تسجيل الخروج"
@@ -247,12 +249,12 @@
   "staff": {
     "hub": "مساحة الموظفين",
     "welcome": "مرحبًا {name}",
-    "recentVisitors": "الزوّار الأخيرون",
+    "recentVisitors": "الضيوف الأخيرون",
     "myVisits": { "title": "زياراتي" },
     "noVisits": "لا توجد زيارات لعرضها.",
     "overview": {
       "officeFloor": "طابق المكتب",
-      "bookTitle": "احجز الزوّار في منشآت AATC بأبوجا",
+      "bookTitle": "احجز الضيوف في منشآت AATC بأبوجا",
       "newInvite": "طلب دعوة جديد"
     },
     "stats": {
@@ -268,7 +270,10 @@
       "yesterday": "أمس"
     },
     "filters": {
-      "searchPlaceholder": "ابحث عن زائر أو منظمة أو غرض أو رقم طلب"
+      "searchPlaceholder": "ابحث عن ضيف أو مضيف أو طابق أو رقم تصريح",
+      "allVisitTypes": "كل أنواع الزيارة",
+      "allPurpose": "كل الأغراض",
+      "search": "بحث"
     },
     "columns": {
       "visitor": "الزائر",
@@ -302,6 +307,7 @@
       "seeAll": "عرض الكل",
       "empty": "لا توجد تحديثات حديثة.",
       "viewUpdate": "عرض التحديث",
+      "updateRequest": "تحديث الطلب",
       "viewDetails": "عرض التفاصيل",
       "category": {
         "ARRIVAL_UPDATE": "تحديث الوصول",

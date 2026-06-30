@@ -78,7 +78,7 @@ export function SegmentedControl({
               onEmphasis
                 ? active
                   ? "border border-accent text-emphasis-fg"
-                  : "border border-transparent text-emphasis-muted hover:text-emphasis-fg"
+                  : "border border-transparent text-[#e3e6e9] hover:text-emphasis-fg"
                 : active
                   ? "bg-surface text-fg shadow-xs"
                   : "border border-transparent text-fg-muted hover:text-fg",
@@ -89,9 +89,7 @@ export function SegmentedControl({
               <span
                 className={cn(
                   "inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                  onEmphasis
-                    ? "bg-emphasis-fg text-emphasis"
-                    : "bg-fg text-surface",
+                  onEmphasis ? "bg-white text-[#005652]" : "bg-fg text-surface",
                 )}
               >
                 {option.count}

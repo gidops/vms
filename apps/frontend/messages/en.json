@@ -6,8 +6,10 @@
     "schedule": "Today's Schedule",
     "myVisits": "My Visits",
     "requests": "Requests & Alerts",
+    "updates": "Updates",
     "visitors": "Visitors",
-    "switchAccount": "Switch Account",
+    "switchToStaff": "Switch to Staff",
+    "switchToVmc": "Switch to VMC",
     "accountSettings": "Account Settings",
     "help": "Help/Support",
     "logout": "Logout"
@@ -247,12 +249,12 @@
   "staff": {
     "hub": "STAFF HUB",
     "welcome": "Welcome {name}",
-    "recentVisitors": "Recent Visitors",
+    "recentVisitors": "Recent Guest",
     "myVisits": { "title": "My Visits" },
     "noVisits": "No visits to show.",
     "overview": {
       "officeFloor": "Office Floor",
-      "bookTitle": "Book visitors into Abuja AATC facilities",
+      "bookTitle": "Book Guests into Abuja\nAATC facilities",
       "newInvite": "New Invite Request"
     },
     "stats": {
@@ -268,7 +270,10 @@
       "yesterday": "Yesterday"
     },
     "filters": {
-      "searchPlaceholder": "Search visitor, organization, purpose, request id"
+      "searchPlaceholder": "Search Guest, host, floor, pass id",
+      "allVisitTypes": "All Visit types",
+      "allPurpose": "All Purpose",
+      "search": "Search"
     },
     "columns": {
       "visitor": "Visitor",
@@ -302,6 +307,7 @@
       "seeAll": "See all",
       "empty": "No recent updates.",
       "viewUpdate": "View Update",
+      "updateRequest": "Update Request",
       "viewDetails": "View Details",
       "category": {
         "ARRIVAL_UPDATE": "Arrival Update",

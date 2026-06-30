@@ -236,7 +236,7 @@
 /* ---- Light theme (default) -------------------------------------------- */
 :root,
 [data-theme="light"] {
-  --vms-canvas: var(--color-neutral-50);
+  --vms-canvas: var(--color-white);
   --vms-surface: var(--color-white);
   --vms-surface-muted: var(--color-neutral-100);
   --vms-surface-inset: var(--color-neutral-100);
