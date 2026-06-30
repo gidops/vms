@@ -57,6 +57,11 @@ set -euo pipefail
 REGION="us-east-1"
 TF="terraform -chdir=terraform"
 
+# Frontend API base URL baked into the Next.js bundle at build time. Points at
+# the backend via the ALB's HTTPS domain (stable, not the volatile EIP).
+# Override with VMS_API_BASE_URL if needed (e.g. a staging domain).
+API_BASE_URL="${VMS_API_BASE_URL:-https://api.aatcvms.online}"
+
 # Approval flags applied to EVERY `terraform apply`. In CI (Jenkins sets
 # VMS_AUTO_APPROVE=1) there is no TTY, so terraform's own "Do you want to perform
 # these actions?" prompt hits stdin EOF and dies — the human approval already
@@ -152,24 +157,25 @@ build_push_backend() {
 }
 
 build_push_frontend() {
-  echo "=== Building + pushing FRONTEND @ $TAG (EIP $BACKEND_EIP baked in) ==="
+  echo "=== Building + pushing FRONTEND @ $TAG ($API_BASE_URL baked in) ==="
   docker build -f apps/frontend/Dockerfile \
-    --build-arg NEXT_PUBLIC_API_BASE_URL="http://$BACKEND_EIP:4000" \
+    --build-arg NEXT_PUBLIC_API_BASE_URL="$API_BASE_URL" \
     -t "$FRONTEND_REPO:$TAG" .
   docker push "$FRONTEND_REPO:$TAG"
   verify_frontend_bake
 }
 
-# Hard-fail if the EIP did not get inlined into the frontend bundle — this is the
-# single highest-risk silent failure (browser ends up calling a dead address).
+# Hard-fail if the API base URL did not get inlined into the frontend bundle —
+# this is the single highest-risk silent failure (browser ends up calling a dead
+# address). grep -F: the URL contains "/" and ":", so match it as a fixed string.
 verify_frontend_bake() {
-  echo "--- Verifying $BACKEND_EIP is baked into the frontend bundle ---"
+  echo "--- Verifying $API_BASE_URL is baked into the frontend bundle ---"
   docker run --rm --entrypoint node "$FRONTEND_REPO:$TAG" -e "
     const cp = require('child_process');
-    const hit = cp.execSync('grep -rl ${BACKEND_EIP} /app 2>/dev/null || true').toString().trim();
+    const hit = cp.execSync('grep -rlF \"${API_BASE_URL}\" /app 2>/dev/null || true').toString().trim();
     if (!hit) { console.error('  NOT FOUND'); process.exit(1); }
     console.log('  OK: ' + hit.split('\n')[0]);
-  " || die "EIP $BACKEND_EIP not found in frontend bundle — build-arg did not take. Stopping before deploy."
+  " || die "API base URL $API_BASE_URL not found in frontend bundle — build-arg did not take. Stopping before deploy."
 }
 
 # Pause so a human reads the plan before any apply that could touch the EIP or RDS.
