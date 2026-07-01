@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "../../primitives/Button/Button";
+import { Input } from "../../primitives/Input/Input";
 import {
   Select,
   SelectContent,
@@ -43,6 +44,44 @@ export const Default: Story = {
             <SelectItem value="types">All Visit types</SelectItem>
             <SelectItem value="walk_in">Walk-in</SelectItem>
             <SelectItem value="pre_invited">Pre-invited</SelectItem>
+          </SelectContent>
+        </Select>
+      </FilterBar>
+    </div>
+  ),
+};
+
+/** Staff dashboard variant: a plain text `Input` plus three selects and a
+ * standalone search action, rather than the `SearchInput` + trailing action. */
+export const StaffSearch: Story = {
+  render: () => (
+    <div className="w-[54rem]">
+      <FilterBar actions={<Button size="lg">Search</Button>}>
+        <div className="min-w-56 flex-[2.2]">
+          <Input placeholder="Search Guest, host, floor, pass id" />
+        </div>
+        <Select defaultValue="all">
+          <SelectTrigger className="flex-1">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select defaultValue="all">
+          <SelectTrigger className="flex-[0.8]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Visit types</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select defaultValue="all">
+          <SelectTrigger className="flex-1">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Purpose</SelectItem>
           </SelectContent>
         </Select>
       </FilterBar>

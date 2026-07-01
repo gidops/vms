@@ -2,8 +2,16 @@
 
 import {
   Avatar,
+  Button,
+  FilterBar,
+  Input,
   RecordTable,
+  Select,
   SegmentedControl,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Spinner,
   StatusBadge,
   Table,
@@ -14,7 +22,6 @@ import {
   TableRow,
   TopNavShell,
 } from "@vms/ui";
-import { CalendarClock } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
@@ -45,8 +52,13 @@ function rangeBounds(range: Range): { dateFrom?: string; dateTo?: string } {
   return { dateFrom: start.toISOString(), dateTo: end.toISOString() };
 }
 
+/** Recent Guests table header cell — design: 16px semibold uppercase, muted grey. */
+const TABLE_HEAD_CN =
+  "h-11 text-base font-semibold uppercase tracking-normal text-fg-subtle";
+
 function Staff() {
   const t = useTranslations("staff");
+  const tCommon = useTranslations("common");
   const { user } = useAuth();
 
   const [range, setRange] = React.useState<Range>("today");
@@ -65,19 +77,57 @@ function Staff() {
   };
 
   return (
-    <TopNavShell nav={<AppTopNav app="staff" active="schedule" requestsCount={undefined} />}>
+    <TopNavShell
+      nav={<AppTopNav app="staff" active="schedule" requestsCount={undefined} />}
+      filterBar={
+        <FilterBar
+          actions={
+            <Button size="lg" className="h-12 rounded-lg px-9 font-semibold shadow-lg">
+              {t("filters.search")}
+            </Button>
+          }
+        >
+          {/* Search takes its base 2 shares PLUS the 0.2 freed by narrowing "All
+              Visit types" (flex-[0.8]); the removed 20% flows into the search bar
+              while "All Status" / "All Purpose" keep their width. Total stays 5. */}
+          <div className="w-full sm:flex-[2.2]">
+            <Input
+              className="h-12 rounded-lg border-border px-4 text-base text-fg placeholder:text-fg"
+              placeholder={t("filters.searchPlaceholder")}
+            />
+          </div>
+          <Select defaultValue="all">
+            <SelectTrigger className="h-12 flex-1 rounded-lg text-base">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{tCommon("allStatus")}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select defaultValue="all">
+            {/* 20% narrower than the other dropdowns (flex-[0.8] vs flex-1); the
+                freed share is absorbed by the search bar above. */}
+            <SelectTrigger className="h-12 flex-[0.8] rounded-lg text-base">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("filters.allVisitTypes")}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select defaultValue="all">
+            <SelectTrigger className="h-12 flex-1 rounded-lg text-base">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("filters.allPurpose")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterBar>
+      }
+    >
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <span className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-primary">
-            <CalendarClock className="size-4" aria-hidden="true" />
-            {t("hub")}
-          </span>
-          <h1 className="text-3xl font-semibold text-fg">
-            {t("welcome", { name: user?.fullName ?? "" })}
-          </h1>
-        </div>
-
         <StaffOverview
+          welcome={t("welcome", { name: user?.fullName ?? "" })}
           office={user?.hostOffice}
           onNewInvite={() => setInvite(true)}
           stats={[
@@ -90,17 +140,22 @@ function Staff() {
           ]}
         />
 
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
+        {/* Right column fr (1.5) MUST match StaffOverview's book-panel column so
+            Recent Updates lines up under it. lg:gap-x-0 + the table's lg:me-6 keep
+            the right track partitioning the full width exactly like the overview bar. */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(300px,1.5fr)] lg:gap-x-0">
           <RecordTable
+            flush
+            className="lg:me-6"
             toolbar={
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-xl font-semibold text-primary">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-t-lg border border-border p-3">
+                <h2 className="text-2xl font-semibold text-fg">
                   {t("recentVisitors")}
                 </h2>
                 <SegmentedControl
                   aria-label={t("recentVisitors")}
                   value={range}
-                  onValueChange={(v) => setRange(v as Range)}
+                  onValueChange={(value) => setRange(value as Range)}
                   options={[
                     { value: "today", label: t("range.today") },
                     { value: "7d", label: t("range.last7") },
@@ -116,12 +171,20 @@ function Staff() {
               </div>
             ) : (
               <Table>
-                <TableHeader>
+                <TableHeader className="[&_tr]:border-border">
                   <TableRow>
-                    <TableHead>{t("columns.visitor")}</TableHead>
-                    <TableHead>{t("columns.organization")}</TableHead>
-                    <TableHead>{t("columns.purpose")}</TableHead>
-                    <TableHead>{t("columns.status")}</TableHead>
+                    <TableHead className={TABLE_HEAD_CN}>
+                      {t("columns.visitor")}
+                    </TableHead>
+                    <TableHead className={TABLE_HEAD_CN}>
+                      {t("columns.organization")}
+                    </TableHead>
+                    <TableHead className={TABLE_HEAD_CN}>
+                      {t("columns.purpose")}
+                    </TableHead>
+                    <TableHead className={TABLE_HEAD_CN}>
+                      {t("columns.status")}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody striped>
@@ -135,7 +198,7 @@ function Staff() {
                     rows.map((row) => (
                       <TableRow
                         key={row.id}
-                        className="cursor-pointer"
+                        className="cursor-pointer border-b-0"
                         onClick={() =>
                           setSelected({ kind: "request", id: row.id })
                         }
@@ -160,7 +223,12 @@ function Staff() {
                           {row.purpose}
                         </TableCell>
                         <TableCell>
-                          <StatusBadge status={row.status} />
+                          <StatusBadge
+                            status={row.status}
+                            tone="outline"
+                            dot={false}
+                            className="border-border bg-surface"
+                          />
                         </TableCell>
                       </TableRow>
                     ))
