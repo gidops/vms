@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { ACCESS_CARD_ZONES, PERMISSIONS, ROLES } from '@vms/contracts';
 import type { Env } from '../config/env.schema';
 import { PrismaService } from '../../prisma/prisma.service';
+import { PasswordService } from './password.service';
 
 /**
  * Scoped roles (SUPER_ADMIN gets every permission and is handled separately).
@@ -87,6 +88,7 @@ export class SeederService implements OnApplicationBootstrap {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService<Env, true>,
+    private readonly passwords: PasswordService,
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
@@ -95,10 +97,9 @@ export class SeederService implements OnApplicationBootstrap {
     // seeded; the first one is created through /signup.
     await this.seedRbac();
     await this.seedAccessCards();
-    await this.seedDemoData();
-    // if (this.config.get('NODE_ENV', { infer: true }) !== 'production') {
-    //   await this.seedDemoData();
-    // }
+    if (this.config.get('NODE_ENV', { infer: true }) !== 'production') {
+      await this.seedDemoData();
+    }
   }
 
   private async seedRbac(): Promise<void> {
@@ -187,6 +188,8 @@ export class SeederService implements OnApplicationBootstrap {
    * is the seeded host user (Dr Alabi), so demo data needs no admin account.
    */
   private async seedDemoData(): Promise<void> {
+    const defaultHash = await this.passwords.hash('Passw0rd!');
+
     const hostUser = await this.prisma.user.upsert({
       where: { id: ID.hostUser },
       update: {},
@@ -194,8 +197,15 @@ export class SeederService implements OnApplicationBootstrap {
         id: ID.hostUser,
         email: 'dr.alabi@aatc.org',
         fullName: 'Dr Alabi Oluwaseun',
+        passwordHash: defaultHash,
       },
     });
+    if (!hostUser.passwordHash) {
+      await this.prisma.user.update({
+        where: { id: hostUser.id },
+        data: { passwordHash: defaultHash },
+      });
+    }
     const host = await this.prisma.host.upsert({
       where: { id: ID.host },
       update: {},
@@ -221,8 +231,15 @@ export class SeederService implements OnApplicationBootstrap {
         id: ID.sarahUser,
         email: 'sarah.lee@aatc.org',
         fullName: 'Sarah Lee',
+        passwordHash: defaultHash,
       },
     });
+    if (!sarah.passwordHash) {
+      await this.prisma.user.update({
+        where: { id: sarah.id },
+        data: { passwordHash: defaultHash },
+      });
+    }
     await this.prisma.host.upsert({
       where: { id: ID.sarahHost },
       update: {},
