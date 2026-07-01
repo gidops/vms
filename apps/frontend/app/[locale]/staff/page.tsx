@@ -153,6 +153,7 @@ function Staff() {
                   {t("recentVisitors")}
                 </h2>
                 <SegmentedControl
+                  variant="outline"
                   aria-label={t("recentVisitors")}
                   value={range}
                   onValueChange={(value) => setRange(value as Range)}

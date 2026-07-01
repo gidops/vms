@@ -20,6 +20,20 @@ export const Default: Story = {
   },
 };
 
+/** Standalone pills with a bordered active state — the staff dashboard's
+ * "Today / Last 7 days / Custom" range toggle above the records table. */
+export const Outline: Story = {
+  args: {
+    variant: "outline",
+    "aria-label": "Recent Guests",
+    options: [
+      { value: "today", label: "Today" },
+      { value: "7d", label: "Last 7 days" },
+      { value: "custom", label: "Custom" },
+    ],
+  },
+};
+
 export const OnEmphasis: Story = {
   parameters: { backgrounds: { default: "brand" } },
   decorators: [
