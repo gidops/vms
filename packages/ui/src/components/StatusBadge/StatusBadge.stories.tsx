@@ -36,3 +36,14 @@ export const AllStatuses: Story = {
     </div>
   ),
 };
+
+/** Explicit `dot` opt-in — the default (`dot={false}`) is a plain text pill. */
+export const WithDot: Story = {
+  render: () => (
+    <div className="flex flex-wrap items-center gap-2">
+      {ALL_STATUSES.map((status) => (
+        <StatusBadge key={status} status={status} dot />
+      ))}
+    </div>
+  ),
+};
