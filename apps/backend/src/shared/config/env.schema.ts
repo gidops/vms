@@ -69,9 +69,16 @@ export const envSchema = z.object({
   ),
 
   // Email transport. EMAIL_PROVIDER selects the implementation; falls back to a
-  // log transport when the chosen provider isn't configured.
-  EMAIL_PROVIDER: z.enum(['smtp', 'sendgrid']).default('smtp'),
+  // log transport when the chosen provider isn't configured. `gmail`, `mailtrap`
+  // and `smtp` all run through the nodemailer SmtpProvider (which resolves its
+  // connection from the selector); `sendgrid` uses the SendGrid HTTP API. This
+  // lets every transport's credentials coexist in env and be switched by flipping
+  // this one variable.
+  EMAIL_PROVIDER: z
+    .enum(['smtp', 'gmail', 'mailtrap', 'sendgrid'])
+    .default('smtp'),
   EMAIL_FROM: z.preprocess(emptyToUndefined, z.string().optional()),
+  // Generic/custom SMTP server.
   SMTP_HOST: z.preprocess(emptyToUndefined, z.string().optional()),
   SMTP_PORT: z.preprocess(
     emptyToUndefined,
@@ -80,6 +87,21 @@ export const envSchema = z.object({
   SMTP_SECURE: boolEnv(false),
   SMTP_USER: z.preprocess(emptyToUndefined, z.string().optional()),
   SMTP_PASS: z.preprocess(emptyToUndefined, z.string().optional()),
+  // Gmail (host/port/secure are fixed to smtp.gmail.com:465; use an app password).
+  GMAIL_USER: z.preprocess(emptyToUndefined, z.string().optional()),
+  GMAIL_APP_PASSWORD: z.preprocess(emptyToUndefined, z.string().optional()),
+  // Mailtrap (live SMTP sending).
+  MAILTRAP_HOST: z.preprocess(
+    emptyToUndefined,
+    z.string().default('live.smtp.mailtrap.io'),
+  ),
+  MAILTRAP_PORT: z.preprocess(
+    emptyToUndefined,
+    z.coerce.number().int().positive().default(2525),
+  ),
+  MAILTRAP_USER: z.preprocess(emptyToUndefined, z.string().optional()),
+  MAILTRAP_PASS: z.preprocess(emptyToUndefined, z.string().optional()),
+  // SendGrid HTTP API (the SG.* value is the API key).
   SENDGRID_API_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
 
   // SMS + WhatsApp via Twilio (one account serves both channels).
