@@ -86,7 +86,18 @@ export class VisitsService {
   }
 
   async cancel(id: string, actorUserId: string): Promise<VisitRequestDetail> {
-    await this.ensureExists(id);
+    const visit = await this.prisma.visit.findUnique({
+      where: { id },
+      select: { createdById: true, host: { select: { userId: true } } },
+    });
+    if (!visit) throw new NotFoundException('errors.visit.notFound');
+    // The creator (e.g. the VMC operator who logged it) or the host may cancel.
+    if (
+      visit.createdById !== actorUserId &&
+      visit.host?.userId !== actorUserId
+    ) {
+      throw new ForbiddenException('errors.visit.notOwner');
+    }
     await this.txm.run(async (tx) => {
       await tx.visit.update({
         where: { id },
@@ -103,16 +114,73 @@ export class VisitsService {
     return this.getDetail(id);
   }
 
+  /**
+   * VMC edit of a not-yet-approved request via the pre-filled invite form —
+   * covers visitor details and that visit's details. Only the creator can edit,
+   * and only while the request is still PENDING/NEEDS_MORE_INFO (an approved
+   * request is locked). A named host must still be a STAFF user.
+   */
   async update(
     id: string,
     input: UpdateVisitRequestInput,
     actorUserId: string,
   ): Promise<VisitRequestDetail> {
-    await this.ensureExists(id);
+    const visit = await this.prisma.visit.findUnique({
+      where: { id },
+      select: { status: true, createdById: true, visitorId: true },
+    });
+    if (!visit) throw new NotFoundException('errors.visit.notFound');
+    if (visit.createdById !== actorUserId) {
+      throw new ForbiddenException('errors.visit.notOwner');
+    }
+    if (visit.status !== 'PENDING' && visit.status !== 'NEEDS_MORE_INFO') {
+      throw new BadRequestException('errors.visit.notEditable');
+    }
+    if (input.hostUserId) {
+      const staff = await this.prisma.user.findFirst({
+        where: {
+          id: input.hostUserId,
+          userRoles: { some: { role: { name: 'STAFF' } } },
+        },
+        select: { id: true },
+      });
+      if (!staff) throw new BadRequestException('errors.host.notStaff');
+    }
+
+    const visitorData = {
+      fullName: input.fullName,
+      email: input.email,
+      phone: input.phone,
+      organization: input.organization,
+    };
+    const hasVisitorChange = Object.values(visitorData).some(
+      (v) => v !== undefined,
+    );
+
     await this.txm.run(async (tx) => {
+      if (hasVisitorChange) {
+        await tx.visitor.update({
+          where: { id: visit.visitorId },
+          data: visitorData,
+        });
+      }
+      const hostId = input.hostUserId
+        ? (
+            await tx.host.upsert({
+              where: { userId: input.hostUserId },
+              create: { userId: input.hostUserId },
+              update: {},
+            })
+          ).id
+        : undefined;
       await tx.visit.update({
         where: { id },
-        data: { purpose: input.purpose, scheduledAt: input.scheduledAt },
+        data: {
+          ...(hostId ? { hostId } : {}),
+          floor: input.floor,
+          purpose: input.purpose,
+          scheduledAt: input.scheduledAt,
+        },
       });
       await this.events.publish(tx, {
         type: EVENT_TYPES.VisitUpdated,
@@ -308,7 +376,8 @@ export class VisitsService {
     currentUserId: string,
   ): Promise<Paginated<VisitListItem>> {
     const where: Prisma.VisitWhereInput = {};
-    if (query.status) where.status = query.status;
+    if (query.statuses?.length) where.status = { in: query.statuses };
+    else if (query.status) where.status = query.status;
     if (query.type) where.type = query.type;
     if (query.purpose) where.purpose = query.purpose;
     if (query.groupId) where.groupId = query.groupId;
@@ -329,8 +398,27 @@ export class VisitsService {
       }),
       this.prisma.visit.count({ where }),
     ]);
+
+    // How many visits share each group on this page — `groupSize > 1` is what
+    // marks a row as a group visit (every visit always carries a groupId).
+    const groupIds = [
+      ...new Set(rows.map((r) => r.groupId).filter((g): g is string => !!g)),
+    ];
+    const groupCounts = groupIds.length
+      ? await this.prisma.visit.groupBy({
+          by: ['groupId'],
+          where: { groupId: { in: groupIds } },
+          _count: { _all: true },
+        })
+      : [];
+    const sizeByGroup = new Map(
+      groupCounts.map((g) => [g.groupId as string, g._count._all]),
+    );
+
     return {
-      items: rows.map((r) => this.toListItem(r)),
+      items: rows.map((r) =>
+        this.toListItem(r, r.groupId ? (sizeByGroup.get(r.groupId) ?? 1) : 1),
+      ),
       page: query.page,
       pageSize: query.pageSize,
       total,
@@ -584,6 +672,7 @@ export class VisitsService {
     visit: Prisma.VisitGetPayload<{
       include: { visitor: true; host: { include: { user: true } } };
     }>,
+    groupSize: number,
   ): VisitListItem {
     return {
       id: visit.id,
@@ -606,6 +695,7 @@ export class VisitsService {
       createdByName: visit.createdByName,
       visitor: visit.visitor,
       host: this.toHost(visit.host),
+      groupSize,
     };
   }
 }

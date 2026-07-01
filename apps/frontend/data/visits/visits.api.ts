@@ -30,6 +30,8 @@ export interface VisitListItem {
   checkOutAt?: string | null;
   createdAt: string;
   createdByName?: string | null;
+  /** Visits sharing this row's group — `groupSize > 1` marks a group visit. */
+  groupSize: number;
   visitor: {
     id: string;
     fullName: string;
@@ -84,6 +86,7 @@ export interface VisitRequestDetail {
   checkOutAt?: string | null;
   createdAt: string;
   source?: string | null;
+  createdById?: string | null;
   createdByName?: string | null;
   visitor: {
     id: string;
@@ -119,6 +122,8 @@ export const visitsApi = {
    */
   list(params?: {
     status?: VisitStatus;
+    /** Restrict to several statuses (e.g. the VMC board's APPROVED/CHECKED_IN/CHECKED_OUT). */
+    statuses?: VisitStatus[];
     scope?: "all" | "mine";
     type?: VisitType;
     purpose?: string;
@@ -130,6 +135,7 @@ export const visitsApi = {
   }): Promise<Paginated<VisitListItem>> {
     const q = new URLSearchParams();
     if (params?.status) q.set("status", params.status);
+    if (params?.statuses?.length) q.set("statuses", params.statuses.join(","));
     if (params?.scope) q.set("scope", params.scope);
     if (params?.type) q.set("type", params.type);
     if (params?.purpose) q.set("purpose", params.purpose);
@@ -170,9 +176,19 @@ export const visitsApi = {
       body: { reason },
     });
   },
+  /** VMC edit of a not-yet-approved request (visitor + visit details). */
   update(
     id: string,
-    input: { purpose?: string; scheduledAt?: string },
+    input: {
+      fullName?: string;
+      email?: string;
+      phone?: string;
+      organization?: string;
+      hostUserId?: string;
+      floor?: string;
+      purpose?: string;
+      scheduledAt?: string;
+    },
   ): Promise<VisitRequestDetail> {
     return api<VisitRequestDetail>(`/visits/${id}`, {
       method: "PATCH",

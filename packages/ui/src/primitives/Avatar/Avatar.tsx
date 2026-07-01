@@ -32,6 +32,14 @@ function accentFor(seed: string): string {
   return ACCENTS[hash % ACCENTS.length] ?? ACCENTS[0];
 }
 
+/** Fixed semantic accents that override the name-hash (e.g. single vs group visit). */
+const NAMED_ACCENTS = {
+  green: "bg-green-100 text-green-800",
+  amber: "bg-amber-100 text-amber-900",
+} as const;
+
+export type AvatarAccent = keyof typeof NAMED_ACCENTS;
+
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
@@ -43,13 +51,19 @@ export interface AvatarProps extends VariantProps<typeof avatarVariants> {
   /** Used for the initials fallback and the deterministic accent color. */
   name: string;
   src?: string;
+  /** Override the name-hash color with a fixed semantic accent (green/amber). */
+  accent?: AvatarAccent;
   className?: string;
 }
 
-export function Avatar({ name, src, size, className }: AvatarProps) {
+export function Avatar({ name, src, size, accent, className }: AvatarProps) {
   return (
     <AvatarPrimitive.Root
-      className={cn(avatarVariants({ size }), accentFor(name), className)}
+      className={cn(
+        avatarVariants({ size }),
+        accent ? NAMED_ACCENTS[accent] : accentFor(name),
+        className,
+      )}
     >
       {src ? (
         <AvatarPrimitive.Image

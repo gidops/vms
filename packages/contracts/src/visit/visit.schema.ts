@@ -102,6 +102,12 @@ export const VisitListItem = Visit.extend({
   visitor: Visitor,
   host: HostWithUser.nullable(),
   createdByName: z.string().nullable().optional(),
+  /**
+   * Number of visits sharing this visit's `groupId`. Every visit always has a
+   * groupId (even a lone guest), so `groupSize > 1` — not the presence of a
+   * groupId — is what distinguishes a group visit from a single one.
+   */
+  groupSize: z.number().int().min(1).default(1),
 });
 export type VisitListItem = z.infer<typeof VisitListItem>;
 
@@ -187,6 +193,23 @@ export type CheckOutVisitInput = z.infer<typeof CheckOutVisitInput>;
  */
 export const VisitListQuery = PaginationQuery.extend({
   status: VisitStatus.optional(),
+  /**
+   * Restrict to several statuses at once (the VMC "Today's Schedule" board shows
+   * only APPROVED/CHECKED_IN/CHECKED_OUT). Accepts a comma-separated string on the
+   * wire (`?statuses=APPROVED,CHECKED_IN`) and parses to a VisitStatus[].
+   */
+  statuses: z
+    .preprocess(
+      (v) =>
+        typeof v === "string"
+          ? v
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : v,
+      z.array(VisitStatus).min(1),
+    )
+    .optional(),
   scope: z.enum(["all", "mine"]).default("all"),
   type: VisitType.optional(),
   purpose: z.string().min(1).optional(),
@@ -229,13 +252,24 @@ export const VisitRequestDetail = Visit.extend({
 });
 export type VisitRequestDetail = z.infer<typeof VisitRequestDetail>;
 
-/** Reception edit of a pending request (purpose / schedule). */
+/**
+ * Reception edit of a not-yet-approved request via the pre-filled invite form.
+ * Covers both the visitor's details and that visit's details; every field is
+ * optional but at least one must be present. The service authorizes the edit
+ * (creator-only, pre-approval) and applies the visitor vs visit changes.
+ */
 export const UpdateVisitRequestInput = z
   .object({
+    fullName: z.string().min(1).optional(),
+    email: z.string().email().optional(),
+    phone: z.string().min(3).optional(),
+    organization: z.string().optional(),
+    hostUserId: z.string().uuid().optional(),
+    floor: z.string().min(1).optional(),
     purpose: z.string().min(1).optional(),
     scheduledAt: z.coerce.date().optional(),
   })
-  .refine((v) => v.purpose !== undefined || v.scheduledAt !== undefined, {
+  .refine((v) => Object.values(v).some((x) => x !== undefined), {
     message: "Provide at least one field to update",
   });
 export type UpdateVisitRequestInput = z.infer<typeof UpdateVisitRequestInput>;

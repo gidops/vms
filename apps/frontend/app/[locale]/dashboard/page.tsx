@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Avatar,
   Button,
-  Checkbox,
   FilterBar,
   RecordTable,
   SearchInput,
@@ -28,6 +27,7 @@ import { SquareActivity } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
+import { VisitDetailSheet } from "@/app/[locale]/_components/VisitDetailSheet";
 import { CheckInModal } from "@/app/[locale]/dashboard/_components/checkin/CheckInModal";
 import { CheckOutModal } from "@/app/[locale]/dashboard/_components/checkin/CheckOutModal";
 import { GroupCheckInSheet } from "@/app/[locale]/dashboard/_components/checkin/GroupCheckInSheet";
@@ -40,6 +40,9 @@ import { visitsApi, type VisitListItem } from "@/data/visits/visits.api";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
 
+/** The VMC board only surfaces visits that a CSO has cleared for reception. */
+const BOARD_STATUSES = ["APPROVED", "CHECKED_IN", "CHECKED_OUT"] as const;
+
 function Dashboard() {
   const t = useTranslations("dashboard");
   const tCommon = useTranslations("common");
@@ -48,35 +51,17 @@ function Dashboard() {
 
   const visitsQ = useQuery({
     queryKey: ["visits", "dashboard"] as const,
-    queryFn: () => visitsApi.list({ pageSize: 50 }),
+    queryFn: () => visitsApi.list({ statuses: [...BOARD_STATUSES], pageSize: 50 }),
   });
   const rows = React.useMemo(() => visitsQ.data?.items ?? [], [visitsQ.data]);
 
-  const [selected, setSelected] = React.useState<Set<string>>(new Set());
   const [quickAction, setQuickAction] = React.useState<QuickActionMode | null>(
     null,
   );
   const [checkInId, setCheckInId] = React.useState<string | null>(null);
   const [checkOutId, setCheckOutId] = React.useState<string | null>(null);
   const [groupCheckIn, setGroupCheckIn] = React.useState<string | null>(null);
-
-  const allSelected = selected.size === rows.length && rows.length > 0;
-  const headerState: boolean | "indeterminate" = allSelected
-    ? true
-    : selected.size > 0
-      ? "indeterminate"
-      : false;
-
-  const toggleAll = () =>
-    setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.id)));
-
-  const toggleRow = (id: string) =>
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  const [detailId, setDetailId] = React.useState<string | null>(null);
 
   const channelLabel = (type: string) =>
     type === "WALK_IN" ? t("channel.walkIn") : t("channel.invited");
@@ -84,10 +69,17 @@ function Dashboard() {
   const hostUnit = (row: VisitListItem) =>
     row.host?.user.fullName ?? row.floor ?? "—";
 
+  // A group visit (groupSize > 1) opens the group sheet; a single visit goes
+  // straight to the check-in modal.
+  const startCheckIn = (row: VisitListItem) => {
+    if (row.groupSize > 1 && row.groupId) setGroupCheckIn(row.groupId);
+    else setCheckInId(row.id);
+  };
+
   const rowAction = (row: VisitListItem) => {
     if (row.status === "APPROVED")
       return (
-        <Button intent="success" size="sm" onClick={() => setCheckInId(row.id)}>
+        <Button intent="success" size="sm" onClick={() => startCheckIn(row)}>
           {t("actions.checkIn")}
         </Button>
       );
@@ -98,7 +90,12 @@ function Dashboard() {
         </Button>
       );
     return (
-      <Button intent="neutral" tone="outline" size="sm">
+      <Button
+        intent="neutral"
+        tone="outline"
+        size="sm"
+        onClick={() => setDetailId(row.id)}
+      >
         {t("actions.viewDetails")}
       </Button>
     );
@@ -106,7 +103,7 @@ function Dashboard() {
 
   return (
     <TopNavShell
-      nav={<AppTopNav active="schedule" requestsCount={8} />}
+      nav={<AppTopNav active="schedule" />}
       filterBar={
         <FilterBar actions={<Button>{t("filters.search")}</Button>}>
           <div className="min-w-56 flex-1">
@@ -181,13 +178,6 @@ function Dashboard() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-10">
-                  <Checkbox
-                    checked={headerState}
-                    onCheckedChange={toggleAll}
-                    aria-label={t("selectAll")}
-                  />
-                </TableHead>
                 <TableHead>{t("columns.visitor")}</TableHead>
                 <TableHead>{t("columns.channel")}</TableHead>
                 <TableHead>{t("columns.hostUnit")}</TableHead>
@@ -200,7 +190,7 @@ function Dashboard() {
             <TableBody striped>
               {visitsQ.isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8}>
+                  <TableCell colSpan={7}>
                     <div className="flex justify-center py-10">
                       <Spinner />
                     </div>
@@ -208,20 +198,14 @@ function Dashboard() {
                 </TableRow>
               ) : (
                 rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={selected.has(row.id) ? "selected" : undefined}
-                  >
-                    <TableCell>
-                      <Checkbox
-                        checked={selected.has(row.id)}
-                        onCheckedChange={() => toggleRow(row.id)}
-                        aria-label={row.visitor.fullName}
-                      />
-                    </TableCell>
+                  <TableRow key={row.id}>
                     <TableCell>
                       <span className="flex items-center gap-3">
-                        <Avatar name={row.visitor.fullName} size="md" />
+                        <Avatar
+                          name={row.visitor.fullName}
+                          size="md"
+                          accent={row.groupSize > 1 ? "amber" : "green"}
+                        />
                         <span className="flex flex-col">
                           <span className="font-medium text-fg">
                             {row.visitor.fullName}
@@ -277,6 +261,13 @@ function Dashboard() {
         <GroupCheckInSheet
           groupId={groupCheckIn}
           onClose={() => setGroupCheckIn(null)}
+        />
+      ) : null}
+      {detailId ? (
+        <VisitDetailSheet
+          kind="request"
+          id={detailId}
+          onClose={() => setDetailId(null)}
         />
       ) : null}
     </TopNavShell>
