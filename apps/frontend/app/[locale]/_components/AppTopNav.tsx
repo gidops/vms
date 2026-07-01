@@ -1,12 +1,15 @@
 "use client";
 
+import { ROLES } from "@vms/contracts";
 import { SegmentedControl, TopNav } from "@vms/ui";
 import { useTranslations } from "next-intl";
 import { useInboxUnread } from "@/data/requests/queries";
 import { useRouter } from "@/i18n/navigation";
+import { useAuth } from "@/shared/auth/AuthContext";
 import { AccountMenu } from "./AccountMenu";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { AppSwitcher } from "./AppSwitcher";
+import { RoleSwitcher } from "./RoleSwitcher";
 
 function BrandMark() {
   return (
@@ -46,6 +49,17 @@ export function AppTopNav({
 }: AppTopNavProps) {
   const tNav = useTranslations("nav");
   const router = useRouter();
+  const { user } = useAuth();
+
+  // The one-tap AppSwitcher only covers the common case: a user who holds
+  // exactly the VMC + Staff pair. Anyone with a different role combination
+  // (a third role, or two roles that aren't this pair) falls back to the
+  // general RoleSwitcher so they don't lose the ability to switch at all.
+  const roles = user?.roles ?? [];
+  const isVmcStaffPair =
+    roles.length === 2 &&
+    roles.includes(ROLES.VMC) &&
+    roles.includes(ROLES.STAFF);
 
   // The nav bubble shows the current user's unread count; staff see their own
   // scope, the VMC sees all. An explicit `requestsCount` overrides it.
@@ -101,7 +115,7 @@ export function AppTopNav({
       }
       end={
         <>
-          <AppSwitcher />
+          {isVmcStaffPair ? <AppSwitcher /> : <RoleSwitcher />}
           <LanguageSwitcher />
           <AccountMenu />
         </>

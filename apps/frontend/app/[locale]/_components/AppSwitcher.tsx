@@ -14,10 +14,9 @@ import { useAuth } from "@/shared/auth/AuthContext";
  * VMC/Staff context. Switching re-mints the scoped token and lands on that
  * app's home route.
  *
- * Scoped to VMC ↔ STAFF by design — the app switcher is a shortcut between the
- * two front-of-house dashboards; other roles (Admin, Auditor, Gate) use the
- * nav's role picker instead, since they aren't a "switch between two apps"
- * pair the way VMC/Staff are.
+ * This is a fast-path for the common case of a user who holds exactly the
+ * VMC + Staff pair. Anyone with a different role combination gets the general
+ * `RoleSwitcher` instead — see the branching in `AppTopNav`.
  */
 export function AppSwitcher() {
   const t = useTranslations("nav");

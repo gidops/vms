@@ -11,6 +11,7 @@
     "switchToStaff": "Passer au personnel",
     "switchToVmc": "Passer au VMC",
     "switchError": "Impossible de changer de rôle. Veuillez réessayer.",
+    "switchAccount": "Changer de compte",
     "accountSettings": "Paramètres du compte",
     "help": "Aide / Support",
     "logout": "Déconnexion"

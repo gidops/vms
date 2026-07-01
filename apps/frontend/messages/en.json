@@ -11,6 +11,7 @@
     "switchToStaff": "Switch to Staff",
     "switchToVmc": "Switch to VMC",
     "switchError": "Couldn't switch roles. Please try again.",
+    "switchAccount": "Switch Account",
     "accountSettings": "Account Settings",
     "help": "Help/Support",
     "logout": "Logout"

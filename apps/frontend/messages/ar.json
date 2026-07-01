@@ -11,6 +11,7 @@
     "switchToStaff": "التبديل إلى الموظفين",
     "switchToVmc": "التبديل إلى VMC",
     "switchError": "تعذّر تبديل الدور. يرجى المحاولة مرة أخرى.",
+    "switchAccount": "تبديل الحساب",
     "accountSettings": "إعدادات الحساب",
     "help": "المساعدة / الدعم",
     "logout": "تسجيل الخروج"
