@@ -1,12 +1,18 @@
-import { ChevronRight, Flag, Users } from "lucide-react";
+import { ChevronRight, Flag, MessageSquareText, Users } from "lucide-react";
 import * as React from "react";
 import { cn } from "../../foundations/cn";
 import { Badge } from "../../primitives/Badge/index";
 
+/** Card category: a live request, a CSO feedback update, or a security alert. */
+export type InboxCardType = "request" | "feedback" | "alert";
+
 export interface InboxCardProps {
-  /** "request" tints the type pill teal (people icon); "alert" tints it red (flag). */
-  type: "request" | "alert";
-  /** Localised label for the type pill ("Visit Request" / "Alerts"). */
+  /**
+   * "request" tints the type pill teal (people icon); "feedback" amber (CSO
+   * update); "alert" red (flag).
+   */
+  type: InboxCardType;
+  /** Localised label for the type pill ("Visit Request" / "CSO Feedback" / "Security Alerts"). */
   typeLabel: string;
   title: React.ReactNode;
   description: React.ReactNode;
@@ -14,9 +20,20 @@ export interface InboxCardProps {
   timeAgo: React.ReactNode;
   /** Footer meta row (created-by, status pill, notes count). */
   meta?: React.ReactNode;
+  /** Unread items get a highlighted background that fades once read. */
+  unread?: boolean;
   onClick?: () => void;
   className?: string;
 }
+
+const TYPE_META: Record<
+  InboxCardType,
+  { intent: "primary" | "warning" | "danger"; icon: typeof Users }
+> = {
+  request: { intent: "primary", icon: Users },
+  feedback: { intent: "warning", icon: MessageSquareText },
+  alert: { intent: "danger", icon: Flag },
+};
 
 /**
  * Inbox list card for the Requests & Alerts feed. Clickable surface that opens
@@ -30,23 +47,27 @@ export function InboxCard({
   description,
   timeAgo,
   meta,
+  unread,
   onClick,
   className,
 }: InboxCardProps) {
-  const Icon = type === "alert" ? Flag : Users;
+  const { intent, icon: Icon } = TYPE_META[type];
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "group relative flex w-full flex-col gap-4 rounded-xl border border-border bg-surface p-5 pe-10 text-start shadow-xs transition-colors",
+        "group relative flex w-full flex-col gap-4 rounded-xl border p-5 pe-10 text-start shadow-xs transition-colors duration-500",
+        unread
+          ? "border-primary/30 bg-primary-subtle/50"
+          : "border-border bg-surface",
         "hover:border-border-strong hover:bg-surface-muted/40",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]",
         className,
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <Badge intent={type === "alert" ? "danger" : "primary"} tone="soft">
+        <Badge intent={intent} tone="soft">
           <Icon className="size-3.5" aria-hidden="true" />
           {typeLabel}
         </Badge>

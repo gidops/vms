@@ -127,6 +127,9 @@ model User {
   isActive          Boolean      @default(true)
   preferredLocale   Locale       @default(EN)
   mfaEnabled        Boolean      @default(false)
+  // When the user last opened Requests & Alerts. An inbox item is "unread" for
+  // them if its updatedAt is newer than this; opening the page bumps it to now.
+  lastInboxSeenAt   DateTime?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 

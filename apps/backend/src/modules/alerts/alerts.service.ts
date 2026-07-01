@@ -8,6 +8,7 @@ import { TransactionManager } from '../../shared/events/transaction.manager';
 
 const detailInclude = Prisma.validator<Prisma.AlertInclude>()({
   visitor: true,
+  visit: { include: { host: { include: { user: true } } } },
   notes: { include: { author: true }, orderBy: { createdAt: 'asc' } },
 });
 
@@ -74,6 +75,14 @@ export class AlertsService {
       createdAt: alert.createdAt,
       updatedAt: alert.updatedAt,
       visitor: alert.visitor,
+      visit: alert.visit
+        ? {
+            hostName: alert.visit.host?.user.fullName ?? null,
+            hostUnit: alert.visit.host?.department ?? null,
+            floor: alert.visit.floor,
+            scheduledAt: alert.visit.scheduledAt,
+          }
+        : null,
       notes: alert.notes.map((note) => ({
         id: note.id,
         visitId: note.visitId,

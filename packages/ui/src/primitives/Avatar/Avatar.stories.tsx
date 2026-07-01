@@ -7,6 +7,7 @@ const meta = {
   args: { name: "Judith Francis" },
   argTypes: {
     size: { control: "select", options: ["sm", "md", "lg"] },
+    accent: { control: "select", options: [undefined, "green", "amber"] },
   },
 } satisfies Meta<typeof Avatar>;
 
@@ -28,6 +29,16 @@ export const ColorCoded: Story = {
       ].map((name) => (
         <Avatar key={name} name={name} />
       ))}
+    </div>
+  ),
+};
+
+/** Semantic accents used on the VMC table: green = single visit, amber = group. */
+export const Accents: Story = {
+  render: () => (
+    <div className="flex items-center gap-3">
+      <Avatar name="Sophia Davis" accent="green" />
+      <Avatar name="Pentagon Group" accent="amber" />
     </div>
   ),
 };

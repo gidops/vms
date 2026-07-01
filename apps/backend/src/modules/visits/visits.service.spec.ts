@@ -360,3 +360,156 @@ describe('VisitsService.list scoping', () => {
     );
   });
 });
+
+describe('VisitsService.list statuses + groupSize', () => {
+  const query = (over: Partial<VisitListQuery>): VisitListQuery => ({
+    page: 1,
+    pageSize: 20,
+    sortDir: 'desc',
+    scope: 'all',
+    ...over,
+  });
+
+  it('filters by multiple statuses and computes groupSize per group', async () => {
+    const rows = [
+      { id: 'a', groupId: 'g1', visitor: {}, host: null },
+      { id: 'b', groupId: 'g1', visitor: {}, host: null },
+      { id: 'c', groupId: 'g2', visitor: {}, host: null },
+    ];
+    const findMany = jest.fn().mockResolvedValue(rows);
+    const count = jest.fn().mockResolvedValue(3);
+    const groupBy = jest.fn().mockResolvedValue([
+      { groupId: 'g1', _count: { _all: 2 } },
+      { groupId: 'g2', _count: { _all: 1 } },
+    ]);
+    const prisma = {
+      visit: { findMany, count, groupBy },
+      $transaction: (ops: unknown[]) => Promise.all(ops as Promise<unknown>[]),
+    } as unknown as PrismaService;
+    const service = new VisitsService(
+      prisma,
+      {} as TransactionManager,
+      {} as EventPublisher,
+    );
+
+    const result = await service.list(
+      query({ statuses: ['APPROVED', 'CHECKED_IN'] }),
+      'me',
+    );
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { status: { in: ['APPROVED', 'CHECKED_IN'] } },
+      }),
+    );
+    expect(result.items[0].groupSize).toBe(2);
+    expect(result.items[2].groupSize).toBe(1);
+  });
+});
+
+describe('VisitsService.update', () => {
+  function setup(visit: Record<string, unknown> | null) {
+    const tx = {
+      visitor: { update: jest.fn().mockResolvedValue({}) },
+      host: { upsert: jest.fn().mockResolvedValue({ id: 'h1' }) },
+      visit: { update: jest.fn().mockResolvedValue({}) },
+    };
+    const prisma = {
+      visit: { findUnique: jest.fn().mockResolvedValue(visit) },
+      user: { findFirst: jest.fn().mockResolvedValue({ id: 'staff1' }) },
+    } as unknown as PrismaService;
+    const txm = {
+      run: (fn: (t: typeof tx) => unknown) => fn(tx),
+    } as unknown as TransactionManager;
+    const publish = jest.fn().mockResolvedValue({});
+    const events = { publish } as unknown as EventPublisher;
+    const service = new VisitsService(prisma, txm, events);
+    jest.spyOn(service, 'getDetail').mockResolvedValue({ id: 'v1' } as never);
+    return { service, tx, publish };
+  }
+
+  it('updates visitor + visit fields for the creator on a pending request', async () => {
+    const { service, tx, publish } = setup({
+      status: 'PENDING',
+      createdById: 'me',
+      visitorId: 'vis1',
+    });
+    await service.update('v1', { fullName: 'New Name', purpose: 'X' }, 'me');
+    expect(tx.visitor.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'vis1' },
+        data: expect.objectContaining({ fullName: 'New Name' }),
+      }),
+    );
+    expect(tx.visit.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ purpose: 'X' }),
+      }),
+    );
+    expect(publish).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({ type: EVENT_TYPES.VisitUpdated }),
+    );
+  });
+
+  it('forbids editing a request the actor did not create', async () => {
+    const { service } = setup({
+      status: 'PENDING',
+      createdById: 'other',
+      visitorId: 'vis1',
+    });
+    await expect(service.update('v1', { purpose: 'X' }, 'me')).rejects.toThrow(
+      ForbiddenException,
+    );
+  });
+
+  it('rejects editing an already-approved request', async () => {
+    const { service } = setup({
+      status: 'APPROVED',
+      createdById: 'me',
+      visitorId: 'vis1',
+    });
+    await expect(service.update('v1', { purpose: 'X' }, 'me')).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+});
+
+describe('VisitsService.cancel', () => {
+  function setup(visit: Record<string, unknown> | null) {
+    const tx = { visit: { update: jest.fn().mockResolvedValue({}) } };
+    const prisma = {
+      visit: { findUnique: jest.fn().mockResolvedValue(visit) },
+    } as unknown as PrismaService;
+    const txm = {
+      run: (fn: (t: typeof tx) => unknown) => fn(tx),
+    } as unknown as TransactionManager;
+    const publish = jest.fn().mockResolvedValue({});
+    const events = { publish } as unknown as EventPublisher;
+    const service = new VisitsService(prisma, txm, events);
+    jest.spyOn(service, 'getDetail').mockResolvedValue({ id: 'v1' } as never);
+    return { service, tx, publish };
+  }
+
+  it('cancels for the creator and emits VisitCancelled', async () => {
+    const { service, tx, publish } = setup({ createdById: 'me', host: null });
+    await service.cancel('v1', 'me');
+    expect(tx.visit.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: 'CANCELLED' } }),
+    );
+    expect(publish).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({ type: EVENT_TYPES.VisitCancelled }),
+    );
+  });
+
+  it('forbids cancelling for a non-owner, non-host', async () => {
+    const { service } = setup({
+      createdById: 'other',
+      host: { userId: 'someone' },
+    });
+    await expect(service.cancel('v1', 'me')).rejects.toThrow(
+      ForbiddenException,
+    );
+  });
+});

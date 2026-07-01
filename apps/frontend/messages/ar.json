@@ -84,7 +84,11 @@
   },
   "requests": {
     "title": "الطلبات والتنبيهات",
-    "tabs": { "all": "الكل", "requests": "الطلبات", "alerts": "التنبيهات" },
+    "tabs": {
+      "all": "الكل",
+      "requests": "الطلبات",
+      "alerts": "التنبيهات"
+    },
     "typeRequest": "طلب زيارة",
     "typeAlert": "تنبيهات",
     "createdBy": "أنشأه",
@@ -131,7 +135,16 @@
       "source": "المصدر",
       "role": "الدور",
       "remarks": "ملاحظات",
-      "reason": "السبب"
+      "reason": "السبب",
+      "requestingHost": "المضيف/الوحدة/الطابق الطالب",
+      "requestedBy": "طلب بواسطة",
+      "staffRole": "المنصب",
+      "scheduled": "مجدول",
+      "alertSummary": "ملخص التنبيه",
+      "riskLevel": "مستوى الخطورة",
+      "alertCategory": "فئة التنبيه",
+      "flaggedAt": "تم الإبلاغ في",
+      "alertReason": "سبب التنبيه"
     },
     "actions": {
       "cancelRequest": "إلغاء الطلب",
@@ -143,9 +156,74 @@
       "approve": "الموافقة",
       "deny": "الرفض",
       "resubmit": "إعادة إرسال الطلب",
-      "confirmDeny": "تأكيد الرفض"
+      "confirmDeny": "تأكيد الرفض",
+      "checkIn": "تسجيل الدخول",
+      "checkOut": "تسجيل الخروج"
     },
-    "denyReasonPlaceholder": "سبب الرفض"
+    "denyReasonPlaceholder": "سبب الرفض",
+    "typeFeedback": "ملاحظات CSO",
+    "editTitle": "تعديل طلب الزيارة",
+    "alertBanner": "لا تسجّل دخول هذا الضيف أو تُصدر تصريحًا حتى تتم مراجعة التنبيه من قبل CSO/الأمن.",
+    "alertNeedsAttention": "يتطلب الانتباه",
+    "alertDefaultCategory": "تطابق ضيف مُعلَّم",
+    "respondPlaceholder": "الرد على التنبيه…",
+    "pagination": {
+      "prev": "السابق",
+      "next": "التالي",
+      "pageOf": "صفحة {page} من {total}"
+    },
+    "card": {
+      "flaggedTitle": "تطابق ضيف مُعلَّم",
+      "title": {
+        "PENDING": "طلب زيارة من {host}",
+        "NEEDS_MORE_INFO": "مطلوب مزيد من المعلومات",
+        "APPROVED": "تمت الموافقة على الطلب من CSO",
+        "DENIED": "تم رفض طلب الزيارة",
+        "CHECKED_IN": "تم تسجيل دخول {visitor}",
+        "CHECKED_OUT": "تم تسجيل خروج {visitor}",
+        "CANCELLED": "تم إلغاء الطلب",
+        "EXPIRED": "انتهت صلاحية الطلب"
+      },
+      "desc": {
+        "PENDING": "طلب زيارة لـ {visitor} من",
+        "NEEDS_MORE_INFO": "يحتاج CSO إلى مزيد من المعلومات عن {visitor} من",
+        "APPROVED": "تمت الموافقة على زيارة {visitor} إلى {host}.",
+        "DENIED": "تم رفض زيارة {visitor} إلى {host} من قبل CSO.",
+        "CHECKED_IN": "{visitor} الآن في الموقع.",
+        "CHECKED_OUT": "قام {visitor} بتسجيل الخروج.",
+        "CANCELLED": "تم إلغاء طلب الزيارة لـ {visitor}.",
+        "EXPIRED": "انتهت صلاحية طلب الزيارة لـ {visitor}."
+      }
+    },
+    "pill": {
+      "PENDING": "بانتظار الموافقة",
+      "NEEDS_MORE_INFO": "مطلوب معلومات",
+      "APPROVED": "متوقع",
+      "DENIED": "مرفوض",
+      "CHECKED_IN": "في الموقع",
+      "CHECKED_OUT": "تم الخروج",
+      "CANCELLED": "ملغى",
+      "EXPIRED": "منتهي"
+    },
+    "statusOption": {
+      "PENDING": "بانتظار الموافقة",
+      "NEEDS_MORE_INFO": "مطلوب معلومات",
+      "APPROVED": "موافق عليه",
+      "DENIED": "مرفوض",
+      "CHECKED_IN": "في الموقع",
+      "CHECKED_OUT": "تم الخروج",
+      "CANCELLED": "ملغى",
+      "EXPIRED": "منتهي",
+      "OPEN": "مفتوح",
+      "ACKNOWLEDGED": "تم الإقرار",
+      "RESOLVED": "تم الحل",
+      "DISMISSED": "مرفوض"
+    },
+    "typeOption": {
+      "WALK_IN": "بدون موعد",
+      "PRE_INVITED": "مدعو",
+      "APPOINTMENT": "موعد"
+    }
   },
   "language": {
     "select": "اختر اللغة",
@@ -304,7 +382,9 @@
     "hub": "مساحة الموظفين",
     "welcome": "مرحبًا {name}",
     "recentVisitors": "الزوّار الأخيرون",
-    "myVisits": { "title": "زياراتي" },
+    "myVisits": {
+      "title": "زياراتي"
+    },
     "noVisits": "لا توجد زيارات لعرضها.",
     "overview": {
       "officeFloor": "طابق المكتب",

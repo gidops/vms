@@ -2,6 +2,7 @@
 
 import { SegmentedControl, TopNav } from "@vms/ui";
 import { useTranslations } from "next-intl";
+import { useInboxUnread } from "@/data/requests/queries";
 import { useRouter } from "@/i18n/navigation";
 import { AccountMenu } from "./AccountMenu";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -30,7 +31,10 @@ export interface AppTopNavProps {
   active?: "schedule" | "visits" | "requests";
   /** Which app's nav segments + routes to render (default "vmc"). */
   app?: "vmc" | "staff";
-  /** Count shown on the "Requests & Alerts" pill. */
+  /**
+   * Override the "Requests & Alerts" pill count. Defaults to the live per-user
+   * unread count (scoped to the current app), so callers normally omit this.
+   */
   requestsCount?: number;
   /** Static centered pill label (e.g. "Account Settings") when there's no toggle. */
   centerLabel?: string;
@@ -51,6 +55,11 @@ export function AppTopNav({
   const tNav = useTranslations("nav");
   const router = useRouter();
 
+  // The nav bubble shows the current user's unread count; staff see their own
+  // scope, the VMC sees all. An explicit `requestsCount` overrides it.
+  const unreadQ = useInboxUnread("all", app === "staff" ? "mine" : "all");
+  const count = requestsCount ?? unreadQ.data?.unread ?? undefined;
+
   const options =
     app === "staff"
       ? [
@@ -60,7 +69,7 @@ export function AppTopNav({
             value: "requests",
             label: tNav("requests"),
             route: "/staff/requests",
-            count: requestsCount,
+            count,
           },
         ]
       : [
@@ -69,7 +78,7 @@ export function AppTopNav({
             value: "requests",
             label: tNav("requests"),
             route: "/requests",
-            count: requestsCount,
+            count,
           },
         ];
 

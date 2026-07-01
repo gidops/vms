@@ -84,7 +84,11 @@
   },
   "requests": {
     "title": "Requests & Alerts",
-    "tabs": { "all": "All", "requests": "Requests", "alerts": "Alerts" },
+    "tabs": {
+      "all": "All",
+      "requests": "Requests",
+      "alerts": "Alerts"
+    },
     "typeRequest": "Visit Request",
     "typeAlert": "Alerts",
     "createdBy": "Created by",
@@ -131,7 +135,16 @@
       "source": "Source",
       "role": "Role",
       "remarks": "Remarks/notes",
-      "reason": "Reason"
+      "reason": "Reason",
+      "requestingHost": "Requesting Host/Unit/Floor",
+      "requestedBy": "Requested By",
+      "staffRole": "Staff Role",
+      "scheduled": "Scheduled",
+      "alertSummary": "Alert Summary",
+      "riskLevel": "Risk Level",
+      "alertCategory": "Alert Category",
+      "flaggedAt": "Flagged At",
+      "alertReason": "Alert Reason"
     },
     "actions": {
       "cancelRequest": "Cancel Request",
@@ -143,9 +156,74 @@
       "approve": "Approve",
       "deny": "Deny",
       "resubmit": "Resubmit Request",
-      "confirmDeny": "Confirm denial"
+      "confirmDeny": "Confirm denial",
+      "checkIn": "Check-In",
+      "checkOut": "Check-Out"
     },
-    "denyReasonPlaceholder": "Reason for denial"
+    "denyReasonPlaceholder": "Reason for denial",
+    "typeFeedback": "CSO Feedback",
+    "editTitle": "Edit Visit Request",
+    "alertBanner": "Do not check in this guest or issue a pass until the alert is reviewed by CSO/security.",
+    "alertNeedsAttention": "Needs Attention",
+    "alertDefaultCategory": "Flagged Guest Match",
+    "respondPlaceholder": "Respond to alert…",
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    },
+    "card": {
+      "flaggedTitle": "Flagged Guest Match",
+      "title": {
+        "PENDING": "Visit Request from {host}",
+        "NEEDS_MORE_INFO": "More Info Requested",
+        "APPROVED": "Request Approved by CSO",
+        "DENIED": "Visit Request Denied",
+        "CHECKED_IN": "{visitor} Checked In",
+        "CHECKED_OUT": "{visitor} Checked Out",
+        "CANCELLED": "Request Cancelled",
+        "EXPIRED": "Request Expired"
+      },
+      "desc": {
+        "PENDING": "Visit request for {visitor} from",
+        "NEEDS_MORE_INFO": "The CSO needs more information for {visitor} from",
+        "APPROVED": "{visitor}'s visit to {host} has been approved.",
+        "DENIED": "{visitor}'s visit to {host} was denied by the CSO.",
+        "CHECKED_IN": "{visitor} is now on site.",
+        "CHECKED_OUT": "{visitor} has checked out.",
+        "CANCELLED": "The visit request for {visitor} was cancelled.",
+        "EXPIRED": "The visit request for {visitor} has expired."
+      }
+    },
+    "pill": {
+      "PENDING": "Awaiting Approval",
+      "NEEDS_MORE_INFO": "Needs More Info",
+      "APPROVED": "Expected",
+      "DENIED": "Denied",
+      "CHECKED_IN": "Onsite",
+      "CHECKED_OUT": "Checked Out",
+      "CANCELLED": "Cancelled",
+      "EXPIRED": "Expired"
+    },
+    "statusOption": {
+      "PENDING": "Awaiting Approval",
+      "NEEDS_MORE_INFO": "Needs More Info",
+      "APPROVED": "Approved",
+      "DENIED": "Denied",
+      "CHECKED_IN": "Onsite",
+      "CHECKED_OUT": "Checked Out",
+      "CANCELLED": "Cancelled",
+      "EXPIRED": "Expired",
+      "OPEN": "Open",
+      "ACKNOWLEDGED": "Acknowledged",
+      "RESOLVED": "Resolved",
+      "DISMISSED": "Dismissed"
+    },
+    "typeOption": {
+      "WALK_IN": "Walk-in",
+      "PRE_INVITED": "Invited",
+      "APPOINTMENT": "Appointment"
+    }
   },
   "language": {
     "select": "Select language",
@@ -304,7 +382,9 @@
     "hub": "STAFF HUB",
     "welcome": "Welcome {name}",
     "recentVisitors": "Recent Visitors",
-    "myVisits": { "title": "My Visits" },
+    "myVisits": {
+      "title": "My Visits"
+    },
     "noVisits": "No visits to show.",
     "overview": {
       "officeFloor": "Office Floor",

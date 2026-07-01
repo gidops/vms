@@ -7,25 +7,54 @@ import type {
   VisitType,
 } from "@vms/contracts";
 import { alertsApi, type AlertStatusAction } from "@/data/alerts/alerts.api";
-import { inboxApi, type InboxKind } from "@/data/inbox/inbox.api";
+import {
+  inboxApi,
+  type InboxKind,
+  type InboxListParams,
+} from "@/data/inbox/inbox.api";
 import { notesApi } from "@/data/notes/notes.api";
 import { visitsApi } from "@/data/visits/visits.api";
 
 type InboxScope = "all" | "mine";
 
+/** Filters + pagination the Requests & Alerts feed accepts. */
+export type InboxFilters = Omit<InboxListParams, "scope">;
+
 const keys = {
-  inbox: (kind: InboxKind, scope: InboxScope) =>
-    ["inbox", scope, kind] as const,
+  inbox: (kind: InboxKind, scope: InboxScope, filters: InboxFilters) =>
+    ["inbox", scope, kind, filters] as const,
+  inboxUnread: (kind: InboxKind, scope: InboxScope) =>
+    ["inbox", "unread", scope, kind] as const,
   visit: (id: string) => ["visit", id] as const,
   alert: (id: string) => ["alert", id] as const,
   pendingVisits: ["visits", "PENDING"] as const,
 };
 
-export function useInbox(kind: InboxKind, opts?: { scope?: InboxScope }) {
-  const scope = opts?.scope ?? "all";
+export function useInbox(
+  kind: InboxKind,
+  opts?: { scope?: InboxScope } & InboxFilters,
+) {
+  const { scope = "all", ...filters } = opts ?? {};
   return useQuery({
-    queryKey: keys.inbox(kind, scope),
-    queryFn: () => inboxApi.list(kind, { scope }),
+    queryKey: keys.inbox(kind, scope, filters),
+    queryFn: () => inboxApi.list(kind, { scope, ...filters }),
+  });
+}
+
+/** Per-user unread count for the "Requests & Alerts" nav bubble. */
+export function useInboxUnread(kind: InboxKind, scope: InboxScope = "all") {
+  return useQuery({
+    queryKey: keys.inboxUnread(kind, scope),
+    queryFn: () => inboxApi.unreadCount(kind, { scope }),
+  });
+}
+
+/** Mark all inbox items read for the current user (called on opening the page). */
+export function useMarkInboxSeen() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => inboxApi.markSeen(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["inbox"] }),
   });
 }
 
@@ -140,6 +169,16 @@ export function useCancelVisit(id: string) {
   const invalidate = useInvalidate();
   return useMutation({
     mutationFn: () => visitsApi.cancel(id),
+    onSuccess: () => invalidate(keys.visit(id)),
+  });
+}
+
+/** VMC edits a not-yet-approved request (visitor + visit details). */
+export function useUpdateVisit(id: string) {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (input: Parameters<typeof visitsApi.update>[1]) =>
+      visitsApi.update(id, input),
     onSuccess: () => invalidate(keys.visit(id)),
   });
 }

@@ -84,7 +84,11 @@
   },
   "requests": {
     "title": "Demandes et alertes",
-    "tabs": { "all": "Tout", "requests": "Demandes", "alerts": "Alertes" },
+    "tabs": {
+      "all": "Tout",
+      "requests": "Demandes",
+      "alerts": "Alertes"
+    },
     "typeRequest": "Demande de visite",
     "typeAlert": "Alertes",
     "createdBy": "Créé par",
@@ -131,7 +135,16 @@
       "source": "Source",
       "role": "Rôle",
       "remarks": "Remarques / notes",
-      "reason": "Motif"
+      "reason": "Motif",
+      "requestingHost": "Hôte/Unité/Étage demandeur",
+      "requestedBy": "Demandé par",
+      "staffRole": "Fonction",
+      "scheduled": "Planifié",
+      "alertSummary": "Résumé de l'alerte",
+      "riskLevel": "Niveau de risque",
+      "alertCategory": "Catégorie d'alerte",
+      "flaggedAt": "Signalé le",
+      "alertReason": "Motif de l'alerte"
     },
     "actions": {
       "cancelRequest": "Annuler la demande",
@@ -143,9 +156,74 @@
       "approve": "Approuver",
       "deny": "Refuser",
       "resubmit": "Renvoyer la demande",
-      "confirmDeny": "Confirmer le refus"
+      "confirmDeny": "Confirmer le refus",
+      "checkIn": "Enregistrer",
+      "checkOut": "Sortie"
     },
-    "denyReasonPlaceholder": "Motif du refus"
+    "denyReasonPlaceholder": "Motif du refus",
+    "typeFeedback": "Retour du CSO",
+    "editTitle": "Modifier la demande de visite",
+    "alertBanner": "N'enregistrez pas ce visiteur et n'émettez pas de badge tant que l'alerte n'a pas été examinée par le CSO/la sécurité.",
+    "alertNeedsAttention": "Attention requise",
+    "alertDefaultCategory": "Correspondance de visiteur signalé",
+    "respondPlaceholder": "Répondre à l'alerte…",
+    "pagination": {
+      "prev": "Précédent",
+      "next": "Suivant",
+      "pageOf": "Page {page} sur {total}"
+    },
+    "card": {
+      "flaggedTitle": "Correspondance de visiteur signalé",
+      "title": {
+        "PENDING": "Demande de visite de {host}",
+        "NEEDS_MORE_INFO": "Informations supplémentaires demandées",
+        "APPROVED": "Demande approuvée par le CSO",
+        "DENIED": "Demande de visite refusée",
+        "CHECKED_IN": "{visitor} enregistré(e)",
+        "CHECKED_OUT": "{visitor} sorti(e)",
+        "CANCELLED": "Demande annulée",
+        "EXPIRED": "Demande expirée"
+      },
+      "desc": {
+        "PENDING": "Demande de visite pour {visitor} de",
+        "NEEDS_MORE_INFO": "Le CSO a besoin d'informations supplémentaires pour {visitor} de",
+        "APPROVED": "La visite de {visitor} à {host} a été approuvée.",
+        "DENIED": "La visite de {visitor} à {host} a été refusée par le CSO.",
+        "CHECKED_IN": "{visitor} est maintenant sur place.",
+        "CHECKED_OUT": "{visitor} est sorti(e).",
+        "CANCELLED": "La demande de visite pour {visitor} a été annulée.",
+        "EXPIRED": "La demande de visite pour {visitor} a expiré."
+      }
+    },
+    "pill": {
+      "PENDING": "En attente",
+      "NEEDS_MORE_INFO": "Infos requises",
+      "APPROVED": "Attendu",
+      "DENIED": "Refusé",
+      "CHECKED_IN": "Sur place",
+      "CHECKED_OUT": "Sorti",
+      "CANCELLED": "Annulé",
+      "EXPIRED": "Expiré"
+    },
+    "statusOption": {
+      "PENDING": "En attente",
+      "NEEDS_MORE_INFO": "Infos requises",
+      "APPROVED": "Approuvé",
+      "DENIED": "Refusé",
+      "CHECKED_IN": "Sur place",
+      "CHECKED_OUT": "Sorti",
+      "CANCELLED": "Annulé",
+      "EXPIRED": "Expiré",
+      "OPEN": "Ouvert",
+      "ACKNOWLEDGED": "Pris en compte",
+      "RESOLVED": "Résolu",
+      "DISMISSED": "Rejeté"
+    },
+    "typeOption": {
+      "WALK_IN": "Sans rendez-vous",
+      "PRE_INVITED": "Invité",
+      "APPOINTMENT": "Rendez-vous"
+    }
   },
   "language": {
     "select": "Choisir la langue",
@@ -304,7 +382,9 @@
     "hub": "ESPACE PERSONNEL",
     "welcome": "Bienvenue {name}",
     "recentVisitors": "Visiteurs récents",
-    "myVisits": { "title": "Mes visites" },
+    "myVisits": {
+      "title": "Mes visites"
+    },
     "noVisits": "Aucune visite à afficher.",
     "overview": {
       "officeFloor": "Étage du bureau",
