@@ -278,8 +278,15 @@ model Host {
 model Visit {
   id           String      @id @default(uuid())
   visitorId    String
-  hostId       String
+  // Optional: walk-ins may not be visiting a named staff host.
+  hostId       String?
   invitationId String?     @unique
+  // Visits created together in one invite/walk-in submission share a groupId
+  // so they can be listed and checked in as a group.
+  groupId      String?
+  // Human-friendly invite code (e.g. "5A19-795") generated for invites at
+  // creation and encoded in the guest's QR. Null for walk-ins.
+  referenceCode String?    @unique
   type         VisitType
   status       VisitStatus @default(PENDING)
   purpose      String
@@ -287,6 +294,8 @@ model Visit {
   floor        String?
   riskLevel    RiskLevel?
   scheduledAt  DateTime?
+  // Set when the visit's QR is validated at the gate (or auto-set at VMC check-in).
+  gateValidatedAt DateTime?
   checkInAt    DateTime?
   checkOutAt   DateTime?
   approvedById String?
@@ -300,7 +309,7 @@ model Visit {
   updatedAt    DateTime    @updatedAt
 
   visitor    Visitor     @relation(fields: [visitorId], references: [id], onDelete: Cascade)
-  host       Host        @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  host       Host?       @relation(fields: [hostId], references: [id], onDelete: Cascade)
   invitation Invitation? @relation(fields: [invitationId], references: [id])
   createdBy  User?       @relation("VisitCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   pass       Pass?
@@ -312,6 +321,7 @@ model Visit {
   @@index([status])
   @@index([visitorId])
   @@index([hostId])
+  @@index([groupId])
 }
 
 model Invitation {
@@ -348,12 +358,17 @@ model Pass {
 model AccessCard {
   id         String    @id @default(uuid())
   cardNumber String    @unique
+  // Zone/location the badge belongs to (e.g. "5th Floor - left wing"). Drives the
+  // "Assign pass" dropdown grouping at check-in.
+  zone       String?
   passId     String?   @unique
   assignedAt DateTime?
   returnedAt DateTime?
   isActive   Boolean   @default(true)
 
   pass Pass? @relation(fields: [passId], references: [id], onDelete: SetNull)
+
+  @@index([zone])
 }
 
 model Rating {

@@ -109,7 +109,7 @@ export class InboxService {
       id: r.id,
       visitId: r.id,
       status: r.status,
-      title: `Visit Request from ${r.host.user.fullName}`,
+      title: `Visit Request from ${r.host?.user.fullName ?? r.visitor.fullName}`,
       // Description ends at "from" so the frontend can emphasise the org.
       description: org
         ? `Visit request for ${r.visitor.fullName} from`

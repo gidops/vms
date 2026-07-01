@@ -1,6 +1,6 @@
 import { Injectable, type OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PERMISSIONS, ROLES } from '@vms/contracts';
+import { ACCESS_CARD_ZONES, PERMISSIONS, ROLES } from '@vms/contracts';
 import type { Env } from '../config/env.schema';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -49,6 +49,9 @@ const ROLE_DEFS: Record<
       PERMISSIONS.VISIT_EDIT,
       PERMISSIONS.VISIT_APPROVE,
       PERMISSIONS.VISIT_DENY,
+      // Check-in/out now happen at the VMC station (badge assigned/released here).
+      PERMISSIONS.VISIT_CHECK_IN,
+      PERMISSIONS.VISIT_CHECK_OUT,
       PERMISSIONS.ALERT_RESOLVE,
       PERMISSIONS.ALERT_ESCALATE,
       PERMISSIONS.NOTE_ADD,
@@ -91,6 +94,7 @@ export class SeederService implements OnApplicationBootstrap {
     // the first-run /signup can assign SUPER_ADMIN. The admin USER is never
     // seeded; the first one is created through /signup.
     await this.seedRbac();
+    await this.seedAccessCards();
     await this.seedDemoData();
     // if (this.config.get('NODE_ENV', { infer: true }) !== 'production') {
     //   await this.seedDemoData();
@@ -154,6 +158,28 @@ export class SeederService implements OnApplicationBootstrap {
     await this.prisma.role.deleteMany({
       where: { name: { notIn: canonical } },
     });
+  }
+
+  /**
+   * Seed the physical badge pool (reference data, every environment) so the
+   * check-in "Assign pass" dropdown has inventory. Idempotent by cardNumber:
+   * four sequentially-numbered badges per zone, e.g. zone "5th Floor - left wing"
+   * → cards 0001..0004. Only fills `zone` on create so reassigned badges aren't
+   * clobbered on reboot.
+   */
+  private async seedAccessCards(): Promise<void> {
+    let n = 0;
+    for (const zone of ACCESS_CARD_ZONES) {
+      for (let i = 0; i < 4; i++) {
+        n += 1;
+        const cardNumber = String(n).padStart(4, '0');
+        await this.prisma.accessCard.upsert({
+          where: { cardNumber },
+          update: {},
+          create: { cardNumber, zone },
+        });
+      }
+    }
   }
 
   /**

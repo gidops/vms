@@ -70,16 +70,21 @@ export class NotificationListener {
       include: { visitor: true, host: { include: { user: true } }, pass: true },
     });
     if (!visit) return;
+    // Walk-ins are auto-approved and start at the VMC — they carry no invite QR
+    // and get no approval email; the badge is assigned in person at check-in.
+    if (visit.type === 'WALK_IN') return;
 
     const locale = this.localeFrom(visit.visitor.preferredLocale, event);
     const phone = this.safeDecrypt(visit.visitor.phone);
     const data = {
       visitorName: visit.visitor.fullName,
-      host: visit.host.user.fullName,
+      host: visit.host?.user.fullName ?? '',
       visitDate: formatDate(visit.scheduledAt),
       time: formatTime(visit.scheduledAt),
       purpose: visit.purpose,
-      code: visit.pass?.code ?? '',
+      // The guest-facing invite code (encoded in the QR). Falls back to the
+      // internal pass code if a reference code was somehow not generated.
+      code: visit.referenceCode ?? visit.pass?.code ?? '',
     };
 
     const channels: ChannelTarget[] = [
@@ -90,7 +95,7 @@ export class NotificationListener {
       },
       { channel: NotificationChannel.SMS, recipient: phone },
       { channel: NotificationChannel.WHATSAPP, recipient: phone },
-      { channel: NotificationChannel.IN_APP, userId: visit.host.userId },
+      { channel: NotificationChannel.IN_APP, userId: visit.host?.userId },
     ];
 
     await this.enqueue(
@@ -109,6 +114,8 @@ export class NotificationListener {
       include: { visitor: true, host: { include: { user: true } } },
     });
     if (!visit) return;
+    // No named host (e.g. a walk-in) → there is nobody to notify of the arrival.
+    if (!visit.host) return;
 
     // Notify the HOST that their guest has arrived (host's preferred locale).
     const locale = this.localeFrom(visit.host.user.preferredLocale, event);
@@ -159,7 +166,7 @@ export class NotificationListener {
       },
       { channel: NotificationChannel.SMS, recipient: phone },
       { channel: NotificationChannel.WHATSAPP, recipient: phone },
-      { channel: NotificationChannel.IN_APP, userId: visit.host.userId },
+      { channel: NotificationChannel.IN_APP, userId: visit.host?.userId },
     ];
 
     await this.enqueue(

@@ -58,7 +58,8 @@ export function PendingRequests() {
                       {v.visitor.fullName}
                     </span>
                     <span className="text-xs text-fg-muted">
-                      {v.purpose} · {v.host.user.fullName}
+                      {v.purpose}
+                      {v.host ? ` · ${v.host.user.fullName}` : ""}
                       {v.scheduledAt
                         ? ` · ${format.dateTime(new Date(v.scheduledAt), {
                             dateStyle: "medium",

@@ -1,122 +1,119 @@
 "use client";
 
-import type { CreateVisitsInput } from "@vms/contracts";
-import { FLOORS, VISIT_PURPOSES } from "@vms/contracts";
-import {
-  Alert,
-  AlertDescription,
-  Button,
-  DetailSection,
-  DrawerClose,
-  Input,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Textarea,
-} from "@vms/ui";
-import { Download, UserPlus, Users } from "lucide-react";
-import { useFormatter, useTranslations } from "next-intl";
+import { Alert, AlertDescription, Button, DrawerClose } from "@vms/ui";
+import { Download, UserMinus, UserPlus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import * as React from "react";
 import { useHosts } from "@/data/hosts/queries";
 import { useCreateVisits } from "@/data/requests/queries";
-import { Stepper } from "./Stepper";
-import {
-  VisitorFields,
-  visitorErrors,
-  type VisitorEntry,
-} from "./VisitorFields";
+import type { VisitRequestDetail } from "@/data/visits/visits.api";
+import { ConfirmStep } from "./ConfirmStep";
+import { GuestBlock } from "./GuestBlock";
+import { SuccessStep } from "./SuccessStep";
+import { VisitorPager } from "./VisitorPager";
 import { downloadGuestTemplate, parseGuestsCsv } from "./csv";
+import {
+  blankGuest,
+  buildCreateInput,
+  guestDetailsValid,
+  visitDetailFields,
+  visitDetailsValid,
+  type GuestEntry,
+  type VisitFormMode,
+} from "./guest-form";
 
-export type VisitFormMode = "walkin" | "invite";
+export type { VisitFormMode } from "./guest-form";
 
-type Pane = "visitors" | "host" | "visit" | "summary";
-
-function blankVisitor(): VisitorEntry {
-  return {
-    id: crypto.randomUUID(),
-    fullName: "",
-    email: "",
-    organization: "",
-    phone: "",
-  };
-}
-
-function visitorValid(v: VisitorEntry): boolean {
-  const e = visitorErrors(v);
-  return !e.fullName && !e.email && !e.organization;
-}
+type View = "form" | "confirm" | "success";
 
 export function VisitRequestForm({
   mode,
   onClose,
   fixedHostUserId,
   fixedHostName,
+  onRequestCheckIn,
 }: {
   mode: VisitFormMode;
   onClose: () => void;
-  /** When set, the host is pinned to this user (e.g. a staff self-invite) and
-   * the host picker is shown read-only. */
+  /** When set, the host is pinned to this user (a staff self-invite). */
   fixedHostUserId?: string;
   fixedHostName?: string;
+  /** Walk-in success "Check-In Visitor" → open the group check-in for this group. */
+  onRequestCheckIn?: (groupId: string) => void;
 }) {
   const t = useTranslations("invite");
-  const format = useFormatter();
   const hosts = useHosts();
   const create = useCreateVisits();
   const fileRef = React.useRef<HTMLInputElement>(null);
 
-  const panes: Pane[] =
-    mode === "invite" ? ["visitors", "host", "summary"] : ["visit", "summary"];
-  const stepLabels =
-    mode === "invite"
-      ? [t("steps.visitor"), t("steps.host"), t("steps.summary")]
-      : [t("steps.visit"), t("steps.summary")];
-
-  const [step, setStep] = React.useState(0);
+  const [view, setView] = React.useState<View>("form");
   const [showErrors, setShowErrors] = React.useState(false);
-  const [showAllVisitors, setShowAllVisitors] = React.useState(false);
-  const [visitors, setVisitors] = React.useState<VisitorEntry[]>([
-    blankVisitor(),
-  ]);
-  const [hostUserId, setHostUserId] = React.useState(fixedHostUserId ?? "");
-  const [floor, setFloor] = React.useState("");
-  const [purpose, setPurpose] = React.useState("");
-  const [scheduledAt, setScheduledAt] = React.useState("");
-  const [notes, setNotes] = React.useState("");
+  const [created, setCreated] = React.useState<VisitRequestDetail[] | null>(
+    null,
+  );
+  const [guests, setGuests] = React.useState<GuestEntry[]>(() => {
+    const g = blankGuest();
+    if (fixedHostUserId) g.hostUserId = fixedHostUserId;
+    return [g];
+  });
+  // The visitor currently being edited (one guest is shown at a time; the pager
+  // switches between them). Their data lives in `guests`, so navigating away and
+  // back preserves everything.
+  const [active, setActive] = React.useState(0);
 
-  const pane = panes[step];
-  const isLast = step === panes.length - 1;
   const hostList = hosts.data ?? [];
-  const hostName =
-    fixedHostName ??
-    hostList.find((h) => h.userId === hostUserId)?.fullName ??
-    "";
 
-  const visitorsValid = visitors.every(visitorValid);
-  const detailsValid =
-    Boolean(hostUserId) &&
-    Boolean(floor) &&
-    Boolean(purpose) &&
-    (mode === "invite" ? Boolean(scheduledAt) : true);
+  // Every guest now carries its own visit details, so all must be complete.
+  const formValid = guests.every(
+    (g) => guestDetailsValid(g) && visitDetailsValid(g, mode),
+  );
 
-  function paneValid(p: Pane): boolean {
-    if (p === "visitors") return visitorsValid;
-    if (p === "host") return detailsValid;
-    if (p === "visit") return visitorsValid && detailsValid;
-    return true;
-  }
-
-  // ── Visitor list helpers ────────────────────────────────────────────────
-  const patchVisitor = (i: number, patch: Partial<VisitorEntry>) =>
-    setVisitors((prev) =>
-      prev.map((v, idx) => (idx === i ? { ...v, ...patch } : v)),
+  // ── Guest list helpers ──────────────────────────────────────────────────
+  const patchGuest = (i: number, patch: Partial<GuestEntry>) =>
+    setGuests((prev) =>
+      prev.map((g, idx) => (idx === i ? { ...g, ...patch } : g)),
     );
-  const addVisitor = () => setVisitors((prev) => [...prev, blankVisitor()]);
-  const removeVisitor = (i: number) =>
-    setVisitors((prev) => prev.filter((_, idx) => idx !== i));
+
+  // "Add Guest" commits the current form (already in state) and swaps to a fresh
+  // blank visitor; the new guest inherits the previous (last) guest's "Use same
+  // visit details" choice — if set, its visit details are pre-copied.
+  const addGuest = () => {
+    setGuests((prev) => {
+      const prevLast = prev[prev.length - 1];
+      const g = blankGuest();
+      if (prevLast.useSame) {
+        Object.assign(g, visitDetailFields(prevLast), { useSame: true });
+      } else {
+        g.useSame = false;
+        if (fixedHostUserId) g.hostUserId = fixedHostUserId;
+      }
+      return [...prev, g];
+    });
+    setActive(guests.length);
+  };
+
+  // "Use same visit details" toggle on a guest (index > 0): checking copies the
+  // previous guest's visit details into this one immediately; unchecking just
+  // clears the flag and leaves the fields as-is.
+  const setUseSameForActive = (checked: boolean) =>
+    setGuests((prev) =>
+      prev.map((g, idx) => {
+        if (idx !== active) return g;
+        if (checked && active > 0) {
+          return {
+            ...g,
+            ...visitDetailFields(prev[active - 1]),
+            useSame: true,
+          };
+        }
+        return { ...g, useSame: checked };
+      }),
+    );
+
+  const removeGuest = (i: number) => {
+    setGuests((prev) => prev.filter((_, idx) => idx !== i));
+    setActive((a) => Math.max(0, Math.min(a, guests.length - 2)));
+  };
 
   async function onImportCsv(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -125,68 +122,57 @@ export function VisitRequestForm({
     try {
       const rows = await parseGuestsCsv(file);
       if (rows.length === 0) return;
-      setVisitors(
-        rows.map((r) => ({
-          id: crypto.randomUUID(),
-          fullName: r.fullName,
-          email: r.email,
-          organization: r.organization,
-          phone: r.phone,
-        })),
+      setGuests(
+        rows.map((r) => {
+          const g = blankGuest();
+          g.fullName = r.fullName;
+          g.email = r.email;
+          g.organization = r.organization;
+          g.phoneNumber = r.phone;
+          // Imported guests have no visit details yet — start unchecked so the
+          // checkbox isn't shown ticked over empty fields.
+          g.useSame = false;
+          const match = hostList.find(
+            (h) => h.email.toLowerCase() === r.hostEmail.toLowerCase(),
+          );
+          if (match) g.hostUserId = match.userId;
+          return g;
+        }),
       );
-      // Preselect host from the first row that carries a matching host email.
-      const withHost = rows.find((r) => r.hostEmail);
-      if (withHost) {
-        const match = hostList.find(
-          (h) => h.email.toLowerCase() === withHost.hostEmail.toLowerCase(),
-        );
-        if (match) setHostUserId(match.userId);
-      }
+      setActive(0);
     } catch {
       /* ignore malformed CSV; the user can re-import */
     }
   }
 
   // ── Navigation ──────────────────────────────────────────────────────────
-  function next() {
-    if (!paneValid(pane)) {
+  function goToConfirm() {
+    if (!formValid) {
       setShowErrors(true);
       return;
     }
     setShowErrors(false);
-    setStep((s) => Math.min(s + 1, panes.length - 1));
-  }
-  function back() {
-    setShowErrors(false);
-    setStep((s) => Math.max(s - 1, 0));
+    setView("confirm");
   }
 
-  function submit() {
-    const input: CreateVisitsInput = {
-      type: mode === "walkin" ? "WALK_IN" : "PRE_INVITED",
-      hostUserId,
-      floor,
-      purpose,
-      scheduledAt:
-        mode === "invite" && scheduledAt ? new Date(scheduledAt) : undefined,
-      notes: mode === "walkin" && notes.trim() ? notes.trim() : undefined,
-      visitors: visitors.map((v) => ({
-        fullName: v.fullName.trim(),
-        email: v.email.trim(),
-        phone: v.phone.trim() || undefined,
-        organization: v.organization.trim() || undefined,
-      })),
-    };
-    create.mutate(input, { onSuccess: () => onClose() });
+  async function submit() {
+    try {
+      const result = await create.mutateAsync(buildCreateInput(guests, mode));
+      setCreated(result);
+      setView("success");
+    } catch {
+      /* error surfaced via create.isError below */
+    }
   }
 
-  const primaryLabel = isLast
-    ? mode === "walkin"
-      ? t("submitWalkin")
-      : t("submitInvite")
-    : panes[step + 1] === "host"
-      ? t("goToHost")
-      : t("review");
+  const headerSubtitle =
+    mode === "walkin" ? t("subtitleWalkin") : t("subtitleInvite");
+  const activeGuest = guests[active] ?? guests[0];
+  // Gate "Add Guest" on the visitor currently on screen being complete (guest +
+  // visit details) — this also covers CSV-imported guests, whose visit details
+  // still need filling in.
+  const currentGuestComplete =
+    guestDetailsValid(activeGuest) && visitDetailsValid(activeGuest, mode);
 
   return (
     <>
@@ -195,163 +181,109 @@ export function VisitRequestForm({
         <h2 className="text-xl font-semibold text-fg">
           {mode === "walkin" ? t("titleWalkin") : t("titleInvite")}
         </h2>
-        <p className="text-sm text-fg-muted">{t("subtitle")}</p>
+        <p className="text-sm text-fg-muted">{headerSubtitle}</p>
       </div>
 
-      {/* Stepper band (dark green) */}
-      <div className="bg-emphasis px-5 py-4 text-emphasis-fg">
-        <Stepper steps={stepLabels} current={step} />
-      </div>
+      {/* CSV banner (invite only, dark green) */}
+      {mode === "invite" ? (
+        <div className="flex flex-col gap-3 bg-emphasis px-5 py-4 sm:flex-row">
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={onImportCsv}
+          />
+          <Button
+            type="button"
+            intent="accent"
+            tone="outline"
+            fullWidth
+            onClick={() => fileRef.current?.click()}
+          >
+            <UserPlus className="size-4" aria-hidden="true" />
+            {t("importCsv")}
+          </Button>
+          <Button
+            type="button"
+            intent="accent"
+            tone="outline"
+            fullWidth
+            onClick={downloadGuestTemplate}
+          >
+            <Download className="size-4" aria-hidden="true" />
+            {t("downloadTemplate")}
+          </Button>
+        </div>
+      ) : null}
 
       {/* Body (scrollable) */}
       <div className="flex-1 overflow-y-auto p-5">
-        {pane === "visitors" || pane === "visit" ? (
+        {view === "form" ? (
           <div className="flex flex-col gap-6">
-            {mode === "invite" ? (
-              <div className="flex flex-col gap-3">
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept=".csv,text/csv"
-                  className="hidden"
-                  onChange={onImportCsv}
-                />
-                <Button
-                  type="button"
-                  intent="primary"
-                  tone="outline"
-                  fullWidth
-                  onClick={() => fileRef.current?.click()}
-                >
-                  <UserPlus className="size-4" aria-hidden="true" />
-                  {t("importCsv")}
-                </Button>
-                <Button
-                  type="button"
-                  intent="primary"
-                  tone="outline"
-                  fullWidth
-                  onClick={downloadGuestTemplate}
-                >
-                  <Download className="size-4" aria-hidden="true" />
-                  {t("downloadTemplate")}
-                </Button>
-              </div>
+            {/* Visitor pager — only once a second visitor exists */}
+            {guests.length > 1 ? (
+              <VisitorPager
+                count={guests.length}
+                current={active}
+                onSelect={setActive}
+              />
             ) : null}
 
-            <SectionHeader>{t("sections.visitorDetails")}</SectionHeader>
-            {visitors.map((v, i) => (
-              <VisitorFields
-                key={v.id}
-                value={v}
-                index={i}
-                canRemove={visitors.length > 1}
-                showErrors={showErrors}
-                onChange={(patch) => patchVisitor(i, patch)}
-                onRemove={() => removeVisitor(i)}
-              />
-            ))}
+            <GuestBlock
+              key={activeGuest.id}
+              value={activeGuest}
+              index={active}
+              mode={mode}
+              hosts={hostList}
+              onUseSameChange={setUseSameForActive}
+              showErrors={showErrors}
+              fixedHostName={fixedHostName}
+              onChange={(patch) => patchGuest(active, patch)}
+            />
+
+            {guests.length > 1 ? (
+              <Button
+                type="button"
+                intent="danger"
+                tone="ghost"
+                fullWidth
+                className="border border-dashed border-danger"
+                onClick={() => removeGuest(active)}
+              >
+                <UserMinus className="size-4" aria-hidden="true" />
+                {t("removeGuest")}
+              </Button>
+            ) : null}
             <Button
               type="button"
               intent="primary"
               tone="ghost"
               fullWidth
               className="border border-dashed border-primary"
-              onClick={addVisitor}
+              disabled={!currentGuestComplete}
+              onClick={addGuest}
             >
-              <Users className="size-4" aria-hidden="true" />
-              {t("addVisitor")}
+              <UserPlus className="size-4" aria-hidden="true" />
+              {t("addGuest")}
             </Button>
-
-            {pane === "visit" ? (
-              <>
-                <SectionHeader>{t("sections.visitPurpose")}</SectionHeader>
-                <HostVisitFields
-                  mode={mode}
-                  hostList={hostList}
-                  hostUserId={hostUserId}
-                  setHostUserId={setHostUserId}
-                  lockedHostName={fixedHostName}
-                  floor={floor}
-                  setFloor={setFloor}
-                  purpose={purpose}
-                  setPurpose={setPurpose}
-                  scheduledAt={scheduledAt}
-                  setScheduledAt={setScheduledAt}
-                  notes={notes}
-                  setNotes={setNotes}
-                  showErrors={showErrors}
-                />
-              </>
-            ) : null}
           </div>
         ) : null}
 
-        {pane === "host" ? (
-          <HostVisitFields
+        {view === "confirm" ? (
+          <ConfirmStep guests={guests} mode={mode} hosts={hostList} />
+        ) : null}
+
+        {view === "success" && created ? (
+          <SuccessStep
+            created={created}
             mode={mode}
-            hostList={hostList}
-            hostUserId={hostUserId}
-            setHostUserId={setHostUserId}
-            lockedHostName={fixedHostName}
-            floor={floor}
-            setFloor={setFloor}
-            purpose={purpose}
-            setPurpose={setPurpose}
-            scheduledAt={scheduledAt}
-            setScheduledAt={setScheduledAt}
-            notes={notes}
-            setNotes={setNotes}
-            showErrors={showErrors}
+            onCheckIn={() => {
+              const groupId = created[0]?.groupId;
+              if (groupId) onRequestCheckIn?.(groupId);
+              onClose();
+            }}
           />
-        ) : null}
-
-        {pane === "summary" ? (
-          <div className="flex flex-col gap-6">
-            <DetailSection title={t("sections.visitorDetails")}>
-              {(showAllVisitors ? visitors : visitors.slice(0, 1)).map((v) => (
-                <SummaryVisitor key={v.id} v={v} />
-              ))}
-              {visitors.length > 1 ? (
-                <button
-                  type="button"
-                  onClick={() => setShowAllVisitors((s) => !s)}
-                  className="self-end text-sm font-medium text-primary underline"
-                >
-                  {showAllVisitors
-                    ? t("showLessVisitors")
-                    : t("showAllVisitors", { count: visitors.length })}
-                </button>
-              ) : null}
-            </DetailSection>
-
-            <DetailSection title={t("sections.hostDetails")}>
-              <SummaryRow label={t("summary.host")} value={hostName} />
-              <SummaryRow label={t("fields.floor")} value={floor} />
-              <SummaryRow label={t("fields.purpose")} value={purpose} />
-              {mode === "invite" ? (
-                <SummaryRow
-                  label={t("summary.dateTime")}
-                  value={
-                    scheduledAt
-                      ? format.dateTime(new Date(scheduledAt), {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                        })
-                      : "—"
-                  }
-                />
-              ) : null}
-              {mode === "walkin" && notes.trim() ? (
-                <SummaryRow label={t("fields.notes")} value={notes.trim()} />
-              ) : null}
-              <SummaryRow
-                label={t("summary.clearance")}
-                value={mode === "walkin" ? t("summary.approved") : t("summary.pending")}
-                accent
-              />
-            </DetailSection>
-          </div>
         ) : null}
 
         {create.isError ? (
@@ -361,212 +293,41 @@ export function VisitRequestForm({
         ) : null}
       </div>
 
-      {/* Footer (sticky) */}
-      <div className="flex items-center gap-2 border-t border-border p-4">
-        {step > 0 ? (
+      {/* Footer (sticky) — hidden on the success screen */}
+      {view !== "success" ? (
+        <div className="flex items-center gap-2 border-t border-border p-4">
+          {view === "confirm" ? (
+            <Button
+              type="button"
+              intent="neutral"
+              tone="ghost"
+              onClick={() => setView("form")}
+              disabled={create.isPending}
+            >
+              {t("back")}
+            </Button>
+          ) : (
+            <DrawerClose asChild>
+              <Button type="button" intent="neutral" tone="ghost">
+                {t("cancel")}
+              </Button>
+            </DrawerClose>
+          )}
           <Button
             type="button"
-            intent="neutral"
-            tone="ghost"
-            onClick={back}
+            intent="primary"
+            fullWidth
+            onClick={view === "form" ? goToConfirm : submit}
             disabled={create.isPending}
           >
-            {t("back")}
+            {create.isPending
+              ? t("submitting")
+              : view === "form" && mode === "walkin"
+                ? t("submitWalkin")
+                : t("submitInvite")}
           </Button>
-        ) : (
-          <DrawerClose asChild>
-            <Button type="button" intent="neutral" tone="ghost">
-              {t("cancel")}
-            </Button>
-          </DrawerClose>
-        )}
-        <Button
-          type="button"
-          intent="primary"
-          fullWidth
-          onClick={isLast ? submit : next}
-          disabled={create.isPending}
-        >
-          {create.isPending ? t("submitting") : primaryLabel}
-        </Button>
-      </div>
+        </div>
+      ) : null}
     </>
-  );
-}
-
-function SectionHeader({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="rounded-lg bg-primary-subtle px-4 py-3 text-base font-semibold text-primary">
-      {children}
-    </div>
-  );
-}
-
-function SummaryRow({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
-  return (
-    <div className="flex flex-col gap-0.5">
-      <span className="text-xs uppercase tracking-wide text-fg-subtle">
-        {label}
-      </span>
-      <span
-        className={accent ? "font-semibold text-warning" : "text-sm text-fg"}
-      >
-        {value || "—"}
-      </span>
-    </div>
-  );
-}
-
-function SummaryVisitor({ v }: { v: VisitorEntry }) {
-  const t = useTranslations("invite");
-  return (
-    <div className="flex flex-col gap-2 border-b border-dashed border-border pb-3 last:border-0">
-      <SummaryRow label={t("fields.fullName")} value={v.fullName} />
-      <SummaryRow label={t("fields.email")} value={v.email} />
-      {v.phone ? <SummaryRow label={t("fields.phone")} value={v.phone} /> : null}
-      <SummaryRow label={t("fields.organization")} value={v.organization} />
-    </div>
-  );
-}
-
-/** Host + floor + purpose (+ date for invite, notes for walk-in). */
-function HostVisitFields(props: {
-  mode: VisitFormMode;
-  hostList: { userId: string; fullName: string; email: string }[];
-  hostUserId: string;
-  setHostUserId: (v: string) => void;
-  /** When set, the host is pinned (staff self-invite) and shown read-only. */
-  lockedHostName?: string;
-  floor: string;
-  setFloor: (v: string) => void;
-  purpose: string;
-  setPurpose: (v: string) => void;
-  scheduledAt: string;
-  setScheduledAt: (v: string) => void;
-  notes: string;
-  setNotes: (v: string) => void;
-  showErrors: boolean;
-}) {
-  const t = useTranslations("invite");
-  const {
-    mode,
-    hostList,
-    hostUserId,
-    setHostUserId,
-    lockedHostName,
-    floor,
-    setFloor,
-    purpose,
-    setPurpose,
-    scheduledAt,
-    setScheduledAt,
-    notes,
-    setNotes,
-    showErrors,
-  } = props;
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
-        <Label>
-          {t("fields.host")} <span className="text-danger">*</span>
-        </Label>
-        {lockedHostName ? (
-          <div className="flex h-10 items-center rounded-md border border-border bg-surface-muted px-3 text-sm text-fg">
-            {lockedHostName}
-          </div>
-        ) : (
-          <Select value={hostUserId} onValueChange={setHostUserId}>
-            <SelectTrigger
-              className={
-                "w-full" + (showErrors && !hostUserId ? " border-danger" : "")
-              }
-            >
-              <SelectValue placeholder={t("fields.hostPlaceholder")} />
-            </SelectTrigger>
-            <SelectContent>
-              {hostList.map((h) => (
-                <SelectItem key={h.userId} value={h.userId}>
-                  {h.fullName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label>
-          {t("fields.floor")} <span className="text-danger">*</span>
-        </Label>
-        <Select value={floor} onValueChange={setFloor}>
-          <SelectTrigger
-            className={"w-full" + (showErrors && !floor ? " border-danger" : "")}
-          >
-            <SelectValue placeholder={t("fields.floorPlaceholder")} />
-          </SelectTrigger>
-          <SelectContent>
-            {FLOORS.map((f) => (
-              <SelectItem key={f} value={f}>
-                {f}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label>
-          {t("fields.purpose")} <span className="text-danger">*</span>
-        </Label>
-        <Select value={purpose} onValueChange={setPurpose}>
-          <SelectTrigger
-            className={"w-full" + (showErrors && !purpose ? " border-danger" : "")}
-          >
-            <SelectValue placeholder={t("fields.purposePlaceholder")} />
-          </SelectTrigger>
-          <SelectContent>
-            {VISIT_PURPOSES.map((p) => (
-              <SelectItem key={p} value={p}>
-                {p}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {mode === "invite" ? (
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="scheduledAt">
-            {t("fields.dateTime")} <span className="text-danger">*</span>
-          </Label>
-          <Input
-            id="scheduledAt"
-            type="datetime-local"
-            value={scheduledAt}
-            invalid={showErrors && !scheduledAt}
-            onChange={(e) => setScheduledAt(e.target.value)}
-          />
-        </div>
-      ) : (
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="notes">{t("fields.notes")}</Label>
-          <Textarea
-            id="notes"
-            value={notes}
-            placeholder={t("fields.notesPlaceholder")}
-            onChange={(e) => setNotes(e.target.value)}
-          />
-        </div>
-      )}
-    </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import type { VisitStatus, VisitType } from "@vms/contracts";
+import { useQuery } from "@tanstack/react-query";
 import {
   Avatar,
   Button,
@@ -14,6 +14,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Spinner,
   StatusBadge,
   Table,
   TableBody,
@@ -24,113 +25,42 @@ import {
   TopNavShell,
 } from "@vms/ui";
 import { SquareActivity } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
+import { CheckInModal } from "@/app/[locale]/dashboard/_components/checkin/CheckInModal";
+import { CheckOutModal } from "@/app/[locale]/dashboard/_components/checkin/CheckOutModal";
+import { GroupCheckInSheet } from "@/app/[locale]/dashboard/_components/checkin/GroupCheckInSheet";
 import {
   QuickActionSheet,
   type QuickActionMode,
 } from "@/app/[locale]/dashboard/_components/QuickActionSheet";
 import { VmcOverview } from "@/app/[locale]/dashboard/_components/VmcOverview";
+import { visitsApi, type VisitListItem } from "@/data/visits/visits.api";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
-
-interface VisitRow {
-  id: string;
-  name: string;
-  email: string;
-  type: VisitType;
-  host: string;
-  purpose: string;
-  timeCreated: string;
-  status: VisitStatus;
-}
-
-// Mock records until a /visits endpoint exists. Shapes mirror VisitWithVisitor.
-const ROWS: VisitRow[] = [
-  {
-    id: "1",
-    name: "Jordan Smith",
-    email: "jordan@email.com",
-    type: "PRE_INVITED",
-    host: "Dr Alabi",
-    purpose: "Client Meeting",
-    timeCreated: "10:00, May 01, 2026",
-    status: "APPROVED",
-  },
-  {
-    id: "2",
-    name: "Sophia Davis",
-    email: "sophia.davis@email.com",
-    type: "WALK_IN",
-    host: "8th Floor LW",
-    purpose: "General Enquiry",
-    timeCreated: "15:30, April 30, 2026",
-    status: "CHECKED_IN",
-  },
-  {
-    id: "3",
-    name: "Ethan Foster",
-    email: "ethan.foster@email.com",
-    type: "PRE_INVITED",
-    host: "Dr Alabi",
-    purpose: "General Enquiry",
-    timeCreated: "18:00, April 30, 2026",
-    status: "CHECKED_OUT",
-  },
-  {
-    id: "4",
-    name: "Ava Singh",
-    email: "ava.singh@email.com",
-    type: "WALK_IN",
-    host: "Dr Alabi",
-    purpose: "Client Meeting",
-    timeCreated: "14:00, April 25, 2026",
-    status: "CHECKED_OUT",
-  },
-  {
-    id: "5",
-    name: "Hannah Chen",
-    email: "chenny@yahoo.com",
-    type: "PRE_INVITED",
-    host: "Dr Alabi",
-    purpose: "Client Meeting",
-    timeCreated: "13:00, April 12, 2026",
-    status: "APPROVED",
-  },
-  {
-    id: "6",
-    name: "Ryan Baker",
-    email: "ryan.baker@email.com",
-    type: "WALK_IN",
-    host: "Dr Alabi",
-    purpose: "Client Meeting",
-    timeCreated: "11:30, April 05, 2026",
-    status: "CHECKED_IN",
-  },
-  {
-    id: "7",
-    name: "Liam Roberts",
-    email: "liam.roberts@email.com",
-    type: "WALK_IN",
-    host: "Dr Alabi",
-    purpose: "Client Meeting",
-    timeCreated: "16:30, April 01, 2026",
-    status: "CANCELLED",
-  },
-];
 
 function Dashboard() {
   const t = useTranslations("dashboard");
   const tCommon = useTranslations("common");
+  const format = useFormatter();
   const { user } = useAuth();
+
+  const visitsQ = useQuery({
+    queryKey: ["visits", "dashboard"] as const,
+    queryFn: () => visitsApi.list({ pageSize: 50 }),
+  });
+  const rows = React.useMemo(() => visitsQ.data?.items ?? [], [visitsQ.data]);
 
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
   const [quickAction, setQuickAction] = React.useState<QuickActionMode | null>(
     null,
   );
+  const [checkInId, setCheckInId] = React.useState<string | null>(null);
+  const [checkOutId, setCheckOutId] = React.useState<string | null>(null);
+  const [groupCheckIn, setGroupCheckIn] = React.useState<string | null>(null);
 
-  const allSelected = selected.size === ROWS.length && ROWS.length > 0;
+  const allSelected = selected.size === rows.length && rows.length > 0;
   const headerState: boolean | "indeterminate" = allSelected
     ? true
     : selected.size > 0
@@ -138,7 +68,7 @@ function Dashboard() {
       : false;
 
   const toggleAll = () =>
-    setSelected(allSelected ? new Set() : new Set(ROWS.map((r) => r.id)));
+    setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.id)));
 
   const toggleRow = (id: string) =>
     setSelected((prev) => {
@@ -148,19 +78,22 @@ function Dashboard() {
       return next;
     });
 
-  const channelLabel = (type: VisitType) =>
+  const channelLabel = (type: string) =>
     type === "WALK_IN" ? t("channel.walkIn") : t("channel.invited");
 
-  const rowAction = (row: VisitRow) => {
+  const hostUnit = (row: VisitListItem) =>
+    row.host?.user.fullName ?? row.floor ?? "—";
+
+  const rowAction = (row: VisitListItem) => {
     if (row.status === "APPROVED")
       return (
-        <Button intent="success" size="sm">
+        <Button intent="success" size="sm" onClick={() => setCheckInId(row.id)}>
           {t("actions.checkIn")}
         </Button>
       );
     if (row.status === "CHECKED_IN")
       return (
-        <Button intent="danger" size="sm">
+        <Button intent="danger" size="sm" onClick={() => setCheckOutId(row.id)}>
           {t("actions.checkOut")}
         </Button>
       );
@@ -265,43 +198,62 @@ function Dashboard() {
               </TableRow>
             </TableHeader>
             <TableBody striped>
-              {ROWS.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={selected.has(row.id) ? "selected" : undefined}
-                >
-                  <TableCell>
-                    <Checkbox
-                      checked={selected.has(row.id)}
-                      onCheckedChange={() => toggleRow(row.id)}
-                      aria-label={row.name}
-                    />
+              {visitsQ.isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={8}>
+                    <div className="flex justify-center py-10">
+                      <Spinner />
+                    </div>
                   </TableCell>
-                  <TableCell>
-                    <span className="flex items-center gap-3">
-                      <Avatar name={row.name} size="md" />
-                      <span className="flex flex-col">
-                        <span className="font-medium text-fg">{row.name}</span>
-                        <span className="text-xs text-fg-muted">
-                          {row.email}
+                </TableRow>
+              ) : (
+                rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={selected.has(row.id) ? "selected" : undefined}
+                  >
+                    <TableCell>
+                      <Checkbox
+                        checked={selected.has(row.id)}
+                        onCheckedChange={() => toggleRow(row.id)}
+                        aria-label={row.visitor.fullName}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <span className="flex items-center gap-3">
+                        <Avatar name={row.visitor.fullName} size="md" />
+                        <span className="flex flex-col">
+                          <span className="font-medium text-fg">
+                            {row.visitor.fullName}
+                          </span>
+                          <span className="text-xs text-fg-muted">
+                            {row.visitor.email}
+                          </span>
                         </span>
                       </span>
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-fg-muted">
-                    {channelLabel(row.type)}
-                  </TableCell>
-                  <TableCell className="text-fg-muted">{row.host}</TableCell>
-                  <TableCell className="text-fg-muted">{row.purpose}</TableCell>
-                  <TableCell className="text-fg-muted">
-                    {row.timeCreated}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={row.status} />
-                  </TableCell>
-                  <TableCell>{rowAction(row)}</TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell className="text-fg-muted">
+                      {channelLabel(row.type)}
+                    </TableCell>
+                    <TableCell className="text-fg-muted">
+                      {hostUnit(row)}
+                    </TableCell>
+                    <TableCell className="text-fg-muted">
+                      {row.purpose}
+                    </TableCell>
+                    <TableCell className="text-fg-muted">
+                      {format.dateTime(new Date(row.createdAt), {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={row.status} />
+                    </TableCell>
+                    <TableCell>{rowAction(row)}</TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </RecordTable>
@@ -310,7 +262,23 @@ function Dashboard() {
       <QuickActionSheet
         mode={quickAction}
         onClose={() => setQuickAction(null)}
+        onRequestCheckIn={(groupId) => setGroupCheckIn(groupId)}
       />
+      {checkInId ? (
+        <CheckInModal visitId={checkInId} onClose={() => setCheckInId(null)} />
+      ) : null}
+      {checkOutId ? (
+        <CheckOutModal
+          visitId={checkOutId}
+          onClose={() => setCheckOutId(null)}
+        />
+      ) : null}
+      {groupCheckIn ? (
+        <GroupCheckInSheet
+          groupId={groupCheckIn}
+          onClose={() => setGroupCheckIn(null)}
+        />
+      ) : null}
     </TopNavShell>
   );
 }

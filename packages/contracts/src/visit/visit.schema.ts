@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { RiskLevel, VisitStatus, VisitType } from "../common/enums.js";
+import {
+  PassStatus,
+  RiskLevel,
+  VisitStatus,
+  VisitType,
+} from "../common/enums.js";
 import { PaginationQuery } from "../common/pagination.js";
 import { Visitor, RegisterVisitorInput } from "../visitor/visitor.schema.js";
 import { HostWithUser } from "../host/host.schema.js";
@@ -50,8 +55,16 @@ export type VisitLifecycleStep = z.infer<typeof VisitLifecycleStep>;
 export const Visit = z.object({
   id: z.string().uuid(),
   visitorId: z.string().uuid(),
-  hostId: z.string().uuid(),
+  /** Host is optional for walk-ins (the guest may not be visiting a named staff). */
+  hostId: z.string().uuid().nullable().optional(),
   invitationId: z.string().uuid().nullable().optional(),
+  /** Visits created together in one invite/walk-in submission share a groupId. */
+  groupId: z.string().uuid().nullable().optional(),
+  /**
+   * Human-friendly invite code (e.g. "5A19-795") generated for invites at
+   * creation. Encoded in the QR the guest presents; null for walk-ins.
+   */
+  referenceCode: z.string().nullable().optional(),
   type: VisitType,
   status: VisitStatus,
   purpose: z.string().min(1),
@@ -59,12 +72,26 @@ export const Visit = z.object({
   floor: z.string().nullable().optional(),
   riskLevel: RiskLevel.nullable().optional(),
   scheduledAt: z.coerce.date().nullable().optional(),
+  /** Set when the gate validates the QR (or auto-set at VMC check-in for now). */
+  gateValidatedAt: z.coerce.date().nullable().optional(),
   checkInAt: z.coerce.date().nullable().optional(),
   checkOutAt: z.coerce.date().nullable().optional(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
 export type Visit = z.infer<typeof Visit>;
+
+/**
+ * The physical access badge assigned to a visit at check-in and released at
+ * check-out. `cardNumber` is the number shown on the pass (e.g. "0019").
+ */
+export const VisitPass = z.object({
+  cardNumber: z.string(),
+  zone: z.string().nullable().optional(),
+  status: PassStatus,
+  assignedAt: z.coerce.date().nullable().optional(),
+});
+export type VisitPass = z.infer<typeof VisitPass>;
 
 /** A visit joined with its visitor — the common read model for list/detail views. */
 export const VisitWithVisitor = Visit.extend({ visitor: Visitor });
@@ -73,7 +100,7 @@ export type VisitWithVisitor = z.infer<typeof VisitWithVisitor>;
 /** A row in the admin approval queue — visit + visitor + host + origin. */
 export const VisitListItem = Visit.extend({
   visitor: Visitor,
-  host: HostWithUser,
+  host: HostWithUser.nullable(),
   createdByName: z.string().nullable().optional(),
 });
 export type VisitListItem = z.infer<typeof VisitListItem>;
@@ -88,21 +115,69 @@ export const CreateVisitRequestInput = z.object({
 export type CreateVisitRequestInput = z.infer<typeof CreateVisitRequestInput>;
 
 /**
- * VMC creates one or more visits for a chosen host — the "New Invite Request" and
- * "Register Walk-In" forms. One visit is created per visitor (each independently
- * approvable), all sharing the host, floor, purpose, schedule and notes. Walk-ins
- * (type WALK_IN) are auto-approved server-side; invites start PENDING.
+ * One guest in a "New Invite Request" / "Register Walk-In" submission: the
+ * visitor's details plus that guest's own visit details. The form's "Use same
+ * visit details" toggle simply copies the first guest's visit details into the
+ * others before submit — the wire format always carries details per guest so
+ * guests can differ. `hostUserId` and `scheduledAt` are optional here and
+ * enforced per visit type by CreateVisitsInput's refinement below.
  */
-export const CreateVisitsInput = z.object({
-  type: VisitType,
-  hostUserId: z.string().uuid(),
+export const CreateVisitGuest = RegisterVisitorInput.extend({
+  hostUserId: z.string().uuid().optional(),
   floor: z.string().min(1).optional(),
   purpose: z.string().min(1),
   scheduledAt: z.coerce.date().optional(),
   notes: z.string().max(2000).optional(),
-  visitors: z.array(RegisterVisitorInput).min(1).max(50),
 });
+export type CreateVisitGuest = z.infer<typeof CreateVisitGuest>;
+
+/**
+ * VMC creates one or more visits — the "New Invite Request" and "Register Walk-In"
+ * forms. One visit is created per guest (each independently approvable), sharing a
+ * generated groupId so they can be checked in together. Walk-ins (type WALK_IN)
+ * are auto-approved server-side; invites start PENDING and get a referenceCode/QR.
+ * Invites require a host and a schedule on every guest; walk-ins need neither.
+ */
+export const CreateVisitsInput = z
+  .object({
+    type: VisitType,
+    guests: z.array(CreateVisitGuest).min(1).max(50),
+  })
+  .superRefine((val, ctx) => {
+    if (val.type === "WALK_IN") return;
+    val.guests.forEach((g, i) => {
+      if (!g.hostUserId)
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["guests", i, "hostUserId"],
+          message: "Host is required for invites",
+        });
+      if (!g.scheduledAt)
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["guests", i, "scheduledAt"],
+          message: "Visit date/time is required for invites",
+        });
+    });
+  });
 export type CreateVisitsInput = z.infer<typeof CreateVisitsInput>;
+
+/** Assign a physical access badge to a visit at check-in (VMC). */
+export const CheckInVisitInput = z.object({
+  accessCardId: z.string().uuid(),
+});
+export type CheckInVisitInput = z.infer<typeof CheckInVisitInput>;
+
+/**
+ * Check a visit out. `accessCardId` lets the operator correct ("Change Pass ID")
+ * the assigned badge before completing; omitted = release the current badge.
+ */
+export const CheckOutVisitInput = z
+  .object({
+    accessCardId: z.string().uuid().optional(),
+  })
+  .default({});
+export type CheckOutVisitInput = z.infer<typeof CheckOutVisitInput>;
 
 /**
  * List visits for the admin approval queue (paginated). With `scope: "mine"` the
@@ -115,6 +190,8 @@ export const VisitListQuery = PaginationQuery.extend({
   scope: z.enum(["all", "mine"]).default("all"),
   type: VisitType.optional(),
   purpose: z.string().min(1).optional(),
+  /** Restrict to the guests of one invite/walk-in submission (group check-in). */
+  groupId: z.string().uuid().optional(),
   dateFrom: z.coerce.date().optional(),
   dateTo: z.coerce.date().optional(),
 });
@@ -140,11 +217,15 @@ export type DenyVisitInput = z.infer<typeof DenyVisitInput>;
  */
 export const VisitRequestDetail = Visit.extend({
   visitor: Visitor,
-  host: HostWithUser,
+  host: HostWithUser.nullable(),
   notes: z.array(Note).default([]),
   source: z.string().nullable().optional(),
   createdById: z.string().uuid().nullable().optional(),
   createdByName: z.string().nullable().optional(),
+  /** Data-URL QR encoding the referenceCode (invites only); null for walk-ins. */
+  qrCode: z.string().nullable().optional(),
+  /** The access badge currently assigned (set at check-in, released at check-out). */
+  pass: VisitPass.nullable().optional(),
 });
 export type VisitRequestDetail = z.infer<typeof VisitRequestDetail>;
 

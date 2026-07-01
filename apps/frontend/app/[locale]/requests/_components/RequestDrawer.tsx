@@ -211,7 +211,7 @@ function RequestDetailBody({
   const canDeny = isPending && hasPermission("visit:deny");
   // The host can resubmit their own request once the CSO bounced it back.
   const canResubmit =
-    data.status === "NEEDS_MORE_INFO" && data.host.user.id === user?.id;
+    data.status === "NEEDS_MORE_INFO" && data.host?.user.id === user?.id;
 
   const stepLabels = {
     inviteCreated: t("timeline.inviteCreated"),
@@ -291,37 +291,41 @@ function RequestDetailBody({
           />
         </DetailSection>
       ) : null}
-      <DetailSection title={t("sections.hostDetails")}>
-        <div className="flex items-center justify-between gap-3 rounded-lg bg-emphasis p-4 text-emphasis-fg">
-          <div className="flex items-center gap-3">
-            <Avatar name={data.host.user.fullName} size="md" />
-            <div className="flex flex-col">
-              <span className="font-semibold">{data.host.user.fullName}</span>
-              {data.host.department ? (
-                <span className="text-sm text-emphasis-muted">
-                  {data.host.department}
-                </span>
-              ) : null}
+      {data.host ? (
+        <DetailSection title={t("sections.hostDetails")}>
+          <div className="flex items-center justify-between gap-3 rounded-lg bg-emphasis p-4 text-emphasis-fg">
+            <div className="flex items-center gap-3">
+              <Avatar name={data.host.user.fullName} size="md" />
+              <div className="flex flex-col">
+                <span className="font-semibold">{data.host.user.fullName}</span>
+                {data.host.department ? (
+                  <span className="text-sm text-emphasis-muted">
+                    {data.host.department}
+                  </span>
+                ) : null}
+              </div>
             </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/afreximbank.svg"
+              alt=""
+              className="size-8"
+              aria-hidden="true"
+            />
           </div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand/afreximbank.svg"
-            alt=""
-            className="size-8"
-            aria-hidden="true"
-          />
-        </div>
-        {data.host.office ? (
-          <div className="flex items-center gap-2 rounded-lg bg-warning-subtle px-4 py-2 text-sm">
-            <Hash className="size-4 text-fg-muted" aria-hidden="true" />
-            <span className="font-medium text-fg">{t("sections.floor")}:</span>
-            <span className="font-semibold text-warning">
-              {data.host.office}
-            </span>
-          </div>
-        ) : null}
-      </DetailSection>
+          {data.host.office ? (
+            <div className="flex items-center gap-2 rounded-lg bg-warning-subtle px-4 py-2 text-sm">
+              <Hash className="size-4 text-fg-muted" aria-hidden="true" />
+              <span className="font-medium text-fg">
+                {t("sections.floor")}:
+              </span>
+              <span className="font-semibold text-warning">
+                {data.host.office}
+              </span>
+            </div>
+          ) : null}
+        </DetailSection>
+      ) : null}
 
       <DetailSection title={t("sections.visitorInfo")}>
         <div className="flex items-start justify-between gap-3 rounded-lg bg-surface-muted p-4">

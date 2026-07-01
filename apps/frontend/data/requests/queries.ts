@@ -1,5 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CreateVisitsInput, VisitStatus, VisitType } from "@vms/contracts";
+import type {
+  CheckInVisitInput,
+  CheckOutVisitInput,
+  CreateVisitsInput,
+  VisitStatus,
+  VisitType,
+} from "@vms/contracts";
 import { alertsApi, type AlertStatusAction } from "@/data/alerts/alerts.api";
 import { inboxApi, type InboxKind } from "@/data/inbox/inbox.api";
 import { notesApi } from "@/data/notes/notes.api";
@@ -8,7 +14,8 @@ import { visitsApi } from "@/data/visits/visits.api";
 type InboxScope = "all" | "mine";
 
 const keys = {
-  inbox: (kind: InboxKind, scope: InboxScope) => ["inbox", scope, kind] as const,
+  inbox: (kind: InboxKind, scope: InboxScope) =>
+    ["inbox", scope, kind] as const,
   visit: (id: string) => ["visit", id] as const,
   alert: (id: string) => ["alert", id] as const,
   pendingVisits: ["visits", "PENDING"] as const,
@@ -80,6 +87,34 @@ export function useCreateVisits() {
   return useMutation({
     mutationFn: (input: CreateVisitsInput) => visitsApi.createVisits(input),
     onSuccess: () => invalidate(),
+  });
+}
+
+/** The guests of one invite/walk-in submission (group check-in sheet). */
+export function useVisitGroup(groupId: string | null) {
+  return useQuery({
+    queryKey: ["visits", "group", groupId] as const,
+    queryFn: () => visitsApi.list({ groupId: groupId as string, pageSize: 50 }),
+    enabled: !!groupId,
+  });
+}
+
+/** VMC assigns a badge and checks a visitor in. */
+export function useCheckIn(id: string) {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (input: CheckInVisitInput) => visitsApi.checkIn(id, input),
+    onSuccess: () => invalidate(keys.visit(id)),
+  });
+}
+
+/** VMC checks a visitor out and releases the badge. */
+export function useCheckOut(id: string) {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (input: CheckOutVisitInput = {}) =>
+      visitsApi.checkOut(id, input),
+    onSuccess: () => invalidate(keys.visit(id)),
   });
 }
 
