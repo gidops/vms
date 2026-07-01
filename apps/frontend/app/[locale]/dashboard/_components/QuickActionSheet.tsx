@@ -1,6 +1,6 @@
 "use client";
 
-import { Drawer, DrawerContent, DrawerTitle } from "@vms/ui";
+import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@vms/ui";
 import { useTranslations } from "next-intl";
 import { VisitRequestForm } from "./VisitRequestForm";
 
@@ -15,12 +15,15 @@ export function QuickActionSheet({
   onClose,
   fixedHostUserId,
   fixedHostName,
+  onRequestCheckIn,
 }: {
   mode: QuickActionMode | null;
   onClose: () => void;
   /** Pin the host (e.g. a staff member inviting visitors to themselves). */
   fixedHostUserId?: string;
   fixedHostName?: string;
+  /** Walk-in success "Check-In Visitor" → open the group check-in for this group. */
+  onRequestCheckIn?: (groupId: string) => void;
 }) {
   const t = useTranslations("invite");
   if (!mode) return null;
@@ -29,17 +32,21 @@ export function QuickActionSheet({
     <Drawer open onOpenChange={(o) => !o && onClose()}>
       <DrawerContent
         side="start"
-        className="flex max-w-xl flex-col gap-0 p-0 sm:max-w-2xl"
+        className="flex flex-col gap-0 p-0 sm:max-w-none sm:w-[40vw]"
       >
         {/* The visible heading lives in the form; this satisfies the dialog a11y title. */}
         <DrawerTitle className="sr-only">
           {mode === "walkin" ? t("titleWalkin") : t("titleInvite")}
         </DrawerTitle>
+        <DrawerDescription className="sr-only">
+          {mode === "walkin" ? t("subtitleWalkin") : t("subtitleInvite")}
+        </DrawerDescription>
         <VisitRequestForm
           mode={mode}
           onClose={onClose}
           fixedHostUserId={fixedHostUserId}
           fixedHostName={fixedHostName}
+          onRequestCheckIn={onRequestCheckIn}
         />
       </DrawerContent>
     </Drawer>

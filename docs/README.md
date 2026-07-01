@@ -7,6 +7,7 @@ start, see the [root README](../README.md).
 | --- | --- |
 | [architecture.md](./architecture.md) | Monorepo layout, backend modular monolith & layering, event‑driven outbox, auth/RBAC, observability, data model, frontend layering |
 | [runbook.md](./runbook.md) | Running locally (dev & full Docker), environment variables, commands, migrations, deployment, troubleshooting |
+| [infrastructure.md](./infrastructure.md) | Plain-language mental model: how containers, the DB, and env vars work locally vs AWS prod, how they communicate, and prod gotchas to watch for |
 | [api.md](./api.md) | HTTP endpoints, auth flow, request/response shapes, errors, correlation IDs |
 | [api-inventory.md](./api-inventory.md) | Complete Postman-ready endpoint catalogue (28 endpoints) + planned routes |
 | [system-inspection-report.md](./system-inspection-report.md) | Architecture audit — i18n, event-driven, microservice readiness, testing, risks |

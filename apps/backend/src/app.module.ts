@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AccessCardsModule } from './modules/access-cards/access-cards.module';
 import { AlertsModule } from './modules/alerts/alerts.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { InboxModule } from './modules/inbox/inbox.module';
@@ -34,6 +35,7 @@ import { StorageModule } from './shared/storage/storage.module';
     AuthModule,
     InboxModule,
     VisitsModule,
+    AccessCardsModule,
     AlertsModule,
     NotesModule,
     NotificationsModule,

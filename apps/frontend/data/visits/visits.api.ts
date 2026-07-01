@@ -1,4 +1,10 @@
-import type { CreateVisitsInput, VisitStatus, VisitType } from "@vms/contracts";
+import type {
+  CheckInVisitInput,
+  CheckOutVisitInput,
+  CreateVisitsInput,
+  VisitStatus,
+  VisitType,
+} from "@vms/contracts";
 import { api } from "@/data/http/client";
 
 export interface Paginated<T> {
@@ -17,15 +23,32 @@ export interface VisitListItem {
   purpose: string;
   floor?: string | null;
   scheduledAt?: string | null;
+  groupId?: string | null;
+  referenceCode?: string | null;
+  gateValidatedAt?: string | null;
+  checkInAt?: string | null;
+  checkOutAt?: string | null;
   createdAt: string;
   createdByName?: string | null;
   visitor: {
     id: string;
     fullName: string;
     email: string;
+    phone?: string | null;
     organization?: string | null;
   };
-  host: { id: string; user: { id: string; fullName: string; email: string } };
+  host: {
+    id: string;
+    user: { id: string; fullName: string; email: string };
+  } | null;
+}
+
+/** The physical badge currently assigned to a visit (set at check-in). */
+export interface VisitPass {
+  cardNumber: string;
+  zone?: string | null;
+  status: string;
+  assignedAt?: string | null;
 }
 
 export interface VisitNote {
@@ -51,7 +74,14 @@ export interface VisitRequestDetail {
     | "CANCELLED"
     | "EXPIRED";
   purpose: string;
+  floor?: string | null;
   scheduledAt?: string | null;
+  groupId?: string | null;
+  referenceCode?: string | null;
+  qrCode?: string | null;
+  gateValidatedAt?: string | null;
+  checkInAt?: string | null;
+  checkOutAt?: string | null;
   createdAt: string;
   source?: string | null;
   createdByName?: string | null;
@@ -67,7 +97,8 @@ export interface VisitRequestDetail {
     department?: string | null;
     office?: string | null;
     user: { id: string; fullName: string; email: string };
-  };
+  } | null;
+  pass?: VisitPass | null;
   notes: VisitNote[];
 }
 
@@ -77,7 +108,10 @@ export const visitsApi = {
   },
   /** Create invite(s) / walk-in(s) — one visit per visitor. */
   createVisits(input: CreateVisitsInput): Promise<VisitRequestDetail[]> {
-    return api<VisitRequestDetail[]>(`/visits`, { method: "POST", body: input });
+    return api<VisitRequestDetail[]>(`/visits`, {
+      method: "POST",
+      body: input,
+    });
   },
   /**
    * Visit list. The admin queue filters by status; the staff dashboard passes
@@ -88,6 +122,7 @@ export const visitsApi = {
     scope?: "all" | "mine";
     type?: VisitType;
     purpose?: string;
+    groupId?: string;
     dateFrom?: string;
     dateTo?: string;
     page?: number;
@@ -98,6 +133,7 @@ export const visitsApi = {
     if (params?.scope) q.set("scope", params.scope);
     if (params?.type) q.set("type", params.type);
     if (params?.purpose) q.set("purpose", params.purpose);
+    if (params?.groupId) q.set("groupId", params.groupId);
     if (params?.dateFrom) q.set("dateFrom", params.dateFrom);
     if (params?.dateTo) q.set("dateTo", params.dateTo);
     if (params?.page) q.set("page", String(params.page));
@@ -107,6 +143,23 @@ export const visitsApi = {
   },
   cancel(id: string): Promise<VisitRequestDetail> {
     return api<VisitRequestDetail>(`/visits/${id}/cancel`, { method: "POST" });
+  },
+  /** VMC check-in: assign a physical badge to an approved visit. */
+  checkIn(id: string, input: CheckInVisitInput): Promise<VisitRequestDetail> {
+    return api<VisitRequestDetail>(`/visits/${id}/check-in`, {
+      method: "POST",
+      body: input,
+    });
+  },
+  /** VMC check-out: release the badge and mark the visitor off-site. */
+  checkOut(
+    id: string,
+    input: CheckOutVisitInput = {},
+  ): Promise<VisitRequestDetail> {
+    return api<VisitRequestDetail>(`/visits/${id}/check-out`, {
+      method: "POST",
+      body: input,
+    });
   },
   approve(id: string): Promise<VisitRequestDetail> {
     return api<VisitRequestDetail>(`/visits/${id}/approve`, { method: "POST" });

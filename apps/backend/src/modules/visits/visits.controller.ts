@@ -8,6 +8,8 @@ import {
   Query,
 } from '@nestjs/common';
 import {
+  CheckInVisitInput,
+  CheckOutVisitInput,
   CreateVisitsInput,
   DenyVisitInput,
   PERMISSIONS,
@@ -102,15 +104,25 @@ export class VisitsController {
     return this.visits.deny(id, input.reason, principal.userId);
   }
 
+  /** VMC check-in: assign a physical badge to an approved visit, mark it on-site. */
   @Post(':id/check-in')
   @RequirePermissions(PERMISSIONS.VISIT_CHECK_IN)
-  checkIn(@Param('id') id: string, @CurrentUser() principal: AuthUser) {
-    return this.visits.checkIn(id, principal.userId);
+  checkIn(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(CheckInVisitInput)) input: CheckInVisitInput,
+    @CurrentUser() principal: AuthUser,
+  ) {
+    return this.visits.checkIn(id, input, principal.userId);
   }
 
+  /** VMC check-out: release the badge and mark the visitor off-site. */
   @Post(':id/check-out')
   @RequirePermissions(PERMISSIONS.VISIT_CHECK_OUT)
-  checkOut(@Param('id') id: string, @CurrentUser() principal: AuthUser) {
-    return this.visits.checkOut(id, principal.userId);
+  checkOut(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(CheckOutVisitInput)) input: CheckOutVisitInput,
+    @CurrentUser() principal: AuthUser,
+  ) {
+    return this.visits.checkOut(id, input, principal.userId);
   }
 }

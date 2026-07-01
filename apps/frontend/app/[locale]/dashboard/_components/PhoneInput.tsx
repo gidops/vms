@@ -1,0 +1,66 @@
+"use client";
+
+import { Input } from "@vms/ui";
+import * as React from "react";
+
+/** A small set of dialling codes; +234 (Nigeria) is the default per the design. */
+const DIAL_CODES = ["+234", "+1", "+44", "+971", "+233", "+27"] as const;
+
+export interface PhoneInputProps {
+  code: string;
+  number: string;
+  onCodeChange: (code: string) => void;
+  onNumberChange: (number: string) => void;
+  placeholder?: string;
+  invalid?: boolean;
+  id?: string;
+}
+
+/**
+ * Telephone field with a dialling-code selector glued to the number input, as in
+ * the invite/walk-in forms. The two values are stored separately and joined into
+ * one string ("+234 80 764 80331") at submit time by the parent.
+ */
+export function PhoneInput({
+  code,
+  number,
+  onCodeChange,
+  onNumberChange,
+  placeholder,
+  invalid,
+  id,
+}: PhoneInputProps) {
+  return (
+    <div
+      className={
+        "flex h-10 items-stretch overflow-hidden rounded-md border " +
+        (invalid ? "border-danger" : "border-border")
+      }
+    >
+      <div className="flex items-center gap-1 border-e border-border bg-surface-muted ps-2 pe-1">
+        <span aria-hidden="true">🇳🇬</span>
+        <select
+          aria-label="Country dialling code"
+          value={code}
+          onChange={(e) => onCodeChange(e.target.value)}
+          className="bg-transparent py-2 pe-1 text-sm text-fg outline-none"
+        >
+          {DIAL_CODES.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+      </div>
+      <Input
+        id={id}
+        type="tel"
+        inputMode="tel"
+        value={number}
+        placeholder={placeholder}
+        onChange={(e) => onNumberChange(e.target.value)}
+        className="flex-1 border-0 focus-visible:ring-0"
+      />
+    </div>
+  );
+}

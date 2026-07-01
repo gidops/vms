@@ -31,13 +31,13 @@ export class EmailTransport implements NotificationTransport {
 
   private provider(): EmailProvider {
     const chosen = this.config.get('EMAIL_PROVIDER', { infer: true });
-    if (chosen === 'sendgrid' && this.sendgrid.isConfigured) {
-      return this.sendgrid;
+    // SendGrid goes through the HTTP API provider; smtp/gmail/mailtrap all run
+    // through the profile-aware nodemailer provider. Fall back to logging when
+    // the chosen provider isn't configured so enabling EMAIL never breaks boot.
+    if (chosen === 'sendgrid') {
+      return this.sendgrid.isConfigured ? this.sendgrid : this.log;
     }
-    if (chosen === 'smtp' && this.smtp.isConfigured) {
-      return this.smtp;
-    }
-    return this.log;
+    return this.smtp.isConfigured ? this.smtp : this.log;
   }
 
   private from(): string {

@@ -84,7 +84,7 @@ A channel that's enabled but unconfigured logs the message (dev) instead of cras
 
 | Channel | Transport | Provider(s) |
 | --- | --- | --- |
-| Email | `EmailTransport` | SMTP (`nodemailer` — Gmail/Mailtrap) or SendGrid; `EMAIL_PROVIDER` selects |
+| Email | `EmailTransport` | `EMAIL_PROVIDER` selects: `smtp`/`gmail`/`mailtrap` (nodemailer `SmtpProvider`, connection resolved from the selector) or `sendgrid` (HTTP API). Every transport's credentials can coexist in env — flip `EMAIL_PROVIDER` to switch, no code change. Falls back to the log provider when unconfigured. |
 | SMS | `SmsTransport` | Twilio |
 | WhatsApp | `WhatsappTransport` | Twilio (Business API) |
 | In-App | (dispatcher) | the persisted row, read via the notifications API |
@@ -126,13 +126,18 @@ See [`apps/backend/.env.example`](../apps/backend/.env.example). Key vars:
 | `NOTIFICATION_POLL_INTERVAL_MS` / `NOTIFICATION_MAX_ATTEMPTS` | Dispatcher cadence + retry cap |
 | `NOTIFICATIONS_DEFAULT_LOCALE` | Fallback locale |
 | `APP_PUBLIC_URL` | Builds the rating link |
-| `EMAIL_PROVIDER` (`smtp`\|`sendgrid`), `EMAIL_FROM` | Email selection |
-| `SMTP_HOST/PORT/SECURE/USER/PASS` | SMTP (Gmail/Mailtrap) |
-| `SENDGRID_API_KEY` | SendGrid |
+| `EMAIL_PROVIDER` (`smtp`\|`gmail`\|`mailtrap`\|`sendgrid`), `EMAIL_FROM` | Email selection + sender |
+| `SMTP_HOST/PORT/SECURE/USER/PASS` | Generic/custom SMTP server (`EMAIL_PROVIDER=smtp`) |
+| `GMAIL_USER/GMAIL_APP_PASSWORD` | Gmail (`EMAIL_PROVIDER=gmail`; host/port/secure fixed to smtp.gmail.com:465) |
+| `MAILTRAP_HOST/PORT/USER/PASS` | Mailtrap live sending (`EMAIL_PROVIDER=mailtrap`) |
+| `SENDGRID_API_KEY` | SendGrid HTTP API (`EMAIL_PROVIDER=sendgrid`) |
 | `TWILIO_ACCOUNT_SID/AUTH_TOKEN/SMS_FROM/WHATSAPP_FROM` | Twilio SMS + WhatsApp |
 
-**Gmail dev quickstart:** `EMAIL_PROVIDER=smtp`, `EMAIL_ENABLED=true`, `SMTP_HOST=smtp.gmail.com`,
-`SMTP_PORT=465`, `SMTP_SECURE=true`, `SMTP_USER=<you@gmail.com>`, `SMTP_PASS=<app password>`.
+**Switching transport:** set `EMAIL_ENABLED=true` and pick `EMAIL_PROVIDER`. Examples —
+`gmail`: `GMAIL_USER=<you@gmail.com>`, `GMAIL_APP_PASSWORD=<app password>` (needs 2FA);
+`mailtrap`: `MAILTRAP_USER`/`MAILTRAP_PASS` from the inbox's SMTP creds;
+`sendgrid`: `SENDGRID_API_KEY=SG.…`. `EMAIL_FROM` must be a sender the active account is
+authorized to send as (verified single sender / domain), or delivery is rejected.
 
 ## Notes & limits
 

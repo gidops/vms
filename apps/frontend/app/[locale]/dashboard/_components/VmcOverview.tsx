@@ -94,9 +94,7 @@ export function VmcOverview({
         {stats.map((stat, i) => (
           <div
             key={stat.label}
-            className={
-              "bg-surface" + (i > 0 ? " border-s border-border" : "")
-            }
+            className={"bg-surface" + (i > 0 ? " border-s border-border" : "")}
           >
             <StatCell stat={stat} />
           </div>
