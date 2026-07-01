@@ -16,6 +16,7 @@ const meta = {
         "warning",
         "danger",
         "info",
+        "purple",
       ],
     },
     tone: { control: "select", options: ["soft", "solid", "outline"] },
@@ -41,6 +42,7 @@ export const Intents: Story = {
           "warning",
           "danger",
           "info",
+          "purple",
         ] as const
       ).map((intent) => (
         <Badge key={intent} {...args} intent={intent} dot>

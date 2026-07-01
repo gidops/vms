@@ -6,20 +6,12 @@ import { useInboxUnread } from "@/data/requests/queries";
 import { useRouter } from "@/i18n/navigation";
 import { AccountMenu } from "./AccountMenu";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import { RoleSwitcher } from "./RoleSwitcher";
+import { AppSwitcher } from "./AppSwitcher";
 
 function BrandMark() {
   return (
-    <span className="flex items-center gap-2">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/brand/afreximbank.svg"
-        alt=""
-        className="size-9"
-        aria-hidden="true"
-      />
-      <span className="text-sm font-bold tracking-[0.2em]">AFREXIMBANK</span>
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src="/brand/afreximbank.svg" alt="AATC VMS" className="size-9" />
   );
 }
 
@@ -67,7 +59,7 @@ export function AppTopNav({
           { value: "visits", label: tNav("myVisits"), route: "/staff/visits" },
           {
             value: "requests",
-            label: tNav("requests"),
+            label: tNav("updates"),
             route: "/staff/requests",
             count,
           },
@@ -109,7 +101,7 @@ export function AppTopNav({
       }
       end={
         <>
-          <RoleSwitcher />
+          <AppSwitcher />
           <LanguageSwitcher />
           <AccountMenu />
         </>

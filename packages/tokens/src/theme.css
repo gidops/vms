@@ -112,6 +112,12 @@
   --color-blue-600: #2563eb;
   --color-blue-700: #1d4ed8;
 
+  /* Purple — the "Visit Status" activity category (outside the core palette) */
+  --color-purple-50: #f5edfe;
+  --color-purple-500: #8a38f5;
+  --color-purple-600: #7424e0;
+  --color-purple-700: #5f18bd;
+
   /* Neutral (slate) */
   --color-neutral-50: #f8fafc;
   --color-neutral-100: #f1f5f9;
@@ -230,13 +236,22 @@
   --color-info-subtle: var(--vms-info-subtle);
   --color-info-fg: var(--vms-info-fg);
 
+  --color-purple: var(--vms-purple);
+  --color-purple-subtle: var(--vms-purple-subtle);
+  --color-purple-fg: var(--vms-purple-fg);
+
+  /* Neutral pill fill used by status/badge components (distinct from
+   * surface-muted so pill styling doesn't drift if surfaces are retuned). */
+  --color-badge-neutral: var(--vms-badge-neutral);
+  --color-badge-neutral-border: var(--vms-badge-neutral-border);
+
   --color-ring: var(--vms-ring);
 }
 
 /* ---- Light theme (default) -------------------------------------------- */
 :root,
 [data-theme="light"] {
-  --vms-canvas: var(--color-neutral-50);
+  --vms-canvas: var(--color-white);
   --vms-surface: var(--color-white);
   --vms-surface-muted: var(--color-neutral-100);
   --vms-surface-inset: var(--color-neutral-100);
@@ -292,6 +307,13 @@
   --vms-info: var(--color-blue-600);
   --vms-info-subtle: var(--color-blue-50);
   --vms-info-fg: var(--color-white);
+
+  --vms-purple: var(--color-purple-600);
+  --vms-purple-subtle: var(--color-purple-50);
+  --vms-purple-fg: var(--color-white);
+
+  --vms-badge-neutral: var(--color-neutral-100);
+  --vms-badge-neutral-border: var(--color-neutral-200);
 
   --vms-ring: var(--color-teal-600);
 }
@@ -376,6 +398,17 @@
     transparent
   );
   --vms-info-fg: var(--color-neutral-950);
+
+  --vms-purple: var(--color-purple-500);
+  --vms-purple-subtle: color-mix(
+    in oklab,
+    var(--color-purple-500) 18%,
+    transparent
+  );
+  --vms-purple-fg: var(--color-neutral-950);
+
+  --vms-badge-neutral: var(--color-neutral-800);
+  --vms-badge-neutral-border: var(--color-neutral-700);
 
   --vms-ring: var(--color-teal-400);
 }
