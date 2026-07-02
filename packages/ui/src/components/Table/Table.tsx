@@ -40,7 +40,7 @@ export function TableBody({ className, striped, ...props }: TableBodyProps) {
     <tbody
       className={cn(
         "[&_tr:last-child]:border-0",
-        striped && "[&>tr:nth-child(even)]:bg-surface-muted/50",
+        striped && "[&>tr:nth-child(odd)]:bg-surface-muted",
         className,
       )}
       {...props}

@@ -9,6 +9,11 @@ export interface RecordTableProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Shown in place of the table body area when there are no records. */
   isEmpty?: boolean;
   emptyState?: React.ReactNode;
+  /**
+   * Drop the surrounding border + rounded corners so the table reads as a
+   * borderless surface (e.g. the striped staff "Recent Guest" table).
+   */
+  flush?: boolean;
   /** The <Table> (or a loading skeleton). */
   children: React.ReactNode;
 }
@@ -22,6 +27,7 @@ export function RecordTable({
   pagination,
   isEmpty,
   emptyState,
+  flush,
   className,
   children,
   ...props
@@ -29,7 +35,12 @@ export function RecordTable({
   return (
     <div className={cn("flex flex-col gap-4", className)} {...props}>
       {toolbar}
-      <div className="overflow-hidden rounded-lg border border-border bg-surface">
+      <div
+        className={cn(
+          "overflow-hidden bg-surface",
+          !flush && "rounded-lg border border-border",
+        )}
+      >
         {isEmpty ? <div className="p-6">{emptyState}</div> : children}
       </div>
       {pagination && !isEmpty ? (

@@ -16,11 +16,14 @@ export interface SegmentedControlProps {
   defaultValue?: string;
   onValueChange?: (value: string) => void;
   /**
-   * `default` — light surface (e.g. the Today / Last 7 days toggle).
+   * `default` — light surface, sliding active pill inside a shared grey track.
    * `onEmphasis` — sits on a deep brand-green surface (the top nav), active
    * option gets a gold outline.
+   * `outline` — standalone pills (no shared track background); the active
+   * option gets a thicker primary-colored border instead of a filled
+   * background (the staff dashboard's "Today / Last 7 days / Custom" toggle).
    */
-  variant?: "default" | "onEmphasis";
+  variant?: "default" | "onEmphasis" | "outline";
   "aria-label"?: string;
   className?: string;
 }
@@ -50,16 +53,22 @@ export function SegmentedControl({
   };
 
   const onEmphasis = variant === "onEmphasis";
+  const outline = variant === "outline";
 
   return (
     <div
       role="radiogroup"
       aria-label={props["aria-label"]}
       className={cn(
-        "inline-flex items-center gap-1 rounded-full p-1",
-        onEmphasis
-          ? "border border-emphasis-border bg-white/5"
-          : "border border-border bg-surface-muted",
+        "inline-flex items-center",
+        outline
+          ? "gap-2"
+          : cn(
+              "gap-1 rounded-full p-1",
+              onEmphasis
+                ? "border border-emphasis-border bg-white/5"
+                : "border border-border bg-surface-muted",
+            ),
         className,
       )}
     >
@@ -73,15 +82,25 @@ export function SegmentedControl({
             aria-checked={active}
             onClick={() => select(option.value)}
             className={cn(
-              "inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors",
+              "inline-flex items-center gap-2 whitespace-nowrap transition-colors",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]",
-              onEmphasis
-                ? active
-                  ? "border border-accent text-emphasis-fg"
-                  : "border border-transparent text-emphasis-fg/70 hover:text-emphasis-fg"
-                : active
-                  ? "bg-surface text-fg shadow-xs"
-                  : "border border-transparent text-fg-muted hover:text-fg",
+              outline
+                ? cn(
+                    "h-[35px] rounded-full bg-surface text-base",
+                    active
+                      ? "border-2 border-primary px-6 font-semibold text-primary"
+                      : "border border-border px-3 font-medium text-fg-subtle hover:text-primary",
+                  )
+                : cn(
+                    "rounded-full px-4 py-1.5 text-sm font-medium",
+                    onEmphasis
+                      ? active
+                        ? "border border-accent text-emphasis-fg"
+                        : "border border-transparent text-emphasis-fg/70 hover:text-emphasis-fg"
+                      : active
+                        ? "bg-surface text-fg shadow-xs"
+                        : "border border-transparent text-fg-muted hover:text-fg",
+                  ),
             )}
           >
             {option.label}

@@ -20,12 +20,12 @@ export function FilterBar({
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 sm:flex-row sm:items-center",
+        "flex flex-col gap-4 sm:flex-row sm:items-center",
         className,
       )}
       {...props}
     >
-      <div className="flex flex-1 flex-wrap items-center gap-2">{children}</div>
+      <div className="flex flex-1 flex-wrap items-center gap-4">{children}</div>
       {actions ? (
         <div className="flex items-center gap-2">{actions}</div>
       ) : null}

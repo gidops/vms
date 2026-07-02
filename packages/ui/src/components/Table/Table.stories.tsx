@@ -78,3 +78,37 @@ export const VisitorRecords: Story = {
     </div>
   ),
 };
+
+export const Striped: Story = {
+  render: () => (
+    <div className="w-[40rem] rounded-lg border border-border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Visitor</TableHead>
+            <TableHead>Host / Floor</TableHead>
+            <TableHead>Check-in</TableHead>
+            <TableHead>Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody striped>
+          {ROWS.map((row) => (
+            <TableRow key={row.name} className="border-b-0">
+              <TableCell>
+                <span className="flex items-center gap-2">
+                  <Avatar name={row.name} size="sm" />
+                  <span className="font-medium">{row.name}</span>
+                </span>
+              </TableCell>
+              <TableCell className="text-fg-muted">{row.host}</TableCell>
+              <TableCell className="text-fg-muted">{row.time}</TableCell>
+              <TableCell>
+                <StatusBadge status={row.status} />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  ),
+};
