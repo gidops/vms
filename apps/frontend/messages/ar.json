@@ -295,7 +295,7 @@
       "groupName": "اسم المجموعة",
       "groupNamePlaceholder": "مثال: وفد شركة Acme",
       "groupContact": "جهة اتصال المجموعة",
-      "groupContactPlaceholder": "أدخل بريد المجموعة أو رقم الهاتف"
+      "groupContactPlaceholder": "البريد الإلكتروني أو رقم الهاتف"
     },
     "confirm": {
       "title": "تأكيد دعوة الزيارة",

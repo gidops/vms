@@ -242,35 +242,68 @@ export function VisitRequestForm({
 
       {/* CSV banner (invite only, dark green) */}
       {mode === "invite" ? (
-        <div className="flex flex-col gap-3 bg-emphasis px-5 py-4 sm:flex-row">
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".csv,text/csv"
-            className="hidden"
-            onChange={onImportCsv}
-          />
-          <Button
-            type="button"
-            intent="accent"
-            tone="outline"
-            fullWidth
-            onClick={() => fileRef.current?.click()}
-          >
-            <UserPlus className="size-4" aria-hidden="true" />
-            {t("importCsv")}
-          </Button>
-          <Button
-            type="button"
-            intent="accent"
-            tone="outline"
-            fullWidth
-            onClick={downloadGuestTemplate}
-          >
-            <Download className="size-4" aria-hidden="true" />
-            {t("downloadTemplate")}
-          </Button>
-        </div>
+        // <div className="flex flex-col gap-3 bg-emphasis px-5 py-4">
+        //   <input
+        //     ref={fileRef}
+        //     type="file"
+        //     accept=".csv,text/csv"
+        //     className="hidden"
+        //     onChange={onImportCsv}
+        //   />
+        //   <Button
+        //     type="button"
+        //     intent="accent"
+        //     tone="outline"
+        //     fullWidth
+        //     onClick={() => fileRef.current?.click()}
+        //   >
+        //     <UserPlus className="size-4" aria-hidden="true" />
+        //     {t("importCsv")}
+        //   </Button>
+        //   <Button
+        //     type="button"
+        //     intent="accent"
+        //     tone="outline"
+        //     fullWidth
+        //     onClick={downloadGuestTemplate}
+        //   >
+        //     <Download className="size-4" aria-hidden="true" />
+        //     {t("downloadTemplate")}
+        //   </Button>
+        // </div>
+        <div className="flex  gap-3 bg-emphasis px-5 py-4 min-w-0 overflow-hidden">
+  <input
+    ref={fileRef}
+    type="file"
+    accept=".csv,text/csv"
+    className="hidden"
+    onChange={onImportCsv}
+  />
+
+  <Button
+    type="button"
+    intent="accent"
+    tone="outline"
+    fullWidth
+    className="min-w-0 max-w-full"
+    onClick={() => fileRef.current?.click()}
+  >
+    <UserPlus className="size-4 shrink-0" aria-hidden="true" />
+    <span className="truncate">{t("importCsv")}</span>
+  </Button>
+
+  <Button
+    type="button"
+    intent="accent"
+    tone="outline"
+    fullWidth
+    className="min-w-0 max-w-full"
+    onClick={downloadGuestTemplate}
+  >
+    <Download className="size-4 shrink-0" aria-hidden="true" />
+    <span className="truncate">{t("downloadTemplate")}</span>
+  </Button>
+</div>
       ) : null}
 
       {/* Body (scrollable) */}

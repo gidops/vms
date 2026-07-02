@@ -295,7 +295,7 @@
       "groupName": "Group Name",
       "groupNamePlaceholder": "e.g. Acme Corp delegation",
       "groupContact": "Group Contact",
-      "groupContactPlaceholder": "Enter group email or phone number"
+      "groupContactPlaceholder": "Email or phone number"
     },
     "confirm": {
       "title": "Confirm Visit Invite",
