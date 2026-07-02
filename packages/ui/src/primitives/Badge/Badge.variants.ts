@@ -19,6 +19,8 @@ export const badgeVariants = tv({
       danger:
         "[--bdg:var(--color-danger)] [--bdg-subtle:var(--color-danger-subtle)]",
       info: "[--bdg:var(--color-info)] [--bdg-subtle:var(--color-info-subtle)]",
+      purple:
+        "[--bdg:var(--color-purple)] [--bdg-subtle:var(--color-purple-subtle)]",
     },
     tone: {
       soft: "border-transparent bg-[var(--bdg-subtle)] text-[var(--bdg)]",

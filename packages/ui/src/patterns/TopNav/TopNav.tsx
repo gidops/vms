@@ -25,7 +25,7 @@ export function TopNav({
   return (
     <header
       className={cn(
-        "flex h-16 w-full shrink-0 items-center gap-4 bg-emphasis px-4 text-emphasis-fg sm:px-6",
+        "flex h-[72px] w-full shrink-0 items-center gap-4 bg-emphasis px-4 text-emphasis-fg sm:px-12",
         className,
       )}
       {...props}

@@ -1,25 +1,20 @@
 "use client";
 
+import { ROLES } from "@vms/contracts";
 import { SegmentedControl, TopNav } from "@vms/ui";
 import { useTranslations } from "next-intl";
 import { useInboxUnread } from "@/data/requests/queries";
 import { useRouter } from "@/i18n/navigation";
+import { useAuth } from "@/shared/auth/AuthContext";
 import { AccountMenu } from "./AccountMenu";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { AppSwitcher } from "./AppSwitcher";
 import { RoleSwitcher } from "./RoleSwitcher";
 
 function BrandMark() {
   return (
-    <span className="flex items-center gap-2">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/brand/afreximbank.svg"
-        alt=""
-        className="size-9"
-        aria-hidden="true"
-      />
-      <span className="text-sm font-bold tracking-[0.2em]">AFREXIMBANK</span>
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src="/brand/afreximbank.svg" alt="AATC VMS" className="size-9" />
   );
 }
 
@@ -54,6 +49,17 @@ export function AppTopNav({
 }: AppTopNavProps) {
   const tNav = useTranslations("nav");
   const router = useRouter();
+  const { user } = useAuth();
+
+  // The one-tap AppSwitcher only covers the common case: a user who holds
+  // exactly the VMC + Staff pair. Anyone with a different role combination
+  // (a third role, or two roles that aren't this pair) falls back to the
+  // general RoleSwitcher so they don't lose the ability to switch at all.
+  const roles = user?.roles ?? [];
+  const isVmcStaffPair =
+    roles.length === 2 &&
+    roles.includes(ROLES.VMC) &&
+    roles.includes(ROLES.STAFF);
 
   // The nav bubble shows the current user's unread count; staff see their own
   // scope, the VMC sees all. An explicit `requestsCount` overrides it.
@@ -67,7 +73,7 @@ export function AppTopNav({
           { value: "visits", label: tNav("myVisits"), route: "/staff/visits" },
           {
             value: "requests",
-            label: tNav("requests"),
+            label: tNav("updates"),
             route: "/staff/requests",
             count,
           },
@@ -109,7 +115,7 @@ export function AppTopNav({
       }
       end={
         <>
-          <RoleSwitcher />
+          {isVmcStaffPair ? <AppSwitcher /> : <RoleSwitcher />}
           <LanguageSwitcher />
           <AccountMenu />
         </>

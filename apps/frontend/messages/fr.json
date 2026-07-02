@@ -6,7 +6,11 @@
     "schedule": "Programme du jour",
     "myVisits": "Mes visites",
     "requests": "Demandes et alertes",
+    "updates": "Mises à jour",
     "visitors": "Visiteurs",
+    "switchToStaff": "Passer au personnel",
+    "switchToVmc": "Passer au VMC",
+    "switchError": "Impossible de changer de rôle. Veuillez réessayer.",
     "switchAccount": "Changer de compte",
     "accountSettings": "Paramètres du compte",
     "help": "Aide / Support",
@@ -388,7 +392,7 @@
     "noVisits": "Aucune visite à afficher.",
     "overview": {
       "officeFloor": "Étage du bureau",
-      "bookTitle": "Réservez des visiteurs dans les installations AATC d'Abuja",
+      "bookTitle": "Réservez des invités dans les installations AATC d'Abuja",
       "newInvite": "Nouvelle demande d'invitation"
     },
     "stats": {
@@ -404,10 +408,13 @@
       "yesterday": "Hier"
     },
     "filters": {
-      "searchPlaceholder": "Rechercher visiteur, organisation, objet, n° de demande"
+      "searchPlaceholder": "Rechercher invité, hôte, étage, ID de pass",
+      "allVisitTypes": "Tous les types de visite",
+      "allPurpose": "Tous les motifs",
+      "search": "Rechercher"
     },
     "columns": {
-      "visitor": "Visiteur",
+      "visitor": "Invité",
       "organization": "Organisation",
       "purpose": "Objet",
       "timeCreated": "Date de création",
@@ -438,6 +445,7 @@
       "seeAll": "Tout voir",
       "empty": "Aucune mise à jour récente.",
       "viewUpdate": "Voir la mise à jour",
+      "updateRequest": "Mettre à jour la demande",
       "viewDetails": "Voir les détails",
       "category": {
         "ARRIVAL_UPDATE": "Mise à jour d'arrivée",
