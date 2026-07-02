@@ -152,12 +152,21 @@ npx turbo run lint:check typecheck build build-storybook test
 ## Deployment (Terraform / AWS)
 
 `terraform/` provisions a VPC (+2 subnets), two EC2 instances (frontend :80,
-backend :4000), and an RDS Postgres 16 instance. `user_data` clones `develop`,
-installs deps, and builds from the monorepo root via `turbo --filter`.
+backend :4000), and an RDS Postgres 16 instance. Deploys use **prebuilt ECR
+images**: `user_data` logs in to ECR and pulls/runs the image for the given
+`*_image_tag` at boot (no on-instance builds — `t2.micro` OOMs on them).
 
-Prerequisites: AWS credentials, an existing EC2 key pair (`vms-key`), and a
-reachable repo. State is local — move to an encrypted remote backend before team
-use (it holds the generated DB password).
+Runtime config for the backend container (image tags, email transport) comes
+from Terraform variables: copy `terraform/terraform.tfvars.example` to
+`terraform.tfvars` (gitignored) and fill in the email credentials before
+`terraform apply` — otherwise the backend silently falls back to its log email
+provider and no mail is sent. Changing these vars rewrites `user_data`, which
+**replaces the backend EC2 instance** on apply (the Elastic IP re-associates and
+migrations re-run at boot, so this is the normal redeploy path).
+
+Prerequisites: AWS credentials, an existing EC2 key pair (`vms-key`), and images
+pushed to ECR. State is local — move to an encrypted remote backend before team
+use (it holds the generated DB password and JWT/encryption secrets).
 
 ## Troubleshooting
 
