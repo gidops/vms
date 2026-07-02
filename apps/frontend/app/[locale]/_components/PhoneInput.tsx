@@ -3,8 +3,8 @@
 import { Input } from "@vms/ui";
 import * as React from "react";
 
-/** A small set of dialling codes; +234 (Nigeria) is the default per the design. */
-const DIAL_CODES = ["+234", "+1", "+44", "+971", "+233", "+27"] as const;
+/** Dialling codes offered in the phone field; +234 (Nigeria) is the default. */
+export const DIAL_CODES = ["+234", "+1", "+44", "+971", "+233", "+27"] as const;
 
 export interface PhoneInputProps {
   code: string;
@@ -17,9 +17,11 @@ export interface PhoneInputProps {
 }
 
 /**
- * Telephone field with a dialling-code selector glued to the number input, as in
- * the invite/walk-in forms. The two values are stored separately and joined into
- * one string ("+234 80 764 80331") at submit time by the parent.
+ * Telephone field with a dialling-code selector glued to the number input. The
+ * two values are stored separately and assembled into one E.164 string at submit
+ * time via `toE164` (@vms/contracts). The number box accepts digits only, so a
+ * dial code / `+` / spaces can't be typed into it — the historical source of
+ * malformed, doubled-country-code numbers.
  */
 export function PhoneInput({
   code,
@@ -58,7 +60,8 @@ export function PhoneInput({
         inputMode="tel"
         value={number}
         placeholder={placeholder}
-        onChange={(e) => onNumberChange(e.target.value)}
+        // Digits only — the country code comes from the selector, never the box.
+        onChange={(e) => onNumberChange(e.target.value.replace(/\D/g, ""))}
         className="flex-1 border-0 focus-visible:ring-0"
       />
     </div>

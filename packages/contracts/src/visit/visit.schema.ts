@@ -6,6 +6,7 @@ import {
   VisitType,
 } from "../common/enums.js";
 import { PaginationQuery } from "../common/pagination.js";
+import { normalizeE164 } from "../common/phone.js";
 import { Visitor, RegisterVisitorInput } from "../visitor/visitor.schema.js";
 import { HostWithUser } from "../host/host.schema.js";
 import { Note } from "../note/note.schema.js";
@@ -262,7 +263,7 @@ export const UpdateVisitRequestInput = z
   .object({
     fullName: z.string().min(1).optional(),
     email: z.string().email().optional(),
-    phone: z.string().min(3).optional(),
+    phone: z.string().min(3).transform(normalizeE164).optional(),
     organization: z.string().optional(),
     hostUserId: z.string().uuid().optional(),
     floor: z.string().min(1).optional(),

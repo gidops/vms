@@ -1,9 +1,11 @@
 "use client";
 
 import { Button, Input, Label } from "@vms/ui";
+import { parsePhone, toE164 } from "@vms/contracts";
 import { Monitor, UserRound } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
+import { DIAL_CODES, PhoneInput } from "@/app/[locale]/_components/PhoneInput";
 import { useUpdateMe } from "@/data/settings/queries";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { roleLabel } from "@/shared/auth/roleLabels";
@@ -39,15 +41,15 @@ export function ProfileTab() {
 
   const [firstName, setFirstName] = React.useState(user?.firstName ?? "");
   const [lastName, setLastName] = React.useState(user?.lastName ?? "");
-  const [phone, setPhone] = React.useState(
-    user?.phone?.replace(/^\+234\s*/, "") ?? "",
-  );
+  const initialPhone = parsePhone(user?.phone, DIAL_CODES);
+  const [phoneCode, setPhoneCode] = React.useState(initialPhone.code);
+  const [phoneNumber, setPhoneNumber] = React.useState(initialPhone.number);
 
   function save() {
     updateMe.mutate({
       firstName: firstName.trim() || undefined,
       lastName: lastName.trim() || undefined,
-      phone: phone.trim() ? `+234 ${phone.trim()}` : null,
+      phone: toE164(phoneCode, phoneNumber) || null,
     });
   }
 
@@ -78,18 +80,14 @@ export function ProfileTab() {
           <ReadonlyField label={t("profile.email")} value={user?.email ?? ""} />
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="phone">{t("profile.phone")}</Label>
-            <div className="flex gap-2">
-              <span className="inline-flex h-10 items-center rounded-md border border-border bg-surface-muted px-3 text-sm text-fg-muted">
-                +234
-              </span>
-              <Input
-                id="phone"
-                inputMode="tel"
-                placeholder="000-000-0000"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
+            <PhoneInput
+              id="phone"
+              code={phoneCode}
+              number={phoneNumber}
+              placeholder="000-000-0000"
+              onCodeChange={setPhoneCode}
+              onNumberChange={setPhoneNumber}
+            />
           </div>
           <ReadonlyField
             label={t("profile.role")}

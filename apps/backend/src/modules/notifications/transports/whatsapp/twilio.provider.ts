@@ -2,12 +2,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Env } from '../../../../shared/config/env.schema';
 import type { RenderedMessage } from '../../notification.types';
+import { normalizeE164 } from '../phone';
 import { TwilioClientProvider } from '../twilio.client';
 import type { WhatsappProvider } from './whatsapp-provider.interface';
 
 /** Ensure a number is in Twilio's `whatsapp:+E164` form. */
 function toWhatsApp(value: string): string {
-  return value.startsWith('whatsapp:') ? value : `whatsapp:${value}`;
+  if (value.startsWith('whatsapp:')) return value;
+  return `whatsapp:${normalizeE164(value)}`;
 }
 
 /** Map ordered variables to Twilio Content positional variables ({"1": …}). */

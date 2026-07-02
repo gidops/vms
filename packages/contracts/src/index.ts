@@ -4,6 +4,7 @@
 
 export * from "./common/enums.js";
 export * from "./common/pagination.js";
+export * from "./common/phone.js";
 export * from "./user/user.schema.js";
 export * from "./auth/auth.schema.js";
 export * from "./auth/rbac.schema.js";

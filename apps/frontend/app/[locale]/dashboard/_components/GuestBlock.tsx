@@ -15,9 +15,10 @@ import {
 } from "@vms/ui";
 import { useTranslations } from "next-intl";
 import * as React from "react";
-import { PhoneInput } from "./PhoneInput";
+import { PhoneInput } from "../../_components/PhoneInput";
 import {
   guestDetailsValid,
+  phoneValid,
   scheduledAtOf,
   type GuestEntry,
   type VisitFormMode,
@@ -113,6 +114,7 @@ export function GuestBlock({
             id={id("phone")}
             code={value.phoneCode}
             number={value.phoneNumber}
+            invalid={detailErr && !phoneValid(value)}
             placeholder={t("fields.phonePlaceholder")}
             onCodeChange={(phoneCode) => onChange({ phoneCode })}
             onNumberChange={(phoneNumber) => onChange({ phoneNumber })}

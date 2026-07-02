@@ -11,9 +11,11 @@ import {
   Timeline,
   type TimelineStep,
 } from "@vms/ui";
+import { parsePhone } from "@vms/contracts";
 import { Hash, TriangleAlert } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
+import { DIAL_CODES } from "@/app/[locale]/_components/PhoneInput";
 import { GuestBlock } from "@/app/[locale]/dashboard/_components/GuestBlock";
 import {
   blankGuest,
@@ -212,18 +214,13 @@ function DenyForm({
 
 // ── Edit form (reuses the invite form's GuestBlock, pre-filled) ─────────────
 
-function splitPhone(phone?: string | null): {
-  phoneCode: string;
-  phoneNumber: string;
-} {
-  if (!phone) return { phoneCode: "+234", phoneNumber: "" };
-  const m = phone.trim().match(/^(\+\d+)\s+(.*)$/);
-  if (m) return { phoneCode: m[1]!, phoneNumber: m[2]! };
-  return { phoneCode: "+234", phoneNumber: phone.trim() };
-}
-
 function guestFromDetail(d: VisitRequestDetail): GuestEntry {
-  const { phoneCode, phoneNumber } = splitPhone(d.visitor.phone);
+  // parsePhone tolerates legacy dirty values (spaces, doubled country codes) so
+  // editing an old request splits cleanly instead of re-doubling on save.
+  const { code: phoneCode, number: phoneNumber } = parsePhone(
+    d.visitor.phone,
+    DIAL_CODES,
+  );
   const sched = d.scheduledAt ? new Date(d.scheduledAt) : null;
   const pad = (n: number) => String(n).padStart(2, "0");
   return {

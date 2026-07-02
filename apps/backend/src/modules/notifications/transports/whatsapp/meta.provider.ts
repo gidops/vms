@@ -2,13 +2,15 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Env } from '../../../../shared/config/env.schema';
 import type { RenderedMessage } from '../../notification.types';
+import { normalizeE164 } from '../phone';
 import type { WhatsappProvider } from './whatsapp-provider.interface';
 
-/** Strip any `whatsapp:` prefix — Meta wants a bare E.164 number. */
+/** Meta wants a bare E.164 number — drop any `whatsapp:` prefix, then normalize. */
 function toE164(value: string): string {
-  return value.startsWith('whatsapp:')
+  const bare = value.startsWith('whatsapp:')
     ? value.slice('whatsapp:'.length)
     : value;
+  return normalizeE164(bare);
 }
 
 /**

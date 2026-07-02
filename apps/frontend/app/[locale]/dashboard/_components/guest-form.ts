@@ -1,4 +1,4 @@
-import type { CreateVisitsInput } from "@vms/contracts";
+import { type CreateVisitsInput, PHONE_E164_RE, toE164 } from "@vms/contracts";
 
 export type VisitFormMode = "walkin" | "invite";
 
@@ -68,10 +68,9 @@ export function blankGuest(): GuestEntry {
   };
 }
 
-/** Joined phone string for the wire/summary, e.g. "+234 80 764 80331". */
+/** Assemble the guest's phone as clean E.164 (e.g. "+2348076480331"), or "". */
 export function formatPhone(g: Pick<GuestEntry, "phoneCode" | "phoneNumber">) {
-  const num = g.phoneNumber.trim();
-  return num ? `${g.phoneCode} ${num}` : "";
+  return toE164(g.phoneCode, g.phoneNumber);
 }
 
 /** ISO datetime from the date + time pickers, or undefined if either is missing. */
@@ -81,12 +80,19 @@ export function scheduledAtOf(g: GuestEntry): Date | undefined {
   return Number.isNaN(d.getTime()) ? undefined : d;
 }
 
+/** True if the guest's phone is blank (optional) or resolves to valid E.164. */
+export function phoneValid(g: Pick<GuestEntry, "phoneCode" | "phoneNumber">): boolean {
+  const e164 = formatPhone(g);
+  return e164 === "" || PHONE_E164_RE.test(e164);
+}
+
 /** Per-guest detail field validity (gates the form + drives inline errors). */
 export function guestDetailsValid(g: GuestEntry): boolean {
   return (
     g.fullName.trim().length > 0 &&
     EMAIL_RE.test(g.email.trim()) &&
-    g.organization.trim().length > 0
+    g.organization.trim().length > 0 &&
+    phoneValid(g)
   );
 }
 
