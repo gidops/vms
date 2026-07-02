@@ -30,7 +30,12 @@ export interface VisitListItem {
   checkOutAt?: string | null;
   createdAt: string;
   createdByName?: string | null;
-  /** Visits sharing this row's group — `groupSize > 1` marks a group visit. */
+  /** True when this row is a group visit's representative (the group signal). */
+  isGroupVisit: boolean;
+  /** Group display name / contact — email or phone (group visits only). */
+  groupName?: string | null;
+  groupContact?: string | null;
+  /** For a group's representative row, the number of guests in the group. */
   groupSize: number;
   visitor: {
     id: string;
@@ -79,6 +84,9 @@ export interface VisitRequestDetail {
   floor?: string | null;
   scheduledAt?: string | null;
   groupId?: string | null;
+  isGroupVisit?: boolean;
+  groupName?: string | null;
+  groupContact?: string | null;
   referenceCode?: string | null;
   qrCode?: string | null;
   gateValidatedAt?: string | null;
@@ -174,6 +182,20 @@ export const visitsApi = {
     return api<VisitRequestDetail>(`/visits/${id}/deny`, {
       method: "POST",
       body: { reason },
+    });
+  },
+  /** Approve several visits at once (group approval sheet — Approve All/Selected). */
+  bulkApprove(visitIds: string[]): Promise<VisitRequestDetail[]> {
+    return api<VisitRequestDetail[]>(`/visits/bulk-approve`, {
+      method: "POST",
+      body: { visitIds },
+    });
+  },
+  /** Deny several visits at once with a shared reason. */
+  bulkDeny(visitIds: string[], reason: string): Promise<VisitRequestDetail[]> {
+    return api<VisitRequestDetail[]>(`/visits/bulk-deny`, {
+      method: "POST",
+      body: { visitIds, reason },
     });
   },
   /** VMC edit of a not-yet-approved request (visitor + visit details). */

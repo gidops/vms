@@ -54,10 +54,12 @@ export function ConfirmStep({
   guests,
   mode,
   hosts,
+  group,
 }: {
   guests: GuestEntry[];
   mode: VisitFormMode;
   hosts: HostOption[];
+  group?: { isGroupVisit: boolean; groupName: string; groupContact: string };
 }) {
   const t = useTranslations("invite");
   const format = useFormatter();
@@ -94,6 +96,12 @@ export function ConfirmStep({
 
       <div className="flex flex-col gap-2">
         <CardHeader title={t("confirm.visitDetails")} />
+        {group?.isGroupVisit ? (
+          <>
+            <Row label={t("fields.groupName")} value={group.groupName} />
+            <Row label={t("fields.groupContact")} value={group.groupContact} />
+          </>
+        ) : null}
         {mode === "invite" ? (
           <Row label={t("confirm.host")} value={hostName} />
         ) : null}

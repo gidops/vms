@@ -74,8 +74,10 @@
       "purpose": "الغرض",
       "timeCreated": "وقت الإنشاء",
       "status": "الحالة",
-      "action": "إجراء"
-    }
+      "action": "إجراء",
+      "guestCount": "عدد الضيوف"
+    },
+    "guestCount": "{count} ضيف"
   },
   "common": {
     "notifications": "الإشعارات",
@@ -289,7 +291,11 @@
       "visitDatePlaceholder": "اختر التاريخ",
       "visitTime": "وقت الزيارة",
       "notes": "ملاحظات الزيارة",
-      "notesPlaceholder": "أدخل ملاحظات الزيارة"
+      "notesPlaceholder": "أدخل ملاحظات الزيارة",
+      "groupName": "اسم المجموعة",
+      "groupNamePlaceholder": "مثال: وفد شركة Acme",
+      "groupContact": "جهة اتصال المجموعة",
+      "groupContactPlaceholder": "أدخل بريد المجموعة أو رقم الهاتف"
     },
     "confirm": {
       "title": "تأكيد دعوة الزيارة",
@@ -323,7 +329,8 @@
     "back": "رجوع",
     "cancel": "إلغاء",
     "guestCount": "الضيف {current} من {total}",
-    "submitError": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+    "submitError": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    "groupVisit": "زيارة جماعية"
   },
   "checkin": {
     "groupTitle": "تسجيل دخول المجموعة",
@@ -376,7 +383,8 @@
     "pendingTitle": "الطلبات المعلّقة",
     "pendingBody": "راجع وقرّر طلبات الزيارة التي تنتظر الموافقة.",
     "pendingEmpty": "لا توجد طلبات تنتظر الموافقة.",
-    "pendingCount": "{count} بانتظار الموافقة"
+    "pendingCount": "{count} بانتظار الموافقة",
+    "groupLabel": "{name} · {count} ضيوف"
   },
   "staff": {
     "hub": "مساحة الموظفين",
@@ -542,5 +550,17 @@
       "csoApproved": "طلب موافَق عليه من CSO",
       "flaggedVisitor": "تنبيه زائر مُعلَّم"
     }
+  },
+  "approval": {
+    "groupTitle": "الموافقة على المجموعة",
+    "guestInformation": "معلومات الضيوف",
+    "approvedCount": "{done}/{total} تمت الموافقة",
+    "select": "تحديد الضيف",
+    "approve": "موافقة",
+    "reject": "رفض",
+    "approveSelected": "الموافقة على المحدد ({count})",
+    "rejectSelected": "رفض المحدد ({count})",
+    "approveAll": "الموافقة على الكل",
+    "reasonPlaceholder": "سبب الرفض (مطلوب للرفض)"
   }
 }

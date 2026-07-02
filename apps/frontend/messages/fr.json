@@ -74,8 +74,10 @@
       "purpose": "Motif",
       "timeCreated": "Heure de création",
       "status": "Statut",
-      "action": "Action"
-    }
+      "action": "Action",
+      "guestCount": "Nb d'invités"
+    },
+    "guestCount": "{count} invité(s)"
   },
   "common": {
     "notifications": "Notifications",
@@ -289,7 +291,11 @@
       "visitDatePlaceholder": "Choisir une date",
       "visitTime": "Heure de la visite",
       "notes": "Notes de visite",
-      "notesPlaceholder": "Saisir les notes de visite"
+      "notesPlaceholder": "Saisir les notes de visite",
+      "groupName": "Nom du groupe",
+      "groupNamePlaceholder": "ex. délégation Acme Corp",
+      "groupContact": "Contact du groupe",
+      "groupContactPlaceholder": "E-mail ou téléphone du groupe"
     },
     "confirm": {
       "title": "Confirmer l'invitation",
@@ -323,7 +329,8 @@
     "back": "Retour",
     "cancel": "Annuler",
     "guestCount": "Invité {current} sur {total}",
-    "submitError": "Une erreur s'est produite. Veuillez réessayer."
+    "submitError": "Une erreur s'est produite. Veuillez réessayer.",
+    "groupVisit": "Visite de groupe"
   },
   "checkin": {
     "groupTitle": "Enregistrement du groupe",
@@ -376,7 +383,8 @@
     "pendingTitle": "Demandes en attente",
     "pendingBody": "Examinez et décidez des demandes de visite en attente d'approbation.",
     "pendingEmpty": "Aucune demande en attente d'approbation.",
-    "pendingCount": "{count} en attente d'approbation"
+    "pendingCount": "{count} en attente d'approbation",
+    "groupLabel": "{name} · {count} invités"
   },
   "staff": {
     "hub": "ESPACE PERSONNEL",
@@ -542,5 +550,17 @@
       "csoApproved": "Demande approuvée par le CSO",
       "flaggedVisitor": "Alerte visiteur signalé"
     }
+  },
+  "approval": {
+    "groupTitle": "Approuver le groupe",
+    "guestInformation": "Informations sur les invités",
+    "approvedCount": "{done}/{total} approuvés",
+    "select": "Sélectionner l'invité",
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "approveSelected": "Approuver la sélection ({count})",
+    "rejectSelected": "Rejeter la sélection ({count})",
+    "approveAll": "Tout approuver",
+    "reasonPlaceholder": "Motif du rejet (obligatoire pour rejeter)"
   }
 }

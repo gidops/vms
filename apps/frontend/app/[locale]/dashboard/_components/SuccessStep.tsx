@@ -109,7 +109,7 @@ export function SuccessStep({
         <SummaryRow label={t("success.floor")} value={visit.floor ?? "—"} />
       </div>
 
-      {!isInvite ? (
+      {!isInvite && onCheckIn ? (
         <Button type="button" intent="primary" fullWidth onClick={onCheckIn}>
           {t("success.checkInVisitor")}
         </Button>

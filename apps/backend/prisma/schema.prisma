@@ -284,9 +284,16 @@ model Visit {
   // Optional: walk-ins may not be visiting a named staff host.
   hostId       String?
   invitationId String?     @unique
-  // Visits created together in one invite/walk-in submission share a groupId
-  // so they can be listed and checked in as a group.
+  // Set ONLY for a true group visit — every guest of that group shares one
+  // groupId so the group collapses to one VMC row and checks in together. Bulk
+  // invites/walk-ins and lone guests are independent visits with groupId = null.
   groupId      String?
+  // True when this visit belongs to a group visit (the group signal). groupName
+  // and groupContact are the shared group display name and optional contact
+  // (a free-text email or phone number).
+  isGroupVisit Boolean    @default(false)
+  groupName    String?
+  groupContact String?
   // Human-friendly invite code (e.g. "5A19-795") generated for invites at
   // creation and encoded in the guest's QR. Null for walk-ins.
   referenceCode String?    @unique

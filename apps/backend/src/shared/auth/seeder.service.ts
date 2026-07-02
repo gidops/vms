@@ -6,7 +6,9 @@ import { PrismaService } from '../../prisma/prisma.service';
 
 /**
  * Scoped roles (SUPER_ADMIN gets every permission and is handled separately).
- * VMC = the old RECEPTION ∪ CSO so the Requests & Alerts feature keeps working.
+ * VMC is reception only — it registers visitors, checks them in/out and works the
+ * Requests & Alerts notification feed, but does NOT approve or deny requests;
+ * approval is an Admin responsibility.
  */
 const ROLE_DEFS: Record<
   string,
@@ -41,14 +43,13 @@ const ROLE_DEFS: Record<
     ],
   },
   [ROLES.VMC]: {
-    description: 'VMC Reception — registers visitors, logs & decides requests',
+    description: 'VMC Reception — registers visitors and checks them in/out',
     permissions: [
       PERMISSIONS.VISITOR_REGISTER,
       PERMISSIONS.INVITATION_CREATE,
       PERMISSIONS.VISIT_CANCEL,
       PERMISSIONS.VISIT_EDIT,
-      PERMISSIONS.VISIT_APPROVE,
-      PERMISSIONS.VISIT_DENY,
+      // VMC does not approve/deny requests — that is an Admin responsibility.
       // Check-in/out now happen at the VMC station (badge assigned/released here).
       PERMISSIONS.VISIT_CHECK_IN,
       PERMISSIONS.VISIT_CHECK_OUT,
@@ -139,9 +140,11 @@ export class SeederService implements OnApplicationBootstrap {
         update: { description: def.description },
         create: { name, description: def.description },
       });
+      const desiredIds: string[] = [];
       for (const key of def.permissions) {
         const permissionId = permByKey.get(key);
         if (!permissionId) continue;
+        desiredIds.push(permissionId);
         await this.prisma.rolePermission.upsert({
           where: {
             roleId_permissionId: { roleId: role.id, permissionId },
@@ -150,6 +153,11 @@ export class SeederService implements OnApplicationBootstrap {
           create: { roleId: role.id, permissionId },
         });
       }
+      // Revoke any permission no longer in the role definition (e.g. approve/deny
+      // removed from VMC) so existing databases converge to the current taxonomy.
+      await this.prisma.rolePermission.deleteMany({
+        where: { roleId: role.id, permissionId: { notIn: desiredIds } },
+      });
     }
 
     // Drop legacy roles no longer in the canonical taxonomy (e.g. CSO,

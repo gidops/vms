@@ -8,6 +8,8 @@ import {
   Query,
 } from '@nestjs/common';
 import {
+  BulkApproveVisitsInput,
+  BulkDenyVisitsInput,
   CheckInVisitInput,
   CheckOutVisitInput,
   CreateVisitsInput,
@@ -86,6 +88,28 @@ export class VisitsController {
     @CurrentUser() principal: AuthUser,
   ) {
     return this.visits.resubmit(id, input, principal.userId);
+  }
+
+  /** Approve several visits at once (group approval sheet — Approve All/Selected). */
+  @Post('bulk-approve')
+  @RequirePermissions(PERMISSIONS.VISIT_APPROVE)
+  bulkApprove(
+    @Body(new ZodValidationPipe(BulkApproveVisitsInput))
+    input: BulkApproveVisitsInput,
+    @CurrentUser() principal: AuthUser,
+  ) {
+    return this.visits.bulkApprove(input.visitIds, principal.userId);
+  }
+
+  /** Deny several visits at once with a shared reason (group approval sheet). */
+  @Post('bulk-deny')
+  @RequirePermissions(PERMISSIONS.VISIT_DENY)
+  bulkDeny(
+    @Body(new ZodValidationPipe(BulkDenyVisitsInput))
+    input: BulkDenyVisitsInput,
+    @CurrentUser() principal: AuthUser,
+  ) {
+    return this.visits.bulkDeny(input.visitIds, input.reason, principal.userId);
   }
 
   @Post(':id/approve')
