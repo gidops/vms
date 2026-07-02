@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NotificationChannel } from '@prisma/client';
 import type { Env } from '../../../../shared/config/env.schema';
 import type { RenderedMessage } from '../../notification.types';
+import { normalizeE164 } from '../phone';
 import type { NotificationTransport } from '../transport.interface';
 import { TwilioClientProvider } from '../twilio.client';
 
@@ -33,7 +34,7 @@ export class SmsTransport implements NotificationTransport {
     }
     await client.messages.create({
       from,
-      to: message.to ?? '',
+      to: normalizeE164(message.to),
       body: message.text ?? '',
     });
     this.logger.debug(`Sent SMS to ${message.to}`);

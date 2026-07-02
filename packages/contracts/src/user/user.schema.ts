@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AuthProvider, Locale } from "../common/enums.js";
+import { normalizeE164 } from "../common/phone.js";
 
 /** A user of the system (staff/host, CSO, gate operative, admin). */
 export const User = z.object({
@@ -57,7 +58,7 @@ export type UserProfile = z.infer<typeof UserProfile>;
 export const UpdateMeInput = z.object({
   firstName: z.string().min(1).optional(),
   lastName: z.string().min(1).optional(),
-  phone: z.string().max(32).nullable().optional(),
+  phone: z.string().max(32).transform(normalizeE164).nullable().optional(),
   preferredLocale: Locale.optional(),
   timezone: z.string().max(64).nullable().optional(),
   assignedDesk: z.string().max(120).nullable().optional(),
