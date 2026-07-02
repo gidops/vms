@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, AlertDescription, Button, DrawerClose } from "@vms/ui";
+import { Alert, AlertDescription, Button, Checkbox, DrawerClose } from "@vms/ui";
 import { Download, UserMinus, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
@@ -15,6 +15,7 @@ import { downloadGuestTemplate, parseGuestsCsv } from "./csv";
 import {
   blankGuest,
   buildCreateInput,
+  groupNameValid,
   guestDetailsValid,
   visitDetailFields,
   visitDetailsValid,
@@ -32,14 +33,17 @@ export function VisitRequestForm({
   fixedHostUserId,
   fixedHostName,
   onRequestCheckIn,
+  onRequestCheckInSingle,
 }: {
   mode: VisitFormMode;
   onClose: () => void;
   /** When set, the host is pinned to this user (a staff self-invite). */
   fixedHostUserId?: string;
   fixedHostName?: string;
-  /** Walk-in success "Check-In Visitor" → open the group check-in for this group. */
+  /** Group walk-in success "Check-In Visitor" → open the group check-in sheet. */
   onRequestCheckIn?: (groupId: string) => void;
+  /** Single walk-in success "Check-In Visitor" → open the single check-in modal. */
+  onRequestCheckInSingle?: (visitId: string) => void;
 }) {
   const t = useTranslations("invite");
   const hosts = useHosts();
@@ -61,12 +65,42 @@ export function VisitRequestForm({
   // back preserves everything.
   const [active, setActive] = React.useState(0);
 
+  // Group visit: one shared group name/contact across all guests, and "use same
+  // visit details" is forced on. A bulk submission keeps guests independent. The
+  // checkbox only appears with 2+ guests (see below), so a group always has a peer.
+  const [isGroupVisit, setIsGroupVisit] = React.useState(false);
+  const [groupName, setGroupName] = React.useState("");
+  const [groupContact, setGroupContact] = React.useState("");
+  const group = { isGroupVisit, groupName, groupContact };
+
+  // Clear all group state — used when the group is turned off and whenever the
+  // guest set changes such that a group is no longer possible/meaningful.
+  const resetGroup = () => {
+    setIsGroupVisit(false);
+    setGroupName("");
+    setGroupContact("");
+  };
+
+  const toggleGroup = (checked: boolean) => {
+    if (!checked) {
+      resetGroup();
+      return;
+    }
+    setIsGroupVisit(true);
+    // A group shares one set of visit details — copy the first guest's details
+    // onto every guest (covers typed, "Add Guest", and CSV-imported guests).
+    setGuests((prev) =>
+      prev.map((g) => ({ ...g, ...visitDetailFields(prev[0]), useSame: true })),
+    );
+  };
+
   const hostList = hosts.data ?? [];
 
-  // Every guest now carries its own visit details, so all must be complete.
-  const formValid = guests.every(
-    (g) => guestDetailsValid(g) && visitDetailsValid(g, mode),
-  );
+  // Every guest now carries its own visit details, so all must be complete; a
+  // group visit also needs a group name.
+  const formValid =
+    guests.every((g) => guestDetailsValid(g) && visitDetailsValid(g, mode)) &&
+    groupNameValid(group);
 
   // ── Guest list helpers ──────────────────────────────────────────────────
   const patchGuest = (i: number, patch: Partial<GuestEntry>) =>
@@ -113,6 +147,9 @@ export function VisitRequestForm({
   const removeGuest = (i: number) => {
     setGuests((prev) => prev.filter((_, idx) => idx !== i));
     setActive((a) => Math.max(0, Math.min(a, guests.length - 2)));
+    // Back down to a single guest → a group is no longer possible; the checkbox
+    // hides, so clear any group state rather than leak it into the payload.
+    if (guests.length - 1 <= 1) resetGroup();
   };
 
   async function onImportCsv(e: React.ChangeEvent<HTMLInputElement>) {
@@ -140,6 +177,9 @@ export function VisitRequestForm({
         }),
       );
       setActive(0);
+      // A fresh guest set replaces any prior group intent; re-check "Group visit"
+      // (only shown for a multi-row import) to reapply shared details.
+      resetGroup();
     } catch {
       /* ignore malformed CSV; the user can re-import */
     }
@@ -157,13 +197,29 @@ export function VisitRequestForm({
 
   async function submit() {
     try {
-      const result = await create.mutateAsync(buildCreateInput(guests, mode));
+      const result = await create.mutateAsync(
+        buildCreateInput(guests, mode, group),
+      );
       setCreated(result);
       setView("success");
     } catch {
       /* error surfaced via create.isError below */
     }
   }
+
+  // Walk-in success "Check-In Visitor": a group opens the group check-in sheet, a
+  // lone visitor the single check-in modal. Bulk walk-ins have no shared group,
+  // so they are checked in individually from the board (no button — see below).
+  const created1 = created?.[0];
+  const canImmediateCheckIn =
+    mode === "walkin" &&
+    !!created1 &&
+    (isGroupVisit ? !!created1.groupId : created!.length === 1);
+  const handleSuccessCheckIn = () => {
+    if (isGroupVisit && created1?.groupId) onRequestCheckIn?.(created1.groupId);
+    else if (created1) onRequestCheckInSingle?.(created1.id);
+    onClose();
+  };
 
   const headerSubtitle =
     mode === "walkin" ? t("subtitleWalkin") : t("subtitleInvite");
@@ -186,35 +242,68 @@ export function VisitRequestForm({
 
       {/* CSV banner (invite only, dark green) */}
       {mode === "invite" ? (
-        <div className="flex flex-col gap-3 bg-emphasis px-5 py-4 sm:flex-row">
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".csv,text/csv"
-            className="hidden"
-            onChange={onImportCsv}
-          />
-          <Button
-            type="button"
-            intent="accent"
-            tone="outline"
-            fullWidth
-            onClick={() => fileRef.current?.click()}
-          >
-            <UserPlus className="size-4" aria-hidden="true" />
-            {t("importCsv")}
-          </Button>
-          <Button
-            type="button"
-            intent="accent"
-            tone="outline"
-            fullWidth
-            onClick={downloadGuestTemplate}
-          >
-            <Download className="size-4" aria-hidden="true" />
-            {t("downloadTemplate")}
-          </Button>
-        </div>
+        // <div className="flex flex-col gap-3 bg-emphasis px-5 py-4">
+        //   <input
+        //     ref={fileRef}
+        //     type="file"
+        //     accept=".csv,text/csv"
+        //     className="hidden"
+        //     onChange={onImportCsv}
+        //   />
+        //   <Button
+        //     type="button"
+        //     intent="accent"
+        //     tone="outline"
+        //     fullWidth
+        //     onClick={() => fileRef.current?.click()}
+        //   >
+        //     <UserPlus className="size-4" aria-hidden="true" />
+        //     {t("importCsv")}
+        //   </Button>
+        //   <Button
+        //     type="button"
+        //     intent="accent"
+        //     tone="outline"
+        //     fullWidth
+        //     onClick={downloadGuestTemplate}
+        //   >
+        //     <Download className="size-4" aria-hidden="true" />
+        //     {t("downloadTemplate")}
+        //   </Button>
+        // </div>
+        <div className="flex  gap-3 bg-emphasis px-5 py-4 min-w-0 overflow-hidden">
+  <input
+    ref={fileRef}
+    type="file"
+    accept=".csv,text/csv"
+    className="hidden"
+    onChange={onImportCsv}
+  />
+
+  <Button
+    type="button"
+    intent="accent"
+    tone="outline"
+    fullWidth
+    className="min-w-0 max-w-full"
+    onClick={() => fileRef.current?.click()}
+  >
+    <UserPlus className="size-4 shrink-0" aria-hidden="true" />
+    <span className="truncate">{t("importCsv")}</span>
+  </Button>
+
+  <Button
+    type="button"
+    intent="accent"
+    tone="outline"
+    fullWidth
+    className="min-w-0 max-w-full"
+    onClick={downloadGuestTemplate}
+  >
+    <Download className="size-4 shrink-0" aria-hidden="true" />
+    <span className="truncate">{t("downloadTemplate")}</span>
+  </Button>
+</div>
       ) : null}
 
       {/* Body (scrollable) */}
@@ -230,6 +319,17 @@ export function VisitRequestForm({
               />
             ) : null}
 
+            {/* Group visit is only possible once a second guest exists. */}
+            {guests.length > 1 ? (
+              <label className="inline-flex cursor-pointer items-center gap-2 self-end text-sm font-medium text-primary underline">
+                <Checkbox
+                  checked={isGroupVisit}
+                  onCheckedChange={(c) => toggleGroup(c === true)}
+                />
+                {t("groupVisit")}
+              </label>
+            ) : null}
+
             <GuestBlock
               key={activeGuest.id}
               value={activeGuest}
@@ -240,6 +340,11 @@ export function VisitRequestForm({
               showErrors={showErrors}
               fixedHostName={fixedHostName}
               onChange={(patch) => patchGuest(active, patch)}
+              isGroupVisit={isGroupVisit}
+              groupName={groupName}
+              groupContact={groupContact}
+              onGroupNameChange={setGroupName}
+              onGroupContactChange={setGroupContact}
             />
 
             {guests.length > 1 ? (
@@ -271,18 +376,19 @@ export function VisitRequestForm({
         ) : null}
 
         {view === "confirm" ? (
-          <ConfirmStep guests={guests} mode={mode} hosts={hostList} />
+          <ConfirmStep
+            guests={guests}
+            mode={mode}
+            hosts={hostList}
+            group={group}
+          />
         ) : null}
 
         {view === "success" && created ? (
           <SuccessStep
             created={created}
             mode={mode}
-            onCheckIn={() => {
-              const groupId = created[0]?.groupId;
-              if (groupId) onRequestCheckIn?.(groupId);
-              onClose();
-            }}
+            onCheckIn={canImmediateCheckIn ? handleSuccessCheckIn : undefined}
           />
         ) : null}
 

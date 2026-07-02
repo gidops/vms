@@ -23,7 +23,7 @@ import {
   TableRow,
   TopNavShell,
 } from "@vms/ui";
-import { SquareActivity } from "lucide-react";
+import { SquareActivity, Users } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
@@ -69,10 +69,10 @@ function Dashboard() {
   const hostUnit = (row: VisitListItem) =>
     row.host?.user.fullName ?? row.floor ?? "—";
 
-  // A group visit (groupSize > 1) opens the group sheet; a single visit goes
-  // straight to the check-in modal.
+  // A group visit opens the group sheet; a bulk/single visit goes straight to the
+  // check-in modal.
   const startCheckIn = (row: VisitListItem) => {
-    if (row.groupSize > 1 && row.groupId) setGroupCheckIn(row.groupId);
+    if (row.isGroupVisit && row.groupId) setGroupCheckIn(row.groupId);
     else setCheckInId(row.id);
   };
 
@@ -182,6 +182,7 @@ function Dashboard() {
                 <TableHead>{t("columns.channel")}</TableHead>
                 <TableHead>{t("columns.hostUnit")}</TableHead>
                 <TableHead>{t("columns.purpose")}</TableHead>
+                <TableHead>{t("columns.guestCount")}</TableHead>
                 <TableHead>{t("columns.timeCreated")}</TableHead>
                 <TableHead>{t("columns.status")}</TableHead>
                 <TableHead>{t("columns.action")}</TableHead>
@@ -190,7 +191,7 @@ function Dashboard() {
             <TableBody striped>
               {visitsQ.isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7}>
+                  <TableCell colSpan={8}>
                     <div className="flex justify-center py-10">
                       <Spinner />
                     </div>
@@ -202,16 +203,24 @@ function Dashboard() {
                     <TableCell>
                       <span className="flex items-center gap-3">
                         <Avatar
-                          name={row.visitor.fullName}
+                          name={
+                            row.isGroupVisit && row.groupName
+                              ? row.groupName
+                              : row.visitor.fullName
+                          }
                           size="md"
-                          accent={row.groupSize > 1 ? "amber" : "green"}
+                          accent={row.isGroupVisit ? "amber" : "green"}
                         />
                         <span className="flex flex-col">
                           <span className="font-medium text-fg">
-                            {row.visitor.fullName}
+                            {row.isGroupVisit && row.groupName
+                              ? row.groupName
+                              : row.visitor.fullName}
                           </span>
                           <span className="text-xs text-fg-muted">
-                            {row.visitor.email}
+                            {row.isGroupVisit
+                              ? (row.groupContact ?? "")
+                              : row.visitor.email}
                           </span>
                         </span>
                       </span>
@@ -224,6 +233,12 @@ function Dashboard() {
                     </TableCell>
                     <TableCell className="text-fg-muted">
                       {row.purpose}
+                    </TableCell>
+                    <TableCell className="text-fg-muted">
+                      <span className="flex items-center gap-1.5">
+                        <Users className="size-4" aria-hidden="true" />
+                        {t("guestCount", { count: row.groupSize })}
+                      </span>
                     </TableCell>
                     <TableCell className="text-fg-muted">
                       {format.dateTime(new Date(row.createdAt), {
@@ -247,6 +262,7 @@ function Dashboard() {
         mode={quickAction}
         onClose={() => setQuickAction(null)}
         onRequestCheckIn={(groupId) => setGroupCheckIn(groupId)}
+        onRequestCheckInSingle={(visitId) => setCheckInId(visitId)}
       />
       {checkInId ? (
         <CheckInModal visitId={checkInId} onClose={() => setCheckInId(null)} />

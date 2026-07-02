@@ -165,6 +165,25 @@ export function useDenyVisit(id: string) {
   });
 }
 
+/** Admin approves several visits at once (group approval sheet). */
+export function useBulkApproveVisits() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (visitIds: string[]) => visitsApi.bulkApprove(visitIds),
+    onSuccess: () => invalidate(),
+  });
+}
+
+/** Admin denies several visits at once with a shared reason. */
+export function useBulkDenyVisits() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (args: { visitIds: string[]; reason: string }) =>
+      visitsApi.bulkDeny(args.visitIds, args.reason),
+    onSuccess: () => invalidate(),
+  });
+}
+
 export function useCancelVisit(id: string) {
   const invalidate = useInvalidate();
   return useMutation({

@@ -256,9 +256,40 @@ export class VisitsService {
   }
 
   /**
+   * Approve several visits at once — the group approval sheet's "Approve All" /
+   * "Approve Selected". Atomic: all approved in one transaction, with one
+   * VisitApproved event per visit so each guest still gets their own QR email.
+   */
+  async bulkApprove(
+    visitIds: string[],
+    actorUserId: string,
+  ): Promise<VisitRequestDetail[]> {
+    const ids = [...new Set(visitIds)];
+    await this.ensureAllExist(ids);
+    await this.txm.run(async (tx) => {
+      await tx.visit.updateMany({
+        where: { id: { in: ids } },
+        data: { status: 'APPROVED', approvedById: actorUserId },
+      });
+      for (const id of ids) {
+        await this.events.publish(tx, {
+          type: EVENT_TYPES.VisitApproved,
+          aggregateType: 'Visit',
+          aggregateId: id,
+          payload: { visitId: id },
+          metadata: { actorUserId },
+        });
+      }
+    });
+    return Promise.all(ids.map((id) => this.getDetail(id)));
+  }
+
+  /**
    * VMC creates one or more visits — the "New Invite Request" / "Register Walk-In"
-   * forms. One Visit per guest (each carries its own host/floor/purpose/schedule),
-   * all sharing a generated groupId so they can be checked in together. Walk-ins
+   * forms. One Visit per guest (each carries its own host/floor/purpose/schedule).
+   * A true group visit (`isGroupVisit`) shares one generated groupId + groupName/
+   * groupContact across all guests so it collapses to one VMC row and checks in as a
+   * group; a bulk submission leaves each visit independent (groupId = null). Walk-ins
    * are auto-approved and emit VisitApproved (no pass, no QR, no visitor email —
    * the badge is assigned at check-in). Invites start PENDING, get a referenceCode
    * + QR for the guest, and emit VisitRequested. All atomic in one transaction.
@@ -290,7 +321,12 @@ export class VisitsService {
       where: { id: actorUserId },
       select: { fullName: true },
     });
-    const groupId = randomUUID();
+    // A group shares one id + name/email; a bulk submission has no shared group.
+    const groupId = input.isGroupVisit ? randomUUID() : null;
+    const groupName = input.isGroupVisit ? (input.groupName ?? null) : null;
+    const groupContact = input.isGroupVisit
+      ? (input.groupContact ?? null)
+      : null;
     const createdIds: string[] = [];
 
     await this.txm.run(async (tx) => {
@@ -325,6 +361,9 @@ export class VisitsService {
             visitorId: visitor.id,
             hostId,
             groupId,
+            isGroupVisit: input.isGroupVisit,
+            groupName,
+            groupContact,
             referenceCode: isWalkIn ? null : generateReferenceCode(),
             type: input.type,
             status: isWalkIn ? 'APPROVED' : 'PENDING',
@@ -399,31 +438,90 @@ export class VisitsService {
       this.prisma.visit.count({ where }),
     ]);
 
-    // How many visits share each group on this page — `groupSize > 1` is what
-    // marks a row as a group visit (every visit always carries a groupId).
+    // Fetching one group's members (the group check-in / approval sheets pass a
+    // groupId) returns every guest as its own row; any other list collapses each
+    // group visit to a single representative row.
+    const collapse = !query.groupId;
+
+    // Aggregate each group's size + member statuses across the whole filtered set
+    // (not just this page) so the representative row shows the true guest count and
+    // a derived status. Deep pagination of a group split across pages is a known
+    // minor edge — the board/queue fetch one large page.
     const groupIds = [
-      ...new Set(rows.map((r) => r.groupId).filter((g): g is string => !!g)),
+      ...new Set(
+        rows
+          .filter((r) => r.isGroupVisit)
+          .map((r) => r.groupId)
+          .filter((g): g is string => !!g),
+      ),
     ];
-    const groupCounts = groupIds.length
+    const groupAgg = groupIds.length
       ? await this.prisma.visit.groupBy({
-          by: ['groupId'],
-          where: { groupId: { in: groupIds } },
+          by: ['groupId', 'status'],
+          where: { ...where, groupId: { in: groupIds } },
           _count: { _all: true },
         })
       : [];
-    const sizeByGroup = new Map(
-      groupCounts.map((g) => [g.groupId as string, g._count._all]),
-    );
+    const sizeByGroup = new Map<string, number>();
+    const statusesByGroup = new Map<string, Set<string>>();
+    for (const g of groupAgg) {
+      const id = g.groupId as string;
+      sizeByGroup.set(id, (sizeByGroup.get(id) ?? 0) + g._count._all);
+      const set = statusesByGroup.get(id) ?? new Set<string>();
+      set.add(g.status);
+      statusesByGroup.set(id, set);
+    }
+
+    const items: VisitListItem[] = [];
+    const seenGroups = new Set<string>();
+    for (const r of rows) {
+      const isGroup = r.isGroupVisit && !!r.groupId;
+      if (collapse && isGroup && seenGroups.has(r.groupId!)) continue;
+      const size = isGroup ? (sizeByGroup.get(r.groupId!) ?? 1) : 1;
+      const item = this.toListItem(r, size);
+      if (collapse && isGroup) {
+        seenGroups.add(r.groupId!);
+        item.status = this.deriveGroupStatus(
+          statusesByGroup.get(r.groupId!),
+          item.status,
+        );
+      }
+      items.push(item);
+    }
 
     return {
-      items: rows.map((r) =>
-        this.toListItem(r, r.groupId ? (sizeByGroup.get(r.groupId) ?? 1) : 1),
-      ),
+      items,
       page: query.page,
       pageSize: query.pageSize,
       total,
       totalPages: Math.ceil(total / query.pageSize),
     };
+  }
+
+  /**
+   * The status shown on a group's single representative row — the most "active"
+   * state present among its members (e.g. any checked-in guest marks the group
+   * on-site). Falls back to the representative visit's own status.
+   */
+  private deriveGroupStatus(
+    statuses: Set<string> | undefined,
+    fallback: VisitListItem['status'],
+  ): VisitListItem['status'] {
+    if (!statuses?.size) return fallback;
+    const priority = [
+      'CHECKED_IN',
+      'APPROVED',
+      'PENDING',
+      'NEEDS_MORE_INFO',
+      'CHECKED_OUT',
+      'EXPIRED',
+      'DENIED',
+      'CANCELLED',
+    ] as const;
+    for (const s of priority) {
+      if (statuses.has(s)) return s;
+    }
+    return fallback;
   }
 
   /**
@@ -599,9 +697,44 @@ export class VisitsService {
     return this.getDetail(id);
   }
 
+  /**
+   * Deny several visits at once with a shared reason — the group approval sheet's
+   * "Reject Selected". Atomic, one VisitDenied event per visit.
+   */
+  async bulkDeny(
+    visitIds: string[],
+    reason: string,
+    actorUserId: string,
+  ): Promise<VisitRequestDetail[]> {
+    const ids = [...new Set(visitIds)];
+    await this.ensureAllExist(ids);
+    await this.txm.run(async (tx) => {
+      await tx.visit.updateMany({
+        where: { id: { in: ids } },
+        data: { status: 'DENIED', deniedReason: reason },
+      });
+      for (const id of ids) {
+        await this.events.publish(tx, {
+          type: EVENT_TYPES.VisitDenied,
+          aggregateType: 'Visit',
+          aggregateId: id,
+          payload: { visitId: id, reason },
+          metadata: { actorUserId },
+        });
+      }
+    });
+    return Promise.all(ids.map((id) => this.getDetail(id)));
+  }
+
   private async ensureExists(id: string): Promise<void> {
     const count = await this.prisma.visit.count({ where: { id } });
     if (count === 0) throw new NotFoundException('errors.visit.notFound');
+  }
+
+  private async ensureAllExist(ids: string[]): Promise<void> {
+    const count = await this.prisma.visit.count({ where: { id: { in: ids } } });
+    if (count !== ids.length)
+      throw new NotFoundException('errors.visit.notFound');
   }
 
   private toHost(host: VisitDetailRow['host']): VisitRequestDetail['host'] {
@@ -638,6 +771,9 @@ export class VisitsService {
       hostId: visit.hostId,
       invitationId: visit.invitationId,
       groupId: visit.groupId,
+      isGroupVisit: visit.isGroupVisit,
+      groupName: visit.groupName,
+      groupContact: visit.groupContact,
       referenceCode: visit.referenceCode,
       type: visit.type,
       status: visit.status,
@@ -680,6 +816,9 @@ export class VisitsService {
       hostId: visit.hostId,
       invitationId: visit.invitationId,
       groupId: visit.groupId,
+      isGroupVisit: visit.isGroupVisit,
+      groupName: visit.groupName,
+      groupContact: visit.groupContact,
       referenceCode: visit.referenceCode,
       type: visit.type,
       status: visit.status,

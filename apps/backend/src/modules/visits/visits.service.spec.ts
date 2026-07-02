@@ -1,4 +1,8 @@
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import type { CreateVisitsInput, VisitListQuery } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
@@ -188,6 +192,7 @@ describe('VisitsService.createVisits', () => {
     await service.createVisits(
       {
         type: 'PRE_INVITED',
+        isGroupVisit: false,
         guests: [
           inviteGuest({ fullName: 'A', email: 'a@x.com' }),
           inviteGuest({ fullName: 'B', email: 'b@x.com' }),
@@ -217,6 +222,7 @@ describe('VisitsService.createVisits', () => {
     await service.createVisits(
       {
         type: 'WALK_IN',
+        isGroupVisit: false,
         guests: [
           {
             fullName: 'Walk',
@@ -249,10 +255,122 @@ describe('VisitsService.createVisits', () => {
     const { service } = setup(false);
     await expect(
       service.createVisits(
-        { type: 'PRE_INVITED', guests: [inviteGuest()] },
+        { type: 'PRE_INVITED', isGroupVisit: false, guests: [inviteGuest()] },
         'actor',
       ),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  it('shares one groupId + group name/email across a group visit', async () => {
+    const { service, tx } = setup(true);
+    await service.createVisits(
+      {
+        type: 'PRE_INVITED',
+        isGroupVisit: true,
+        groupName: 'Pentagon',
+        groupContact: 'group@pentagon.com',
+        guests: [
+          inviteGuest({ fullName: 'A', email: 'a@x.com' }),
+          inviteGuest({ fullName: 'B', email: 'b@x.com' }),
+        ],
+      },
+      'actor',
+    );
+    const calls = tx.visit.create.mock.calls;
+    const groupIds = calls.map((c) => c[0].data.groupId);
+    expect(groupIds[0]).toEqual(expect.any(String));
+    expect(groupIds[0]).toBe(groupIds[1]); // every guest shares the same group id
+    for (const c of calls) {
+      expect(c[0].data).toEqual(
+        expect.objectContaining({
+          isGroupVisit: true,
+          groupName: 'Pentagon',
+          groupContact: 'group@pentagon.com',
+        }),
+      );
+    }
+  });
+
+  it('keeps bulk guests independent — no shared group id or group fields', async () => {
+    const { service, tx } = setup(true);
+    await service.createVisits(
+      {
+        type: 'PRE_INVITED',
+        isGroupVisit: false,
+        guests: [
+          inviteGuest({ fullName: 'A', email: 'a@x.com' }),
+          inviteGuest({ fullName: 'B', email: 'b@x.com' }),
+        ],
+      },
+      'actor',
+    );
+    for (const c of tx.visit.create.mock.calls) {
+      expect(c[0].data).toEqual(
+        expect.objectContaining({
+          groupId: null,
+          isGroupVisit: false,
+          groupName: null,
+          groupContact: null,
+        }),
+      );
+    }
+  });
+});
+
+describe('VisitsService.bulkApprove / bulkDeny', () => {
+  function setup() {
+    const tx = {
+      visit: { updateMany: jest.fn().mockResolvedValue({ count: 2 }) },
+    };
+    const count = jest.fn().mockResolvedValue(2);
+    const prisma = { visit: { count } } as unknown as PrismaService;
+    const txm = {
+      run: (fn: (t: typeof tx) => unknown) => fn(tx),
+    } as unknown as TransactionManager;
+    const publish = jest.fn().mockResolvedValue({});
+    const events = { publish } as unknown as EventPublisher;
+    const service = new VisitsService(prisma, txm, events);
+    jest.spyOn(service, 'getDetail').mockResolvedValue({ id: 'x' } as never);
+    return { service, tx, publish, count };
+  }
+
+  it('approves all ids and emits one VisitApproved per visit', async () => {
+    const { service, tx, publish } = setup();
+    await service.bulkApprove(['v1', 'v2'], 'actor');
+    expect(tx.visit.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: { in: ['v1', 'v2'] } },
+        data: { status: 'APPROVED', approvedById: 'actor' },
+      }),
+    );
+    expect(publish).toHaveBeenCalledTimes(2);
+    expect(publish).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({ type: EVENT_TYPES.VisitApproved }),
+    );
+  });
+
+  it('denies all ids with the shared reason and emits VisitDenied per visit', async () => {
+    const { service, tx, publish } = setup();
+    await service.bulkDeny(['v1', 'v2'], 'no pass', 'actor');
+    expect(tx.visit.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { status: 'DENIED', deniedReason: 'no pass' },
+      }),
+    );
+    expect(publish).toHaveBeenCalledTimes(2);
+    expect(publish).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({ type: EVENT_TYPES.VisitDenied }),
+    );
+  });
+
+  it('rejects when some ids do not exist', async () => {
+    const { service, count } = setup();
+    count.mockResolvedValueOnce(1); // only one of the two ids exists
+    await expect(service.bulkApprove(['v1', 'v2'], 'actor')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });
 
@@ -370,17 +488,40 @@ describe('VisitsService.list statuses + groupSize', () => {
     ...over,
   });
 
-  it('filters by multiple statuses and computes groupSize per group', async () => {
+  it('collapses a group to one representative row and leaves bulk/single rows alone', async () => {
+    // a + b are one group visit (g1); c is an independent (bulk/single) visit.
     const rows = [
-      { id: 'a', groupId: 'g1', visitor: {}, host: null },
-      { id: 'b', groupId: 'g1', visitor: {}, host: null },
-      { id: 'c', groupId: 'g2', visitor: {}, host: null },
+      {
+        id: 'a',
+        groupId: 'g1',
+        isGroupVisit: true,
+        status: 'APPROVED',
+        visitor: {},
+        host: null,
+      },
+      {
+        id: 'b',
+        groupId: 'g1',
+        isGroupVisit: true,
+        status: 'CHECKED_IN',
+        visitor: {},
+        host: null,
+      },
+      {
+        id: 'c',
+        groupId: null,
+        isGroupVisit: false,
+        status: 'APPROVED',
+        visitor: {},
+        host: null,
+      },
     ];
     const findMany = jest.fn().mockResolvedValue(rows);
     const count = jest.fn().mockResolvedValue(3);
+    // groupBy is now keyed by [groupId, status] over the group members.
     const groupBy = jest.fn().mockResolvedValue([
-      { groupId: 'g1', _count: { _all: 2 } },
-      { groupId: 'g2', _count: { _all: 1 } },
+      { groupId: 'g1', status: 'APPROVED', _count: { _all: 1 } },
+      { groupId: 'g1', status: 'CHECKED_IN', _count: { _all: 1 } },
     ]);
     const prisma = {
       visit: { findMany, count, groupBy },
@@ -402,8 +543,56 @@ describe('VisitsService.list statuses + groupSize', () => {
         where: { status: { in: ['APPROVED', 'CHECKED_IN'] } },
       }),
     );
+    // a + b collapse into one row; c stays. Group size counts both members and
+    // the derived status is the most active (CHECKED_IN beats APPROVED).
+    expect(result.items).toHaveLength(2);
+    expect(result.items[0].id).toBe('a');
     expect(result.items[0].groupSize).toBe(2);
-    expect(result.items[2].groupSize).toBe(1);
+    expect(result.items[0].status).toBe('CHECKED_IN');
+    expect(result.items[1].id).toBe('c');
+    expect(result.items[1].groupSize).toBe(1);
+  });
+
+  it('returns every group member (no collapse) when a groupId filter is set', async () => {
+    const rows = [
+      {
+        id: 'a',
+        groupId: 'g1',
+        isGroupVisit: true,
+        status: 'APPROVED',
+        visitor: {},
+        host: null,
+      },
+      {
+        id: 'b',
+        groupId: 'g1',
+        isGroupVisit: true,
+        status: 'APPROVED',
+        visitor: {},
+        host: null,
+      },
+    ];
+    const findMany = jest.fn().mockResolvedValue(rows);
+    const count = jest.fn().mockResolvedValue(2);
+    const groupBy = jest
+      .fn()
+      .mockResolvedValue([
+        { groupId: 'g1', status: 'APPROVED', _count: { _all: 2 } },
+      ]);
+    const prisma = {
+      visit: { findMany, count, groupBy },
+      $transaction: (ops: unknown[]) => Promise.all(ops as Promise<unknown>[]),
+    } as unknown as PrismaService;
+    const service = new VisitsService(
+      prisma,
+      {} as TransactionManager,
+      {} as EventPublisher,
+    );
+
+    const result = await service.list(query({ groupId: 'g1' }), 'me');
+
+    expect(result.items).toHaveLength(2);
+    expect(result.items.map((i) => i.id)).toEqual(['a', 'b']);
   });
 });
 

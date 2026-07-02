@@ -10,6 +10,7 @@ import {
 } from "@vms/ui";
 import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
+import { GroupApprovalSheet } from "@/app/[locale]/requests/_components/GroupApprovalSheet";
 import {
   RequestDrawer,
   type SelectedItem,
@@ -25,6 +26,7 @@ export function PendingRequests() {
   const format = useFormatter();
   const pending = usePendingVisits();
   const [selected, setSelected] = React.useState<SelectedItem | null>(null);
+  const [groupApproval, setGroupApproval] = React.useState<string | null>(null);
   const items = pending.data?.items ?? [];
 
   return (
@@ -49,13 +51,27 @@ export function PendingRequests() {
               <li key={v.id}>
                 <button
                   type="button"
-                  onClick={() => setSelected({ kind: "request", id: v.id })}
+                  onClick={() =>
+                    v.isGroupVisit && v.groupId
+                      ? setGroupApproval(v.groupId)
+                      : setSelected({ kind: "request", id: v.id })
+                  }
                   className="flex w-full items-center gap-3 rounded-md py-3 text-start hover:bg-surface-muted"
                 >
-                  <Avatar name={v.visitor.fullName} size="sm" />
+                  <Avatar
+                    name={
+                      v.isGroupVisit && v.groupName
+                        ? v.groupName
+                        : v.visitor.fullName
+                    }
+                    size="sm"
+                    accent={v.isGroupVisit ? "amber" : undefined}
+                  />
                   <span className="flex flex-col">
                     <span className="font-medium text-fg">
-                      {v.visitor.fullName}
+                      {v.isGroupVisit && v.groupName
+                        ? t("groupLabel", { name: v.groupName, count: v.groupSize })
+                        : v.visitor.fullName}
                     </span>
                     <span className="text-xs text-fg-muted">
                       {v.purpose}
@@ -75,6 +91,12 @@ export function PendingRequests() {
         )}
       </CardContent>
       <RequestDrawer selected={selected} onClose={() => setSelected(null)} />
+      {groupApproval ? (
+        <GroupApprovalSheet
+          groupId={groupApproval}
+          onClose={() => setGroupApproval(null)}
+        />
+      ) : null}
     </Card>
   );
 }

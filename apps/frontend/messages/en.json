@@ -74,8 +74,10 @@
       "purpose": "Purpose",
       "timeCreated": "Time Created",
       "status": "Status",
-      "action": "Action"
-    }
+      "action": "Action",
+      "guestCount": "No of Guest"
+    },
+    "guestCount": "{count} Guest"
   },
   "common": {
     "notifications": "Notifications",
@@ -289,7 +291,11 @@
       "visitDatePlaceholder": "Pick date",
       "visitTime": "Time of Visit",
       "notes": "Visit notes",
-      "notesPlaceholder": "Enter visit notes"
+      "notesPlaceholder": "Enter visit notes",
+      "groupName": "Group Name",
+      "groupNamePlaceholder": "e.g. Acme Corp delegation",
+      "groupContact": "Group Contact",
+      "groupContactPlaceholder": "Email or phone number"
     },
     "confirm": {
       "title": "Confirm Visit Invite",
@@ -323,7 +329,8 @@
     "back": "Back",
     "cancel": "Cancel",
     "guestCount": "Guest {current} of {total}",
-    "submitError": "Something went wrong. Please try again."
+    "submitError": "Something went wrong. Please try again.",
+    "groupVisit": "Group visit"
   },
   "checkin": {
     "groupTitle": "Group check in",
@@ -376,7 +383,8 @@
     "pendingTitle": "Pending Requests",
     "pendingBody": "Review and decide visit requests awaiting approval.",
     "pendingEmpty": "No requests awaiting approval.",
-    "pendingCount": "{count} awaiting approval"
+    "pendingCount": "{count} awaiting approval",
+    "groupLabel": "{name} · {count} guests"
   },
   "staff": {
     "hub": "STAFF HUB",
@@ -542,5 +550,17 @@
       "csoApproved": "CSO approved request",
       "flaggedVisitor": "Flagged visitor alert"
     }
+  },
+  "approval": {
+    "groupTitle": "Approve group",
+    "guestInformation": "Guest Information",
+    "approvedCount": "{done}/{total} approved",
+    "select": "Select guest",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approveSelected": "Approve Selected ({count})",
+    "rejectSelected": "Reject Selected ({count})",
+    "approveAll": "Approve All",
+    "reasonPlaceholder": "Rejection reason (required to reject)"
   }
 }
