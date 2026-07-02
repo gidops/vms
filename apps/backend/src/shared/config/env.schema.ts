@@ -104,11 +104,35 @@ export const envSchema = z.object({
   // SendGrid HTTP API (the SG.* value is the API key).
   SENDGRID_API_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
 
-  // SMS + WhatsApp via Twilio (one account serves both channels).
+  // SMS via Twilio (one Twilio account also serves the WhatsApp `twilio` provider).
   TWILIO_ACCOUNT_SID: z.preprocess(emptyToUndefined, z.string().optional()),
   TWILIO_AUTH_TOKEN: z.preprocess(emptyToUndefined, z.string().optional()),
   TWILIO_SMS_FROM: z.preprocess(emptyToUndefined, z.string().optional()),
   TWILIO_WHATSAPP_FROM: z.preprocess(emptyToUndefined, z.string().optional()),
+
+  // WhatsApp transport. WHATSAPP_PROVIDER selects the backend (mirrors
+  // EMAIL_PROVIDER): `twilio` (BSP, reuses the Twilio account above) or `meta`
+  // (Meta WhatsApp Cloud API, direct Graph API — no middleman). Falls back to a
+  // log provider when the chosen backend isn't configured, so enabling WhatsApp
+  // never breaks boot. WHATSAPP_USE_TEMPLATES=false sends free text (works in the
+  // Twilio sandbox and within 24h sessions); set true once approved templates
+  // (HSM) exist, required for proactive production sends.
+  WHATSAPP_PROVIDER: z.enum(['twilio', 'meta']).default('twilio'),
+  WHATSAPP_USE_TEMPLATES: boolEnv(false),
+  // Meta WhatsApp Cloud API (WHATSAPP_PROVIDER=meta). Token is a permanent
+  // system-user access token; phone-number-id identifies the sending number.
+  META_WHATSAPP_ACCESS_TOKEN: z.preprocess(
+    emptyToUndefined,
+    z.string().optional(),
+  ),
+  META_WABA_PHONE_NUMBER_ID: z.preprocess(
+    emptyToUndefined,
+    z.string().optional(),
+  ),
+  META_GRAPH_API_VERSION: z.preprocess(
+    emptyToUndefined,
+    z.string().default('v21.0'),
+  ),
 });
 
 export type Env = z.infer<typeof envSchema>;

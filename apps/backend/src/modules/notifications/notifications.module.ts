@@ -15,6 +15,9 @@ import { SmtpProvider } from './transports/email/smtp.provider';
 import { SmsTransport } from './transports/sms/sms.transport';
 import { NOTIFICATION_TRANSPORTS } from './transports/transport.interface';
 import { TwilioClientProvider } from './transports/twilio.client';
+import { LogWhatsappProvider } from './transports/whatsapp/log.provider';
+import { MetaCloudWhatsappProvider } from './transports/whatsapp/meta.provider';
+import { TwilioWhatsappProvider } from './transports/whatsapp/twilio.provider';
 import { WhatsappTransport } from './transports/whatsapp/whatsapp.transport';
 
 /**
@@ -39,10 +42,14 @@ import { WhatsappTransport } from './transports/whatsapp/whatsapp.transport';
     SmtpProvider,
     SendgridProvider,
     LogEmailProvider,
-    // SMS + WhatsApp (Twilio)
+    // SMS (Twilio)
     SmsTransport,
-    WhatsappTransport,
     TwilioClientProvider,
+    // WhatsApp — provider-swappable via WHATSAPP_PROVIDER (twilio | meta)
+    WhatsappTransport,
+    TwilioWhatsappProvider,
+    MetaCloudWhatsappProvider,
+    LogWhatsappProvider,
     // The set of channel transports the dispatcher routes to.
     {
       provide: NOTIFICATION_TRANSPORTS,
