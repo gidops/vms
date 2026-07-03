@@ -68,7 +68,7 @@
       "viewDetails": "View Details"
     },
     "columns": {
-      "visitor": "Visitor",
+      "visitor": "Guest",
       "channel": "Channel",
       "hostUnit": "Host / Floor / Unit",
       "purpose": "Purpose",
@@ -77,7 +77,8 @@
       "action": "Action",
       "guestCount": "No of Guest"
     },
-    "guestCount": "{count} Guest"
+    "guestCount": "{count} Guest",
+    "onsiteElapsed": "{time} hr"
   },
   "common": {
     "notifications": "Notifications",
@@ -337,6 +338,7 @@
     "guestInformation": "Guest Information",
     "checkedInCount": "{done}/{total} checked in",
     "checkInAll": "Check-In All",
+    "selectAll": "Select all",
     "checkIn": "Check-in",
     "checkOut": "Check-Out",
     "viewDetails": "View Details",

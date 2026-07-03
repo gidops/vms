@@ -338,8 +338,7 @@ function RequestDetailBody({
   const canResubmit =
     data.status === "NEEDS_MORE_INFO" && data.host?.user.id === user?.id;
   // Cancel only for the VMC operator who created it, while it isn't terminal.
-  const canCancel =
-    data.source === "VMC_STATION" && isMine && !isTerminal;
+  const canCancel = data.source === "VMC_STATION" && isMine && !isTerminal;
   // Edit only the creator, and only before a CSO approves it.
   const canEdit = isMine && preApproval;
 
@@ -401,7 +400,7 @@ function RequestDetailBody({
         </Button>
       ) : null}
       {data.status === "APPROVED" ? (
-        <Button intent="success" size="sm" onClick={() => setCheckAction("in")}>
+        <Button intent="primary" size="sm" onClick={() => setCheckAction("in")}>
           {t("actions.checkIn")}
         </Button>
       ) : null}
@@ -683,7 +682,10 @@ function AlertDetailBody({
       {data.visit ? (
         <DetailSection title={t("sections.requestingHost")}>
           <div className="grid grid-cols-2 gap-4 rounded-lg bg-emphasis p-4 text-sm text-emphasis-fg">
-            <Meta label={t("sections.requestedBy")} value={data.visit.hostName} />
+            <Meta
+              label={t("sections.requestedBy")}
+              value={data.visit.hostName}
+            />
             <Meta label={t("sections.staffRole")} value={data.visit.hostUnit} />
             <Meta
               label={t("sections.scheduled")}
@@ -792,7 +794,8 @@ export function VisitDetailSheet({
       return <LoadingDrawer onClose={onClose} />;
     return <RequestDetailBody data={request.data} onClose={onClose} />;
   }
-  if (alert.isLoading || !alert.data) return <LoadingDrawer onClose={onClose} />;
+  if (alert.isLoading || !alert.data)
+    return <LoadingDrawer onClose={onClose} />;
   return <AlertDetailBody data={alert.data} onClose={onClose} />;
 }
 

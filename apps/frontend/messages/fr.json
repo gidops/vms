@@ -68,7 +68,7 @@
       "viewDetails": "Voir les détails"
     },
     "columns": {
-      "visitor": "Visiteur",
+      "visitor": "Invité",
       "channel": "Canal",
       "hostUnit": "Hôte / Étage / Unité",
       "purpose": "Motif",
@@ -77,7 +77,8 @@
       "action": "Action",
       "guestCount": "Nb d'invités"
     },
-    "guestCount": "{count} invité(s)"
+    "guestCount": "{count} invité(s)",
+    "onsiteElapsed": "{time} h"
   },
   "common": {
     "notifications": "Notifications",
@@ -337,6 +338,7 @@
     "guestInformation": "Informations sur les invités",
     "checkedInCount": "{done}/{total} enregistrés",
     "checkInAll": "Tout enregistrer",
+    "selectAll": "Tout sélectionner",
     "checkIn": "Enregistrer",
     "checkOut": "Sortie",
     "viewDetails": "Voir les détails",

@@ -1,6 +1,12 @@
 "use client";
 
-import { Alert, AlertDescription, Button, Checkbox, DrawerClose } from "@vms/ui";
+import {
+  Alert,
+  AlertDescription,
+  Button,
+  Checkbox,
+  DrawerClose,
+} from "@vms/ui";
 import { Download, UserMinus, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
@@ -272,38 +278,38 @@ export function VisitRequestForm({
         //   </Button>
         // </div>
         <div className="flex  gap-3 bg-emphasis px-5 py-4 min-w-0 overflow-hidden">
-  <input
-    ref={fileRef}
-    type="file"
-    accept=".csv,text/csv"
-    className="hidden"
-    onChange={onImportCsv}
-  />
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={onImportCsv}
+          />
 
-  <Button
-    type="button"
-    intent="accent"
-    tone="outline"
-    fullWidth
-    className="min-w-0 max-w-full"
-    onClick={() => fileRef.current?.click()}
-  >
-    <UserPlus className="size-4 shrink-0" aria-hidden="true" />
-    <span className="truncate">{t("importCsv")}</span>
-  </Button>
+          <Button
+            type="button"
+            intent="accent"
+            tone="outline"
+            fullWidth
+            className="min-w-0 max-w-full"
+            onClick={() => fileRef.current?.click()}
+          >
+            <UserPlus className="size-4 shrink-0" aria-hidden="true" />
+            <span className="truncate">{t("importCsv")}</span>
+          </Button>
 
-  <Button
-    type="button"
-    intent="accent"
-    tone="outline"
-    fullWidth
-    className="min-w-0 max-w-full"
-    onClick={downloadGuestTemplate}
-  >
-    <Download className="size-4 shrink-0" aria-hidden="true" />
-    <span className="truncate">{t("downloadTemplate")}</span>
-  </Button>
-</div>
+          <Button
+            type="button"
+            intent="accent"
+            tone="outline"
+            fullWidth
+            className="min-w-0 max-w-full"
+            onClick={downloadGuestTemplate}
+          >
+            <Download className="size-4 shrink-0" aria-hidden="true" />
+            <span className="truncate">{t("downloadTemplate")}</span>
+          </Button>
+        </div>
       ) : null}
 
       {/* Body (scrollable) */}

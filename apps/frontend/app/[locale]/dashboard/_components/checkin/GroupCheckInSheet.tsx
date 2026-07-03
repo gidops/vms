@@ -2,6 +2,7 @@
 
 import {
   Button,
+  Checkbox,
   Drawer,
   DrawerContent,
   DrawerDescription,
@@ -18,6 +19,12 @@ import { CheckOutModal } from "./CheckOutModal";
 
 type Active = { visitId: string; action: "in" | "out" } | null;
 
+// Guests still awaiting CSO approval cannot be checked in yet.
+const NOT_APPROVED: VisitListItem["status"][] = ["PENDING", "NEEDS_MORE_INFO"];
+const isApproved = (g: VisitListItem) => g.status === "APPROVED";
+const isNotApproved = (g: VisitListItem) => NOT_APPROVED.includes(g.status);
+const isSelectable = (g: VisitListItem) => isApproved(g) || isNotApproved(g);
+
 export function GroupCheckInSheet({
   groupId,
   onClose,
@@ -28,18 +35,75 @@ export function GroupCheckInSheet({
   const t = useTranslations("checkin");
   const groupQ = useVisitGroup(groupId);
   const [active, setActive] = React.useState<Active>(null);
+  const [selected, setSelected] = React.useState<Set<string>>(new Set());
+  const [queue, setQueue] = React.useState<string[]>([]);
+  const checkedInRef = React.useRef(false);
 
   const guests = groupQ.data?.items ?? [];
   const done = guests.filter((g) => g.status === "CHECKED_IN").length;
-  const firstPending = guests.find((g) => g.status === "APPROVED");
+
+  const selectableIds = guests.filter(isSelectable).map((g) => g.id);
+  const selectedGuests = guests.filter((g) => selected.has(g.id));
+  // "Check-In All" acts on the selection and is only valid when every selected
+  // guest is approved — including one not-yet-approved guest disables it.
+  const canCheckInAll =
+    selectedGuests.length > 0 && selectedGuests.every(isApproved);
+
+  const allSelected =
+    selectableIds.length > 0 && selectableIds.every((id) => selected.has(id));
+  const someSelected = selectableIds.some((id) => selected.has(id));
+  const headerChecked: boolean | "indeterminate" = allSelected
+    ? true
+    : someSelected
+      ? "indeterminate"
+      : false;
+
+  const toggle = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const toggleAll = (checked: boolean) =>
+    setSelected(checked ? new Set(selectableIds) : new Set());
+
+  const openSingle = (visitId: string, action: "in" | "out") => {
+    setQueue([]);
+    setActive({ visitId, action });
+  };
+
+  // Bulk check-in: walk the selected approved guests through the badge modal one
+  // after another, advancing on each success.
+  const startCheckInAll = () => {
+    const ids = selectedGuests.filter(isApproved).map((g) => g.id);
+    if (ids.length === 0) return;
+    checkedInRef.current = false;
+    setQueue(ids.slice(1));
+    setActive({ visitId: ids[0]!, action: "in" });
+  };
+
+  const handleModalClose = () => {
+    const advance = checkedInRef.current && active?.action === "in";
+    checkedInRef.current = false;
+    if (advance && queue.length > 0) {
+      const [next, ...rest] = queue;
+      setQueue(rest);
+      setActive({ visitId: next!, action: "in" });
+      return;
+    }
+    setQueue([]);
+    setActive(null);
+  };
 
   const rowAction = (g: VisitListItem) => {
-    if (g.status === "APPROVED")
+    if (isApproved(g))
       return (
         <Button
           intent="primary"
           size="sm"
-          onClick={() => setActive({ visitId: g.id, action: "in" })}
+          onClick={() => openSingle(g.id, "in")}
         >
           {t("checkIn")}
         </Button>
@@ -50,9 +114,16 @@ export function GroupCheckInSheet({
           intent="danger"
           tone="outline"
           size="sm"
-          onClick={() => setActive({ visitId: g.id, action: "out" })}
+          onClick={() => openSingle(g.id, "out")}
         >
           {t("checkOut")}
+        </Button>
+      );
+    // Not-yet-approved guests cannot be checked in — disabled, clearly labelled.
+    if (isNotApproved(g))
+      return (
+        <Button intent="primary" size="sm" disabled>
+          {t("checkIn")}
         </Button>
       );
     return (
@@ -87,6 +158,17 @@ export function GroupCheckInSheet({
             </span>
           </div>
 
+          {selectableIds.length > 0 ? (
+            <label className="flex items-center gap-2 border-b border-border px-5 py-2 text-xs font-medium text-fg-muted">
+              <Checkbox
+                checked={headerChecked}
+                onCheckedChange={(v) => toggleAll(v === true)}
+                aria-label={t("selectAll")}
+              />
+              {t("selectAll")}
+            </label>
+          ) : null}
+
           <div className="flex-1 overflow-y-auto">
             {groupQ.isLoading ? (
               <div className="flex h-40 items-center justify-center">
@@ -96,9 +178,18 @@ export function GroupCheckInSheet({
               guests.map((g) => (
                 <div
                   key={g.id}
-                  className="flex items-center justify-between gap-3 border-b border-border px-5 py-4"
+                  className="flex items-center gap-3 border-b border-border px-5 py-4"
                 >
-                  <div className="flex flex-col gap-1">
+                  {isSelectable(g) ? (
+                    <Checkbox
+                      checked={selected.has(g.id)}
+                      onCheckedChange={() => toggle(g.id)}
+                      aria-label={g.visitor.fullName}
+                    />
+                  ) : (
+                    <span className="size-4 shrink-0" aria-hidden="true" />
+                  )}
+                  <div className="flex flex-1 flex-col gap-1">
                     <span className="font-medium text-fg">
                       {g.visitor.fullName}
                     </span>
@@ -106,7 +197,7 @@ export function GroupCheckInSheet({
                       {g.visitor.email}
                       {g.visitor.phone ? ` · ${g.visitor.phone}` : ""}
                     </span>
-                    <StatusBadge status={g.status} />
+                    <StatusBadge status={g.status} className="self-start" />
                   </div>
                   {rowAction(g)}
                 </div>
@@ -118,11 +209,8 @@ export function GroupCheckInSheet({
             <Button
               intent="primary"
               fullWidth
-              disabled={!firstPending}
-              onClick={() =>
-                firstPending &&
-                setActive({ visitId: firstPending.id, action: "in" })
-              }
+              disabled={!canCheckInAll}
+              onClick={startCheckInAll}
             >
               {t("checkInAll")}
             </Button>
@@ -132,15 +220,21 @@ export function GroupCheckInSheet({
 
       {active?.action === "in" ? (
         <CheckInModal
+          key={active.visitId}
           visitId={active.visitId}
-          onClose={() => setActive(null)}
+          onClose={handleModalClose}
+          onCheckedIn={() => {
+            checkedInRef.current = true;
+            setSelected((prev) => {
+              const next = new Set(prev);
+              next.delete(active.visitId);
+              return next;
+            });
+          }}
         />
       ) : null}
       {active?.action === "out" ? (
-        <CheckOutModal
-          visitId={active.visitId}
-          onClose={() => setActive(null)}
-        />
+        <CheckOutModal visitId={active.visitId} onClose={handleModalClose} />
       ) : null}
     </>
   );

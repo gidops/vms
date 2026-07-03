@@ -32,10 +32,16 @@ function accentFor(seed: string): string {
   return ACCENTS[hash % ACCENTS.length] ?? ACCENTS[0];
 }
 
-/** Fixed semantic accents that override the name-hash (e.g. single vs group visit). */
+/**
+ * Fixed semantic accents that override the name-hash — single vs group visit.
+ * Both carry a 2px border so they share the same footprint; the single border
+ * matches its fill (reads as borderless), the group gets a brighter gold ring.
+ */
 const NAMED_ACCENTS = {
-  green: "bg-green-100 text-green-800",
-  amber: "bg-amber-100 text-amber-900",
+  single:
+    "border-2 border-[var(--color-avatar-single-bg)] bg-[var(--color-avatar-single-bg)] text-white",
+  group:
+    "border-2 border-[var(--color-avatar-group-border)] bg-[var(--color-avatar-group-bg)] text-white",
 } as const;
 
 export type AvatarAccent = keyof typeof NAMED_ACCENTS;
@@ -51,7 +57,7 @@ export interface AvatarProps extends VariantProps<typeof avatarVariants> {
   /** Used for the initials fallback and the deterministic accent color. */
   name: string;
   src?: string;
-  /** Override the name-hash color with a fixed semantic accent (green/amber). */
+  /** Override the name-hash color with a fixed semantic accent (single/group). */
   accent?: AvatarAccent;
   className?: string;
 }

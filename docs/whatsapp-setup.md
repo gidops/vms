@@ -28,7 +28,7 @@ crashing, so the app always boots.
 1. **Recipients need a phone number.** The listener sends WhatsApp to
    `visitor.phone` / `host.user.phone` (E.164, e.g. `+15551234567`). A visitor
    with no phone simply gets no WhatsApp message.
-2. **Free text vs approved templates.** WhatsApp only allows *business-initiated*
+2. **Free text vs approved templates.** WhatsApp only allows _business-initiated_
    messages (all three VMS notifications) as **pre-approved templates (HSM)**
    outside a 24-hour window the user opens by messaging you first. Free text is
    silently undelivered in production.
@@ -84,7 +84,7 @@ Talks to Meta's Graph API directly — the analogue of SendGrid's HTTP API vs SM
 ### Prerequisites (Meta side)
 
 1. A **Meta Business account** and a **Meta App** (developer.facebook.com) with
-   the *WhatsApp* product added.
+   the _WhatsApp_ product added.
 2. A **WhatsApp Business Account (WABA)** with a phone number registered.
 3. The number's **phone-number ID** (WhatsApp → API Setup).
 4. A **permanent System User access token** with `whatsapp_business_messaging`
@@ -135,22 +135,22 @@ can send without a template.
 
 ### What you'll see in logs
 
-| Log line | Meaning |
-| --- | --- |
-| `Sent WhatsApp to <n> via Twilio` / `via Meta Cloud API` | Delivered to the provider |
-| `[whatsapp:log] to=… (… not configured — not actually sent)` | Provider unconfigured → fell back to logging (nothing sent) |
-| `Meta WhatsApp send failed (401 …)` | Meta rejected it (bad/expired token, unverified recipient) — will retry |
+| Log line                                                     | Meaning                                                                 |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| `Sent WhatsApp to <n> via Twilio` / `via Meta Cloud API`     | Delivered to the provider                                               |
+| `[whatsapp:log] to=… (… not configured — not actually sent)` | Provider unconfigured → fell back to logging (nothing sent)             |
+| `Meta WhatsApp send failed (401 …)`                          | Meta rejected it (bad/expired token, unverified recipient) — will retry |
 
 ## Troubleshooting
 
-| Symptom | Likely cause / fix |
-| --- | --- |
-| No message arrives, logs show `[whatsapp:log] … not configured` | `TWILIO_WHATSAPP_FROM` (or Meta token/phone-number-id) unset → provider fell back to log. Fill the env and restart. |
-| Nothing enqueued at all | `WHATSAPP_ENABLED` not `true`, or the recipient has no phone number. |
-| Twilio error 63007 / 63016 | Test phone hasn't joined the sandbox — send the `join <code>` message first. |
-| Twilio: free text fine in sandbox, fails on a real number | Business-initiated free text needs an approved template outside the 24h window. Set up templates and `WHATSAPP_USE_TEMPLATES=true`. |
-| Meta 401 / 190 | Access token invalid or expired — use a permanent system-user token. |
-| Meta 131030 / recipient not allowed | Recipient not in the app's allowed test list, or no approved template for a business-initiated message. |
+| Symptom                                                         | Likely cause / fix                                                                                                                  |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| No message arrives, logs show `[whatsapp:log] … not configured` | `TWILIO_WHATSAPP_FROM` (or Meta token/phone-number-id) unset → provider fell back to log. Fill the env and restart.                 |
+| Nothing enqueued at all                                         | `WHATSAPP_ENABLED` not `true`, or the recipient has no phone number.                                                                |
+| Twilio error 63007 / 63016                                      | Test phone hasn't joined the sandbox — send the `join <code>` message first.                                                        |
+| Twilio: free text fine in sandbox, fails on a real number       | Business-initiated free text needs an approved template outside the 24h window. Set up templates and `WHATSAPP_USE_TEMPLATES=true`. |
+| Meta 401 / 190                                                  | Access token invalid or expired — use a permanent system-user token.                                                                |
+| Meta 131030 / recipient not allowed                             | Recipient not in the app's allowed test list, or no approved template for a business-initiated message.                             |
 
 ## Production: approved templates
 
@@ -181,13 +181,13 @@ off it keeps sending free text.
 
 ## Configuration reference
 
-| Var | Purpose |
-| --- | --- |
-| `WHATSAPP_ENABLED` | Master toggle for the channel |
-| `WHATSAPP_PROVIDER` (`twilio` \| `meta`) | Which backend to send through |
-| `WHATSAPP_USE_TEMPLATES` | `false` = free text (sandbox/24h); `true` = approved templates |
-| `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` | Twilio credentials (shared with SMS) |
-| `TWILIO_WHATSAPP_FROM` | Twilio WhatsApp sender (sandbox or registered number) |
-| `META_WHATSAPP_ACCESS_TOKEN` | Meta permanent system-user token |
-| `META_WABA_PHONE_NUMBER_ID` | Meta sending number's phone-number ID |
-| `META_GRAPH_API_VERSION` | Graph API version (default `v21.0`) |
+| Var                                        | Purpose                                                        |
+| ------------------------------------------ | -------------------------------------------------------------- |
+| `WHATSAPP_ENABLED`                         | Master toggle for the channel                                  |
+| `WHATSAPP_PROVIDER` (`twilio` \| `meta`)   | Which backend to send through                                  |
+| `WHATSAPP_USE_TEMPLATES`                   | `false` = free text (sandbox/24h); `true` = approved templates |
+| `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` | Twilio credentials (shared with SMS)                           |
+| `TWILIO_WHATSAPP_FROM`                     | Twilio WhatsApp sender (sandbox or registered number)          |
+| `META_WHATSAPP_ACCESS_TOKEN`               | Meta permanent system-user token                               |
+| `META_WABA_PHONE_NUMBER_ID`                | Meta sending number's phone-number ID                          |
+| `META_GRAPH_API_VERSION`                   | Graph API version (default `v21.0`)                            |

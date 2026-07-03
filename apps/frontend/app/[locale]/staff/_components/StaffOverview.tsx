@@ -76,7 +76,11 @@ function StatCell({ stat }: { stat: StaffStat }) {
  * "book visitors" panel. Mirrors the VMC dashboard's overview so the two stay
  * visually consistent; on mobile the panel stacks above the stats.
  */
-export function StaffOverview({ stats, office, onNewInvite }: StaffOverviewProps) {
+export function StaffOverview({
+  stats,
+  office,
+  onNewInvite,
+}: StaffOverviewProps) {
   return (
     <>
       {/* ── Desktop: stats + flush book panel in one bar ──────────────────── */}

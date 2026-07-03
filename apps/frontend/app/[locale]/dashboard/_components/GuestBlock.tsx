@@ -160,7 +160,11 @@ export function GuestBlock({
 
         {isGroupVisit ? (
           <>
-            <Field label={t("fields.groupName")} required htmlFor={id("groupName")}>
+            <Field
+              label={t("fields.groupName")}
+              required
+              htmlFor={id("groupName")}
+            >
               <Input
                 id={id("groupName")}
                 value={groupName}

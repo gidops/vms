@@ -10,7 +10,9 @@
     ".": "./src/index.ts",
     "./styles.css": "./src/styles.css"
   },
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "scripts": {
     "lint": "eslint src",
     "lint:check": "eslint src",

@@ -65,7 +65,11 @@ function Staff() {
   };
 
   return (
-    <TopNavShell nav={<AppTopNav app="staff" active="schedule" requestsCount={undefined} />}>
+    <TopNavShell
+      nav={
+        <AppTopNav app="staff" active="schedule" requestsCount={undefined} />
+      }
+    >
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-1">
           <span className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-primary">
@@ -81,7 +85,10 @@ function Staff() {
           office={user?.hostOffice}
           onNewInvite={() => setInvite(true)}
           stats={[
-            { label: t("stats.expectedToday"), value: stats.data?.expectedToday ?? "—" },
+            {
+              label: t("stats.expectedToday"),
+              value: stats.data?.expectedToday ?? "—",
+            },
             {
               label: t("stats.awaitingApproval"),
               value: stats.data?.awaitingApproval ?? "—",
@@ -127,7 +134,10 @@ function Staff() {
                 <TableBody striped>
                   {rows.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="py-10 text-center text-fg-subtle">
+                      <TableCell
+                        colSpan={4}
+                        className="py-10 text-center text-fg-subtle"
+                      >
                         {t("noVisits")}
                       </TableCell>
                     </TableRow>

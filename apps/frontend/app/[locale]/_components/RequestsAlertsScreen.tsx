@@ -117,10 +117,12 @@ export function RequestsAlertsScreen({
   }, [searchInput]);
 
   // Changing tab/filters returns to the first page (handlers, not an effect).
-  const resetTo = <T,>(set: (v: T) => void) => (v: T) => {
-    set(v);
-    setPage(1);
-  };
+  const resetTo =
+    <T,>(set: (v: T) => void) =>
+    (v: T) => {
+      set(v);
+      setPage(1);
+    };
 
   // Opening the page marks everything read after a short beat, so the unread
   // highlight is visible first and then fades (see InboxCard transition). The
@@ -217,7 +219,9 @@ export function RequestsAlertsScreen({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL}>{tDash("filters.allVisitTypes")}</SelectItem>
+              <SelectItem value={ALL}>
+                {tDash("filters.allVisitTypes")}
+              </SelectItem>
               {VISIT_TYPES.map((vt) => (
                 <SelectItem key={vt} value={vt}>
                   {t(`typeOption.${vt}`)}
@@ -308,9 +312,7 @@ export function RequestsAlertsScreen({
                       setSelected({
                         kind: item.kind,
                         id:
-                          item.kind === "request"
-                            ? item.visitId
-                            : item.alertId,
+                          item.kind === "request" ? item.visitId : item.alertId,
                       })
                     }
                   />
@@ -327,7 +329,10 @@ export function RequestsAlertsScreen({
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                 >
-                  <ChevronLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
+                  <ChevronLeft
+                    className="size-4 rtl:rotate-180"
+                    aria-hidden="true"
+                  />
                   {t("pagination.prev")}
                 </Button>
                 <span className="text-sm text-fg-muted">
@@ -341,7 +346,10 @@ export function RequestsAlertsScreen({
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 >
                   {t("pagination.next")}
-                  <ChevronRight className="size-4 rtl:rotate-180" aria-hidden="true" />
+                  <ChevronRight
+                    className="size-4 rtl:rotate-180"
+                    aria-hidden="true"
+                  />
                 </Button>
               </div>
             ) : null}
