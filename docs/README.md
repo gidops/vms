@@ -13,6 +13,7 @@ start, see the [root README](../README.md).
 | [system-inspection-report.md](./system-inspection-report.md) | Architecture audit — i18n, event-driven, microservice readiness, testing, risks |
 | [design-system.md](./design-system.md) | Design tokens, component catalogue, Storybook, dark mode & RTL |
 | [notifications.md](./notifications.md) | Notification system (In-App/Email/SMS/WhatsApp), email templating, transports, backend localization |
+| [sonarqube-local.md](./sonarqube-local.md) | Local SonarQube via Docker — one-command scan (`npm run sonar`), auth bootstrap, dashboard, relationship to SonarCloud CI |
 | [client-presentation-canva-prompts.md](./client-presentation-canva-prompts.md) | Executive client deck — paste-ready Canva AI prompts, speaker notes, narrative flow |
 
 Repo guide for AI assistants: [CLAUDE.md](../CLAUDE.md).
