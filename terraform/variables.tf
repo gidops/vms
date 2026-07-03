@@ -90,6 +90,48 @@ variable "mailtrap_pass" {
   sensitive   = true
 }
 
+variable "whatsapp_enabled" {
+  description = "Enable the WhatsApp notification channel"
+  type        = bool
+  default     = false
+}
+
+
+variable "whatsapp_provider" {
+  description = "WhatsApp provider backend (twilio or meta)"
+  type        = string
+  default     = "twilio"
+
+  validation {
+    condition     = contains(["twilio", "meta"], var.whatsapp_provider)
+    error_message = "whatsapp_provider must be one of: twilio, meta."
+  }
+}
+
+variable "whatsapp_use_templates" {
+  description = "Use approved HSM templates instead of free-text messages (false for Twilio sandbox)"
+  type        = bool
+  default     = false
+}
+
+
+variable "twilio_account_sid" {
+  description = "Twilio account SID (shared by SMS and WhatsApp providers)"
+  type        = string
+  sensitive   = true
+}
+
+variable "twilio_auth_token" {
+  description = "Twilio auth token for API authentication"
+  type        = string
+  sensitive   = true
+}
+
+variable "twilio_whatsapp_from" {
+  description = "WhatsApp sender number (Twilio sandbox or approved number)"
+  type        = string
+}
+
 variable "sendgrid_api_key" {
   description = "SendGrid HTTP API key (SENDGRID_API_KEY, the SG.* value)."
   type        = string
