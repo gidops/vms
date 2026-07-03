@@ -68,7 +68,7 @@
       "viewDetails": "عرض التفاصيل"
     },
     "columns": {
-      "visitor": "الزائر",
+      "visitor": "ضيف",
       "channel": "القناة",
       "hostUnit": "المضيف / الطابق / الوحدة",
       "purpose": "الغرض",
@@ -77,7 +77,8 @@
       "action": "إجراء",
       "guestCount": "عدد الضيوف"
     },
-    "guestCount": "{count} ضيف"
+    "guestCount": "{count} ضيف",
+    "onsiteElapsed": "{time} س"
   },
   "common": {
     "notifications": "الإشعارات",

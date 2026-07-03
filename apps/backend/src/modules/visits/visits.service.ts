@@ -427,26 +427,66 @@ export class VisitsService {
         ...(query.dateTo ? { lte: query.dateTo } : {}),
       };
     }
-    const [rows, total] = await this.prisma.$transaction([
-      this.prisma.visit.findMany({
-        where,
-        include: { visitor: true, host: { include: { user: true } } },
-        orderBy: { createdAt: 'desc' },
-        skip: (query.page - 1) * query.pageSize,
-        take: query.pageSize,
-      }),
-      this.prisma.visit.count({ where }),
-    ]);
-
     // Fetching one group's members (the group check-in / approval sheets pass a
     // groupId) returns every guest as its own row; any other list collapses each
     // group visit to a single representative row.
     const collapse = !query.groupId;
 
+    type Row = Prisma.VisitGetPayload<{
+      include: { visitor: true; host: { include: { user: true } } };
+    }>;
+    let rows: Row[];
+    let total: number;
+    if (collapse) {
+      // A group visit is ONE logical row, so pagination must run over logical rows:
+      // if we fetched a fixed-size page of raw rows and then collapsed group members,
+      // a page holding a group would return fewer than pageSize rows. Read the
+      // ordered ids once, keep one representative (the newest member) per group, then
+      // fetch just this page's rows. `total`/`totalPages` are the logical-row count.
+      const keys = await this.prisma.visit.findMany({
+        where,
+        select: { id: true, groupId: true, isGroupVisit: true },
+        orderBy: { createdAt: 'desc' },
+      });
+      const repIds: string[] = [];
+      const seen = new Set<string>();
+      for (const k of keys) {
+        if (k.isGroupVisit && k.groupId) {
+          if (seen.has(k.groupId)) continue;
+          seen.add(k.groupId);
+        }
+        repIds.push(k.id);
+      }
+      total = repIds.length;
+      const pageIds = repIds.slice(
+        (query.page - 1) * query.pageSize,
+        query.page * query.pageSize,
+      );
+      const pageRows = pageIds.length
+        ? await this.prisma.visit.findMany({
+            where: { id: { in: pageIds } },
+            include: { visitor: true, host: { include: { user: true } } },
+          })
+        : [];
+      const byId = new Map(pageRows.map((r) => [r.id, r]));
+      // `in` doesn't preserve order — restore the createdAt-desc page order.
+      rows = pageIds.map((id) => byId.get(id)).filter((r): r is Row => !!r);
+    } else {
+      [rows, total] = await this.prisma.$transaction([
+        this.prisma.visit.findMany({
+          where,
+          include: { visitor: true, host: { include: { user: true } } },
+          orderBy: { createdAt: 'desc' },
+          skip: (query.page - 1) * query.pageSize,
+          take: query.pageSize,
+        }),
+        this.prisma.visit.count({ where }),
+      ]);
+    }
+
     // Aggregate each group's size + member statuses across the whole filtered set
     // (not just this page) so the representative row shows the true guest count and
-    // a derived status. Deep pagination of a group split across pages is a known
-    // minor edge — the board/queue fetch one large page.
+    // a derived status.
     const groupIds = [
       ...new Set(
         rows

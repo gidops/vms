@@ -553,6 +553,75 @@ describe('VisitsService.list statuses + groupSize', () => {
     expect(result.items[1].groupSize).toBe(1);
   });
 
+  it('paginates over collapsed rows so a group counts as one logical row', async () => {
+    // Raw set (newest first): a + b are one group (g1); c, d are singles. The
+    // logical rows are [g1-representative, c, d] → 3, so pageSize 2 = 2 pages and
+    // page 1 must return a full 2 rows even though a group spans it.
+    const rows = [
+      {
+        id: 'a',
+        groupId: 'g1',
+        isGroupVisit: true,
+        status: 'APPROVED',
+        visitor: {},
+        host: null,
+      },
+      {
+        id: 'b',
+        groupId: 'g1',
+        isGroupVisit: true,
+        status: 'APPROVED',
+        visitor: {},
+        host: null,
+      },
+      {
+        id: 'c',
+        groupId: null,
+        isGroupVisit: false,
+        status: 'APPROVED',
+        visitor: {},
+        host: null,
+      },
+      {
+        id: 'd',
+        groupId: null,
+        isGroupVisit: false,
+        status: 'APPROVED',
+        visitor: {},
+        host: null,
+      },
+    ];
+    const findMany = jest.fn().mockResolvedValue(rows);
+    const count = jest.fn();
+    const groupBy = jest
+      .fn()
+      .mockResolvedValue([
+        { groupId: 'g1', status: 'APPROVED', _count: { _all: 2 } },
+      ]);
+    const prisma = {
+      visit: { findMany, count, groupBy },
+      $transaction: (ops: unknown[]) => Promise.all(ops as Promise<unknown>[]),
+    } as unknown as PrismaService;
+    const service = new VisitsService(
+      prisma,
+      {} as TransactionManager,
+      {} as EventPublisher,
+    );
+
+    const page1 = await service.list(query({ pageSize: 2, page: 1 }), 'me');
+    // total / totalPages count logical (collapsed) rows, not raw visit rows.
+    expect(page1.total).toBe(3);
+    expect(page1.totalPages).toBe(2);
+    expect(page1.items.map((i) => i.id)).toEqual(['a', 'c']);
+    expect(page1.items[0].groupSize).toBe(2);
+
+    const page2 = await service.list(query({ pageSize: 2, page: 2 }), 'me');
+    expect(page2.items.map((i) => i.id)).toEqual(['d']);
+
+    // The collapsed path slices logical ids in memory — no offset row count query.
+    expect(count).not.toHaveBeenCalled();
+  });
+
   it('returns every group member (no collapse) when a groupId filter is set', async () => {
     const rows = [
       {

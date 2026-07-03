@@ -5,6 +5,7 @@ import {
   Avatar,
   Button,
   FilterBar,
+  Pagination,
   RecordTable,
   SearchInput,
   SegmentedControl,
@@ -23,7 +24,7 @@ import {
   TableRow,
   TopNavShell,
 } from "@vms/ui";
-import { SquareActivity, Users } from "lucide-react";
+import { CircleUser, SquareActivity } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
@@ -43,15 +44,40 @@ import { RouteGuard } from "@/shared/auth/RouteGuard";
 /** The VMC board only surfaces visits that a CSO has cleared for reception. */
 const BOARD_STATUSES = ["APPROVED", "CHECKED_IN", "CHECKED_OUT"] as const;
 
+/**
+ * Live-ticking elapsed time since a visitor checked in, shown under the "Onsite"
+ * status pill (HH:MM:SS). Owns its own interval so only this cell re-renders each
+ * second rather than the whole table.
+ */
+function OnsiteElapsed({ since }: { since: string }) {
+  const t = useTranslations("dashboard");
+  const [now, setNow] = React.useState(() => Date.now());
+  React.useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const totalSec = Math.max(0, Math.floor((now - new Date(since).getTime()) / 1000));
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const time = `${pad(Math.floor(totalSec / 3600))}:${pad(
+    Math.floor((totalSec % 3600) / 60),
+  )}:${pad(totalSec % 60)}`;
+  return (
+    <span className="text-xs text-fg-muted">{t("onsiteElapsed", { time })}</span>
+  );
+}
+
 function Dashboard() {
   const t = useTranslations("dashboard");
   const tCommon = useTranslations("common");
   const format = useFormatter();
   const { user } = useAuth();
 
+  const [page, setPage] = React.useState(1);
   const visitsQ = useQuery({
-    queryKey: ["visits", "dashboard"] as const,
-    queryFn: () => visitsApi.list({ statuses: [...BOARD_STATUSES], pageSize: 50 }),
+    queryKey: ["visits", "dashboard", page] as const,
+    queryFn: () =>
+      visitsApi.list({ statuses: [...BOARD_STATUSES], page, pageSize: 10 }),
+    placeholderData: (prev) => prev,
   });
   const rows = React.useMemo(() => visitsQ.data?.items ?? [], [visitsQ.data]);
 
@@ -76,16 +102,31 @@ function Dashboard() {
     else setCheckInId(row.id);
   };
 
+  // Shared size so the ACTION column reads uniformly regardless of which action
+  // a row shows (Check-In / Check-Out / View Details): smaller label + a min width
+  // wide enough for the longest ("View Details") so all three match.
+  const actionButtonClass = "min-w-28 text-xs";
+
   const rowAction = (row: VisitListItem) => {
     if (row.status === "APPROVED")
       return (
-        <Button intent="success" size="sm" onClick={() => startCheckIn(row)}>
+        <Button
+          intent="primary"
+          size="sm"
+          className={actionButtonClass}
+          onClick={() => startCheckIn(row)}
+        >
           {t("actions.checkIn")}
         </Button>
       );
     if (row.status === "CHECKED_IN")
       return (
-        <Button intent="danger" size="sm" onClick={() => setCheckOutId(row.id)}>
+        <Button
+          intent="danger"
+          size="sm"
+          className={actionButtonClass}
+          onClick={() => setCheckOutId(row.id)}
+        >
           {t("actions.checkOut")}
         </Button>
       );
@@ -94,6 +135,7 @@ function Dashboard() {
         intent="neutral"
         tone="outline"
         size="sm"
+        className={actionButtonClass}
         onClick={() => setDetailId(row.id)}
       >
         {t("actions.viewDetails")}
@@ -158,6 +200,7 @@ function Dashboard() {
         />
 
         <RecordTable
+          frameless
           toolbar={
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-xl font-semibold text-primary">
@@ -174,6 +217,13 @@ function Dashboard() {
               />
             </div>
           }
+          pagination={
+            <Pagination
+              page={page}
+              totalPages={visitsQ.data?.totalPages ?? 1}
+              onPageChange={setPage}
+            />
+          }
         >
           <Table>
             <TableHeader>
@@ -183,7 +233,6 @@ function Dashboard() {
                 <TableHead>{t("columns.hostUnit")}</TableHead>
                 <TableHead>{t("columns.purpose")}</TableHead>
                 <TableHead>{t("columns.guestCount")}</TableHead>
-                <TableHead>{t("columns.timeCreated")}</TableHead>
                 <TableHead>{t("columns.status")}</TableHead>
                 <TableHead>{t("columns.action")}</TableHead>
               </TableRow>
@@ -191,7 +240,7 @@ function Dashboard() {
             <TableBody striped>
               {visitsQ.isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8}>
+                  <TableCell colSpan={7}>
                     <div className="flex justify-center py-10">
                       <Spinner />
                     </div>
@@ -209,7 +258,7 @@ function Dashboard() {
                               : row.visitor.fullName
                           }
                           size="md"
-                          accent={row.isGroupVisit ? "amber" : "green"}
+                          accent={row.isGroupVisit ? "group" : "single"}
                         />
                         <span className="flex flex-col">
                           <span className="font-medium text-fg">
@@ -236,18 +285,23 @@ function Dashboard() {
                     </TableCell>
                     <TableCell className="text-fg-muted">
                       <span className="flex items-center gap-1.5">
-                        <Users className="size-4" aria-hidden="true" />
+                        <CircleUser className="size-4" aria-hidden="true" />
                         {t("guestCount", { count: row.groupSize })}
                       </span>
                     </TableCell>
-                    <TableCell className="text-fg-muted">
-                      {format.dateTime(new Date(row.createdAt), {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
-                    </TableCell>
                     <TableCell>
-                      <StatusBadge status={row.status} />
+                      <span className="flex flex-col items-start gap-1">
+                        <StatusBadge status={row.status} />
+                        {row.status === "CHECKED_IN" && row.checkInAt ? (
+                          <OnsiteElapsed since={row.checkInAt} />
+                        ) : (
+                          <span className="text-xs text-fg-muted">
+                            {format.dateTime(new Date(row.createdAt), {
+                              timeStyle: "short",
+                            })}
+                          </span>
+                        )}
+                      </span>
                     </TableCell>
                     <TableCell>{rowAction(row)}</TableCell>
                   </TableRow>

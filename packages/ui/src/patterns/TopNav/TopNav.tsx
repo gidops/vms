@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "../../foundations/cn";
+import { contentContainer } from "../../foundations/layout";
 
 export interface TopNavProps extends React.HTMLAttributes<HTMLElement> {
   /** Brand / logo, pinned to the leading edge. */
@@ -25,19 +26,23 @@ export function TopNav({
   return (
     <header
       className={cn(
-        "flex h-16 w-full shrink-0 items-center gap-4 bg-emphasis px-4 text-emphasis-fg sm:px-6",
+        "flex h-16 w-full shrink-0 items-center bg-emphasis text-emphasis-fg",
         className,
       )}
       {...props}
     >
-      <div className="flex min-w-0 flex-1 items-center">{brand}</div>
-      {center ? (
-        <div className="hidden items-center justify-center md:flex">
-          {center}
+      <div
+        className={cn(contentContainer, "flex items-center gap-4 px-4 sm:px-6")}
+      >
+        <div className="flex min-w-0 flex-1 items-center">{brand}</div>
+        {center ? (
+          <div className="hidden items-center justify-center md:flex">
+            {center}
+          </div>
+        ) : null}
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
+          {end}
         </div>
-      ) : null}
-      <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
-        {end}
       </div>
     </header>
   );

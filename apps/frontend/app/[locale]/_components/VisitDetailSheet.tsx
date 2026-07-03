@@ -401,7 +401,7 @@ function RequestDetailBody({
         </Button>
       ) : null}
       {data.status === "APPROVED" ? (
-        <Button intent="success" size="sm" onClick={() => setCheckAction("in")}>
+        <Button intent="primary" size="sm" onClick={() => setCheckAction("in")}>
           {t("actions.checkIn")}
         </Button>
       ) : null}

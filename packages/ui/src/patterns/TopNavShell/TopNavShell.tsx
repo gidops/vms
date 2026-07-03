@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "../../foundations/cn";
+import { contentContainer } from "../../foundations/layout";
 
 export interface TopNavShellProps {
   /** The top navigation bar (typically a <TopNav />). */
@@ -33,11 +34,15 @@ export function TopNavShell({
     >
       {nav}
       {filterBar ? (
-        <div className="shrink-0 border-b border-border bg-surface px-4 py-3 sm:px-6">
-          {filterBar}
+        <div className="shrink-0 border-b border-border bg-surface">
+          <div className={cn(contentContainer, "px-4 py-3 sm:px-6")}>
+            {filterBar}
+          </div>
         </div>
       ) : null}
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6">{children}</main>
+      <main className="flex-1 overflow-y-auto">
+        <div className={cn(contentContainer, "p-4 sm:p-6")}>{children}</div>
+      </main>
     </div>
   );
 }
