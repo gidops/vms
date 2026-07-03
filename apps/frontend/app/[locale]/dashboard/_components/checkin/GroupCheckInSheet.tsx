@@ -194,7 +194,7 @@ export function GroupCheckInSheet({
                       {g.visitor.email}
                       {g.visitor.phone ? ` · ${g.visitor.phone}` : ""}
                     </span>
-                    <StatusBadge status={g.status} />
+                    <StatusBadge status={g.status} className="self-start" />
                   </div>
                   {rowAction(g)}
                 </div>
