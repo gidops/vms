@@ -29,6 +29,7 @@ export * from "./components/Drawer/index";
 export * from "./components/EmptyState/index";
 export * from "./components/InboxCard/index";
 export * from "./components/Pagination/index";
+export * from "./components/RangeCalendar/index";
 export * from "./components/SearchInput/index";
 export * from "./components/SegmentedControl/index";
 export * from "./components/StatCard/index";

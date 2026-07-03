@@ -160,7 +160,9 @@ function MyVisits() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{tDash("filters.allVisitTypes")}</SelectItem>
+              <SelectItem value="all">
+                {tDash("filters.allVisitTypes")}
+              </SelectItem>
               {TYPES.map((ty) => (
                 <SelectItem key={ty} value={ty}>
                   {t(`visitType.${ty}`)}
@@ -186,7 +188,9 @@ function MyVisits() {
     >
       <div className="flex flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-3xl font-semibold text-fg">{t("myVisits.title")}</h1>
+          <h1 className="text-3xl font-semibold text-fg">
+            {t("myVisits.title")}
+          </h1>
           <SegmentedControl
             aria-label={t("myVisits.title")}
             value={tab}
@@ -229,7 +233,10 @@ function MyVisits() {
               <TableBody striped>
                 {rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-10 text-center text-fg-subtle">
+                    <TableCell
+                      colSpan={6}
+                      className="py-10 text-center text-fg-subtle"
+                    >
                       {t("noVisits")}
                     </TableCell>
                   </TableRow>
@@ -252,7 +259,9 @@ function MyVisits() {
                       <TableCell className="text-fg-muted">
                         {row.visitor.organization ?? "—"}
                       </TableCell>
-                      <TableCell className="text-fg-muted">{row.purpose}</TableCell>
+                      <TableCell className="text-fg-muted">
+                        {row.purpose}
+                      </TableCell>
                       <TableCell className="text-fg-muted">
                         {format.dateTime(new Date(row.createdAt), {
                           dateStyle: "medium",

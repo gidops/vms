@@ -63,7 +63,8 @@ export function GroupApprovalSheet({
     .map((g) => g.id);
 
   const doApprove = (ids: string[]) => {
-    if (ids.length) approve.mutate(ids, { onSuccess: () => setSelected(new Set()) });
+    if (ids.length)
+      approve.mutate(ids, { onSuccess: () => setSelected(new Set()) });
   };
   const doDeny = (ids: string[]) => {
     if (ids.length && reasonValid)

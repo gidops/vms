@@ -81,7 +81,9 @@ export function scheduledAtOf(g: GuestEntry): Date | undefined {
 }
 
 /** True if the guest's phone is blank (optional) or resolves to valid E.164. */
-export function phoneValid(g: Pick<GuestEntry, "phoneCode" | "phoneNumber">): boolean {
+export function phoneValid(
+  g: Pick<GuestEntry, "phoneCode" | "phoneNumber">,
+): boolean {
   const e164 = formatPhone(g);
   return e164 === "" || PHONE_E164_RE.test(e164);
 }

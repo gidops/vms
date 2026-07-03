@@ -70,7 +70,10 @@ export function PendingRequests() {
                   <span className="flex flex-col">
                     <span className="font-medium text-fg">
                       {v.isGroupVisit && v.groupName
-                        ? t("groupLabel", { name: v.groupName, count: v.groupSize })
+                        ? t("groupLabel", {
+                            name: v.groupName,
+                            count: v.groupSize,
+                          })
                         : v.visitor.fullName}
                     </span>
                     <span className="text-xs text-fg-muted">

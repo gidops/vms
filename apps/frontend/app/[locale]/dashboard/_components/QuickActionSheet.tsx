@@ -33,10 +33,7 @@ export function QuickActionSheet({
 
   return (
     <Drawer open onOpenChange={(o) => !o && onClose()}>
-      <DrawerContent
-        side="start"
-        className="flex flex-col gap-0 p-0"
-      >
+      <DrawerContent side="start" className="flex flex-col gap-0 p-0">
         {/* The visible heading lives in the form; this satisfies the dialog a11y title. */}
         <DrawerTitle className="sr-only">
           {mode === "walkin" ? t("titleWalkin") : t("titleInvite")}

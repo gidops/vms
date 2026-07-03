@@ -1,6 +1,6 @@
 # Infrastructure, explained simply
 
-A plain-language guide to how the VMS actually *runs* — the containers, the
+A plain-language guide to how the VMS actually _runs_ — the containers, the
 database, how they talk to each other, and where environment variables live —
 both on your laptop and on AWS.
 
@@ -34,8 +34,8 @@ the **database**. Everything else is plumbing.
 
 1. Your browser asks the **frontend** for the web page. The frontend hands back
    HTML + JavaScript.
-2. **This is the part that surprises people:** once the page is running, *your
-   browser* — not the frontend server — calls the **backend** API directly. The
+2. **This is the part that surprises people:** once the page is running, _your
+   browser_ — not the frontend server — calls the **backend** API directly. The
    frontend server's job is basically done after it serves the page.
 3. The **backend** is the only thing that touches the **database**. The browser
    and database never speak to each other.
@@ -68,16 +68,16 @@ server runs one with `docker run`.
 Locally everything is described in one file: **`docker-compose.yml`**. One command
 (`docker compose up`) starts these five containers:
 
-| Container  | Open it at        | Port (host → inside) | What it is                          |
-| ---------- | ----------------- | -------------------- | ----------------------------------- |
-| `frontend` | localhost:3000    | 3000 → 3000          | The Next.js web app                 |
-| `backend`  | localhost:4000    | 4000 → 4000          | The NestJS API                      |
-| `postgres` | localhost:5432    | 5432 → 5432          | The database                        |
-| `adminer`  | localhost:8080    | 8080 → 8080          | A web UI to browse the database     |
-| `seq`      | localhost:8081    | 8081 → 80            | A web UI to search logs/audit trail |
+| Container  | Open it at     | Port (host → inside) | What it is                          |
+| ---------- | -------------- | -------------------- | ----------------------------------- |
+| `frontend` | localhost:3000 | 3000 → 3000          | The Next.js web app                 |
+| `backend`  | localhost:4000 | 4000 → 4000          | The NestJS API                      |
+| `postgres` | localhost:5432 | 5432 → 5432          | The database                        |
+| `adminer`  | localhost:8080 | 8080 → 8080          | A web UI to browse the database     |
+| `seq`      | localhost:8081 | 8081 → 80            | A web UI to search logs/audit trail |
 
 > `host:inside` means the port on your machine maps to a (sometimes different)
-> port inside the container. E.g. Seq's UI is port 80 *inside* the container but
+> port inside the container. E.g. Seq's UI is port 80 _inside_ the container but
 > you reach it at `localhost:8081`.
 
 ### How do the containers find each other?
@@ -93,7 +93,7 @@ were a hostname.** So inside the network:
 ### The one gotcha that bites everyone: `localhost` vs `postgres`
 
 The backend finds the database via a setting called `DATABASE_URL`. The host part
-of that URL changes depending on *where the backend is running*:
+of that URL changes depending on _where the backend is running_:
 
 - Backend running **on your laptop** (the normal dev flow, `npm run start:dev`) →
   the DB is at **`localhost`** → `postgresql://vms:vms@localhost:5432/vms`
@@ -119,7 +119,7 @@ The frontend container does **not** call the backend container. Instead:
 There is no proxy or rewrite in between — it's a plain cross-origin `fetch` from
 the browser to the API.
 
-**Why you must care:** because the *browser* makes the call, the backend has to be
+**Why you must care:** because the _browser_ makes the call, the backend has to be
 reachable from wherever the user's browser is. On your laptop that's `localhost`.
 On AWS that has to be a real, public address (more on this below).
 
@@ -127,7 +127,7 @@ On AWS that has to be a real, public address (more on this below).
 
 `NEXT_PUBLIC_*` variables are **baked into the JavaScript at build time**, not read
 when the app runs. When the frontend image is built, whatever
-`NEXT_PUBLIC_API_BASE_URL` was set to gets *hard-coded into the bundle*. You cannot
+`NEXT_PUBLIC_API_BASE_URL` was set to gets _hard-coded into the bundle_. You cannot
 change it later by setting an environment variable on the running container — you'd
 have to rebuild the image.
 
@@ -174,13 +174,13 @@ into the apps without hard-coding them.
 
 **Backend** — only two are strictly required; the rest have sane defaults:
 
-| Variable       | Required? | What it's for                                |
-| -------------- | --------- | -------------------------------------------- |
-| `DATABASE_URL` | ✅ yes    | How to reach Postgres                        |
-| `JWT_SECRET`   | ✅ yes    | Signs login tokens                           |
-| `ENCRYPTION_KEY` | optional (derived in dev) | Encrypts sensitive fields (AES-256) |
-| `PORT`, `NODE_ENV`, `JWT_EXPIRES_IN`, `LOG_LEVEL` | optional | Defaults provided |
-| SMTP / Twilio / SendGrid / S3 / Seq keys | optional | Email, SMS, uploads, log mirror — off by default |
+| Variable                                          | Required?                 | What it's for                                    |
+| ------------------------------------------------- | ------------------------- | ------------------------------------------------ |
+| `DATABASE_URL`                                    | ✅ yes                    | How to reach Postgres                            |
+| `JWT_SECRET`                                      | ✅ yes                    | Signs login tokens                               |
+| `ENCRYPTION_KEY`                                  | optional (derived in dev) | Encrypts sensitive fields (AES-256)              |
+| `PORT`, `NODE_ENV`, `JWT_EXPIRES_IN`, `LOG_LEVEL` | optional                  | Defaults provided                                |
+| SMTP / Twilio / SendGrid / S3 / Seq keys          | optional                  | Email, SMS, uploads, log mirror — off by default |
 
 Sensitive ones to guard: `JWT_SECRET`, `ENCRYPTION_KEY`, and any Twilio/SMTP/
 SendGrid keys.
@@ -188,11 +188,11 @@ SendGrid keys.
 **Frontend** — both are `NEXT_PUBLIC_` (so, baked in at build time **and** visible
 to anyone in the browser — never put a secret here):
 
-| Variable                  | What it's for                          |
-| ------------------------- | -------------------------------------- |
-| `NEXT_PUBLIC_API_BASE_URL`| Address of the backend API             |
-| `NEXT_PUBLIC_APP_URL`     | The app's own public URL (for links)   |
-| `NEXT_PUBLIC_S3_BASE_URL` | Optional — base URL for avatar images  |
+| Variable                   | What it's for                         |
+| -------------------------- | ------------------------------------- |
+| `NEXT_PUBLIC_API_BASE_URL` | Address of the backend API            |
+| `NEXT_PUBLIC_APP_URL`      | The app's own public URL (for links)  |
+| `NEXT_PUBLIC_S3_BASE_URL`  | Optional — base URL for avatar images |
 
 > Rule of thumb: `NEXT_PUBLIC_` = public + frozen at build. Everything without that
 > prefix (all backend vars) = server-only + read at runtime.
@@ -201,20 +201,20 @@ to anyone in the browser — never put a secret here):
 
 ## 6. Local vs Prod — what actually changes
 
-The *shape* is identical (frontend, backend, database). Only the **plumbing around
+The _shape_ is identical (frontend, backend, database). Only the **plumbing around
 them** changes. Here's the translation table:
 
-| Concept                     | Local (Docker Compose)                  | AWS Production (Terraform)                                  |
-| --------------------------- | --------------------------------------- | ---------------------------------------------------------- |
-| Frontend                    | `frontend` container                    | A small **EC2 server** running the frontend image (`-p 80:3000`) |
-| Backend                     | `backend` container                     | A separate **EC2 server** running the backend image (`-p 4000:4000`) |
-| Database                    | `postgres` container                    | **AWS RDS** managed Postgres 16 (private, not on the public internet) |
-| How they find each other    | Service names on a Compose network      | Fixed IP addresses + **security groups** (firewall rules)  |
-| Where the images come from  | Built on your machine by Compose        | Built once, pushed to **ECR** (AWS's image registry), servers pull them |
-| How env vars get in         | `.env` files                            | `docker run -e ...`, with secrets generated by Terraform   |
-| Frontend's backend URL      | `localhost:4000` from `.env`            | The backend's **Elastic IP**, baked in at build time       |
-| Log/audit viewer (Seq)      | `seq` container                         | **Not deployed** — audit still recorded in the DB `AuditLog` table |
-| DB admin UI (Adminer)       | `adminer` container                     | **Not deployed** — connect with a DB client over SSH if needed |
+| Concept                    | Local (Docker Compose)             | AWS Production (Terraform)                                              |
+| -------------------------- | ---------------------------------- | ----------------------------------------------------------------------- |
+| Frontend                   | `frontend` container               | A small **EC2 server** running the frontend image (`-p 80:3000`)        |
+| Backend                    | `backend` container                | A separate **EC2 server** running the backend image (`-p 4000:4000`)    |
+| Database                   | `postgres` container               | **AWS RDS** managed Postgres 16 (private, not on the public internet)   |
+| How they find each other   | Service names on a Compose network | Fixed IP addresses + **security groups** (firewall rules)               |
+| Where the images come from | Built on your machine by Compose   | Built once, pushed to **ECR** (AWS's image registry), servers pull them |
+| How env vars get in        | `.env` files                       | `docker run -e ...`, with secrets generated by Terraform                |
+| Frontend's backend URL     | `localhost:4000` from `.env`       | The backend's **Elastic IP**, baked in at build time                    |
+| Log/audit viewer (Seq)     | `seq` container                    | **Not deployed** — audit still recorded in the DB `AuditLog` table      |
+| DB admin UI (Adminer)      | `adminer` container                | **Not deployed** — connect with a DB client over SSH if needed          |
 
 Two things worth calling out:
 
@@ -222,7 +222,7 @@ Two things worth calling out:
   EC2 virtual machines each running one `docker run`. Traffic hits the servers'
   IP addresses directly. (Why not build images on the server? A tiny `t2.micro`
   can't build the Next.js image — it runs out of memory. So we build elsewhere and
-  the server just *pulls and runs*.)
+  the server just _pulls and runs_.)
 - **The database is private.** RDS is not reachable from the internet. Its firewall
   only allows the backend server to connect on port 5432. Good default.
 
@@ -259,7 +259,7 @@ values are passed straight into the container as `-e` flags. They are stored in 
 up the S3 remote state.)
 
 **The frontend's backend URL is handled completely differently** — it's baked in
-when the image is *built*, not when the server runs. The deploy script builds the
+when the image is _built_, not when the server runs. The deploy script builds the
 frontend like this:
 
 ```bash
@@ -282,7 +282,7 @@ You don't run `terraform apply` directly — there's a wrapper script,
 ```
 
 Because the frontend has to bake in the backend's address, the **first** deploy is
-*phased*: create the backend's Elastic IP first, then build the frontend against
+_phased_: create the backend's Elastic IP first, then build the frontend against
 that IP, then bring everything up. The script handles this for you.
 
 Real commands (the script's actual modes):
@@ -298,7 +298,7 @@ Real commands (the script's actual modes):
 > as above. Run `./vms-deploy.sh` with no arguments to see the built-in usage.
 
 CI/CD: every push is checked by **GitHub Actions** and **Jenkins** (lint,
-typecheck, build, test, `terraform validate`). Only Jenkins can *deploy*, only from
+typecheck, build, test, `terraform validate`). Only Jenkins can _deploy_, only from
 `main`/`staging`, and only behind a manual approval gate.
 
 ---
@@ -311,7 +311,7 @@ test. Here are the real traps, roughly in priority order:
 1. **🪤 The #1 trap — the frontend's backend address is frozen at build time.**
    If the backend's Elastic IP ever changes (most commonly: you run
    `terraform destroy` and redeploy — the IP is released and you get a new one),
-   the *old* frontend image still points at the dead address and the app silently
+   the _old_ frontend image still points at the dead address and the app silently
    can't reach the API. **Fix:** after any backend-IP change, rebuild and repush the
    frontend (`./vms-deploy.sh --deploy both`). The deploy script has a safety check
    that fails the build if the right IP isn't baked in.
@@ -339,7 +339,7 @@ test. Here are the real traps, roughly in priority order:
 6. **How you log in the first time.** No admin account is seeded. The first person
    to use the **`/signup`** screen becomes `SUPER_ADMIN`
    (`apps/backend/src/shared/auth/seeder.service.ts`). So right after deploy, go to
-   `/signup` and create your admin — *then* you'd normally close signup.
+   `/signup` and create your admin — _then_ you'd normally close signup.
    ⚠️ Also: the "only seed demo data outside production" guard is currently
    **commented out**, so demo visit/alert rows will be created in production too.
    Re-enable that guard (`seeder.service.ts` ~lines 94–96) before a real launch if
@@ -380,6 +380,6 @@ test. Here are the real traps, roughly in priority order:
 
 ---
 
-*See also: [`runbook.md`](./runbook.md) for local commands,
+_See also: [`runbook.md`](./runbook.md) for local commands,
 [`terraform-steps.md`](./terraform-steps.md) for the deploy walkthrough, and
-[`architecture.md`](./architecture.md) for how the application code is organized.*
+[`architecture.md`](./architecture.md) for how the application code is organized._

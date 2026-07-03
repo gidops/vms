@@ -26,7 +26,11 @@ export interface RecentUpdatesProps {
   onSelect: (item: StaffActivityItem) => void;
 }
 
-export function RecentUpdates({ items, isLoading, onSelect }: RecentUpdatesProps) {
+export function RecentUpdates({
+  items,
+  isLoading,
+  onSelect,
+}: RecentUpdatesProps) {
   const t = useTranslations("staff");
   const format = useFormatter();
 
@@ -69,7 +73,9 @@ export function RecentUpdates({ items, isLoading, onSelect }: RecentUpdatesProps
                 onClick={() => onSelect(item)}
                 className="flex items-center gap-1 self-start text-sm font-medium text-primary underline"
               >
-                {item.alertId ? t("updates.viewDetails") : t("updates.viewUpdate")}
+                {item.alertId
+                  ? t("updates.viewDetails")
+                  : t("updates.viewUpdate")}
                 <ChevronRight className="size-4" aria-hidden="true" />
               </button>
             </li>

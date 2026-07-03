@@ -477,6 +477,16 @@ describe('VisitsService.list scoping', () => {
       expect.objectContaining({ where: { status: 'PENDING' } }),
     );
   });
+
+  it('orders by scheduled date ascending with undated visits last', async () => {
+    const { service, findMany } = setup();
+    await service.list(query({ scope: 'all' }), 'me');
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { scheduledAt: { sort: 'asc', nulls: 'last' } },
+      }),
+    );
+  });
 });
 
 describe('VisitsService.list statuses + groupSize', () => {
@@ -599,7 +609,7 @@ describe('VisitsService.list statuses + groupSize', () => {
   });
 
   it('paginates over collapsed rows so a group counts as one logical row', async () => {
-    // Raw set (newest first): a + b are one group (g1); c, d are singles. The
+    // Raw set (scheduled order): a + b are one group (g1); c, d are singles. The
     // logical rows are [g1-representative, c, d] → 3, so pageSize 2 = 2 pages and
     // page 1 must return a full 2 rows even though a group spans it.
     const rows = [

@@ -51,16 +51,17 @@ the EIP baked in) → create the full stack (VPC, RDS, 2× EC2, IAM). RDS takes 
 
 All modes:
 
-| Command | Use when |
-|---------|----------|
-| `./vms-deploy.sh --fresh` | **No instances exist yet** (first deploy, or after `destroy`). Creates everything from scratch. |
-| `./vms-deploy.sh --update [backend\|frontend\|both]` | Instances exist; you changed code and want it live. |
-| `./vms-deploy.sh --redeploy [backend\|frontend\|both]` | Instances exist but one is broken; recreate it, no rebuild. |
+| Command                                                | Use when                                                                                        |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| `./vms-deploy.sh --fresh`                              | **No instances exist yet** (first deploy, or after `destroy`). Creates everything from scratch. |
+| `./vms-deploy.sh --update [backend\|frontend\|both]`   | Instances exist; you changed code and want it live.                                             |
+| `./vms-deploy.sh --redeploy [backend\|frontend\|both]` | Instances exist but one is broken; recreate it, no rebuild.                                     |
 
 The script pauses to show the Terraform plan before applying. **Confirm the plan replaces only
 the instance(s) you intend** — it must not show `aws_eip.backend` or `aws_db_instance.main`.
 
 > Manual equivalent, if not using the script:
+>
 > ```bash
 > # Phase A
 > terraform -chdir=terraform apply -target=aws_ecr_repository.backend \
@@ -87,7 +88,6 @@ curl -s -o /dev/null -w "%{http_code}\n" http://localhost:4000/health   # expect
 
 Frontend: browse to `terraform -chdir=terraform output public_ip`. (Some local networks
 intercept bare-IP HTTP; if the page looks wrong, try another network/device.)
-
 
 ### Tear down (RDS + 2× EC2 bill by the minute — destroy when done)
 

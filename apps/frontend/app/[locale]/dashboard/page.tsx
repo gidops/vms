@@ -8,7 +8,6 @@ import {
   Pagination,
   RecordTable,
   SearchInput,
-  SegmentedControl,
   Select,
   SelectContent,
   SelectItem,
@@ -36,6 +35,11 @@ import {
   QuickActionSheet,
   type QuickActionMode,
 } from "@/app/[locale]/dashboard/_components/QuickActionSheet";
+import {
+  RecordsRangeFilter,
+  type DateRange,
+  type RecordsRange,
+} from "@/app/[locale]/dashboard/_components/RecordsRangeFilter";
 import { VmcOverview } from "@/app/[locale]/dashboard/_components/VmcOverview";
 import { visitsApi, type VisitListItem } from "@/data/visits/visits.api";
 import { useAuth } from "@/shared/auth/AuthContext";
@@ -56,13 +60,18 @@ function OnsiteElapsed({ since }: { since: string }) {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
-  const totalSec = Math.max(0, Math.floor((now - new Date(since).getTime()) / 1000));
+  const totalSec = Math.max(
+    0,
+    Math.floor((now - new Date(since).getTime()) / 1000),
+  );
   const pad = (n: number) => String(n).padStart(2, "0");
   const time = `${pad(Math.floor(totalSec / 3600))}:${pad(
     Math.floor((totalSec % 3600) / 60),
   )}:${pad(totalSec % 60)}`;
   return (
-    <span className="text-xs text-fg-muted">{t("onsiteElapsed", { time })}</span>
+    <span className="text-xs text-fg-muted">
+      {t("onsiteElapsed", { time })}
+    </span>
   );
 }
 
@@ -73,13 +82,34 @@ function Dashboard() {
   const { user } = useAuth();
 
   const [page, setPage] = React.useState(1);
+  const [range, setRange] = React.useState<RecordsRange>("all");
+  const [dates, setDates] = React.useState<DateRange>({});
   const visitsQ = useQuery({
-    queryKey: ["visits", "dashboard", page] as const,
+    queryKey: [
+      "visits",
+      "dashboard",
+      page,
+      dates.dateFrom,
+      dates.dateTo,
+    ] as const,
     queryFn: () =>
-      visitsApi.list({ statuses: [...BOARD_STATUSES], page, pageSize: 10 }),
+      visitsApi.list({
+        statuses: [...BOARD_STATUSES],
+        page,
+        pageSize: 10,
+        dateFrom: dates.dateFrom,
+        dateTo: dates.dateTo,
+      }),
     placeholderData: (prev) => prev,
   });
   const rows = React.useMemo(() => visitsQ.data?.items ?? [], [visitsQ.data]);
+
+  // Changing the window resets to page 1 (page is part of the query key).
+  const onRangeChange = (next: RecordsRange, window?: DateRange) => {
+    setRange(next);
+    setDates(window ?? {});
+    setPage(1);
+  };
 
   const [quickAction, setQuickAction] = React.useState<QuickActionMode | null>(
     null,
@@ -94,6 +124,15 @@ function Dashboard() {
 
   const hostUnit = (row: VisitListItem) =>
     row.host?.user.fullName ?? row.floor ?? "—";
+
+  // The time shown under the status pill is status-specific: an Expected visit
+  // shows when they're scheduled to arrive, a Checked-Out one shows when they
+  // left. (Onsite renders the live elapsed timer instead — handled in the cell.)
+  const underPillTime = (row: VisitListItem): string | null => {
+    if (row.status === "APPROVED") return row.scheduledAt ?? null;
+    if (row.status === "CHECKED_OUT") return row.checkOutAt ?? null;
+    return row.createdAt;
+  };
 
   // A group visit opens the group sheet; a bulk/single visit goes straight to the
   // check-in modal.
@@ -206,15 +245,7 @@ function Dashboard() {
               <h2 className="text-xl font-semibold text-primary">
                 {t("records")}
               </h2>
-              <SegmentedControl
-                aria-label={t("records")}
-                defaultValue="today"
-                options={[
-                  { value: "today", label: t("range.today") },
-                  { value: "7d", label: t("range.last7") },
-                  { value: "custom", label: t("range.custom") },
-                ]}
-              />
+              <RecordsRangeFilter value={range} onChange={onRangeChange} />
             </div>
           }
           pagination={
@@ -295,11 +326,16 @@ function Dashboard() {
                         {row.status === "CHECKED_IN" && row.checkInAt ? (
                           <OnsiteElapsed since={row.checkInAt} />
                         ) : (
-                          <span className="text-xs text-fg-muted">
-                            {format.dateTime(new Date(row.createdAt), {
-                              timeStyle: "short",
-                            })}
-                          </span>
+                          (() => {
+                            const ts = underPillTime(row);
+                            return ts ? (
+                              <span className="text-xs text-fg-muted">
+                                {format.dateTime(new Date(ts), {
+                                  timeStyle: "short",
+                                })}
+                              </span>
+                            ) : null;
+                          })()
                         )}
                       </span>
                     </TableCell>
