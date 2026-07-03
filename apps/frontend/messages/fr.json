@@ -338,6 +338,7 @@
     "guestInformation": "Informations sur les invités",
     "checkedInCount": "{done}/{total} enregistrés",
     "checkInAll": "Tout enregistrer",
+    "selectAll": "Tout sélectionner",
     "checkIn": "Enregistrer",
     "checkOut": "Sortie",
     "viewDetails": "Voir les détails",

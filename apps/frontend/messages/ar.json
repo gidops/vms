@@ -338,6 +338,7 @@
     "guestInformation": "معلومات الضيوف",
     "checkedInCount": "{done}/{total} تم تسجيل دخولهم",
     "checkInAll": "تسجيل دخول الكل",
+    "selectAll": "تحديد الكل",
     "checkIn": "تسجيل الدخول",
     "checkOut": "تسجيل الخروج",
     "viewDetails": "عرض التفاصيل",

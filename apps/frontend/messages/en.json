@@ -338,6 +338,7 @@
     "guestInformation": "Guest Information",
     "checkedInCount": "{done}/{total} checked in",
     "checkInAll": "Check-In All",
+    "selectAll": "Select all",
     "checkIn": "Check-in",
     "checkOut": "Check-Out",
     "viewDetails": "View Details",

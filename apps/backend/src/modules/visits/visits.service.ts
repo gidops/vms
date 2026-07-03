@@ -27,6 +27,20 @@ import { TransactionManager } from '../../shared/events/transaction.manager';
 const PASS_TTL_MS = 24 * 60 * 60 * 1000;
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
+/** Statuses that remove a guest from the visiting group (ignored when deriving a
+ *  group's collapsed status and guest count). */
+const GROUP_INACTIVE_STATUSES = new Set<string>([
+  'DENIED',
+  'CANCELLED',
+  'EXPIRED',
+]);
+/** Lifecycle statuses that mean a guest has not (yet) checked in. */
+const GROUP_PRE_CHECKIN_STATUSES = new Set<string>([
+  'PENDING',
+  'NEEDS_MORE_INFO',
+  'APPROVED',
+]);
+
 /** Internal pass code, e.g. "4486-BC9C" (digits-dash-alnum). */
 function generateAccessCode(): string {
   const digits = String(randomInt(1000, 10000));
@@ -495,10 +509,13 @@ export class VisitsService {
           .filter((g): g is string => !!g),
       ),
     ];
+    // Aggregate over ALL of each group's members (no status filter) so the derived
+    // status and guest count reflect the whole group — including still-PENDING
+    // members that the board's status filter would otherwise hide.
     const groupAgg = groupIds.length
       ? await this.prisma.visit.groupBy({
           by: ['groupId', 'status'],
-          where: { ...where, groupId: { in: groupIds } },
+          where: { groupId: { in: groupIds } },
           _count: { _all: true },
         })
       : [];
@@ -506,7 +523,11 @@ export class VisitsService {
     const statusesByGroup = new Map<string, Set<string>>();
     for (const g of groupAgg) {
       const id = g.groupId as string;
-      sizeByGroup.set(id, (sizeByGroup.get(id) ?? 0) + g._count._all);
+      // Guest count = active members only (a denied/cancelled/expired guest is
+      // not part of the visiting group).
+      if (!GROUP_INACTIVE_STATUSES.has(g.status)) {
+        sizeByGroup.set(id, (sizeByGroup.get(id) ?? 0) + g._count._all);
+      }
       const set = statusesByGroup.get(id) ?? new Set<string>();
       set.add(g.status);
       statusesByGroup.set(id, set);
@@ -548,20 +569,16 @@ export class VisitsService {
     fallback: VisitListItem['status'],
   ): VisitListItem['status'] {
     if (!statuses?.size) return fallback;
-    const priority = [
-      'CHECKED_IN',
-      'APPROVED',
-      'PENDING',
-      'NEEDS_MORE_INFO',
-      'CHECKED_OUT',
-      'EXPIRED',
-      'DENIED',
-      'CANCELLED',
-    ] as const;
-    for (const s of priority) {
-      if (statuses.has(s)) return s;
-    }
-    return fallback;
+    // Only active guests count; a denied/cancelled/expired guest left the group.
+    const active = [...statuses].filter((s) => !GROUP_INACTIVE_STATUSES.has(s));
+    if (active.length === 0) return fallback;
+    // Expected while ≥1 active guest still hasn't checked in.
+    if (active.some((s) => GROUP_PRE_CHECKIN_STATUSES.has(s)))
+      return 'APPROVED';
+    // Everyone has checked in — Checked Out only once all have also left,
+    // otherwise Onsite (a checked-out guest still counts as having checked in).
+    if (active.every((s) => s === 'CHECKED_OUT')) return 'CHECKED_OUT';
+    return 'CHECKED_IN';
   }
 
   /**

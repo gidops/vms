@@ -543,14 +543,59 @@ describe('VisitsService.list statuses + groupSize', () => {
         where: { status: { in: ['APPROVED', 'CHECKED_IN'] } },
       }),
     );
-    // a + b collapse into one row; c stays. Group size counts both members and
-    // the derived status is the most active (CHECKED_IN beats APPROVED).
+    // a + b collapse into one row; c stays. Group size counts both members, and
+    // the derived status is Expected (APPROVED) because member `a` (APPROVED) has
+    // not checked in yet — even though `b` is CHECKED_IN.
     expect(result.items).toHaveLength(2);
     expect(result.items[0].id).toBe('a');
     expect(result.items[0].groupSize).toBe(2);
-    expect(result.items[0].status).toBe('CHECKED_IN');
+    expect(result.items[0].status).toBe('APPROVED');
     expect(result.items[1].id).toBe('c');
     expect(result.items[1].groupSize).toBe(1);
+  });
+
+  it.each([
+    [['APPROVED', 'CHECKED_IN'], 'APPROVED'], // someone not checked in → Expected
+    [['PENDING', 'CHECKED_IN'], 'APPROVED'], // pending member holds it Expected
+    [['CHECKED_IN'], 'CHECKED_IN'], // all on-site → Onsite
+    [['CHECKED_IN', 'CHECKED_OUT'], 'CHECKED_IN'], // all checked in, some left → Onsite
+    [['CHECKED_OUT'], 'CHECKED_OUT'], // everyone left → Checked Out
+    [['CANCELLED', 'CHECKED_IN'], 'CHECKED_IN'], // cancelled guest ignored → Onsite
+  ])('derives a group status of %s → %s', async (memberStatuses, expected) => {
+    const rows = [
+      {
+        id: 'a',
+        groupId: 'g1',
+        isGroupVisit: true,
+        status: 'APPROVED',
+        visitor: {},
+        host: null,
+      },
+    ];
+    const findMany = jest.fn().mockResolvedValue(rows);
+    const count = jest.fn().mockResolvedValue(1);
+    const groupBy = jest.fn().mockResolvedValue(
+      memberStatuses.map((status) => ({
+        groupId: 'g1',
+        status,
+        _count: { _all: 1 },
+      })),
+    );
+    const prisma = {
+      visit: { findMany, count, groupBy },
+      $transaction: (ops: unknown[]) => Promise.all(ops as Promise<unknown>[]),
+    } as unknown as PrismaService;
+    const service = new VisitsService(
+      prisma,
+      {} as TransactionManager,
+      {} as EventPublisher,
+    );
+
+    const result = await service.list(
+      query({ statuses: ['APPROVED', 'CHECKED_IN', 'CHECKED_OUT'] }),
+      'me',
+    );
+    expect(result.items[0].status).toBe(expected);
   });
 
   it('paginates over collapsed rows so a group counts as one logical row', async () => {
