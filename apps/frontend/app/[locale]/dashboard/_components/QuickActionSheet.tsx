@@ -16,14 +16,17 @@ export function QuickActionSheet({
   fixedHostUserId,
   fixedHostName,
   onRequestCheckIn,
+  onRequestCheckInSingle,
 }: {
   mode: QuickActionMode | null;
   onClose: () => void;
   /** Pin the host (e.g. a staff member inviting visitors to themselves). */
   fixedHostUserId?: string;
   fixedHostName?: string;
-  /** Walk-in success "Check-In Visitor" → open the group check-in for this group. */
+  /** Group walk-in success "Check-In Visitor" → open the group check-in sheet. */
   onRequestCheckIn?: (groupId: string) => void;
+  /** Single walk-in success "Check-In Visitor" → open the single check-in modal. */
+  onRequestCheckInSingle?: (visitId: string) => void;
 }) {
   const t = useTranslations("invite");
   if (!mode) return null;
@@ -32,7 +35,7 @@ export function QuickActionSheet({
     <Drawer open onOpenChange={(o) => !o && onClose()}>
       <DrawerContent
         side="start"
-        className="flex flex-col gap-0 p-0 sm:max-w-none sm:w-[40vw]"
+        className="flex flex-col gap-0 p-0"
       >
         {/* The visible heading lives in the form; this satisfies the dialog a11y title. */}
         <DrawerTitle className="sr-only">
@@ -47,6 +50,7 @@ export function QuickActionSheet({
           fixedHostUserId={fixedHostUserId}
           fixedHostName={fixedHostName}
           onRequestCheckIn={onRequestCheckIn}
+          onRequestCheckInSingle={onRequestCheckInSingle}
         />
       </DrawerContent>
     </Drawer>

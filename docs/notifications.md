@@ -86,8 +86,15 @@ A channel that's enabled but unconfigured logs the message (dev) instead of cras
 | --- | --- | --- |
 | Email | `EmailTransport` | `EMAIL_PROVIDER` selects: `smtp`/`gmail`/`mailtrap` (nodemailer `SmtpProvider`, connection resolved from the selector) or `sendgrid` (HTTP API). Every transport's credentials can coexist in env — flip `EMAIL_PROVIDER` to switch, no code change. Falls back to the log provider when unconfigured. |
 | SMS | `SmsTransport` | Twilio |
-| WhatsApp | `WhatsappTransport` | Twilio (Business API) |
+| WhatsApp | `WhatsappTransport` | `WHATSAPP_PROVIDER` selects: `twilio` (`TwilioWhatsappProvider`, reuses the Twilio account/client that backs SMS) or `meta` (`MetaCloudWhatsappProvider`, Meta WhatsApp Cloud API via the Graph API). Falls back to the log provider when unconfigured. |
 | In-App | (dispatcher) | the persisted row, read via the notifications API |
+
+> **WhatsApp templates (HSM).** WhatsApp only allows *business-initiated* messages (all three VMS
+> notifications) as pre-approved templates outside a 24h user-opened session; free text is silently
+> undelivered. `WHATSAPP_USE_TEMPLATES=false` (default) sends the free-text catalog copy — fine for
+> the Twilio sandbox and 24h sessions. Set `true` and add a `whatsappTemplate` (`name` = Meta template
+> name / Twilio Content SID, plus ordered `vars`) to the entry in `TEMPLATE_META`
+> (`notification.types.ts`) for proactive production sends.
 
 ### Adding a new provider/channel
 
@@ -131,7 +138,9 @@ See [`apps/backend/.env.example`](../apps/backend/.env.example). Key vars:
 | `GMAIL_USER/GMAIL_APP_PASSWORD` | Gmail (`EMAIL_PROVIDER=gmail`; host/port/secure fixed to smtp.gmail.com:465) |
 | `MAILTRAP_HOST/PORT/USER/PASS` | Mailtrap live sending (`EMAIL_PROVIDER=mailtrap`) |
 | `SENDGRID_API_KEY` | SendGrid HTTP API (`EMAIL_PROVIDER=sendgrid`) |
-| `TWILIO_ACCOUNT_SID/AUTH_TOKEN/SMS_FROM/WHATSAPP_FROM` | Twilio SMS + WhatsApp |
+| `TWILIO_ACCOUNT_SID/AUTH_TOKEN/SMS_FROM/WHATSAPP_FROM` | Twilio SMS + WhatsApp (`twilio` provider) |
+| `WHATSAPP_PROVIDER` (`twilio`\|`meta`), `WHATSAPP_USE_TEMPLATES` | WhatsApp backend selection + template mode |
+| `META_WHATSAPP_ACCESS_TOKEN/META_WABA_PHONE_NUMBER_ID/META_GRAPH_API_VERSION` | Meta WhatsApp Cloud API (`WHATSAPP_PROVIDER=meta`) |
 
 **Switching transport:** set `EMAIL_ENABLED=true` and pick `EMAIL_PROVIDER`. Examples —
 `gmail`: `GMAIL_USER=<you@gmail.com>`, `GMAIL_APP_PASSWORD=<app password>` (needs 2FA);

@@ -268,6 +268,15 @@ locals {
       -e DATABASE_URL="postgres://${aws_db_instance.main.username}:${random_password.db.result}@${aws_db_instance.main.address}:5432/${aws_db_instance.main.db_name}" \
       -e JWT_SECRET="${random_password.jwt_secret.result}" \
       -e ENCRYPTION_KEY="${random_bytes.encryption_key.base64}" \
+      -e APP_PUBLIC_URL="${var.app_public_url}" \
+      -e EMAIL_ENABLED="${var.email_enabled}" \
+      -e EMAIL_PROVIDER="${var.email_provider}" \
+      -e EMAIL_FROM="${var.email_from}" \
+      -e MAILTRAP_HOST="${var.mailtrap_host}" \
+      -e MAILTRAP_PORT="${var.mailtrap_port}" \
+      -e MAILTRAP_USER="${var.mailtrap_user}" \
+      -e MAILTRAP_PASS="${var.mailtrap_pass}" \
+      -e SENDGRID_API_KEY="${var.sendgrid_api_key}" \
       ${aws_ecr_repository.backend.repository_url}:${var.backend_image_tag}
   EOT
 }

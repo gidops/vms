@@ -1,46 +1,52 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NotificationChannel } from '@prisma/client';
 import type { Env } from '../../../../shared/config/env.schema';
 import type { RenderedMessage } from '../../notification.types';
 import type { NotificationTransport } from '../transport.interface';
-import { TwilioClientProvider } from '../twilio.client';
+import { LogWhatsappProvider } from './log.provider';
+import { MetaCloudWhatsappProvider } from './meta.provider';
+import { TwilioWhatsappProvider } from './twilio.provider';
+import type { WhatsappProvider } from './whatsapp-provider.interface';
 
-/** Ensure a number is in Twilio's `whatsapp:+E164` form. */
-function toWhatsApp(value: string): string {
-  return value.startsWith('whatsapp:') ? value : `whatsapp:${value}`;
-}
-
-/** WhatsApp channel via Twilio. Logs (no-op) when Twilio isn't configured. */
+/**
+ * WhatsApp channel. Selects a provider by WHATSAPP_PROVIDER (twilio | meta),
+ * falling back to a log provider when the chosen one isn't configured, so
+ * enabling WHATSAPP never breaks boot. Approved templates are only sent when
+ * WHATSAPP_USE_TEMPLATES is on; otherwise free text (Twilio sandbox / 24h window).
+ */
 @Injectable()
 export class WhatsappTransport implements NotificationTransport {
   readonly channel = NotificationChannel.WHATSAPP;
-  private readonly logger = new Logger(WhatsappTransport.name);
 
   constructor(
     private readonly config: ConfigService<Env, true>,
-    private readonly twilio: TwilioClientProvider,
+    private readonly twilio: TwilioWhatsappProvider,
+    private readonly meta: MetaCloudWhatsappProvider,
+    private readonly log: LogWhatsappProvider,
   ) {}
 
   isEnabled(): boolean {
     return this.config.get('WHATSAPP_ENABLED', { infer: true });
   }
 
-  async send(message: RenderedMessage): Promise<void> {
-    const client = this.twilio.getClient();
-    const from = this.config.get('TWILIO_WHATSAPP_FROM', { infer: true });
-    if (!client || !from) {
-      this.logger.log(
-        `[whatsapp:log] to=${message.to} body="${message.text ?? ''}" ` +
-          `(Twilio WhatsApp not configured — not actually sent)`,
-      );
-      return;
+  private provider(): WhatsappProvider {
+    const chosen = this.config.get('WHATSAPP_PROVIDER', { infer: true });
+    if (chosen === 'meta') {
+      return this.meta.isConfigured ? this.meta : this.log;
     }
-    await client.messages.create({
-      from: toWhatsApp(from),
-      to: toWhatsApp(message.to ?? ''),
-      body: message.text ?? '',
+    return this.twilio.isConfigured ? this.twilio : this.log;
+  }
+
+  async send(message: RenderedMessage): Promise<void> {
+    // Templates are opt-in: strip the payload so providers send free text until
+    // approved templates exist (keeps the Twilio sandbox path working).
+    const useTemplates = this.config.get('WHATSAPP_USE_TEMPLATES', {
+      infer: true,
     });
-    this.logger.debug(`Sent WhatsApp to ${message.to}`);
+    const outbound = useTemplates
+      ? message
+      : { ...message, template: undefined };
+    await this.provider().send(outbound);
   }
 }

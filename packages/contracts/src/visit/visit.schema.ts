@@ -6,6 +6,7 @@ import {
   VisitType,
 } from "../common/enums.js";
 import { PaginationQuery } from "../common/pagination.js";
+import { normalizeE164 } from "../common/phone.js";
 import { Visitor, RegisterVisitorInput } from "../visitor/visitor.schema.js";
 import { HostWithUser } from "../host/host.schema.js";
 import { Note } from "../note/note.schema.js";
@@ -58,8 +59,22 @@ export const Visit = z.object({
   /** Host is optional for walk-ins (the guest may not be visiting a named staff). */
   hostId: z.string().uuid().nullable().optional(),
   invitationId: z.string().uuid().nullable().optional(),
-  /** Visits created together in one invite/walk-in submission share a groupId. */
+  /**
+   * Set ONLY for a true "group visit" — all guests of that group share one
+   * groupId. Bulk invites / walk-ins and lone guests are independent visits with
+   * `groupId = null`. Presence of a groupId (with `isGroupVisit`) is what makes a
+   * row a group.
+   */
   groupId: z.string().uuid().nullable().optional(),
+  /** True when this visit belongs to a group visit (vs. a bulk/single visit). */
+  isGroupVisit: z.boolean().default(false),
+  /** Group display name (e.g. "Pentagon"), shared by every guest of the group. */
+  groupName: z.string().nullable().optional(),
+  /**
+   * Optional group contact — a free-text email OR phone number for the group,
+   * shared by every guest of the group.
+   */
+  groupContact: z.string().nullable().optional(),
   /**
    * Human-friendly invite code (e.g. "5A19-795") generated for invites at
    * creation. Encoded in the QR the guest presents; null for walk-ins.
@@ -103,9 +118,9 @@ export const VisitListItem = Visit.extend({
   host: HostWithUser.nullable(),
   createdByName: z.string().nullable().optional(),
   /**
-   * Number of visits sharing this visit's `groupId`. Every visit always has a
-   * groupId (even a lone guest), so `groupSize > 1` — not the presence of a
-   * groupId — is what distinguishes a group visit from a single one.
+   * For a group visit's representative row, the number of guests in the group.
+   * A row is a group when `isGroupVisit === true` (not `groupSize > 1`); bulk and
+   * single visits are `isGroupVisit: false` with `groupSize: 1`.
    */
   groupSize: z.number().int().min(1).default(1),
 });
@@ -139,17 +154,30 @@ export type CreateVisitGuest = z.infer<typeof CreateVisitGuest>;
 
 /**
  * VMC creates one or more visits — the "New Invite Request" and "Register Walk-In"
- * forms. One visit is created per guest (each independently approvable), sharing a
- * generated groupId so they can be checked in together. Walk-ins (type WALK_IN)
- * are auto-approved server-side; invites start PENDING and get a referenceCode/QR.
- * Invites require a host and a schedule on every guest; walk-ins need neither.
+ * forms. One visit is created per guest (each independently approvable). Walk-ins
+ * (type WALK_IN) are auto-approved server-side; invites start PENDING and get a
+ * referenceCode/QR. Invites require a host and a schedule on every guest; walk-ins
+ * need neither.
+ *
+ * `isGroupVisit` distinguishes a true group (all guests share one groupId and a
+ * `groupName`, collapse to one VMC row, check in together) from a bulk submission
+ * (independent visits, one row each). A group requires a `groupName`.
  */
 export const CreateVisitsInput = z
   .object({
     type: VisitType,
     guests: z.array(CreateVisitGuest).min(1).max(50),
+    isGroupVisit: z.boolean().optional().default(false),
+    groupName: z.string().min(1).optional(),
+    groupContact: z.string().min(1).optional(),
   })
   .superRefine((val, ctx) => {
+    if (val.isGroupVisit && !val.groupName?.trim())
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["groupName"],
+        message: "Group name is required for a group visit",
+      });
     if (val.type === "WALK_IN") return;
     val.guests.forEach((g, i) => {
       if (!g.hostUserId)
@@ -167,6 +195,19 @@ export const CreateVisitsInput = z
     });
   });
 export type CreateVisitsInput = z.infer<typeof CreateVisitsInput>;
+
+/** Bulk-approve several visits at once (the group approval sheet's Approve All / Selected). */
+export const BulkApproveVisitsInput = z.object({
+  visitIds: z.array(z.string().uuid()).min(1),
+});
+export type BulkApproveVisitsInput = z.infer<typeof BulkApproveVisitsInput>;
+
+/** Bulk-deny several visits at once with a shared reason. */
+export const BulkDenyVisitsInput = z.object({
+  visitIds: z.array(z.string().uuid()).min(1),
+  reason: z.string().min(1),
+});
+export type BulkDenyVisitsInput = z.infer<typeof BulkDenyVisitsInput>;
 
 /** Assign a physical access badge to a visit at check-in (VMC). */
 export const CheckInVisitInput = z.object({
@@ -262,7 +303,7 @@ export const UpdateVisitRequestInput = z
   .object({
     fullName: z.string().min(1).optional(),
     email: z.string().email().optional(),
-    phone: z.string().min(3).optional(),
+    phone: z.string().min(3).transform(normalizeE164).optional(),
     organization: z.string().optional(),
     hostUserId: z.string().uuid().optional(),
     floor: z.string().min(1).optional(),

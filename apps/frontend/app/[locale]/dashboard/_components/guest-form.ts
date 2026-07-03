@@ -1,4 +1,4 @@
-import type { CreateVisitsInput } from "@vms/contracts";
+import { type CreateVisitsInput, PHONE_E164_RE, toE164 } from "@vms/contracts";
 
 export type VisitFormMode = "walkin" | "invite";
 
@@ -68,10 +68,9 @@ export function blankGuest(): GuestEntry {
   };
 }
 
-/** Joined phone string for the wire/summary, e.g. "+234 80 764 80331". */
+/** Assemble the guest's phone as clean E.164 (e.g. "+2348076480331"), or "". */
 export function formatPhone(g: Pick<GuestEntry, "phoneCode" | "phoneNumber">) {
-  const num = g.phoneNumber.trim();
-  return num ? `${g.phoneCode} ${num}` : "";
+  return toE164(g.phoneCode, g.phoneNumber);
 }
 
 /** ISO datetime from the date + time pickers, or undefined if either is missing. */
@@ -81,12 +80,19 @@ export function scheduledAtOf(g: GuestEntry): Date | undefined {
   return Number.isNaN(d.getTime()) ? undefined : d;
 }
 
+/** True if the guest's phone is blank (optional) or resolves to valid E.164. */
+export function phoneValid(g: Pick<GuestEntry, "phoneCode" | "phoneNumber">): boolean {
+  const e164 = formatPhone(g);
+  return e164 === "" || PHONE_E164_RE.test(e164);
+}
+
 /** Per-guest detail field validity (gates the form + drives inline errors). */
 export function guestDetailsValid(g: GuestEntry): boolean {
   return (
     g.fullName.trim().length > 0 &&
     EMAIL_RE.test(g.email.trim()) &&
-    g.organization.trim().length > 0
+    g.organization.trim().length > 0 &&
+    phoneValid(g)
   );
 }
 
@@ -97,18 +103,39 @@ export function visitDetailsValid(g: GuestEntry, mode: VisitFormMode): boolean {
   return base && Boolean(g.hostUserId) && Boolean(scheduledAtOf(g));
 }
 
+/** Group-visit metadata collected once for the whole submission. */
+export interface GroupInfo {
+  isGroupVisit: boolean;
+  groupName: string;
+  /** Free-text group contact — email or phone. */
+  groupContact: string;
+}
+
+/** A group visit requires a non-empty group name (gates the form). */
+export function groupNameValid(group: GroupInfo): boolean {
+  return !group.isGroupVisit || group.groupName.trim().length > 0;
+}
+
 /**
  * Build the create payload. Each guest carries its own visit details (the
  * "Use same visit details" copy-forward already materialized them per guest).
- * Walk-ins omit host + schedule.
+ * Walk-ins omit host + schedule. A group visit adds the shared group name/email;
+ * a bulk submission leaves those off so each visit stays independent.
  */
 export function buildCreateInput(
   guests: GuestEntry[],
   mode: VisitFormMode,
+  group: GroupInfo,
 ): CreateVisitsInput {
   const isInvite = mode === "invite";
   return {
     type: isInvite ? "PRE_INVITED" : "WALK_IN",
+    isGroupVisit: group.isGroupVisit,
+    groupName: group.isGroupVisit ? group.groupName.trim() : undefined,
+    groupContact:
+      group.isGroupVisit && group.groupContact.trim()
+        ? group.groupContact.trim()
+        : undefined,
     guests: guests.map((g) => ({
       fullName: g.fullName.trim(),
       email: g.email.trim(),

@@ -1,0 +1,28 @@
+# Copy to terraform.tfvars (gitignored) and fill in real values before
+# `terraform plan` / `apply`. Plays the same role as apps/backend/.env.example.
+
+# Image tags (git SHA) pushed to ECR — required, no defaults.
+backend_image_tag  = "<git-sha>"
+frontend_image_tag = "<git-sha>"
+
+# ---------------------------------------------------------------------------
+# Email transport (backend). email_provider selects the implementation:
+# smtp | gmail | mailtrap | sendgrid. Credentials for every provider can
+# coexist; the backend only reads the ones for the active provider. Values
+# left empty are treated as unset — the backend then falls back to logging
+# emails instead of sending them.
+# ---------------------------------------------------------------------------
+email_enabled  = true
+email_provider = "mailtrap"
+email_from     = "no-reply@example.com"
+# Public frontend URL used for links inside emails (defaults to the production domain).
+# app_public_url = "https://aatcvms.online"
+
+# Mailtrap live SMTP (email_provider = "mailtrap").
+mailtrap_user = ""
+mailtrap_pass = ""
+# mailtrap_host = "live.smtp.mailtrap.io"
+# mailtrap_port = 2525
+
+# SendGrid HTTP API (email_provider = "sendgrid"). The SG.* value.
+sendgrid_api_key = ""

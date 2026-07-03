@@ -15,9 +15,10 @@ import {
 } from "@vms/ui";
 import { useTranslations } from "next-intl";
 import * as React from "react";
-import { PhoneInput } from "./PhoneInput";
+import { PhoneInput } from "../../_components/PhoneInput";
 import {
   guestDetailsValid,
+  phoneValid,
   scheduledAtOf,
   type GuestEntry,
   type VisitFormMode,
@@ -58,6 +59,12 @@ export interface GuestBlockProps {
   showErrors: boolean;
   fixedHostName?: string;
   onChange: (patch: Partial<GuestEntry>) => void;
+  /** Group visit: shared group name/contact fields show and "use same" is forced. */
+  isGroupVisit?: boolean;
+  groupName?: string;
+  groupContact?: string;
+  onGroupNameChange?: (v: string) => void;
+  onGroupContactChange?: (v: string) => void;
 }
 
 /** One guest's Guest Details + Visit Details. */
@@ -70,6 +77,11 @@ export function GuestBlock({
   showErrors,
   fixedHostName,
   onChange,
+  isGroupVisit = false,
+  groupName = "",
+  groupContact = "",
+  onGroupNameChange,
+  onGroupContactChange,
 }: GuestBlockProps) {
   const t = useTranslations("invite");
   const id = (f: string) => `guest-${index}-${f}`;
@@ -113,6 +125,7 @@ export function GuestBlock({
             id={id("phone")}
             code={value.phoneCode}
             number={value.phoneNumber}
+            invalid={detailErr && !phoneValid(value)}
             placeholder={t("fields.phonePlaceholder")}
             onCodeChange={(phoneCode) => onChange({ phoneCode })}
             onNumberChange={(phoneNumber) => onChange({ phoneNumber })}
@@ -124,8 +137,17 @@ export function GuestBlock({
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-2">
           <SectionHeader>{t("sections.visitDetails")}</SectionHeader>
-          {/* The first guest has no previous to copy from, so no toggle. */}
-          {index > 0 ? (
+          {/*
+           * Group visit forces shared details — checked & disabled on every guest.
+           * Otherwise the toggle only appears from the second guest onward (the
+           * first has no previous guest to copy from).
+           */}
+          {isGroupVisit ? (
+            <label className="inline-flex items-center gap-2 text-sm font-medium text-primary underline">
+              <Checkbox checked disabled />
+              {t("useSameVisitDetails")}
+            </label>
+          ) : index > 0 ? (
             <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-primary underline">
               <Checkbox
                 checked={value.useSame}
@@ -135,6 +157,32 @@ export function GuestBlock({
             </label>
           ) : null}
         </div>
+
+        {isGroupVisit ? (
+          <>
+            <Field label={t("fields.groupName")} required htmlFor={id("groupName")}>
+              <Input
+                id={id("groupName")}
+                value={groupName}
+                invalid={showErrors && !groupName.trim()}
+                placeholder={t("fields.groupNamePlaceholder")}
+                onChange={(e) => onGroupNameChange?.(e.target.value)}
+              />
+            </Field>
+            <Field
+              label={t("fields.groupContact")}
+              htmlFor={id("groupContact")}
+            >
+              <Input
+                id={id("groupContact")}
+                type="text"
+                value={groupContact}
+                placeholder={t("fields.groupContactPlaceholder")}
+                onChange={(e) => onGroupContactChange?.(e.target.value)}
+              />
+            </Field>
+          </>
+        ) : null}
 
         {mode === "invite" ? (
           <Field label={t("fields.host")} required>
