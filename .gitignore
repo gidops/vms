@@ -40,3 +40,7 @@ npm-debug.log*
 # CLAUDE
 CLAUDE.md
 .claude/
+
+# Local SonarQube state (bootstrapped credentials/token) + scanner work dir
+/.sonar/
+/.scannerwork/

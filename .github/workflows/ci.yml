@@ -76,6 +76,10 @@ jobs:
       - name: SonarCloud Scan
         continue-on-error: true
         uses: SonarSource/sonarqube-scan-action@v6
+        with:
+          # Cloud-only setting, kept out of sonar-project.properties so the same
+          # file drives the local SonarQube (docs/sonarqube-local.md).
+          args: -Dsonar.organization=vmsvms
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 

@@ -140,6 +140,19 @@ docker compose up --build              # full stack
 docker compose down                    # stop (add -v to wipe the DB volume)
 ```
 
+## Code quality (local SonarQube)
+
+Scan the repo against a local SonarQube dashboard before pushing:
+
+```bash
+npm run sonar             # start SonarQube (Docker, :9000) if needed + scan
+npm run sonar:coverage    # include backend jest coverage in the analysis
+```
+
+Results: <http://localhost:9000/dashboard?id=gidops_vms>. First boot takes
+1–3 min; credentials are auto-bootstrapped into the gitignored `.sonar/` dir.
+Full details: [sonarqube-local.md](./sonarqube-local.md).
+
 ## Verification
 
 ```bash
