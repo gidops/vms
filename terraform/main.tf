@@ -277,6 +277,12 @@ locals {
       -e MAILTRAP_USER="${var.mailtrap_user}" \
       -e MAILTRAP_PASS="${var.mailtrap_pass}" \
       -e SENDGRID_API_KEY="${var.sendgrid_api_key}" \
+      -e WHATSAPP_ENABLED="${var.whatsapp_enabled}" \
+      -e WHATSAPP_PROVIDER="${var.whatsapp_provider}" \
+      -e WHATSAPP_USE_TEMPLATES="${var.whatsapp_use_templates}" \
+      -e TWILIO_ACCOUNT_SID="${var.twilio_account_sid}" \
+      -e TWILIO_AUTH_TOKEN="${var.twilio_auth_token}" \
+      -e TWILIO_WHATSAPP_FROM="${var.twilio_whatsapp_from}" \
       ${aws_ecr_repository.backend.repository_url}:${var.backend_image_tag}
   EOT
 }

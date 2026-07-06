@@ -1,4 +1,5 @@
 import type { VisitStatus } from "@vms/contracts";
+import { cn } from "../../foundations/cn";
 import { Badge, type BadgeProps } from "../../primitives/Badge/index";
 
 type Intent = NonNullable<BadgeProps["intent"]>;
@@ -31,12 +32,18 @@ export interface StatusBadgeProps extends Omit<
 
 export function StatusBadge({
   status,
-  dot = true,
+  dot = false,
+  className,
   ...props
 }: StatusBadgeProps) {
   const { intent, label } = STATUS_MAP[status];
   return (
-    <Badge intent={intent} dot={dot} {...props}>
+    <Badge
+      intent={intent}
+      dot={dot}
+      className={cn("border-current/15", className)}
+      {...props}
+    >
       {label}
     </Badge>
   );

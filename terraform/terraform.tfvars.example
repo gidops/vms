@@ -26,3 +26,12 @@ mailtrap_pass = ""
 
 # SendGrid HTTP API (email_provider = "sendgrid"). The SG.* value.
 sendgrid_api_key = ""
+
+
+# WhatsApp notifications (Twilio sandbox)
+whatsapp_enabled     = true
+whatsapp_provider    = "twilio"
+whatsapp_use_templates = false
+twilio_account_sid   = "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+twilio_auth_token    = "your-twilio-auth-token"
+twilio_whatsapp_from = "+14155238886"

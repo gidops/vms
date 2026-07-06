@@ -43,11 +43,11 @@ dispatcher delivers and retries with exponential backoff up to `NOTIFICATION_MAX
 
 ## Notification flows
 
-| Event | Recipient(s) | Channels | Template | Contents |
-| --- | --- | --- | --- | --- |
-| `visit.approved` | Visitor (+ host in-app) | Email, SMS, WhatsApp, In-App | `visit.approved` | name, host, date/time, purpose, **access code**, **QR** (email) |
-| `visitor.checked_in` | Host | Email, SMS, WhatsApp, In-App | `visitor.arrived` | guest name, time |
-| `visitor.checked_out` | Visitor (+ host in-app) | Email, (SMS/WhatsApp), In-App | `visit.thank_you` | thank-you + **rating link** |
+| Event                 | Recipient(s)            | Channels                      | Template          | Contents                                                        |
+| --------------------- | ----------------------- | ----------------------------- | ----------------- | --------------------------------------------------------------- |
+| `visit.approved`      | Visitor (+ host in-app) | Email, SMS, WhatsApp, In-App  | `visit.approved`  | name, host, date/time, purpose, **access code**, **QR** (email) |
+| `visitor.checked_in`  | Host                    | Email, SMS, WhatsApp, In-App  | `visitor.arrived` | guest name, time                                                |
+| `visitor.checked_out` | Visitor (+ host in-app) | Email, (SMS/WhatsApp), In-App | `visit.thank_you` | thank-you + **rating link**                                     |
 
 On approval, `VisitsService.approve()` also mints a `Pass` (access code) atomically, so the email/SMS
 can include the code and an inline QR (generated from the code by `QrService`).
@@ -75,21 +75,21 @@ Render pipeline: `Handlebars(template, data)` → MJML string → `mjml2html()` 
 2. Add the copy to `shared/i18n/messages/{en,fr,ar}.json` under `email.<ns>.*`, `sms.<ns>`,
    `whatsapp.<ns>`, `inapp.<ns>.*`.
 3. Register it in `TEMPLATE_META` (`notification.types.ts`) mapping the template key → `{ emailFile,
-   ns, withQr? }`, and add the key to `NOTIFICATION_TEMPLATES`.
+ns, withQr? }`, and add the key to `NOTIFICATION_TEMPLATES`.
 
 ## Channels, providers & toggles
 
 Each channel is independently toggleable via env — **no code change** to disable Email/SMS/WhatsApp.
 A channel that's enabled but unconfigured logs the message (dev) instead of crashing.
 
-| Channel | Transport | Provider(s) |
-| --- | --- | --- |
-| Email | `EmailTransport` | `EMAIL_PROVIDER` selects: `smtp`/`gmail`/`mailtrap` (nodemailer `SmtpProvider`, connection resolved from the selector) or `sendgrid` (HTTP API). Every transport's credentials can coexist in env — flip `EMAIL_PROVIDER` to switch, no code change. Falls back to the log provider when unconfigured. |
-| SMS | `SmsTransport` | Twilio |
-| WhatsApp | `WhatsappTransport` | `WHATSAPP_PROVIDER` selects: `twilio` (`TwilioWhatsappProvider`, reuses the Twilio account/client that backs SMS) or `meta` (`MetaCloudWhatsappProvider`, Meta WhatsApp Cloud API via the Graph API). Falls back to the log provider when unconfigured. |
-| In-App | (dispatcher) | the persisted row, read via the notifications API |
+| Channel  | Transport           | Provider(s)                                                                                                                                                                                                                                                                                            |
+| -------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Email    | `EmailTransport`    | `EMAIL_PROVIDER` selects: `smtp`/`gmail`/`mailtrap` (nodemailer `SmtpProvider`, connection resolved from the selector) or `sendgrid` (HTTP API). Every transport's credentials can coexist in env — flip `EMAIL_PROVIDER` to switch, no code change. Falls back to the log provider when unconfigured. |
+| SMS      | `SmsTransport`      | Twilio                                                                                                                                                                                                                                                                                                 |
+| WhatsApp | `WhatsappTransport` | `WHATSAPP_PROVIDER` selects: `twilio` (`TwilioWhatsappProvider`, reuses the Twilio account/client that backs SMS) or `meta` (`MetaCloudWhatsappProvider`, Meta WhatsApp Cloud API via the Graph API). Falls back to the log provider when unconfigured.                                                |
+| In-App   | (dispatcher)        | the persisted row, read via the notifications API                                                                                                                                                                                                                                                      |
 
-> **WhatsApp templates (HSM).** WhatsApp only allows *business-initiated* messages (all three VMS
+> **WhatsApp templates (HSM).** WhatsApp only allows _business-initiated_ messages (all three VMS
 > notifications) as pre-approved templates outside a 24h user-opened session; free text is silently
 > undelivered. `WHATSAPP_USE_TEMPLATES=false` (default) sends the free-text catalog copy — fine for
 > the Twilio sandbox and 24h sessions. Set `true` and add a `whatsappTemplate` (`name` = Meta template
@@ -104,11 +104,11 @@ untouched — swapping Twilio → Meta WhatsApp Cloud API is a transport-only ch
 
 ## In-app notifications API
 
-| Method | Path | Description |
-| --- | --- | --- |
-| `GET` | `/notifications?unreadOnly&page&pageSize` | Current user's in-app notifications (paginated) |
-| `PATCH` | `/notifications/:id/read` | Mark one read |
-| `POST` | `/notifications/read-all` | Mark all read |
+| Method  | Path                                      | Description                                     |
+| ------- | ----------------------------------------- | ----------------------------------------------- |
+| `GET`   | `/notifications?unreadOnly&page&pageSize` | Current user's in-app notifications (paginated) |
+| `PATCH` | `/notifications/:id/read`                 | Mark one read                                   |
+| `POST`  | `/notifications/read-all`                 | Mark all read                                   |
 
 ## Localization
 
@@ -127,20 +127,20 @@ untouched — swapping Twilio → Meta WhatsApp Cloud API is a transport-only ch
 
 See [`apps/backend/.env.example`](../apps/backend/.env.example). Key vars:
 
-| Var | Purpose |
-| --- | --- |
-| `EMAIL_ENABLED` / `SMS_ENABLED` / `WHATSAPP_ENABLED` / `INAPP_ENABLED` | Per-channel toggles |
-| `NOTIFICATION_POLL_INTERVAL_MS` / `NOTIFICATION_MAX_ATTEMPTS` | Dispatcher cadence + retry cap |
-| `NOTIFICATIONS_DEFAULT_LOCALE` | Fallback locale |
-| `APP_PUBLIC_URL` | Builds the rating link |
-| `EMAIL_PROVIDER` (`smtp`\|`gmail`\|`mailtrap`\|`sendgrid`), `EMAIL_FROM` | Email selection + sender |
-| `SMTP_HOST/PORT/SECURE/USER/PASS` | Generic/custom SMTP server (`EMAIL_PROVIDER=smtp`) |
-| `GMAIL_USER/GMAIL_APP_PASSWORD` | Gmail (`EMAIL_PROVIDER=gmail`; host/port/secure fixed to smtp.gmail.com:465) |
-| `MAILTRAP_HOST/PORT/USER/PASS` | Mailtrap live sending (`EMAIL_PROVIDER=mailtrap`) |
-| `SENDGRID_API_KEY` | SendGrid HTTP API (`EMAIL_PROVIDER=sendgrid`) |
-| `TWILIO_ACCOUNT_SID/AUTH_TOKEN/SMS_FROM/WHATSAPP_FROM` | Twilio SMS + WhatsApp (`twilio` provider) |
-| `WHATSAPP_PROVIDER` (`twilio`\|`meta`), `WHATSAPP_USE_TEMPLATES` | WhatsApp backend selection + template mode |
-| `META_WHATSAPP_ACCESS_TOKEN/META_WABA_PHONE_NUMBER_ID/META_GRAPH_API_VERSION` | Meta WhatsApp Cloud API (`WHATSAPP_PROVIDER=meta`) |
+| Var                                                                           | Purpose                                                                      |
+| ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `EMAIL_ENABLED` / `SMS_ENABLED` / `WHATSAPP_ENABLED` / `INAPP_ENABLED`        | Per-channel toggles                                                          |
+| `NOTIFICATION_POLL_INTERVAL_MS` / `NOTIFICATION_MAX_ATTEMPTS`                 | Dispatcher cadence + retry cap                                               |
+| `NOTIFICATIONS_DEFAULT_LOCALE`                                                | Fallback locale                                                              |
+| `APP_PUBLIC_URL`                                                              | Builds the rating link                                                       |
+| `EMAIL_PROVIDER` (`smtp`\|`gmail`\|`mailtrap`\|`sendgrid`), `EMAIL_FROM`      | Email selection + sender                                                     |
+| `SMTP_HOST/PORT/SECURE/USER/PASS`                                             | Generic/custom SMTP server (`EMAIL_PROVIDER=smtp`)                           |
+| `GMAIL_USER/GMAIL_APP_PASSWORD`                                               | Gmail (`EMAIL_PROVIDER=gmail`; host/port/secure fixed to smtp.gmail.com:465) |
+| `MAILTRAP_HOST/PORT/USER/PASS`                                                | Mailtrap live sending (`EMAIL_PROVIDER=mailtrap`)                            |
+| `SENDGRID_API_KEY`                                                            | SendGrid HTTP API (`EMAIL_PROVIDER=sendgrid`)                                |
+| `TWILIO_ACCOUNT_SID/AUTH_TOKEN/SMS_FROM/WHATSAPP_FROM`                        | Twilio SMS + WhatsApp (`twilio` provider)                                    |
+| `WHATSAPP_PROVIDER` (`twilio`\|`meta`), `WHATSAPP_USE_TEMPLATES`              | WhatsApp backend selection + template mode                                   |
+| `META_WHATSAPP_ACCESS_TOKEN/META_WABA_PHONE_NUMBER_ID/META_GRAPH_API_VERSION` | Meta WhatsApp Cloud API (`WHATSAPP_PROVIDER=meta`)                           |
 
 **Switching transport:** set `EMAIL_ENABLED=true` and pick `EMAIL_PROVIDER`. Examples —
 `gmail`: `GMAIL_USER=<you@gmail.com>`, `GMAIL_APP_PASSWORD=<app password>` (needs 2FA);

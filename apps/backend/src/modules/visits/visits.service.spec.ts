@@ -477,6 +477,16 @@ describe('VisitsService.list scoping', () => {
       expect.objectContaining({ where: { status: 'PENDING' } }),
     );
   });
+
+  it('orders by scheduled date ascending with undated visits last', async () => {
+    const { service, findMany } = setup();
+    await service.list(query({ scope: 'all' }), 'me');
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { scheduledAt: { sort: 'asc', nulls: 'last' } },
+      }),
+    );
+  });
 });
 
 describe('VisitsService.list statuses + groupSize', () => {
@@ -543,14 +553,128 @@ describe('VisitsService.list statuses + groupSize', () => {
         where: { status: { in: ['APPROVED', 'CHECKED_IN'] } },
       }),
     );
-    // a + b collapse into one row; c stays. Group size counts both members and
-    // the derived status is the most active (CHECKED_IN beats APPROVED).
+    // a + b collapse into one row; c stays. Group size counts both members, and
+    // the derived status is Expected (APPROVED) because member `a` (APPROVED) has
+    // not checked in yet — even though `b` is CHECKED_IN.
     expect(result.items).toHaveLength(2);
     expect(result.items[0].id).toBe('a');
     expect(result.items[0].groupSize).toBe(2);
-    expect(result.items[0].status).toBe('CHECKED_IN');
+    expect(result.items[0].status).toBe('APPROVED');
     expect(result.items[1].id).toBe('c');
     expect(result.items[1].groupSize).toBe(1);
+  });
+
+  it.each([
+    [['APPROVED', 'CHECKED_IN'], 'APPROVED'], // someone not checked in → Expected
+    [['PENDING', 'CHECKED_IN'], 'APPROVED'], // pending member holds it Expected
+    [['CHECKED_IN'], 'CHECKED_IN'], // all on-site → Onsite
+    [['CHECKED_IN', 'CHECKED_OUT'], 'CHECKED_IN'], // all checked in, some left → Onsite
+    [['CHECKED_OUT'], 'CHECKED_OUT'], // everyone left → Checked Out
+    [['CANCELLED', 'CHECKED_IN'], 'CHECKED_IN'], // cancelled guest ignored → Onsite
+  ])('derives a group status of %s → %s', async (memberStatuses, expected) => {
+    const rows = [
+      {
+        id: 'a',
+        groupId: 'g1',
+        isGroupVisit: true,
+        status: 'APPROVED',
+        visitor: {},
+        host: null,
+      },
+    ];
+    const findMany = jest.fn().mockResolvedValue(rows);
+    const count = jest.fn().mockResolvedValue(1);
+    const groupBy = jest.fn().mockResolvedValue(
+      memberStatuses.map((status) => ({
+        groupId: 'g1',
+        status,
+        _count: { _all: 1 },
+      })),
+    );
+    const prisma = {
+      visit: { findMany, count, groupBy },
+      $transaction: (ops: unknown[]) => Promise.all(ops as Promise<unknown>[]),
+    } as unknown as PrismaService;
+    const service = new VisitsService(
+      prisma,
+      {} as TransactionManager,
+      {} as EventPublisher,
+    );
+
+    const result = await service.list(
+      query({ statuses: ['APPROVED', 'CHECKED_IN', 'CHECKED_OUT'] }),
+      'me',
+    );
+    expect(result.items[0].status).toBe(expected);
+  });
+
+  it('paginates over collapsed rows so a group counts as one logical row', async () => {
+    // Raw set (scheduled order): a + b are one group (g1); c, d are singles. The
+    // logical rows are [g1-representative, c, d] → 3, so pageSize 2 = 2 pages and
+    // page 1 must return a full 2 rows even though a group spans it.
+    const rows = [
+      {
+        id: 'a',
+        groupId: 'g1',
+        isGroupVisit: true,
+        status: 'APPROVED',
+        visitor: {},
+        host: null,
+      },
+      {
+        id: 'b',
+        groupId: 'g1',
+        isGroupVisit: true,
+        status: 'APPROVED',
+        visitor: {},
+        host: null,
+      },
+      {
+        id: 'c',
+        groupId: null,
+        isGroupVisit: false,
+        status: 'APPROVED',
+        visitor: {},
+        host: null,
+      },
+      {
+        id: 'd',
+        groupId: null,
+        isGroupVisit: false,
+        status: 'APPROVED',
+        visitor: {},
+        host: null,
+      },
+    ];
+    const findMany = jest.fn().mockResolvedValue(rows);
+    const count = jest.fn();
+    const groupBy = jest
+      .fn()
+      .mockResolvedValue([
+        { groupId: 'g1', status: 'APPROVED', _count: { _all: 2 } },
+      ]);
+    const prisma = {
+      visit: { findMany, count, groupBy },
+      $transaction: (ops: unknown[]) => Promise.all(ops as Promise<unknown>[]),
+    } as unknown as PrismaService;
+    const service = new VisitsService(
+      prisma,
+      {} as TransactionManager,
+      {} as EventPublisher,
+    );
+
+    const page1 = await service.list(query({ pageSize: 2, page: 1 }), 'me');
+    // total / totalPages count logical (collapsed) rows, not raw visit rows.
+    expect(page1.total).toBe(3);
+    expect(page1.totalPages).toBe(2);
+    expect(page1.items.map((i) => i.id)).toEqual(['a', 'c']);
+    expect(page1.items[0].groupSize).toBe(2);
+
+    const page2 = await service.list(query({ pageSize: 2, page: 2 }), 'me');
+    expect(page2.items.map((i) => i.id)).toEqual(['d']);
+
+    // The collapsed path slices logical ids in memory — no offset row count query.
+    expect(count).not.toHaveBeenCalled();
   });
 
   it('returns every group member (no collapse) when a groupId filter is set', async () => {

@@ -20,9 +20,12 @@ import { QrPane, statusText, SummaryRow } from "./modal-shared";
 export function CheckInModal({
   visitId,
   onClose,
+  onCheckedIn,
 }: {
   visitId: string;
   onClose: () => void;
+  /** Called after a successful check-in (used to advance a group queue). */
+  onCheckedIn?: () => void;
 }) {
   const t = useTranslations("checkin");
   const format = useFormatter();
@@ -39,6 +42,7 @@ export function CheckInModal({
     try {
       const result = await checkIn.mutateAsync({ accessCardId: cardId });
       setDone(result);
+      onCheckedIn?.();
     } catch {
       /* surfaced below */
     }

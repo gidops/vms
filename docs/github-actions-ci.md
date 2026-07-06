@@ -73,8 +73,8 @@ Coverage is produced by the backend coverage step earlier in the job.
 
 Set under: repository **Settings → Secrets and variables → Actions → New repository secret**.
 
-| Secret | Used by | Notes |
-|--------|---------|-------|
+| Secret        | Used by              | Notes                                                                                                                                           |
+| ------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `SONAR_TOKEN` | SonarCloud scan step | SonarCloud analysis token for project `gidops_vms` (organization `vmsvms`). Same token value used by the Jenkins `sonarcloud-token` credential. |
 
 No AWS or other secrets are required for CI. (Deployment/CD is a separate

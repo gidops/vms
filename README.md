@@ -56,8 +56,8 @@ npm run dev -w @vms/frontend
 
 Open <http://localhost:3000> and sign in:
 
-| Email | Password |
-| --- | --- |
+| Email            | Password    |
+| ---------------- | ----------- |
 | `admin@aatc.org` | `Passw0rd!` |
 
 > Prefer one command? `docker compose up --build` runs the whole stack in Docker —
@@ -66,13 +66,13 @@ Open <http://localhost:3000> and sign in:
 
 ### URLs
 
-| Service | URL |
-| --- | --- |
-| Frontend (login) | <http://localhost:3000/> · `/fr`, `/ar` for French/Arabic (RTL) |
-| Dashboard | <http://localhost:3000/dashboard> |
-| Backend health | <http://localhost:4000/health> |
-| Adminer | <http://localhost:8080> (System **PostgreSQL**, server **postgres**, user/pass/db **vms/vms/vms**) |
-| Storybook | `npm run storybook -w @vms/ui` |
+| Service          | URL                                                                                                |
+| ---------------- | -------------------------------------------------------------------------------------------------- |
+| Frontend (login) | <http://localhost:3000/> · `/fr`, `/ar` for French/Arabic (RTL)                                    |
+| Dashboard        | <http://localhost:3000/dashboard>                                                                  |
+| Backend health   | <http://localhost:4000/health>                                                                     |
+| Adminer          | <http://localhost:8080> (System **PostgreSQL**, server **postgres**, user/pass/db **vms/vms/vms**) |
+| Storybook        | `npm run storybook -w @vms/ui`                                                                     |
 
 ## Documentation
 

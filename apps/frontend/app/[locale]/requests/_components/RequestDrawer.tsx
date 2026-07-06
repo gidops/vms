@@ -21,10 +21,6 @@ export function RequestDrawer({
 }) {
   if (!selected) return null;
   return (
-    <VisitDetailSheet
-      kind={selected.kind}
-      id={selected.id}
-      onClose={onClose}
-    />
+    <VisitDetailSheet kind={selected.kind} id={selected.id} onClose={onClose} />
   );
 }

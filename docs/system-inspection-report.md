@@ -20,17 +20,17 @@ readiness, testing, and key risks. Findings are verified against source on `deve
 
 ### Frontend — fully implemented ✅
 
-| Aspect | Finding | Location |
-| --- | --- | --- |
-| Library | **next-intl v4** | `apps/frontend/package.json` |
-| Locales | `en` (default, unprefixed), `fr`, `ar` — `localePrefix: "as-needed"` | `apps/frontend/i18n/routing.ts` |
-| Middleware | `createMiddleware(routing)` on all non-API/internal paths | `apps/frontend/middleware.ts` |
-| Request config | dynamic per-locale message loading | `apps/frontend/i18n/request.ts` |
-| Navigation | locale-aware `Link`/`redirect`/`useRouter`/`usePathname` | `apps/frontend/i18n/navigation.ts` |
-| Catalogs | `messages/{en,fr,ar}.json`, flat dot-notation keys, **full parity** (14 top-level groups: app, nav, login, dashboard, common, requests, language, roles, signup, admin, staff, gate, users, settings — 111 leaf-groups each) | `apps/frontend/messages/` |
-| Usage | client-side `useTranslations(namespace)` (no server `getTranslations` in app code) | `app/[locale]/**` |
-| Runtime switching | **Yes** — `LanguageSwitcher.tsx` globe popover, `router.replace(pathname, { locale })` preserves path | `app/[locale]/_components/LanguageSwitcher.tsx` |
-| RTL | `dir="rtl"` for Arabic on `<html>`; logical Tailwind props (`ms/me`, `ps/pe`, `text-start`) flip layout | `app/[locale]/layout.tsx` |
+| Aspect            | Finding                                                                                                                                                                                                                      | Location                                        |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| Library           | **next-intl v4**                                                                                                                                                                                                             | `apps/frontend/package.json`                    |
+| Locales           | `en` (default, unprefixed), `fr`, `ar` — `localePrefix: "as-needed"`                                                                                                                                                         | `apps/frontend/i18n/routing.ts`                 |
+| Middleware        | `createMiddleware(routing)` on all non-API/internal paths                                                                                                                                                                    | `apps/frontend/middleware.ts`                   |
+| Request config    | dynamic per-locale message loading                                                                                                                                                                                           | `apps/frontend/i18n/request.ts`                 |
+| Navigation        | locale-aware `Link`/`redirect`/`useRouter`/`usePathname`                                                                                                                                                                     | `apps/frontend/i18n/navigation.ts`              |
+| Catalogs          | `messages/{en,fr,ar}.json`, flat dot-notation keys, **full parity** (14 top-level groups: app, nav, login, dashboard, common, requests, language, roles, signup, admin, staff, gate, users, settings — 111 leaf-groups each) | `apps/frontend/messages/`                       |
+| Usage             | client-side `useTranslations(namespace)` (no server `getTranslations` in app code)                                                                                                                                           | `app/[locale]/**`                               |
+| Runtime switching | **Yes** — `LanguageSwitcher.tsx` globe popover, `router.replace(pathname, { locale })` preserves path                                                                                                                        | `app/[locale]/_components/LanguageSwitcher.tsx` |
+| RTL               | `dir="rtl"` for Arabic on `<html>`; logical Tailwind props (`ms/me`, `ps/pe`, `text-start`) flip layout                                                                                                                      | `app/[locale]/layout.tsx`                       |
 
 ### Backend — architecturally prepared, **not implemented** ⚠️
 
@@ -68,13 +68,13 @@ UseCase ─ tx ─▶ repo.update(tx) + outbox.append(tx, Event)        (one ato
 OutboxRelay (poll, OUTBOX_POLL_INTERVAL_MS) ─▶ EventEmitter2 ─▶ handlers (AuditListener, …)
 ```
 
-| Component | Role | Location |
-| --- | --- | --- |
-| `TransactionManager` | wraps `prisma.$transaction`, makes state change + event append atomic | `shared/events/transaction.manager.ts` |
-| `EventPublisher` | stamps correlation/actor/ip/ua from CLS; appends to outbox in the caller's tx | `shared/events/event-publisher.ts` |
-| `OutboxRepository` | `append` / `fetchPending` / `markPublished` / `markFailed` (backoff) | `shared/events/outbox.repository.ts` |
-| `OutboxRelay` | polls PENDING rows (batch 50), emits to EventEmitter2, marks published — **the only transport-aware component** | `shared/events/outbox.relay.ts` |
-| `AuditListener` | `@OnEvent('**')` → one append-only `AuditLog` row per event | `shared/audit/audit.listener.ts` |
+| Component            | Role                                                                                                            | Location                               |
+| -------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `TransactionManager` | wraps `prisma.$transaction`, makes state change + event append atomic                                           | `shared/events/transaction.manager.ts` |
+| `EventPublisher`     | stamps correlation/actor/ip/ua from CLS; appends to outbox in the caller's tx                                   | `shared/events/event-publisher.ts`     |
+| `OutboxRepository`   | `append` / `fetchPending` / `markPublished` / `markFailed` (backoff)                                            | `shared/events/outbox.repository.ts`   |
+| `OutboxRelay`        | polls PENDING rows (batch 50), emits to EventEmitter2, marks published — **the only transport-aware component** | `shared/events/outbox.relay.ts`        |
+| `AuditListener`      | `@OnEvent('**')` → one append-only `AuditLog` row per event                                                     | `shared/audit/audit.listener.ts`       |
 
 - **Events defined** in `shared/events/domain-event.ts` (`EVENT_TYPES`): visit (approved/denied/
   cancelled/updated), `visitor.checked_in/out`, `invitation.created`, `alert.updated`,
@@ -122,13 +122,13 @@ shared/    config · logging · prisma · crypto · storage ·
 
 ### Coupling assessment
 
-| Coupling | Strength | Detail |
-| --- | --- | --- |
-| Domain ↔ Domain | **Loose** | No cross-domain imports (e.g. visits never imports alerts). Inbox reads both tables directly but imports neither module. |
-| Domain ↔ Events | **Loose (mediated)** | All writers use `TransactionManager`/`EventPublisher` from the shared events module, not each other. |
-| Domain ↔ Prisma | **Tight** | Every service injects the **single global `PrismaService`**; no repository abstraction. One Postgres, ACID across domains. |
-| Auth ↔ Identity | **Tight (circular, mitigated)** | `AuthModule` imports `IdentityModule` for `UsersService`; the circular dep is broken by re-providing `PasswordService` in both. |
-| Auth ↔ everything | **Tight (by design)** | Global `JwtAuthGuard` + `PermissionsGuard` (`APP_GUARD`) weave auth into every route. |
+| Coupling          | Strength                        | Detail                                                                                                                          |
+| ----------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Domain ↔ Domain   | **Loose**                       | No cross-domain imports (e.g. visits never imports alerts). Inbox reads both tables directly but imports neither module.        |
+| Domain ↔ Events   | **Loose (mediated)**            | All writers use `TransactionManager`/`EventPublisher` from the shared events module, not each other.                            |
+| Domain ↔ Prisma   | **Tight**                       | Every service injects the **single global `PrismaService`**; no repository abstraction. One Postgres, ACID across domains.      |
+| Auth ↔ Identity   | **Tight (circular, mitigated)** | `AuthModule` imports `IdentityModule` for `UsersService`; the circular dep is broken by re-providing `PasswordService` in both. |
+| Auth ↔ everything | **Tight (by design)**           | Global `JwtAuthGuard` + `PermissionsGuard` (`APP_GUARD`) weave auth into every route.                                           |
 
 ### Migration readiness
 
@@ -141,7 +141,7 @@ shared/    config · logging · prisma · crypto · storage ·
   true microservices require splitting the schema (with eventual consistency for cross-domain reads
   like the inbox) and moving the bus off in-process EventEmitter2.
 
-**Verdict:** early-microservice-*ready* modular monolith. The event/relay seam and clean module
+**Verdict:** early-microservice-_ready_ modular monolith. The event/relay seam and clean module
 boundaries mean extraction is evolutionary, not a rewrite — but the shared DB must be addressed
 before any module becomes a true service.
 
@@ -151,15 +151,15 @@ before any module becomes a true service.
 
 ### Types present
 
-| Type | Present? | Where | Count |
-| --- | --- | --- | --- |
-| Unit (backend) | ✅ | `apps/backend/src/**/*.spec.ts` (co-located) | 14 |
-| E2E (backend) | ✅ | `apps/backend/test/*.e2e-spec.ts` | 2 (`app`, `auth`) |
-| Integration | ➖ | overlaps the e2e suite (boots the Nest app); no separate tier | — |
-| Contract tests (`@vms/contracts`) | ❌ | none | 0 |
-| Frontend (unit/component/e2e) | ❌ | none | 0 |
-| UI / Storybook | ⚠️ | `build-storybook` is the only UI gate (no test-runner/interaction tests) | — |
-| Infra (docker/db/seq) | ❌ | none | 0 |
+| Type                              | Present? | Where                                                                    | Count             |
+| --------------------------------- | -------- | ------------------------------------------------------------------------ | ----------------- |
+| Unit (backend)                    | ✅       | `apps/backend/src/**/*.spec.ts` (co-located)                             | 14                |
+| E2E (backend)                     | ✅       | `apps/backend/test/*.e2e-spec.ts`                                        | 2 (`app`, `auth`) |
+| Integration                       | ➖       | overlaps the e2e suite (boots the Nest app); no separate tier            | —                 |
+| Contract tests (`@vms/contracts`) | ❌       | none                                                                     | 0                 |
+| Frontend (unit/component/e2e)     | ❌       | none                                                                     | 0                 |
+| UI / Storybook                    | ⚠️       | `build-storybook` is the only UI gate (no test-runner/interaction tests) | —                 |
+| Infra (docker/db/seq)             | ❌       | none                                                                     | 0                 |
 
 Runner: **Jest + ts-jest**. Unit config inline in `apps/backend/package.json` (`testRegex
 .*\.spec\.ts$`, `rootDir: src`); e2e via `apps/backend/test/jest-e2e.json`.
@@ -176,15 +176,15 @@ Runner: **Jest + ts-jest**. Unit config inline in `apps/backend/package.json` (`
 
 ### How to run
 
-| Goal | Command |
-| --- | --- |
-| **All tests** (every workspace) | `npx turbo run test` |
-| **Only unit (backend)** | `npm test -w @vms/backend` |
-| **Single file** | `npm test -- path/to/file.spec.ts -w @vms/backend` |
-| **Only e2e (backend)** | `npm run test:e2e -w @vms/backend` |
-| **Coverage** | `npm run test:cov -w @vms/backend` |
-| **Backend-only via Turbo filter** | `npx turbo run test --filter=@vms/backend` |
-| **Frontend tests** | _none exist_ |
+| Goal                              | Command                                            |
+| --------------------------------- | -------------------------------------------------- |
+| **All tests** (every workspace)   | `npx turbo run test`                               |
+| **Only unit (backend)**           | `npm test -w @vms/backend`                         |
+| **Single file**                   | `npm test -- path/to/file.spec.ts -w @vms/backend` |
+| **Only e2e (backend)**            | `npm run test:e2e -w @vms/backend`                 |
+| **Coverage**                      | `npm run test:cov -w @vms/backend`                 |
+| **Backend-only via Turbo filter** | `npx turbo run test --filter=@vms/backend`         |
+| **Frontend tests**                | _none exist_                                       |
 
 **Turbo orchestration** (`turbo.json`): the `test` task declares `dependsOn: ["^build"]` (deps
 build first) and caches `coverage/**`. Only `@vms/backend` defines a `test` script, so
@@ -197,17 +197,17 @@ tasks — they are invoked directly per-workspace (notably in CI).
 
 ### Coverage analysis
 
-| Critical domain | Covered? |
-| --- | --- |
-| Auth (login/refresh/token/password) | ✅ Strong (unit + e2e) |
-| RBAC / permissions guards | ✅ (`guards.spec.ts`) |
-| Audit log / listener | ✅ |
-| Outbox / relay | ✅ |
-| Security events | ✅ (`security-audit.service.spec.ts`) |
-| Crypto / column encryption | ✅ |
-| **Domain services (visits, alerts, notes, inbox, users)** | ❌ **No unit tests** |
-| **Frontend (auth context, RouteGuard, data layer, i18n)** | ❌ **No tests** |
-| **`@vms/contracts` schemas** | ❌ No tests |
+| Critical domain                                           | Covered?                              |
+| --------------------------------------------------------- | ------------------------------------- |
+| Auth (login/refresh/token/password)                       | ✅ Strong (unit + e2e)                |
+| RBAC / permissions guards                                 | ✅ (`guards.spec.ts`)                 |
+| Audit log / listener                                      | ✅                                    |
+| Outbox / relay                                            | ✅                                    |
+| Security events                                           | ✅ (`security-audit.service.spec.ts`) |
+| Crypto / column encryption                                | ✅                                    |
+| **Domain services (visits, alerts, notes, inbox, users)** | ❌ **No unit tests**                  |
+| **Frontend (auth context, RouteGuard, data layer, i18n)** | ❌ **No tests**                       |
+| **`@vms/contracts` schemas**                              | ❌ No tests                           |
 
 The **security/infrastructure spine is well-tested**; the **business logic layer and the entire
 frontend are untested**. The Jest coverage threshold is set low (`statements 32%`, `branches 30%`,
@@ -237,7 +237,7 @@ frontend are untested**. The Jest coverage threshold is set low (`statements 32%
 
 ---
 
-*Inspection method: three parallel read-only Explore agents plus direct source verification
+_Inspection method: three parallel read-only Explore agents plus direct source verification
 (controllers, `domain-event.ts`, `turbo.json`, `ci.yml`, Prisma schema, message catalogs). No code
-was modified.*
+was modified._
 </content>

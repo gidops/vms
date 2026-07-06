@@ -24,8 +24,8 @@ npm run dev       -w @vms/frontend           # terminal 2 → http://localhost:3
 
 Sign in at <http://localhost:3000> with the dev seed account:
 
-| Email | Password |
-| --- | --- |
+| Email            | Password    |
+| ---------------- | ----------- |
 | `admin@aatc.org` | `Passw0rd!` |
 
 The backend seeds the permission catalogue, the `ADMIN` / `CSO` / `RECEPTION`
@@ -34,14 +34,14 @@ non‑production (idempotent) — so the Requests & Alerts inbox renders with da
 
 ### URLs
 
-| Service | URL |
-| --- | --- |
-| Frontend (login) | <http://localhost:3000/> (`/fr`, `/ar` for FR/AR) |
-| Dashboard | <http://localhost:3000/dashboard> |
-| Backend health | <http://localhost:4000/health> |
-| Adminer | <http://localhost:8080> — System **PostgreSQL**, server **postgres**, user/pass/db **vms/vms/vms** |
-| Seq (audit/log search) | <http://localhost:8081> — ingestion on `:5341` (CLEF) |
-| Storybook | `npm run storybook -w @vms/ui` |
+| Service                | URL                                                                                                |
+| ---------------------- | -------------------------------------------------------------------------------------------------- |
+| Frontend (login)       | <http://localhost:3000/> (`/fr`, `/ar` for FR/AR)                                                  |
+| Dashboard              | <http://localhost:3000/dashboard>                                                                  |
+| Backend health         | <http://localhost:4000/health>                                                                     |
+| Adminer                | <http://localhost:8080> — System **PostgreSQL**, server **postgres**, user/pass/db **vms/vms/vms** |
+| Seq (audit/log search) | <http://localhost:8081> — ingestion on `:5341` (CLEF)                                              |
+| Storybook              | `npm run storybook -w @vms/ui`                                                                     |
 
 ### Seq (structured-log + audit mirror)
 
@@ -91,16 +91,16 @@ fast** on a missing/invalid variable.
 
 **Backend** (`apps/backend/.env`):
 
-| Var | Notes |
-| --- | --- |
-| `DATABASE_URL` | Postgres URL (`localhost` host for dev, `postgres` in compose) |
-| `JWT_SECRET` | signing secret for access tokens |
-| `JWT_EXPIRES_IN` | e.g. `1h`, `15m` |
-| `PORT` | `4000` |
-| `NODE_ENV` | `development` / `production` |
-| `LOG_LEVEL` | optional (`info` default) |
-| `ENCRYPTION_KEY` | optional base64 32‑byte key; derived from `JWT_SECRET` in dev |
-| `OUTBOX_POLL_INTERVAL_MS` | optional (`2000` default) |
+| Var                       | Notes                                                          |
+| ------------------------- | -------------------------------------------------------------- |
+| `DATABASE_URL`            | Postgres URL (`localhost` host for dev, `postgres` in compose) |
+| `JWT_SECRET`              | signing secret for access tokens                               |
+| `JWT_EXPIRES_IN`          | e.g. `1h`, `15m`                                               |
+| `PORT`                    | `4000`                                                         |
+| `NODE_ENV`                | `development` / `production`                                   |
+| `LOG_LEVEL`               | optional (`info` default)                                      |
+| `ENCRYPTION_KEY`          | optional base64 32‑byte key; derived from `JWT_SECRET` in dev  |
+| `OUTBOX_POLL_INTERVAL_MS` | optional (`2000` default)                                      |
 
 **Frontend** (`apps/frontend/.env`): `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_API_BASE_URL`.
 

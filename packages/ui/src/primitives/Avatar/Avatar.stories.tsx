@@ -33,12 +33,12 @@ export const ColorCoded: Story = {
   ),
 };
 
-/** Semantic accents used on the VMC table: green = single visit, amber = group. */
+/** Semantic accents used on the VMC table: single visit (teal) vs group (gold ring). */
 export const Accents: Story = {
   render: () => (
     <div className="flex items-center gap-3">
-      <Avatar name="Sophia Davis" accent="green" />
-      <Avatar name="Pentagon Group" accent="amber" />
+      <Avatar name="Sophia Davis" accent="single" />
+      <Avatar name="Pentagon Group" accent="group" />
     </div>
   ),
 };
