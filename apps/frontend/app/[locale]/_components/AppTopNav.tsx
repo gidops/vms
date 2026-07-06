@@ -10,16 +10,8 @@ import { RoleSwitcher } from "./RoleSwitcher";
 
 function BrandMark() {
   return (
-    <span className="flex items-center gap-2">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/brand/afreximbank.svg"
-        alt=""
-        className="size-9"
-        aria-hidden="true"
-      />
-      <span className="text-sm font-bold tracking-[0.2em]">AFREXIMBANK</span>
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src="/brand/afreximbank.svg" alt="AATC VMS" className="size-9" />
   );
 }
 

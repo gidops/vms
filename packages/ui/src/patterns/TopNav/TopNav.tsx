@@ -26,13 +26,16 @@ export function TopNav({
   return (
     <header
       className={cn(
-        "flex h-16 w-full shrink-0 items-center bg-emphasis text-emphasis-fg",
+        "flex h-[72px] w-full shrink-0 items-center bg-emphasis text-emphasis-fg",
         className,
       )}
       {...props}
     >
       <div
-        className={cn(contentContainer, "flex items-center gap-4 px-4 sm:px-6")}
+        className={cn(
+          contentContainer,
+          "flex items-center gap-4 px-4 sm:px-12",
+        )}
       >
         <div className="flex min-w-0 flex-1 items-center">{brand}</div>
         {center ? (

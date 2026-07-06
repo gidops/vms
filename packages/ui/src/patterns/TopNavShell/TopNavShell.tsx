@@ -35,13 +35,15 @@ export function TopNavShell({
       {nav}
       {filterBar ? (
         <div className="shrink-0 border-b border-border bg-surface">
-          <div className={cn(contentContainer, "px-4 py-3 sm:px-6")}>
+          <div className={cn(contentContainer, "px-4 py-[19px] sm:px-12")}>
             {filterBar}
           </div>
         </div>
       ) : null}
       <main className="flex-1 overflow-y-auto">
-        <div className={cn(contentContainer, "p-4 sm:p-6")}>{children}</div>
+        <div className={cn(contentContainer, "p-4 sm:px-12 sm:py-6")}>
+          {children}
+        </div>
       </main>
     </div>
   );
