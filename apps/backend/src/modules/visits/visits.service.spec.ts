@@ -826,3 +826,164 @@ describe('VisitsService.cancel', () => {
     );
   });
 });
+
+describe('VisitsService rating, resend & operative names', () => {
+  function make(visit: Record<string, unknown> | null) {
+    const tx = {
+      rating: { upsert: jest.fn().mockResolvedValue({}) },
+    };
+    const prisma = {
+      visit: { findUnique: jest.fn().mockResolvedValue(visit) },
+    } as unknown as PrismaService;
+    const txm = {
+      run: (fn: (t: typeof tx) => unknown) => fn(tx),
+    } as unknown as TransactionManager;
+    const publish = jest.fn().mockResolvedValue({});
+    const events = { publish } as unknown as EventPublisher;
+    const service = new VisitsService(prisma, txm, events);
+    jest.spyOn(service, 'getDetail').mockResolvedValue({ id: 'v1' } as never);
+    return { service, tx, publish };
+  }
+
+  it('rate upserts a rating and emits VisitorRated', async () => {
+    const { service, tx, publish } = make({
+      status: 'CHECKED_OUT',
+      visitorId: 'vis1',
+      createdById: 'actor',
+      host: { userId: 'h' },
+    });
+    await service.rate('v1', { score: 5 }, 'actor');
+    expect(tx.rating.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { visitId: 'v1' } }),
+    );
+    expect(publish).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({ type: EVENT_TYPES.VisitorRated }),
+    );
+  });
+
+  it('rate forbids a non-owner', async () => {
+    const { service } = make({
+      status: 'CHECKED_OUT',
+      visitorId: 'vis1',
+      createdById: 'someone',
+      host: { userId: 'other' },
+    });
+    await expect(service.rate('v1', { score: 5 }, 'actor')).rejects.toThrow(
+      ForbiddenException,
+    );
+  });
+
+  it('rate rejects when the visit is not checked out', async () => {
+    const { service } = make({
+      status: 'CHECKED_IN',
+      visitorId: 'vis1',
+      createdById: 'actor',
+      host: { userId: 'h' },
+    });
+    await expect(service.rate('v1', { score: 5 }, 'actor')).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+
+  it('rate 404s for a missing visit', async () => {
+    const { service } = make(null);
+    await expect(service.rate('v1', { score: 5 }, 'actor')).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+
+  it('resendCode emits VisitInviteResent for an invite', async () => {
+    const { service, publish } = make({
+      type: 'PRE_INVITED',
+      referenceCode: '5A19-795',
+      createdById: 'actor',
+      host: { userId: 'h' },
+    });
+    await service.resendCode('v1', 'actor');
+    expect(publish).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ type: EVENT_TYPES.VisitInviteResent }),
+    );
+  });
+
+  it('resendCode rejects a walk-in without a reference code', async () => {
+    const { service } = make({
+      type: 'WALK_IN',
+      referenceCode: null,
+      createdById: 'actor',
+      host: { userId: 'h' },
+    });
+    await expect(service.resendCode('v1', 'actor')).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+
+  it('resendCode forbids a non-owner', async () => {
+    const { service } = make({
+      type: 'PRE_INVITED',
+      referenceCode: 'x',
+      createdById: 'x',
+      host: { userId: 'y' },
+    });
+    await expect(service.resendCode('v1', 'actor')).rejects.toThrow(
+      ForbiddenException,
+    );
+  });
+
+  it('getDetail resolves checked-in/out operative names from the gate log', async () => {
+    const now = new Date();
+    const visitRow = {
+      id: 'v1',
+      visitorId: 'vis1',
+      hostId: null,
+      invitationId: null,
+      groupId: null,
+      isGroupVisit: false,
+      groupName: null,
+      groupContact: null,
+      referenceCode: null,
+      type: 'PRE_INVITED',
+      status: 'CHECKED_OUT',
+      purpose: 'Meeting',
+      floor: null,
+      riskLevel: null,
+      scheduledAt: null,
+      gateValidatedAt: null,
+      checkInAt: now,
+      checkOutAt: now,
+      createdAt: now,
+      updatedAt: now,
+      source: null,
+      createdById: null,
+      createdByName: 'Creator',
+      createdBy: null,
+      visitor: { id: 'vis1', fullName: 'Guest', email: 'g@x.io' },
+      host: null,
+      pass: null,
+      notes: [],
+    };
+    const prisma = {
+      visit: { findUnique: jest.fn().mockResolvedValue(visitRow) },
+      gateEvent: {
+        findMany: jest.fn().mockResolvedValue([
+          { result: 'CHECKED_IN', operativeUserId: 'op1' },
+          { result: 'CHECKED_OUT', operativeUserId: 'op2' },
+        ]),
+      },
+      user: {
+        findMany: jest.fn().mockResolvedValue([
+          { id: 'op1', fullName: 'Alice' },
+          { id: 'op2', fullName: 'Bob' },
+        ]),
+      },
+    } as unknown as PrismaService;
+    const txm = {} as unknown as TransactionManager;
+    const events = {} as unknown as EventPublisher;
+    const service = new VisitsService(prisma, txm, events);
+
+    const detail = await service.getDetail('v1');
+    expect(detail.checkedInByName).toBe('Alice');
+    expect(detail.checkedOutByName).toBe('Bob');
+  });
+});

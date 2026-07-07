@@ -212,6 +212,25 @@ export function useResubmitVisit(id: string) {
   });
 }
 
+/** Host rates a completed visit (1-5 stars). */
+export function useRateVisit(id: string) {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (input: { score: number; comment?: string }) =>
+      visitsApi.rate(id, input),
+    onSuccess: () => invalidate(keys.visit(id)),
+  });
+}
+
+/** Re-send the guest's invite code/QR email. */
+export function useResendCode(id: string) {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: () => visitsApi.resendCode(id),
+    onSuccess: () => invalidate(keys.visit(id)),
+  });
+}
+
 export function useAddNote(target: { visitId?: string; alertId?: string }) {
   const invalidate = useInvalidate();
   return useMutation({

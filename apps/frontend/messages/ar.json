@@ -6,6 +6,7 @@
     "schedule": "جدول اليوم",
     "myVisits": "زياراتي",
     "requests": "الطلبات والتنبيهات",
+    "updates": "التحديثات",
     "visitors": "الزوّار",
     "switchAccount": "تبديل الحساب",
     "accountSettings": "إعدادات الحساب",
@@ -97,12 +98,18 @@
     "createdBy": "أنشأه",
     "notesCount": "{count} ملاحظات",
     "empty": "لا توجد طلبات أو تنبيهات",
-    "detailTitle": "تفاصيل طلب الزيارة",
+    "detailTitle": "تفاصيل الزيارة",
+    "updateDetailTitle": "تفاصيل التحديث",
+    "inviteRequestDetailTitle": "تفاصيل طلب الدعوة",
+    "addingNote": "جارٍ إضافة الملاحظة",
+    "sendCode": "إرسال الرمز إلى الضيف",
+    "codeSent": "تم إرسال الرمز",
+    "notAssigned": "غير مخصّص",
     "alertDetailTitle": "تفاصيل التنبيه",
     "visitorAwaiting": "في انتظار الموافقة",
     "vmcReception": "استقبال VMC",
     "noNotes": "لا توجد ملاحظات بعد.",
-    "addNotePlaceholder": "أضف ملاحظة…",
+    "addNotePlaceholder": "ابدأ الكتابة",
     "status": {
       "awaitingApproval": "في انتظار موافقة CSO",
       "needsMoreInfo": "يلزم مزيد من المعلومات",
@@ -120,15 +127,29 @@
     "timeline": {
       "inviteCreated": "تم إنشاء الدعوة",
       "awaitingApproval": "في انتظار موافقة CSO",
+      "awaitingCso": "في انتظار موافقة CSO",
       "checkedIn": "تم الدخول",
       "passIssued": "تم إصدار التصريح",
+      "issuedPass": "تم إصدار التصريح",
       "checkedOut": "تم الخروج"
     },
     "sections": {
       "hostDetails": "تفاصيل المضيف / الوحدة / الطابق",
       "floor": "الطابق",
-      "visitorInfo": "معلومات الزائر",
-      "trackStatus": "تتبّع حالة الطلب",
+      "host": "المضيف",
+      "visitorInfo": "معلومات الضيف",
+      "trackStatus": "تتبّع تقدّم الزيارة",
+      "visitSummary": "ملخّص الزيارة",
+      "visitingFloor": "طابق الزيارة",
+      "guestPass": "تصريح الضيف",
+      "checkInDateTime": "تاريخ/وقت الدخول",
+      "checkInTime": "وقت الدخول",
+      "checkOutDateTime": "تاريخ/وقت الخروج",
+      "timeSpentOnsite": "الوقت المقضي في الموقع",
+      "checkedInBy": "تم تسجيل الدخول بواسطة",
+      "visitNotes": "ملاحظات الزيارة",
+      "destination": "الوجهة",
+      "rateGuest": "قيّم الضيف",
       "purposeOfVisit": "غرض الزيارة",
       "purposeCategory": "فئة الغرض",
       "scheduledFor": "مجدول لـ",
@@ -392,6 +413,12 @@
     "hub": "مساحة الموظفين",
     "welcome": "مرحبًا {name}",
     "recentVisitors": "الزوّار الأخيرون",
+    "expectedGuests": "الضيوف المتوقعون",
+    "guestCount": "{count} ضيف",
+    "onsiteFor": "منذ {time}",
+    "statusSub": {
+      "fromCso": "من CSO"
+    },
     "myVisits": {
       "title": "زياراتي"
     },
@@ -411,7 +438,8 @@
       "last7": "آخر 7 أيام",
       "custom": "مخصّص",
       "upcoming": "القادمة",
-      "yesterday": "أمس"
+      "yesterday": "أمس",
+      "pickDate": "اختر التاريخ"
     },
     "filters": {
       "searchPlaceholder": "ابحث عن زائر أو منظمة أو غرض أو رقم طلب"
@@ -420,6 +448,7 @@
       "visitor": "الزائر",
       "organization": "المنظمة",
       "purpose": "الغرض",
+      "noOfGuest": "عدد الضيوف",
       "timeCreated": "وقت الإنشاء",
       "status": "الحالة",
       "action": "إجراء"
@@ -449,6 +478,9 @@
       "empty": "لا توجد تحديثات حديثة.",
       "viewUpdate": "عرض التحديث",
       "viewDetails": "عرض التفاصيل",
+      "allTitle": "كل التحديثات",
+      "all": "الكل",
+      "updateRequest": "تحديث الطلب",
       "category": {
         "ARRIVAL_UPDATE": "تحديث الوصول",
         "CSO_FEEDBACK": "ملاحظات CSO",

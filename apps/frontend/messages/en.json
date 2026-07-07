@@ -6,6 +6,7 @@
     "schedule": "Today's Schedule",
     "myVisits": "My Visits",
     "requests": "Requests & Alerts",
+    "updates": "Updates",
     "visitors": "Visitors",
     "switchAccount": "Switch Account",
     "accountSettings": "Account Settings",
@@ -97,12 +98,18 @@
     "createdBy": "Created by",
     "notesCount": "{count} notes",
     "empty": "No requests or alerts",
-    "detailTitle": "Visit Request Details",
+    "detailTitle": "Visit Details",
     "alertDetailTitle": "Alert Details",
+    "updateDetailTitle": "Update Details",
+    "inviteRequestDetailTitle": "Invite Request Details",
     "visitorAwaiting": "Awaiting Approval",
     "vmcReception": "VMC Reception",
     "noNotes": "No remarks yet.",
-    "addNotePlaceholder": "Add a note…",
+    "addNotePlaceholder": "Start typing",
+    "addingNote": "Adding note",
+    "sendCode": "Send CODE to guest",
+    "codeSent": "Code sent",
+    "notAssigned": "Not Assigned",
     "status": {
       "awaitingApproval": "Awaiting CSO Approval",
       "needsMoreInfo": "Needs More Info",
@@ -120,15 +127,29 @@
     "timeline": {
       "inviteCreated": "Invite Created",
       "awaitingApproval": "Awaiting CSO Approval",
+      "awaitingCso": "Awaiting CSO Approval",
       "checkedIn": "Checked In",
       "passIssued": "Pass Issued",
+      "issuedPass": "Issued Pass",
       "checkedOut": "Checked out"
     },
     "sections": {
       "hostDetails": "Host/Unit /Floor Details",
       "floor": "Floor",
-      "visitorInfo": "Visitor Information",
-      "trackStatus": "Track request status",
+      "host": "Host",
+      "visitorInfo": "Guest Information",
+      "trackStatus": "Track visit progress",
+      "visitSummary": "Visit Summary",
+      "visitingFloor": "Visiting Floor",
+      "guestPass": "Guest Pass",
+      "checkInDateTime": "Check In Date/Time",
+      "checkInTime": "Check In Time",
+      "checkOutDateTime": "Check Out Date/Time",
+      "timeSpentOnsite": "Time Spent Onsite",
+      "checkedInBy": "Checked In By",
+      "visitNotes": "Visit Notes",
+      "destination": "Destination",
+      "rateGuest": "Rate Guest",
       "purposeOfVisit": "Purpose of visit",
       "purposeCategory": "Purpose Category",
       "scheduledFor": "Scheduled for",
@@ -392,6 +413,12 @@
     "hub": "STAFF HUB",
     "welcome": "Welcome {name}",
     "recentVisitors": "Recent Visitors",
+    "expectedGuests": "Expected Guests",
+    "guestCount": "{count} Guest",
+    "onsiteFor": "For {time} HR",
+    "statusSub": {
+      "fromCso": "From CSO"
+    },
     "myVisits": {
       "title": "My Visits"
     },
@@ -411,7 +438,8 @@
       "last7": "Last 7 days",
       "custom": "Custom",
       "upcoming": "Upcoming",
-      "yesterday": "Yesterday"
+      "yesterday": "Yesterday",
+      "pickDate": "Pick date"
     },
     "filters": {
       "searchPlaceholder": "Search visitor, organization, purpose, request id"
@@ -420,6 +448,7 @@
       "visitor": "Visitor",
       "organization": "Organization",
       "purpose": "Purpose",
+      "noOfGuest": "No of Guest",
       "timeCreated": "Time Created",
       "status": "Status",
       "action": "Action"
@@ -449,6 +478,9 @@
       "empty": "No recent updates.",
       "viewUpdate": "View Update",
       "viewDetails": "View Details",
+      "allTitle": "All Updates",
+      "all": "All",
+      "updateRequest": "Update Request",
       "category": {
         "ARRIVAL_UPDATE": "Arrival Update",
         "CSO_FEEDBACK": "CSO Feedback",

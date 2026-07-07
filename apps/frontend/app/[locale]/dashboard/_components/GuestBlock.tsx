@@ -188,34 +188,30 @@ export function GuestBlock({
           </>
         ) : null}
 
-        {mode === "invite" ? (
+        {/* Host selector — hidden for a staff self-invite (host is pinned to the
+            signed-in staff member); VMC still picks the host. */}
+        {mode === "invite" && !fixedHostName ? (
           <Field label={t("fields.host")} required>
-            {fixedHostName ? (
-              <div className="flex h-10 items-center rounded-md border border-border bg-surface-muted px-3 text-sm text-fg">
-                {fixedHostName}
-              </div>
-            ) : (
-              <Select
-                value={value.hostUserId}
-                onValueChange={(hostUserId) => onChange({ hostUserId })}
+            <Select
+              value={value.hostUserId}
+              onValueChange={(hostUserId) => onChange({ hostUserId })}
+            >
+              <SelectTrigger
+                className={
+                  "w-full" +
+                  (showErrors && !value.hostUserId ? " border-danger" : "")
+                }
               >
-                <SelectTrigger
-                  className={
-                    "w-full" +
-                    (showErrors && !value.hostUserId ? " border-danger" : "")
-                  }
-                >
-                  <SelectValue placeholder={t("fields.hostPlaceholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {hosts.map((h) => (
-                    <SelectItem key={h.userId} value={h.userId}>
-                      {h.fullName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+                <SelectValue placeholder={t("fields.hostPlaceholder")} />
+              </SelectTrigger>
+              <SelectContent>
+                {hosts.map((h) => (
+                  <SelectItem key={h.userId} value={h.userId}>
+                    {h.fullName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Field>
         ) : null}
 

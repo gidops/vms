@@ -36,14 +36,16 @@ export const staffApi = {
   stats(): Promise<StaffDashboardStats> {
     return api<StaffDashboardStats>(`/staff/dashboard/stats`);
   },
-  /** Recent Updates feed; optionally narrowed to a single ISO day (YYYY-MM-DD). */
+  /** Recent Updates feed; optionally narrowed to a day and/or category. */
   activityFeed(opts?: {
     date?: string;
+    category?: StaffActivityCategory;
     page?: number;
     pageSize?: number;
   }): Promise<Paginated<StaffActivityItem>> {
     const q = new URLSearchParams();
     if (opts?.date) q.set("date", opts.date);
+    if (opts?.category) q.set("category", opts.category);
     if (opts?.page) q.set("page", String(opts.page));
     if (opts?.pageSize) q.set("pageSize", String(opts.pageSize));
     const qs = q.toString();

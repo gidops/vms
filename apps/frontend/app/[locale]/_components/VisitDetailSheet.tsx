@@ -12,7 +12,7 @@ import {
   type TimelineStep,
 } from "@vms/ui";
 import { parsePhone } from "@vms/contracts";
-import { Hash, TriangleAlert } from "lucide-react";
+import { Loader2, Send, Star, TriangleAlert } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
 import { DIAL_CODES } from "@/app/[locale]/_components/PhoneInput";
@@ -26,6 +26,7 @@ import {
 import { CheckInModal } from "@/app/[locale]/dashboard/_components/checkin/CheckInModal";
 import { CheckOutModal } from "@/app/[locale]/dashboard/_components/checkin/CheckOutModal";
 import type { AlertDetail } from "@/data/alerts/alerts.api";
+import type { StaffActivityCategory } from "@/data/staff/staff.api";
 import { useHosts } from "@/data/hosts/queries";
 import {
   useAddNote,
@@ -33,6 +34,8 @@ import {
   useApproveVisit,
   useCancelVisit,
   useDenyVisit,
+  useRateVisit,
+  useResendCode,
   useResubmitVisit,
   useUpdateVisit,
   useVisitRequest,
@@ -54,34 +57,102 @@ const TERMINAL: VisitStatus[] = [
   "EXPIRED",
 ];
 
-/** Derive the 5-step lifecycle states from a visit status. */
+/**
+ * Derive the 4-step "Track visit progress" states from a visit status:
+ * Awaiting CSO Approval → Checked In → Issued Pass → Checked out. A checked-in
+ * visitor advances past "Issued Pass" only once a physical pass is assigned.
+ */
 function timelineFor(
   status: VisitStatus,
   labels: Record<string, string>,
+  hasPass: boolean,
 ): TimelineStep[] {
-  const order = [
-    "inviteCreated",
-    "awaitingApproval",
-    "checkedIn",
-    "passIssued",
-    "checkedOut",
-  ] as const;
+  const order = ["awaitingCso", "checkedIn", "passIssued", "checkedOut"] as const;
   const progress: Record<string, number> = {
-    PENDING: 1,
-    NEEDS_MORE_INFO: 1,
-    DENIED: 1,
-    CANCELLED: 1,
-    EXPIRED: 1,
-    APPROVED: 2,
-    CHECKED_IN: 3,
-    CHECKED_OUT: 5,
+    PENDING: 0,
+    NEEDS_MORE_INFO: 0,
+    DENIED: 0,
+    CANCELLED: 0,
+    EXPIRED: 0,
+    APPROVED: 1,
+    CHECKED_IN: 2,
+    CHECKED_OUT: 4,
   };
-  const p = progress[status] ?? 1;
+  let p = progress[status] ?? 0;
+  if (status === "CHECKED_IN" && hasPass) p = 3;
   return order.map((key, i) => ({
     key,
     label: labels[key] ?? key,
     state: i < p ? "complete" : i === p ? "current" : "upcoming",
   }));
+}
+
+/** Elapsed HH:MM:SS between two ISO timestamps, suffixed for the summary grid. */
+function durationHms(from: string, to: string): string {
+  const secs = Math.max(
+    0,
+    Math.floor((new Date(to).getTime() - new Date(from).getTime()) / 1000),
+  );
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(Math.floor(secs / 3600))}:${pad(
+    Math.floor((secs % 3600) / 60),
+  )}:${pad(secs % 60)}`;
+}
+
+/** A labelled field in the Visit Summary grid. */
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-xs uppercase tracking-wide text-fg-subtle">
+        {label}
+      </span>
+      <span className="text-sm text-fg">{children}</span>
+    </div>
+  );
+}
+
+/** QR + invite reference code + "Send CODE to guest" beside the progress stepper. */
+function QrPanel({
+  visitId,
+  qrCode,
+  referenceCode,
+}: {
+  visitId: string;
+  qrCode?: string | null;
+  referenceCode?: string | null;
+}) {
+  const t = useTranslations("requests");
+  const resend = useResendCode(visitId);
+  if (!qrCode && !referenceCode) return null;
+  return (
+    <div className="flex shrink-0 flex-col items-center gap-2">
+      {qrCode ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={qrCode} alt="" className="size-28 rounded-md" aria-hidden="true" />
+      ) : null}
+      {referenceCode ? (
+        <span className="rounded-md bg-accent px-3 py-1.5 text-center font-mono text-sm font-semibold tracking-[0.25em] text-accent-fg">
+          {referenceCode}
+        </span>
+      ) : null}
+      {referenceCode ? (
+        <button
+          type="button"
+          onClick={() => resend.mutate()}
+          disabled={resend.isPending}
+          className="text-xs font-medium text-primary underline disabled:opacity-50"
+        >
+          {resend.isSuccess ? t("codeSent") : t("sendCode")}
+        </button>
+      ) : null}
+    </div>
+  );
 }
 
 function NoteList({
@@ -112,53 +183,57 @@ function NoteList({
   );
 }
 
-function AddNoteForm({
+/**
+ * Inline note composer with a send-icon button (always visible under the notes
+ * list), used for both visit remarks and alert responses. Shows an "Adding
+ * note" indicator while the mutation is in flight.
+ */
+function NoteComposer({
   target,
   placeholder,
-  onDone,
 }: {
   target: { visitId?: string; alertId?: string };
-  placeholder: string;
-  onDone: () => void;
+  placeholder?: string;
 }) {
   const t = useTranslations("requests");
   const [body, setBody] = React.useState("");
   const addNote = useAddNote(target);
 
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!body.trim() || addNote.isPending) return;
+    addNote.mutate(body.trim(), { onSuccess: () => setBody("") });
+  };
+
   return (
-    <form
-      className="flex flex-col gap-2"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (!body.trim()) return;
-        addNote.mutate(body.trim(), {
-          onSuccess: () => {
-            setBody("");
-            onDone();
-          },
-        });
-      }}
-    >
-      <Textarea
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        placeholder={placeholder}
-        rows={3}
-      />
-      <div className="flex items-center gap-2">
-        <Button type="submit" size="sm" disabled={addNote.isPending}>
-          {t("actions.save")}
-        </Button>
-        <Button
-          type="button"
-          intent="neutral"
-          tone="ghost"
-          size="sm"
-          onClick={onDone}
+    <form className="flex flex-col gap-1.5" onSubmit={submit}>
+      <div className="relative">
+        <Textarea
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          placeholder={placeholder ?? t("addNotePlaceholder")}
+          rows={3}
+          className="pe-12"
+        />
+        <button
+          type="submit"
+          disabled={!body.trim() || addNote.isPending}
+          aria-label={t("actions.addNote")}
+          className="absolute bottom-3 end-3 text-primary transition-opacity disabled:opacity-40"
         >
-          {t("actions.cancel")}
-        </Button>
+          {addNote.isPending ? (
+            <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+          ) : (
+            <Send className="size-5 rtl:-scale-x-100" aria-hidden="true" />
+          )}
+        </button>
       </div>
+      {addNote.isPending ? (
+        <span className="flex items-center gap-1.5 text-xs text-fg-muted">
+          <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+          {t("addingNote")}
+        </span>
+      ) : null}
     </form>
   );
 }
@@ -304,19 +379,107 @@ function EditVisitForm({
   );
 }
 
+// ── Notification context (opened from the Updates feed) ────────────────────
+
+/**
+ * When the detail sheet is opened from an activity-feed item, it shows a colored
+ * banner describing the update and swaps the QR panel for a destination card.
+ */
+export interface NotificationContext {
+  category: StaffActivityCategory;
+  title: string;
+  body: string;
+  createdAt: string;
+}
+
+function NotificationBanner({ ctx }: { ctx: NotificationContext }) {
+  const tCat = useTranslations("staff.updates");
+  const format = useFormatter();
+  return (
+    <div className="flex flex-col gap-1 rounded-lg bg-emphasis p-4 text-emphasis-fg">
+      <div className="flex items-center justify-between gap-2">
+        <Badge
+          intent="neutral"
+          tone="soft"
+          className="bg-surface/15 text-emphasis-fg"
+        >
+          {tCat(`category.${ctx.category}`)}
+        </Badge>
+        <span className="text-xs text-emphasis-muted">
+          {format.relativeTime(new Date(ctx.createdAt))}
+        </span>
+      </div>
+      <p className="text-lg font-semibold text-accent">{ctx.title}</p>
+      <p className="text-sm text-emphasis-muted">{ctx.body}</p>
+    </div>
+  );
+}
+
+/** The gold destination card shown beside the progress stepper in feed context. */
+function DestinationCard({ floor }: { floor?: string | null }) {
+  const t = useTranslations("requests");
+  if (!floor) return null;
+  return (
+    <div className="flex shrink-0 flex-col items-center gap-1">
+      <div className="flex size-28 items-center justify-center rounded-md bg-accent p-3 text-center text-sm font-bold text-accent-fg">
+        {floor}
+      </div>
+      <span className="text-xs uppercase tracking-wide text-fg-subtle">
+        {t("sections.destination")}
+      </span>
+    </div>
+  );
+}
+
+/** Star rating shown after checkout — persists the host's score for the guest. */
+function RateGuest({ visitId }: { visitId: string }) {
+  const t = useTranslations("requests");
+  const rate = useRateVisit(visitId);
+  const [rating, setRating] = React.useState(0);
+  const submit = (score: number) => {
+    setRating(score);
+    rate.mutate({ score });
+  };
+  return (
+    <DetailSection title={t("sections.rateGuest")}>
+      <div className="flex items-center justify-center gap-2 py-1">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => submit(n)}
+            disabled={rate.isPending}
+            aria-label={String(n)}
+          >
+            <Star
+              className={`size-7 ${
+                n <= rating
+                  ? "fill-primary text-primary"
+                  : "fill-transparent text-border"
+              }`}
+              aria-hidden="true"
+            />
+          </button>
+        ))}
+      </div>
+    </DetailSection>
+  );
+}
+
 // ── Request detail ──────────────────────────────────────────────────────────
 
 function RequestDetailBody({
   data,
   onClose,
+  notification,
 }: {
   data: VisitRequestDetail;
   onClose: () => void;
+  notification?: NotificationContext;
 }) {
   const t = useTranslations("requests");
   const format = useFormatter();
   const { hasPermission, user } = useAuth();
-  const [showNote, setShowNote] = React.useState(false);
   const [showDeny, setShowDeny] = React.useState(false);
   const [editing, setEditing] = React.useState(false);
   const [checkAction, setCheckAction] = React.useState<"in" | "out" | null>(
@@ -341,16 +504,34 @@ function RequestDetailBody({
   const canCancel = data.source === "VMC_STATION" && isMine && !isTerminal;
   // Edit only the creator, and only before a CSO approves it.
   const canEdit = isMine && preApproval;
+  // The staff host viewing their own visit gets the clean guest-first layout
+  // (no host card); VMC/admin viewers still see the requesting host.
+  const viewerIsHost = data.host?.user.id === user?.id;
+  const onsite = data.status === "CHECKED_IN";
+  const checkedOut = data.status === "CHECKED_OUT";
 
   const stepLabels = {
-    inviteCreated: t("timeline.inviteCreated"),
-    awaitingApproval: t("timeline.awaitingApproval"),
+    awaitingCso: t("timeline.awaitingCso"),
     checkedIn: t("timeline.checkedIn"),
-    passIssued: t("timeline.passIssued"),
+    passIssued: t("timeline.issuedPass"),
     checkedOut: t("timeline.checkedOut"),
   };
 
-  const footer = editing ? undefined : (
+  const canCheckIn =
+    data.status === "APPROVED" && hasPermission("visit:check_in");
+  const canCheckOut =
+    data.status === "CHECKED_IN" && hasPermission("visit:check_out");
+  const hasActions =
+    canResubmit ||
+    canApprove ||
+    canDeny ||
+    canCancel ||
+    canEdit ||
+    canCheckIn ||
+    canCheckOut;
+
+  const footer =
+    editing || !hasActions ? undefined : (
     <>
       {canResubmit ? (
         <Button
@@ -399,24 +580,16 @@ function RequestDetailBody({
           {t("actions.editRequest")}
         </Button>
       ) : null}
-      {data.status === "APPROVED" ? (
+      {canCheckIn ? (
         <Button intent="primary" size="sm" onClick={() => setCheckAction("in")}>
           {t("actions.checkIn")}
         </Button>
       ) : null}
-      {data.status === "CHECKED_IN" ? (
+      {canCheckOut ? (
         <Button intent="danger" size="sm" onClick={() => setCheckAction("out")}>
           {t("actions.checkOut")}
         </Button>
       ) : null}
-      <Button
-        intent="primary"
-        tone="soft"
-        size="sm"
-        onClick={() => setShowNote(true)}
-      >
-        {t("actions.addNote")}
-      </Button>
     </>
   );
 
@@ -426,13 +599,22 @@ function RequestDetailBody({
         open
         side="start"
         onOpenChange={(o) => !o && onClose()}
-        title={editing ? t("editTitle") : t("detailTitle")}
+        title={
+          editing
+            ? t("editTitle")
+            : notification
+              ? notification.category === "ARRIVAL_UPDATE"
+                ? t("inviteRequestDetailTitle")
+                : t("updateDetailTitle")
+              : t("detailTitle")
+        }
         footer={footer}
       >
         {editing ? (
           <EditVisitForm detail={data} onDone={() => setEditing(false)} />
         ) : (
           <>
+            {notification ? <NotificationBanner ctx={notification} /> : null}
             {showDeny ? (
               <DetailSection title={t("actions.deny")}>
                 <DenyForm
@@ -446,44 +628,6 @@ function RequestDetailBody({
                 />
               </DetailSection>
             ) : null}
-            {data.host ? (
-              <DetailSection title={t("sections.hostDetails")}>
-                <div className="flex items-center justify-between gap-3 rounded-lg bg-emphasis p-4 text-emphasis-fg">
-                  <div className="flex items-center gap-3">
-                    <Avatar name={data.host.user.fullName} size="md" />
-                    <div className="flex flex-col">
-                      <span className="font-semibold">
-                        {data.host.user.fullName}
-                      </span>
-                      {data.host.department ? (
-                        <span className="text-sm text-emphasis-muted">
-                          {data.host.department}
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="/brand/afreximbank.svg"
-                    alt=""
-                    className="size-8"
-                    aria-hidden="true"
-                  />
-                </div>
-                {data.host.office ? (
-                  <div className="flex items-center gap-2 rounded-lg bg-warning-subtle px-4 py-2 text-sm">
-                    <Hash className="size-4 text-fg-muted" aria-hidden="true" />
-                    <span className="font-medium text-fg">
-                      {t("sections.floor")}:
-                    </span>
-                    <span className="font-semibold text-warning">
-                      {data.host.office}
-                    </span>
-                  </div>
-                ) : null}
-              </DetailSection>
-            ) : null}
-
             <DetailSection title={t("sections.visitorInfo")}>
               <div className="flex items-start justify-between gap-3 rounded-lg bg-surface-muted p-4">
                 <div className="flex items-center gap-3">
@@ -508,80 +652,95 @@ function RequestDetailBody({
             </DetailSection>
 
             <DetailSection title={t("sections.trackStatus")}>
-              <Timeline steps={timelineFor(data.status, stepLabels)} />
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <Timeline
+                    steps={timelineFor(data.status, stepLabels, !!data.pass)}
+                  />
+                </div>
+                {notification ? (
+                  <DestinationCard floor={data.floor} />
+                ) : (
+                  <QrPanel
+                    visitId={data.id}
+                    qrCode={data.qrCode}
+                    referenceCode={data.referenceCode}
+                  />
+                )}
+              </div>
             </DetailSection>
 
-            <DetailSection title={t("sections.purposeOfVisit")}>
+            <DetailSection title={t("sections.visitSummary")}>
               <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs uppercase tracking-wide text-fg-subtle">
-                    {t("sections.purposeCategory")}
-                  </span>
+                <Field label={t("sections.purposeCategory")}>
                   <Badge intent="neutral" tone="soft">
                     {data.purpose}
                   </Badge>
-                </div>
-                {data.scheduledAt ? (
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs uppercase tracking-wide text-fg-subtle">
-                      {t("sections.scheduledFor")}
+                </Field>
+                {checkedOut && data.checkInAt && data.checkOutAt ? (
+                  <Field label={t("sections.timeSpentOnsite")}>
+                    {`${durationHms(data.checkInAt, data.checkOutAt)} HR`}
+                  </Field>
+                ) : data.scheduledAt ? (
+                  <Field label={t("sections.scheduledFor")}>
+                    {format.dateTime(new Date(data.scheduledAt), {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </Field>
+                ) : null}
+                {(onsite || checkedOut) && data.checkInAt ? (
+                  <Field
+                    label={
+                      checkedOut
+                        ? t("sections.checkInTime")
+                        : t("sections.checkInDateTime")
+                    }
+                  >
+                    {format.dateTime(new Date(data.checkInAt), {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </Field>
+                ) : null}
+                {checkedOut && data.checkOutAt ? (
+                  <Field label={t("sections.checkOutDateTime")}>
+                    {format.dateTime(new Date(data.checkOutAt), {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </Field>
+                ) : null}
+                {onsite || checkedOut ? (
+                  <Field label={t("sections.checkedInBy")}>
+                    {data.checkedInByName ?? "—"}
+                  </Field>
+                ) : null}
+                <Field label={t("sections.visitingFloor")}>
+                  {data.floor ?? "—"}
+                </Field>
+                <Field label={t("sections.guestPass")}>
+                  {data.pass?.cardNumber ? (
+                    <span className="font-semibold text-warning">
+                      {data.pass.cardNumber}
                     </span>
-                    <span className="text-sm text-fg">
-                      {format.dateTime(new Date(data.scheduledAt), {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
-                    </span>
-                  </div>
+                  ) : (
+                    t("notAssigned")
+                  )}
+                </Field>
+                {data.host && !viewerIsHost ? (
+                  <Field label={t("sections.host")}>
+                    {data.host.user.fullName}
+                  </Field>
                 ) : null}
               </div>
             </DetailSection>
 
-            <DetailSection title={t("sections.origin")}>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs uppercase tracking-wide text-fg-subtle">
-                    {t("sections.createdByLabel")}
-                  </span>
-                  <span className="text-fg">{data.createdByName ?? "—"}</span>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs uppercase tracking-wide text-fg-subtle">
-                    {t("sections.timeCreated")}
-                  </span>
-                  <span className="text-fg">
-                    {format.dateTime(new Date(data.createdAt), {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    })}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs uppercase tracking-wide text-fg-subtle">
-                    {t("sections.source")}
-                  </span>
-                  <span className="text-fg">{data.source ?? "—"}</span>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs uppercase tracking-wide text-fg-subtle">
-                    {t("sections.role")}
-                  </span>
-                  <Badge intent="warning" tone="soft">
-                    {t("vmcReception")}
-                  </Badge>
-                </div>
-              </div>
-            </DetailSection>
+            {checkedOut ? <RateGuest visitId={data.id} /> : null}
 
-            <DetailSection title={t("sections.remarks")}>
+            <DetailSection title={t("sections.visitNotes")}>
               <NoteList notes={data.notes} emptyLabel={t("noNotes")} />
-              {showNote ? (
-                <AddNoteForm
-                  target={{ visitId: data.id }}
-                  placeholder={t("addNotePlaceholder")}
-                  onDone={() => setShowNote(false)}
-                />
-              ) : null}
+              <NoteComposer target={{ visitId: data.id }} />
             </DetailSection>
           </>
         )}
@@ -632,21 +791,23 @@ const LEVEL_DOT: Record<string, string> = {
 function AlertDetailBody({
   data,
   onClose,
+  notification,
 }: {
   data: AlertDetail;
   onClose: () => void;
+  notification?: NotificationContext;
 }) {
   const t = useTranslations("requests");
   const format = useFormatter();
-  const [showNote, setShowNote] = React.useState(true);
 
   return (
     <DetailDrawer
       open
       side="start"
       onOpenChange={(o) => !o && onClose()}
-      title={t("alertDetailTitle")}
+      title={notification ? t("updateDetailTitle") : t("alertDetailTitle")}
     >
+      {notification ? <NotificationBanner ctx={notification} /> : null}
       <div className="flex items-start gap-2 rounded-lg bg-danger-subtle p-3 text-sm font-medium text-danger">
         <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
         <span>{t("alertBanner")}</span>
@@ -747,13 +908,10 @@ function AlertDetailBody({
 
       <DetailSection title={t("sections.remarks")}>
         <NoteList notes={data.notes} emptyLabel={t("noNotes")} />
-        {showNote ? (
-          <AddNoteForm
-            target={{ alertId: data.id }}
-            placeholder={t("respondPlaceholder")}
-            onDone={() => setShowNote(false)}
-          />
-        ) : null}
+        <NoteComposer
+          target={{ alertId: data.id }}
+          placeholder={t("respondPlaceholder")}
+        />
       </DetailSection>
     </DetailDrawer>
   );
@@ -780,10 +938,13 @@ export function VisitDetailSheet({
   kind,
   id,
   onClose,
+  notification,
 }: {
   kind: "request" | "alert";
   id: string;
   onClose: () => void;
+  /** Set when opened from the Updates feed — renders a contextual banner. */
+  notification?: NotificationContext;
 }) {
   const isRequest = kind === "request";
   const request = useVisitRequest(isRequest ? id : null);
@@ -792,11 +953,23 @@ export function VisitDetailSheet({
   if (isRequest) {
     if (request.isLoading || !request.data)
       return <LoadingDrawer onClose={onClose} />;
-    return <RequestDetailBody data={request.data} onClose={onClose} />;
+    return (
+      <RequestDetailBody
+        data={request.data}
+        onClose={onClose}
+        notification={notification}
+      />
+    );
   }
   if (alert.isLoading || !alert.data)
     return <LoadingDrawer onClose={onClose} />;
-  return <AlertDetailBody data={alert.data} onClose={onClose} />;
+  return (
+    <AlertDetailBody
+      data={alert.data}
+      onClose={onClose}
+      notification={notification}
+    />
+  );
 }
 
 function LoadingDrawer({ onClose }: { onClose: () => void }) {

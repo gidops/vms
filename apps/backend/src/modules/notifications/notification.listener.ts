@@ -65,6 +65,17 @@ export class NotificationListener {
 
   @OnEvent(EVENT_TYPES.VisitApproved)
   async onVisitApproved(event: DomainEvent): Promise<void> {
+    await this.sendInviteCode(event);
+  }
+
+  /** Host re-triggered the invite email (Send CODE to guest) — same payload. */
+  @OnEvent(EVENT_TYPES.VisitInviteResent)
+  async onVisitInviteResent(event: DomainEvent): Promise<void> {
+    await this.sendInviteCode(event);
+  }
+
+  /** Email/SMS/WhatsApp the guest their invite code + QR (skips walk-ins). */
+  private async sendInviteCode(event: DomainEvent): Promise<void> {
     const visit = await this.prisma.visit.findUnique({
       where: { id: event.aggregateId },
       include: { visitor: true, host: { include: { user: true } }, pass: true },

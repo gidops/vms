@@ -290,8 +290,18 @@ export const VisitRequestDetail = Visit.extend({
   qrCode: z.string().nullable().optional(),
   /** The access badge currently assigned (set at check-in, released at check-out). */
   pass: VisitPass.nullable().optional(),
+  /** Name of the operative who checked the visitor in / out (from the gate log). */
+  checkedInByName: z.string().nullable().optional(),
+  checkedOutByName: z.string().nullable().optional(),
 });
 export type VisitRequestDetail = z.infer<typeof VisitRequestDetail>;
+
+/** Host rates a completed (checked-out) visit — 1-5 stars + an optional note. */
+export const RateVisitInput = z.object({
+  score: z.number().int().min(1).max(5),
+  comment: z.string().max(2000).optional(),
+});
+export type RateVisitInput = z.infer<typeof RateVisitInput>;
 
 /**
  * Reception edit of a not-yet-approved request via the pre-filled invite form.

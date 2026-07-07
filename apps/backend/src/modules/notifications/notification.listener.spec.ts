@@ -87,4 +87,32 @@ describe('NotificationListener', () => {
     await listener.onVisitApproved(event('missing'));
     expect(enqueue).not.toHaveBeenCalled();
   });
+
+  it('re-enqueues the invite email on VisitInviteResent', async () => {
+    const { listener, enqueue } = setup({
+      id: 'v1',
+      scheduledAt: new Date('2026-06-15T00:00:00Z'),
+      purpose: 'Official',
+      referenceCode: '5A19-795',
+      type: 'PRE_INVITED',
+      visitor: {
+        fullName: 'Paebi Bobson',
+        email: 'paebi@x.com',
+        phone: null,
+        preferredLocale: 'EN',
+      },
+      host: {
+        userId: 'host-user',
+        user: { fullName: 'Sarah Lee', email: 'sarah@x.com', phone: null },
+      },
+      pass: null,
+    });
+
+    await listener.onVisitInviteResent(event('v1'));
+
+    expect(enqueue).toHaveBeenCalledTimes(1);
+    const spec = enqueue.mock.calls[0][0];
+    expect(spec.templateKey).toBe(NOTIFICATION_TEMPLATES.VISIT_APPROVED);
+    expect(spec.data).toMatchObject({ code: '5A19-795' });
+  });
 });

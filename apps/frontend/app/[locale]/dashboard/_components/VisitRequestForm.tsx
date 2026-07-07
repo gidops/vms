@@ -248,36 +248,7 @@ export function VisitRequestForm({
 
       {/* CSV banner (invite only, dark green) */}
       {mode === "invite" ? (
-        // <div className="flex flex-col gap-3 bg-emphasis px-5 py-4">
-        //   <input
-        //     ref={fileRef}
-        //     type="file"
-        //     accept=".csv,text/csv"
-        //     className="hidden"
-        //     onChange={onImportCsv}
-        //   />
-        //   <Button
-        //     type="button"
-        //     intent="accent"
-        //     tone="outline"
-        //     fullWidth
-        //     onClick={() => fileRef.current?.click()}
-        //   >
-        //     <UserPlus className="size-4" aria-hidden="true" />
-        //     {t("importCsv")}
-        //   </Button>
-        //   <Button
-        //     type="button"
-        //     intent="accent"
-        //     tone="outline"
-        //     fullWidth
-        //     onClick={downloadGuestTemplate}
-        //   >
-        //     <Download className="size-4" aria-hidden="true" />
-        //     {t("downloadTemplate")}
-        //   </Button>
-        // </div>
-        <div className="flex  gap-3 bg-emphasis px-5 py-4 min-w-0 overflow-hidden">
+        <div className="flex gap-3 overflow-hidden bg-emphasis px-5 py-4 min-w-0">
           <input
             ref={fileRef}
             type="file"
@@ -387,6 +358,7 @@ export function VisitRequestForm({
             mode={mode}
             hosts={hostList}
             group={group}
+            fixedHostName={fixedHostName}
           />
         ) : null}
 
@@ -394,6 +366,7 @@ export function VisitRequestForm({
           <SuccessStep
             created={created}
             mode={mode}
+            hideHost={!!fixedHostUserId}
             onCheckIn={canImmediateCheckIn ? handleSuccessCheckIn : undefined}
           />
         ) : null}

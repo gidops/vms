@@ -42,9 +42,11 @@ export const StaffActivityItem = z.object({
 });
 export type StaffActivityItem = z.infer<typeof StaffActivityItem>;
 
-/** Activity-feed query: paginated, optionally narrowed to a single calendar day. */
+/** Activity-feed query: paginated, optionally narrowed to a day and/or category. */
 export const StaffActivityQuery = PaginationQuery.extend({
   /** ISO date (YYYY-MM-DD); when set, only that day's updates are returned. */
   date: z.coerce.date().optional(),
+  /** When set, only updates in this category are returned. */
+  category: StaffActivityCategory.optional(),
 });
 export type StaffActivityQuery = z.infer<typeof StaffActivityQuery>;

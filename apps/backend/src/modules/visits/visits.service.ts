@@ -10,6 +10,7 @@ import type {
   CheckOutVisitInput,
   CreateVisitsInput,
   Paginated,
+  RateVisitInput,
   ResubmitVisitInput,
   UpdateVisitRequestInput,
   VisitListItem,
@@ -96,7 +97,44 @@ export class VisitsService {
         errorCorrectionLevel: 'M',
       });
     }
+    if (visit.checkInAt || visit.checkOutAt) {
+      await this.attachOperativeNames(detail);
+    }
     return detail;
+  }
+
+  /**
+   * Resolve the "Checked In By" / "Checked Out By" operative names from the gate
+   * log (the operativeUserId recorded at check-in / check-out).
+   */
+  private async attachOperativeNames(
+    detail: VisitRequestDetail,
+  ): Promise<void> {
+    const events = await this.prisma.gateEvent.findMany({
+      where: {
+        visitId: detail.id,
+        result: { in: ['CHECKED_IN', 'CHECKED_OUT'] },
+      },
+      orderBy: { occurredAt: 'desc' },
+      select: { result: true, operativeUserId: true },
+    });
+    const opIds = [
+      ...new Set(
+        events.map((e) => e.operativeUserId).filter((id): id is string => !!id),
+      ),
+    ];
+    if (opIds.length === 0) return;
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: opIds } },
+      select: { id: true, fullName: true },
+    });
+    const nameById = new Map(users.map((u) => [u.id, u.fullName]));
+    const inOp = events.find((e) => e.result === 'CHECKED_IN')?.operativeUserId;
+    const outOp = events.find(
+      (e) => e.result === 'CHECKED_OUT',
+    )?.operativeUserId;
+    detail.checkedInByName = inOp ? (nameById.get(inOp) ?? null) : null;
+    detail.checkedOutByName = outOp ? (nameById.get(outOp) ?? null) : null;
   }
 
   async cancel(id: string, actorUserId: string): Promise<VisitRequestDetail> {
@@ -725,6 +763,95 @@ export class VisitsService {
       });
       await this.events.publish(tx, {
         type: EVENT_TYPES.VisitorCheckedOut,
+        aggregateType: 'Visit',
+        aggregateId: id,
+        payload: { visitId: id },
+        metadata: { actorUserId },
+      });
+    });
+    return this.getDetail(id);
+  }
+
+  /**
+   * Host rates a completed visit (1-5 stars). Only the visit's host or creator
+   * may rate, and only once the visitor has checked out. Idempotent per visit.
+   */
+  async rate(
+    id: string,
+    input: RateVisitInput,
+    actorUserId: string,
+  ): Promise<VisitRequestDetail> {
+    const visit = await this.prisma.visit.findUnique({
+      where: { id },
+      select: {
+        status: true,
+        visitorId: true,
+        createdById: true,
+        host: { select: { userId: true } },
+      },
+    });
+    if (!visit) throw new NotFoundException('errors.visit.notFound');
+    if (
+      visit.host?.userId !== actorUserId &&
+      visit.createdById !== actorUserId
+    ) {
+      throw new ForbiddenException('errors.visit.notOwner');
+    }
+    if (visit.status !== 'CHECKED_OUT') {
+      throw new BadRequestException('errors.visit.notCheckedOut');
+    }
+    await this.txm.run(async (tx) => {
+      await tx.rating.upsert({
+        where: { visitId: id },
+        create: {
+          visitId: id,
+          visitorId: visit.visitorId,
+          score: input.score,
+          comment: input.comment,
+        },
+        update: { score: input.score, comment: input.comment ?? null },
+      });
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.VisitorRated,
+        aggregateType: 'Visit',
+        aggregateId: id,
+        payload: { visitId: id, score: input.score },
+        metadata: { actorUserId },
+      });
+    });
+    return this.getDetail(id);
+  }
+
+  /**
+   * Re-send the invite code/QR email to the guest. Only the host or creator may
+   * trigger it, and only for an invite that still carries a reference code.
+   */
+  async resendCode(
+    id: string,
+    actorUserId: string,
+  ): Promise<VisitRequestDetail> {
+    const visit = await this.prisma.visit.findUnique({
+      where: { id },
+      select: {
+        type: true,
+        referenceCode: true,
+        createdById: true,
+        host: { select: { userId: true } },
+      },
+    });
+    if (!visit) throw new NotFoundException('errors.visit.notFound');
+    if (
+      visit.host?.userId !== actorUserId &&
+      visit.createdById !== actorUserId
+    ) {
+      throw new ForbiddenException('errors.visit.notOwner');
+    }
+    if (visit.type === 'WALK_IN' || !visit.referenceCode) {
+      throw new BadRequestException('errors.visit.invalidState');
+    }
+    await this.txm.run(async (tx) => {
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.VisitInviteResent,
         aggregateType: 'Visit',
         aggregateId: id,
         payload: { visitId: id },
