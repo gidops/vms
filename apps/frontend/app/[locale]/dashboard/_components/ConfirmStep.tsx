@@ -55,11 +55,14 @@ export function ConfirmStep({
   mode,
   hosts,
   group,
+  fixedHostName,
 }: {
   guests: GuestEntry[];
   mode: VisitFormMode;
   hosts: HostOption[];
   group?: { isGroupVisit: boolean; groupName: string; groupContact: string };
+  /** When the host is pinned (staff self-invite) the host row is omitted. */
+  fixedHostName?: string;
 }) {
   const t = useTranslations("invite");
   const format = useFormatter();
@@ -102,7 +105,7 @@ export function ConfirmStep({
             <Row label={t("fields.groupContact")} value={group.groupContact} />
           </>
         ) : null}
-        {mode === "invite" ? (
+        {mode === "invite" && !fixedHostName ? (
           <Row label={t("confirm.host")} value={hostName} />
         ) : null}
         <Row label={t("confirm.floor")} value={source.floor} />

@@ -71,7 +71,9 @@
     "validationFailed": "Validation failed",
     "visit": {
       "notFound": "Visit not found",
-      "invalidState": "The visit is not in a valid state for this action."
+      "invalidState": "The visit is not in a valid state for this action.",
+      "notOwner": "You are not allowed to modify this visit.",
+      "notCheckedOut": "The visit must be checked out before it can be rated."
     },
     "alert": {
       "notFound": "Alert not found"

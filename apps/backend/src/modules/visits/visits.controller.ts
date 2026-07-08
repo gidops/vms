@@ -15,6 +15,7 @@ import {
   CreateVisitsInput,
   DenyVisitInput,
   PERMISSIONS,
+  RateVisitInput,
   ResubmitVisitInput,
   UpdateVisitRequestInput,
   VisitListQuery,
@@ -126,6 +127,26 @@ export class VisitsController {
     @CurrentUser() principal: AuthUser,
   ) {
     return this.visits.deny(id, input.reason, principal.userId);
+  }
+
+  /**
+   * Host resubmits nothing here — re-sends the guest's invite code/QR email.
+   * Authorized by host/creator ownership in the service.
+   */
+  @Post(':id/resend-code')
+  @RequirePermissions(PERMISSIONS.INVITATION_CREATE)
+  resendCode(@Param('id') id: string, @CurrentUser() principal: AuthUser) {
+    return this.visits.resendCode(id, principal.userId);
+  }
+
+  /** Host rates a completed visit (1-5). Authorized by host/creator in the service. */
+  @Post(':id/rating')
+  rate(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(RateVisitInput)) input: RateVisitInput,
+    @CurrentUser() principal: AuthUser,
+  ) {
+    return this.visits.rate(id, input, principal.userId);
   }
 
   /** VMC check-in: assign a physical badge to an approved visit, mark it on-site. */

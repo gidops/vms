@@ -71,7 +71,9 @@
     "validationFailed": "Échec de la validation",
     "visit": {
       "notFound": "Visite introuvable",
-      "invalidState": "La visite n'est pas dans un état valide pour cette action."
+      "invalidState": "La visite n'est pas dans un état valide pour cette action.",
+      "notOwner": "Vous n'êtes pas autorisé à modifier cette visite.",
+      "notCheckedOut": "La visite doit être terminée avant de pouvoir être évaluée."
     },
     "alert": {
       "notFound": "Alerte introuvable"

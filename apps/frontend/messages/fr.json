@@ -6,6 +6,7 @@
     "schedule": "Programme du jour",
     "myVisits": "Mes visites",
     "requests": "Demandes et alertes",
+    "updates": "Mises à jour",
     "visitors": "Visiteurs",
     "switchAccount": "Changer de compte",
     "accountSettings": "Paramètres du compte",
@@ -97,12 +98,18 @@
     "createdBy": "Créé par",
     "notesCount": "{count} notes",
     "empty": "Aucune demande ni alerte",
-    "detailTitle": "Détails de la demande de visite",
+    "detailTitle": "Détails de la visite",
+    "updateDetailTitle": "Détails de la mise à jour",
+    "inviteRequestDetailTitle": "Détails de la demande d'invitation",
+    "addingNote": "Ajout de la note",
+    "sendCode": "Envoyer le CODE à l'invité",
+    "codeSent": "Code envoyé",
+    "notAssigned": "Non attribué",
     "alertDetailTitle": "Détails de l'alerte",
     "visitorAwaiting": "En attente d'approbation",
     "vmcReception": "Réception VMC",
     "noNotes": "Aucune remarque pour l'instant.",
-    "addNotePlaceholder": "Ajouter une note…",
+    "addNotePlaceholder": "Commencer à écrire",
     "status": {
       "awaitingApproval": "En attente d'approbation du CSO",
       "needsMoreInfo": "Informations requises",
@@ -120,15 +127,29 @@
     "timeline": {
       "inviteCreated": "Invitation créée",
       "awaitingApproval": "En attente d'approbation du CSO",
+      "awaitingCso": "En attente d'approbation du CSO",
       "checkedIn": "Entré",
       "passIssued": "Pass émis",
+      "issuedPass": "Laissez-passer émis",
       "checkedOut": "Sorti"
     },
     "sections": {
       "hostDetails": "Détails hôte / unité / étage",
       "floor": "Étage",
-      "visitorInfo": "Informations sur le visiteur",
-      "trackStatus": "Suivi de la demande",
+      "host": "Hôte",
+      "visitorInfo": "Informations sur l'invité",
+      "trackStatus": "Suivre la progression de la visite",
+      "visitSummary": "Résumé de la visite",
+      "visitingFloor": "Étage de visite",
+      "guestPass": "Laissez-passer",
+      "checkInDateTime": "Date/heure d'arrivée",
+      "checkInTime": "Heure d'arrivée",
+      "checkOutDateTime": "Date/heure de départ",
+      "timeSpentOnsite": "Temps passé sur site",
+      "checkedInBy": "Enregistré par",
+      "visitNotes": "Notes de visite",
+      "destination": "Destination",
+      "rateGuest": "Évaluer l'invité",
       "purposeOfVisit": "Objet de la visite",
       "purposeCategory": "Catégorie d'objet",
       "scheduledFor": "Prévu pour",
@@ -392,6 +413,12 @@
     "hub": "ESPACE PERSONNEL",
     "welcome": "Bienvenue {name}",
     "recentVisitors": "Visiteurs récents",
+    "expectedGuests": "Invités attendus",
+    "guestCount": "{count} invité(s)",
+    "onsiteFor": "Depuis {time} h",
+    "statusSub": {
+      "fromCso": "Du CSO"
+    },
     "myVisits": {
       "title": "Mes visites"
     },
@@ -411,7 +438,8 @@
       "last7": "7 derniers jours",
       "custom": "Personnalisé",
       "upcoming": "À venir",
-      "yesterday": "Hier"
+      "yesterday": "Hier",
+      "pickDate": "Choisir une date"
     },
     "filters": {
       "searchPlaceholder": "Rechercher visiteur, organisation, objet, n° de demande"
@@ -420,6 +448,7 @@
       "visitor": "Visiteur",
       "organization": "Organisation",
       "purpose": "Objet",
+      "noOfGuest": "Nb d'invités",
       "timeCreated": "Date de création",
       "status": "Statut",
       "action": "Action"
@@ -449,6 +478,9 @@
       "empty": "Aucune mise à jour récente.",
       "viewUpdate": "Voir la mise à jour",
       "viewDetails": "Voir les détails",
+      "allTitle": "Toutes les mises à jour",
+      "all": "Tout",
+      "updateRequest": "Mettre à jour la demande",
       "category": {
         "ARRIVAL_UPDATE": "Mise à jour d'arrivée",
         "CSO_FEEDBACK": "Retour du CSO",

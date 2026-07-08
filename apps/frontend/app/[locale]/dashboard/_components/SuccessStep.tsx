@@ -25,10 +25,13 @@ export function SuccessStep({
   created,
   mode,
   onCheckIn,
+  hideHost,
 }: {
   created: VisitRequestDetail[];
   mode: VisitFormMode;
   onCheckIn?: () => void;
+  /** Omit the host row for a staff self-invite (host is the signed-in staff). */
+  hideHost?: boolean;
 }) {
   const t = useTranslations("invite");
   const format = useFormatter();
@@ -90,10 +93,12 @@ export function SuccessStep({
           label={t("success.guestsName")}
           value={visit.visitor.fullName}
         />
-        <SummaryRow
-          label={t("success.host")}
-          value={visit.host?.user.fullName ?? "—"}
-        />
+        {hideHost ? null : (
+          <SummaryRow
+            label={t("success.host")}
+            value={visit.host?.user.fullName ?? "—"}
+          />
+        )}
         <SummaryRow label={t("success.purpose")} value={visit.purpose} />
         <SummaryRow
           label={t("success.schedule")}

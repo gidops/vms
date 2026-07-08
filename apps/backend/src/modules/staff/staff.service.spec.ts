@@ -95,3 +95,35 @@ describe('StaffService.activityFeed', () => {
     );
   });
 });
+
+describe('StaffService.activityFeed category filter', () => {
+  it('narrows the audit actions to the requested category', async () => {
+    const findMany = jest.fn().mockResolvedValue([]);
+    const prisma = {
+      visit: {
+        findMany: jest
+          .fn()
+          .mockResolvedValue([
+            { id: 'v1', visitorId: 'vis1', visitor: { fullName: 'X' } },
+          ]),
+      },
+      alert: { findMany: jest.fn().mockResolvedValue([]) },
+      auditLog: { findMany, count: jest.fn().mockResolvedValue(0) },
+      $transaction: (ops: unknown[]) => Promise.all(ops as Promise<unknown>[]),
+    } as unknown as PrismaService;
+    const service = new StaffService(prisma);
+
+    await service.activityFeed('me', {
+      page: 1,
+      pageSize: 20,
+      sortDir: 'desc',
+      category: 'VISIT_STATUS',
+    });
+
+    const actions = findMany.mock.calls[0][0].where.action.in as string[];
+    expect(actions).toEqual(
+      expect.arrayContaining(['visitor.checked_in', 'visitor.checked_out']),
+    );
+    expect(actions).not.toContain('visit.approved');
+  });
+});

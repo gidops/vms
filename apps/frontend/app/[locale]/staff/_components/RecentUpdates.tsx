@@ -39,7 +39,7 @@ export function RecentUpdates({
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-fg">{t("updates.title")}</h2>
         <Link
-          href="/staff/requests"
+          href="/staff/updates"
           className="text-sm font-medium text-primary underline"
         >
           {t("updates.seeAll")}

@@ -142,8 +142,13 @@ export class StaffService {
       return this.emptyPage(query);
     }
 
+    // Category filter narrows to the audit actions that map to that category.
+    const actions = Object.entries(ACTIVITY_MAP)
+      .filter(([, m]) => !query.category || m.category === query.category)
+      .map(([action]) => action);
+
     const where: Prisma.AuditLogWhereInput = {
-      action: { in: Object.keys(ACTIVITY_MAP) },
+      action: { in: actions },
       OR: [
         { entityType: 'Visit', entityId: { in: visitIds } },
         { entityType: 'Alert', entityId: { in: alertIds } },

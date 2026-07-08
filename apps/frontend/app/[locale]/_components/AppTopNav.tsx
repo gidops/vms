@@ -18,9 +18,9 @@ function BrandMark() {
 export interface AppTopNavProps {
   /**
    * Primary view toggle. The VMC dashboard toggles schedule/requests; the staff
-   * dashboard adds "visits". Omit on dashboards with no toggle.
+   * dashboard toggles schedule/visits/updates. Omit on dashboards with no toggle.
    */
-  active?: "schedule" | "visits" | "requests";
+  active?: "schedule" | "visits" | "requests" | "updates";
   /** Which app's nav segments + routes to render (default "vmc"). */
   app?: "vmc" | "staff";
   /**
@@ -58,9 +58,9 @@ export function AppTopNav({
           { value: "schedule", label: tNav("schedule"), route: "/staff" },
           { value: "visits", label: tNav("myVisits"), route: "/staff/visits" },
           {
-            value: "requests",
-            label: tNav("requests"),
-            route: "/staff/requests",
+            value: "updates",
+            label: tNav("updates"),
+            route: "/staff/updates",
             count,
           },
         ]

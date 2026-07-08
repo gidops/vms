@@ -110,6 +110,8 @@ export interface VisitRequestDetail {
     user: { id: string; fullName: string; email: string };
   } | null;
   pass?: VisitPass | null;
+  checkedInByName?: string | null;
+  checkedOutByName?: string | null;
   notes: VisitNote[];
 }
 
@@ -215,6 +217,22 @@ export const visitsApi = {
     return api<VisitRequestDetail>(`/visits/${id}`, {
       method: "PATCH",
       body: input,
+    });
+  },
+  /** Host rates a completed (checked-out) visit — 1-5 stars + optional comment. */
+  rate(
+    id: string,
+    input: { score: number; comment?: string },
+  ): Promise<VisitRequestDetail> {
+    return api<VisitRequestDetail>(`/visits/${id}/rating`, {
+      method: "POST",
+      body: input,
+    });
+  },
+  /** Re-send the invite code/QR email to the guest. */
+  resendCode(id: string): Promise<VisitRequestDetail> {
+    return api<VisitRequestDetail>(`/visits/${id}/resend-code`, {
+      method: "POST",
     });
   },
   /** Host edits & resubmits a NEEDS_MORE_INFO request → back to PENDING. */

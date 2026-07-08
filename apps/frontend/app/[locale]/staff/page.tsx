@@ -5,7 +5,6 @@ import {
   RecordTable,
   SegmentedControl,
   Spinner,
-  StatusBadge,
   Table,
   TableBody,
   TableCell,
@@ -14,10 +13,11 @@ import {
   TableRow,
   TopNavShell,
 } from "@vms/ui";
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, CircleUser } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
+import { StatusCell } from "@/app/[locale]/_components/StatusCell";
 import { QuickActionSheet } from "@/app/[locale]/dashboard/_components/QuickActionSheet";
 import {
   RequestDrawer,
@@ -25,6 +25,7 @@ import {
 } from "@/app/[locale]/requests/_components/RequestDrawer";
 import { StaffOverview } from "./_components/StaffOverview";
 import { RecentUpdates } from "./_components/RecentUpdates";
+import { VisitFilters, type VisitFiltersValue } from "./_components/VisitFilters";
 import { useMyVisits } from "@/data/requests/queries";
 import { useStaffActivityFeed, useStaffStats } from "@/data/staff/queries";
 import type { StaffActivityItem } from "@/data/staff/staff.api";
@@ -52,12 +53,34 @@ function Staff() {
   const [range, setRange] = React.useState<Range>("today");
   const [invite, setInvite] = React.useState(false);
   const [selected, setSelected] = React.useState<SelectedItem | null>(null);
+  const [filters, setFilters] = React.useState<VisitFiltersValue>({
+    search: "",
+    status: "all",
+    type: "all",
+    purpose: "all",
+  });
 
   const stats = useStaffStats();
   const activity = useStaffActivityFeed();
-  const visits = useMyVisits({ ...rangeBounds(range), pageSize: 8 });
+  const visits = useMyVisits({
+    ...rangeBounds(range),
+    status: filters.status === "all" ? undefined : filters.status,
+    type: filters.type === "all" ? undefined : filters.type,
+    purpose: filters.purpose === "all" ? undefined : filters.purpose,
+    pageSize: 8,
+  });
 
-  const rows = visits.data?.items ?? [];
+  // Free-text search is applied client-side over the fetched page (name / email /
+  // organization / purpose), mirroring My Visits.
+  const q = filters.search.trim().toLowerCase();
+  const rows = (visits.data?.items ?? []).filter((r) =>
+    q
+      ? r.visitor.fullName.toLowerCase().includes(q) ||
+        r.visitor.email.toLowerCase().includes(q) ||
+        (r.visitor.organization?.toLowerCase().includes(q) ?? false) ||
+        r.purpose.toLowerCase().includes(q)
+      : true,
+  );
 
   const openActivity = (item: StaffActivityItem) => {
     if (item.alertId) setSelected({ kind: "alert", id: item.alertId });
@@ -68,6 +91,12 @@ function Staff() {
     <TopNavShell
       nav={
         <AppTopNav app="staff" active="schedule" requestsCount={undefined} />
+      }
+      filterBar={
+        <VisitFilters
+          value={filters}
+          onChange={(patch) => setFilters((f) => ({ ...f, ...patch }))}
+        />
       }
     >
       <div className="flex flex-col gap-6">
@@ -102,10 +131,10 @@ function Staff() {
             toolbar={
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="text-xl font-semibold text-primary">
-                  {t("recentVisitors")}
+                  {t("expectedGuests")}
                 </h2>
                 <SegmentedControl
-                  aria-label={t("recentVisitors")}
+                  aria-label={t("expectedGuests")}
                   value={range}
                   onValueChange={(v) => setRange(v as Range)}
                   options={[
@@ -126,8 +155,8 @@ function Staff() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t("columns.visitor")}</TableHead>
-                    <TableHead>{t("columns.organization")}</TableHead>
                     <TableHead>{t("columns.purpose")}</TableHead>
+                    <TableHead>{t("columns.noOfGuest")}</TableHead>
                     <TableHead>{t("columns.status")}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -142,38 +171,56 @@ function Staff() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    rows.map((row) => (
-                      <TableRow
-                        key={row.id}
-                        className="cursor-pointer"
-                        onClick={() =>
-                          setSelected({ kind: "request", id: row.id })
-                        }
-                      >
-                        <TableCell>
-                          <span className="flex items-center gap-3">
-                            <Avatar name={row.visitor.fullName} size="md" />
-                            <span className="flex flex-col">
-                              <span className="font-medium text-fg">
-                                {row.visitor.fullName}
-                              </span>
-                              <span className="text-xs text-fg-muted">
-                                {row.visitor.email}
+                    rows.map((row) => {
+                      const isGroup = row.isGroupVisit && row.groupName;
+                      return (
+                        <TableRow
+                          key={row.id}
+                          className="cursor-pointer"
+                          onClick={() =>
+                            setSelected({ kind: "request", id: row.id })
+                          }
+                        >
+                          <TableCell>
+                            <span className="flex items-center gap-3">
+                              <Avatar
+                                name={isGroup ? row.groupName! : row.visitor.fullName}
+                                size="md"
+                                accent={row.isGroupVisit ? "group" : "single"}
+                              />
+                              <span className="flex flex-col">
+                                <span className="font-medium text-fg">
+                                  {isGroup ? row.groupName : row.visitor.fullName}
+                                </span>
+                                <span className="text-xs text-fg-muted">
+                                  {isGroup
+                                    ? (row.groupContact ?? "")
+                                    : row.visitor.email}
+                                </span>
                               </span>
                             </span>
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-fg-muted">
-                          {row.visitor.organization ?? "—"}
-                        </TableCell>
-                        <TableCell className="text-fg-muted">
-                          {row.purpose}
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge status={row.status} />
-                        </TableCell>
-                      </TableRow>
-                    ))
+                          </TableCell>
+                          <TableCell className="text-fg-muted">
+                            {row.purpose}
+                          </TableCell>
+                          <TableCell className="text-fg-muted">
+                            <span className="flex items-center gap-1.5">
+                              <CircleUser className="size-4" aria-hidden="true" />
+                              {t("guestCount", { count: row.groupSize })}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <StatusCell
+                              status={row.status}
+                              scheduledAt={row.scheduledAt}
+                              checkInAt={row.checkInAt}
+                              checkOutAt={row.checkOutAt}
+                              createdAt={row.createdAt}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>
