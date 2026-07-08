@@ -13,7 +13,7 @@ import {
   TableRow,
   TopNavShell,
 } from "@vms/ui";
-import { CalendarClock, CircleUser } from "lucide-react";
+import { CircleUser } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
@@ -100,17 +100,8 @@ function Staff() {
       }
     >
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <span className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-primary">
-            <CalendarClock className="size-4" aria-hidden="true" />
-            {t("hub")}
-          </span>
-          <h1 className="text-3xl font-semibold text-fg">
-            {t("welcome", { name: user?.fullName ?? "" })}
-          </h1>
-        </div>
-
         <StaffOverview
+          welcome={t("welcome", { name: user?.fullName ?? "" })}
           office={user?.hostOffice}
           onNewInvite={() => setInvite(true)}
           stats={[
