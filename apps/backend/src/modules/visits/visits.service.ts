@@ -457,10 +457,11 @@ export class VisitsService {
   }
 
   /**
-   * Paginated visit list ordered by scheduled date, earliest first (the VMC
-   * check-in board surfaces who we're expecting soonest; undated visits sort
-   * last). The admin approval queue passes no scope; the staff dashboard passes
-   * `scope: "mine"` to restrict the result to visits the requesting user hosts.
+   * Paginated visit list ordered by scheduled date, latest first (the VMC
+   * check-in board surfaces the most recent expected arrivals at the top;
+   * undated visits sort last). The admin approval queue passes no scope; the
+   * staff dashboard passes `scope: "mine"` to restrict the result to visits
+   * the requesting user hosts.
    * `type`/`purpose` and the `dateFrom`/`dateTo` window (over the scheduled date)
    * are the staff facets.
    */
@@ -500,7 +501,7 @@ export class VisitsService {
       const keys = await this.prisma.visit.findMany({
         where,
         select: { id: true, groupId: true, isGroupVisit: true },
-        orderBy: { scheduledAt: { sort: 'asc', nulls: 'last' } },
+        orderBy: { scheduledAt: { sort: 'desc', nulls: 'last' } },
       });
       const repIds: string[] = [];
       const seen = new Set<string>();
@@ -523,14 +524,14 @@ export class VisitsService {
           })
         : [];
       const byId = new Map(pageRows.map((r) => [r.id, r]));
-      // `in` doesn't preserve order — restore the scheduledAt-asc page order.
+      // `in` doesn't preserve order — restore the scheduledAt-desc page order.
       rows = pageIds.map((id) => byId.get(id)).filter((r): r is Row => !!r);
     } else {
       [rows, total] = await this.prisma.$transaction([
         this.prisma.visit.findMany({
           where,
           include: { visitor: true, host: { include: { user: true } } },
-          orderBy: { scheduledAt: { sort: 'asc', nulls: 'last' } },
+          orderBy: { scheduledAt: { sort: 'desc', nulls: 'last' } },
           skip: (query.page - 1) * query.pageSize,
           take: query.pageSize,
         }),
