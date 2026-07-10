@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@vms/ui";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, SquareActivity } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
 
@@ -11,25 +11,53 @@ export interface OverviewStat {
 }
 
 export interface VmcOverviewProps {
+  /** Welcome heading, e.g. "Welcome Judith Francis". Rendered inside the bar. */
+  welcome: string;
   stats: OverviewStat[];
   onRegisterWalkIn: () => void;
   onNewInvite: () => void;
 }
 
-/** Decorative stacked chevrons in the trailing-top corner of the green panel. */
+/** "VMC HUB" eyebrow + welcome heading — the bar's white top row. */
+function WelcomeHeader({ welcome }: { welcome: string }) {
+  const t = useTranslations("dashboard");
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="flex items-center gap-1.5 text-base font-semibold uppercase tracking-tight text-success">
+        <SquareActivity className="size-4" aria-hidden="true" />
+        {t("hub")}
+      </span>
+      <h1 className="text-4xl font-semibold text-fg">{welcome}</h1>
+    </div>
+  );
+}
+
+/**
+ * Decorative nested chevrons bleeding off the top-right corner of the green
+ * panel — a subtle brand watermark matching the Figma design.
+ *
+ * The SVG fills the panel and uses a `0 0 449 149` viewBox (the design panel's
+ * own coordinate space) with `xMaxYMin slice`, so the chevrons stay pinned to
+ * the top-right corner and scale with the panel at any width/height. The paths
+ * are drawn at the exact design coordinates and intentionally extend past the
+ * viewBox (negative Y / x > 449) so they bleed off the top and right edges,
+ * clipped by the panel's `overflow-hidden`.
+ */
 function DecorChevrons() {
   return (
     <svg
       aria-hidden="true"
-      viewBox="0 0 120 120"
-      className="pointer-events-none absolute -top-2 end-0 h-32 w-32 text-emphasis-fg/10 rtl:-scale-x-100"
+      viewBox="0 0 449 149"
+      preserveAspectRatio="xMaxYMin slice"
+      className="pointer-events-none absolute inset-0 h-full w-full text-emphasis-fg/[0.07] rtl:-scale-x-100"
       fill="none"
       stroke="currentColor"
-      strokeWidth="10"
+      strokeWidth="17"
+      strokeLinejoin="round"
     >
-      <path d="M20 20 L60 50 L100 20" />
-      <path d="M20 50 L60 80 L100 50" />
-      <path d="M20 80 L60 110 L100 80" />
+      <path d="M287 -15 L387 65 L487 -15" />
+      <path d="M287 -52 L387 28 L487 -52" />
+      <path d="M287 -89 L387 -9 L487 -89" />
     </svg>
   );
 }
@@ -67,19 +95,26 @@ function QuickActions({
 
 function StatCell({ stat }: { stat: OverviewStat }) {
   return (
-    <div className="flex flex-col gap-2 p-5">
-      <span className="text-sm text-fg-muted">{stat.label}</span>
-      <span className="text-3xl font-semibold text-fg">{stat.value}</span>
+    <div className="flex flex-col gap-4 p-8">
+      <span className="text-xl leading-6 font-semibold text-fg-subtle">
+        {stat.label}
+      </span>
+      <span className="text-5xl font-bold leading-[1.2] text-fg">
+        {stat.value}
+      </span>
     </div>
   );
 }
 
 /**
- * VMC dashboard overview. Desktop: a single bar of stat cells with a flush
- * brand-green quick-actions panel at the end. Mobile: the quick-actions panel on
- * top, with the stats moved into a collapsible "View your activity" section.
+ * VMC dashboard overview, rendered as one unified bar:
+ *   row 1 — "VMC HUB" eyebrow + welcome heading (full width, white)
+ *   row 2 — three stat cells | brand-green quick-actions panel
+ * Mobile: welcome heading, quick-actions panel, then the stats in a
+ * collapsible "View your activity" section.
  */
 export function VmcOverview({
+  welcome,
   stats,
   onRegisterWalkIn,
   onNewInvite,
@@ -89,17 +124,26 @@ export function VmcOverview({
 
   return (
     <>
-      {/* ── Desktop: stats + flush quick-actions in one bar ───────────────── */}
-      <div className="hidden overflow-hidden rounded-xl border border-border shadow-xs lg:grid lg:grid-cols-[repeat(3,1fr)_minmax(300px,1.15fr)]">
+      {/* ── Desktop: welcome + stats/quick-actions in one bar ─────────────── */}
+      <div className="hidden overflow-hidden rounded-t-xl border border-border shadow-xs lg:grid lg:grid-cols-[repeat(3,1fr)_minmax(300px,1.5fr)]">
+        {/* Row 1 */}
+        <div className="col-span-4 bg-surface p-6">
+          <WelcomeHeader welcome={welcome} />
+        </div>
+
+        {/* Row 2 */}
         {stats.map((stat, i) => (
           <div
             key={stat.label}
-            className={"bg-surface" + (i > 0 ? " border-s border-border" : "")}
+            className={
+              "border-t border-border bg-primary-subtle" +
+              (i > 0 ? " border-s" : "")
+            }
           >
             <StatCell stat={stat} />
           </div>
         ))}
-        <div className="relative flex flex-col justify-between gap-6 overflow-hidden border-s border-border bg-emphasis p-5 text-emphasis-fg">
+        <div className="relative flex flex-col justify-between gap-6 overflow-hidden border-s border-t border-border bg-emphasis p-6 text-emphasis-fg">
           <QuickActions
             onRegisterWalkIn={onRegisterWalkIn}
             onNewInvite={onNewInvite}
@@ -107,9 +151,10 @@ export function VmcOverview({
         </div>
       </div>
 
-      {/* ── Mobile: quick-actions on top, collapsible stats below ─────────── */}
+      {/* ── Mobile: welcome, quick-actions, collapsible stats below ───────── */}
       <div className="flex flex-col gap-4 lg:hidden">
-        <div className="relative flex flex-col justify-between gap-6 overflow-hidden rounded-xl bg-emphasis p-5 text-emphasis-fg">
+        <WelcomeHeader welcome={welcome} />
+        <div className="relative flex flex-col justify-between gap-6 overflow-hidden rounded-xl bg-emphasis p-6 text-emphasis-fg">
           <QuickActions
             onRegisterWalkIn={onRegisterWalkIn}
             onNewInvite={onNewInvite}
@@ -135,7 +180,7 @@ export function VmcOverview({
             />
           </button>
           {open ? (
-            <div className="divide-y divide-border border-t border-border">
+            <div className="divide-y divide-border border-t border-border bg-primary-subtle">
               {stats.map((stat) => (
                 <StatCell key={stat.label} stat={stat} />
               ))}
