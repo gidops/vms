@@ -3,6 +3,7 @@
     "name": "AATC VMS"
   },
   "nav": {
+    "home": "Home",
     "schedule": "Today's Schedule",
     "myVisits": "My Visits",
     "requests": "Requests & Alerts",

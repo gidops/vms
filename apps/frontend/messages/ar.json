@@ -3,6 +3,7 @@
     "name": "AATC VMS"
   },
   "nav": {
+    "home": "الرئيسية",
     "schedule": "جدول اليوم",
     "myVisits": "زياراتي",
     "requests": "الطلبات والتنبيهات",
