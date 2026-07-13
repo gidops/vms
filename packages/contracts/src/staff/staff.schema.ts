@@ -2,9 +2,10 @@ import { z } from "zod";
 import { PaginationQuery } from "../common/pagination.js";
 
 /**
- * Staff "Today's Schedule" headline counts, all scoped to the signed-in host.
+ * Staff "Today's Schedule" headline counts, all scoped to the signed-in staff
+ * (visits they created or host).
  * - expectedToday: APPROVED visits scheduled for today (awaiting arrival)
- * - awaitingApproval: PENDING + REVIEW_REQUESTED (needs the CSO / the host)
+ * - awaitingApproval: PENDING + REVIEW_REQUESTED (needs the Security Manager / the host)
  * - onsite: currently CHECKED_IN
  */
 export const StaffDashboardStats = z.object({
@@ -20,7 +21,7 @@ export type StaffDashboardStats = z.infer<typeof StaffDashboardStats>;
  */
 export const StaffActivityCategory = z.enum([
   "ARRIVAL_UPDATE",
-  "CSO_FEEDBACK",
+  "SM_FEEDBACK",
   "REQUEST_UPDATE",
   "VISIT_STATUS",
   "SECURITY_ALERT",

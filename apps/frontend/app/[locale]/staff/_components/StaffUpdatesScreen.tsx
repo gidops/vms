@@ -23,7 +23,7 @@ const CATEGORIES: StaffActivityCategory[] = [
   "REQUEST_UPDATE",
   "VISIT_STATUS",
   "SECURITY_ALERT",
-  "CSO_FEEDBACK",
+  "SM_FEEDBACK",
 ];
 
 const chip =

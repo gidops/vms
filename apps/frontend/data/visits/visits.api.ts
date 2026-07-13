@@ -154,6 +154,12 @@ export const visitsApi = {
     groupId?: string;
     dateFrom?: string;
     dateTo?: string;
+    /** Which date column `dateFrom`/`dateTo` filter on (default `scheduledAt`). */
+    dateField?: "scheduledAt" | "createdAt";
+    /** Free-text search (guest/host/floor/pass id). */
+    search?: string;
+    sortBy?: string;
+    sortDir?: "asc" | "desc";
     page?: number;
     pageSize?: number;
   }): Promise<Paginated<VisitListItem>> {
@@ -166,6 +172,10 @@ export const visitsApi = {
     if (params?.groupId) q.set("groupId", params.groupId);
     if (params?.dateFrom) q.set("dateFrom", params.dateFrom);
     if (params?.dateTo) q.set("dateTo", params.dateTo);
+    if (params?.dateField) q.set("dateField", params.dateField);
+    if (params?.search) q.set("search", params.search);
+    if (params?.sortBy) q.set("sortBy", params.sortBy);
+    if (params?.sortDir) q.set("sortDir", params.sortDir);
     if (params?.page) q.set("page", String(params.page));
     if (params?.pageSize) q.set("pageSize", String(params.pageSize));
     const qs = q.toString();
@@ -259,14 +269,14 @@ export const visitsApi = {
       body: input,
     });
   },
-  /** CSO/admin flags a visit → FLAGGED + a SECURITY_REVIEW alert (blocks check-in). */
+  /** Security Manager/admin flags a visit → FLAGGED + a SECURITY_REVIEW alert (blocks check-in). */
   flag(id: string, input: FlagVisitInput): Promise<VisitRequestDetail> {
     return api<VisitRequestDetail>(`/visits/${id}/flag`, {
       method: "POST",
       body: input,
     });
   },
-  /** CSO/admin requests more info → REVIEW_REQUESTED + an ADDITIONAL_INFO alert. */
+  /** Security Manager/admin requests more info → REVIEW_REQUESTED + an ADDITIONAL_INFO alert. */
   requestInfo(
     id: string,
     input: RequestInfoInput,

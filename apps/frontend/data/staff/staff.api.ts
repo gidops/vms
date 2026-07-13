@@ -8,7 +8,7 @@ export interface StaffDashboardStats {
 
 export type StaffActivityCategory =
   | "ARRIVAL_UPDATE"
-  | "CSO_FEEDBACK"
+  | "SM_FEEDBACK"
   | "REQUEST_UPDATE"
   | "VISIT_STATUS"
   | "SECURITY_ALERT";

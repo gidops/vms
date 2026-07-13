@@ -13,7 +13,7 @@ type Intent = "info" | "warning" | "success" | "danger" | "neutral";
 
 const CATEGORY_INTENT: Record<StaffActivityCategory, Intent> = {
   ARRIVAL_UPDATE: "info",
-  CSO_FEEDBACK: "warning",
+  SM_FEEDBACK: "warning",
   REQUEST_UPDATE: "success",
   VISIT_STATUS: "info",
   SECURITY_ALERT: "danger",

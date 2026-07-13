@@ -3,6 +3,7 @@
     "name": "AATC VMS"
   },
   "nav": {
+    "home": "Accueil",
     "schedule": "Programme du jour",
     "myVisits": "Mes visites",
     "requests": "Demandes et alertes",
@@ -111,10 +112,10 @@
     "noNotes": "Aucune remarque pour l'instant.",
     "addNotePlaceholder": "Commencer à écrire",
     "status": {
-      "awaitingApproval": "En attente d'approbation du CSO",
+      "awaitingApproval": "En attente d'approbation du SM",
       "needsMoreInfo": "Informations requises",
-      "approvedByCso": "Approuvé par le CSO",
-      "deniedByCso": "Refusé par le CSO",
+      "approvedBySm": "Approuvé par le SM",
+      "deniedBySm": "Refusé par le SM",
       "cancelled": "Annulé",
       "onsite": "Sur site",
       "checkedOut": "Sorti",
@@ -128,8 +129,8 @@
     },
     "timeline": {
       "inviteCreated": "Invitation créée",
-      "awaitingApproval": "En attente d'approbation du CSO",
-      "awaitingCso": "En attente d'approbation du CSO",
+      "awaitingApproval": "En attente d'approbation du SM",
+      "awaitingSm": "En attente d'approbation du SM",
       "checkedIn": "Entré",
       "passIssued": "Pass émis",
       "issuedPass": "Laissez-passer émis",
@@ -194,9 +195,9 @@
       "confirmRequestInfo": "Envoyer la demande"
     },
     "denyReasonPlaceholder": "Motif du refus",
-    "typeFeedback": "Retour du CSO",
+    "typeFeedback": "Retour du SM",
     "editTitle": "Modifier la demande de visite",
-    "alertBanner": "N'enregistrez pas ce visiteur et n'émettez pas de badge tant que l'alerte n'a pas été examinée par le CSO/la sécurité.",
+    "alertBanner": "N'enregistrez pas ce visiteur et n'émettez pas de badge tant que l'alerte n'a pas été examinée par le SM/la sécurité.",
     "alertNeedsAttention": "Attention requise",
     "alertDefaultCategory": "Correspondance de visiteur signalé",
     "respondPlaceholder": "Répondre à l'alerte…",
@@ -210,7 +211,7 @@
       "title": {
         "PENDING": "Demande de visite de {host}",
         "REVIEW_REQUESTED": "Informations supplémentaires demandées",
-        "APPROVED": "Demande approuvée par le CSO",
+        "APPROVED": "Demande approuvée par le SM",
         "DENIED": "Demande de visite refusée",
         "CHECKED_IN": "{visitor} enregistré(e)",
         "CHECKED_OUT": "{visitor} sorti(e)",
@@ -220,9 +221,9 @@
       },
       "desc": {
         "PENDING": "Demande de visite pour {visitor} de",
-        "REVIEW_REQUESTED": "Le CSO a besoin d'informations supplémentaires pour {visitor} de",
+        "REVIEW_REQUESTED": "Le SM a besoin d'informations supplémentaires pour {visitor} de",
         "APPROVED": "La visite de {visitor} à {host} a été approuvée.",
-        "DENIED": "La visite de {visitor} à {host} a été refusée par le CSO.",
+        "DENIED": "La visite de {visitor} à {host} a été refusée par le SM.",
         "CHECKED_IN": "{visitor} est maintenant sur place.",
         "CHECKED_OUT": "{visitor} est sorti(e).",
         "CANCELLED": "La demande de visite pour {visitor} a été annulée.",
@@ -443,7 +444,7 @@
     "guestCount": "{count} invité(s)",
     "onsiteFor": "Depuis {time} h",
     "statusSub": {
-      "fromCso": "Du CSO"
+      "fromSm": "Du SM"
     },
     "myVisits": {
       "title": "Mes visites"
@@ -509,7 +510,7 @@
       "updateRequest": "Mettre à jour la demande",
       "category": {
         "ARRIVAL_UPDATE": "Mise à jour d'arrivée",
-        "CSO_FEEDBACK": "Retour du CSO",
+        "SM_FEEDBACK": "Retour du SM",
         "REQUEST_UPDATE": "Mise à jour de demande",
         "VISIT_STATUS": "Statut de visite",
         "SECURITY_ALERT": "Alertes de sécurité"
@@ -606,8 +607,8 @@
       "title": "Notifications",
       "help": "Restez informé de l'activité de votre compte.",
       "newInviteRequest": "Nouvelle demande d'invitation",
-      "csoDenied": "Demande refusée par le CSO",
-      "csoApproved": "Demande approuvée par le CSO",
+      "smDenied": "Demande refusée par le SM",
+      "smApproved": "Demande approuvée par le SM",
       "flaggedVisitor": "Alerte visiteur signalé"
     }
   },

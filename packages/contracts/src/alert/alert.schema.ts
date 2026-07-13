@@ -3,7 +3,7 @@ import { AlertStatus, AlertType, RiskLevel } from "../common/enums.js";
 import { Visitor } from "../visitor/visitor.schema.js";
 import { Note } from "../note/note.schema.js";
 
-/** A security alert raised against a visit for CSO review (flag / more-info / restricted match). */
+/** A security alert raised against a visit for Security Manager review (flag / more-info / restricted match). */
 export const Alert = z.object({
   id: z.string().uuid(),
   visitId: z.string().uuid().nullable().optional(),
@@ -39,14 +39,14 @@ export const AlertWithVisitor = Alert.extend({
 });
 export type AlertWithVisitor = z.infer<typeof AlertWithVisitor>;
 
-/** CSO action: move an alert to a new lifecycle status. */
+/** Security Manager action: move an alert to a new lifecycle status. */
 export const UpdateAlertStatusInput = z.object({
   status: z.enum(["ACKNOWLEDGED", "RESOLVED", "DISMISSED"]),
 });
 export type UpdateAlertStatusInput = z.infer<typeof UpdateAlertStatusInput>;
 
 /**
- * CSO/admin raises a security alert against a visit. Not exposed as a standalone
+ * Security Manager/admin raises a security alert against a visit. Not exposed as a standalone
  * endpoint today — the visit `flag` / `request-info` actions build this internally
  * — but shared so both sides describe the same shape.
  */

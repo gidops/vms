@@ -53,7 +53,7 @@ const ALERT_STATUSES = [
 ] as const;
 const VISIT_TYPES = ["WALK_IN", "PRE_INVITED", "APPOINTMENT"] as const;
 
-/** CSO approve/deny/needs-info updates render as "CSO Feedback" cards. */
+/** Security Manager approve/deny/needs-info updates render as "Security Manager Feedback" cards. */
 const FEEDBACK_STATUSES = ["REVIEW_REQUESTED", "APPROVED", "DENIED"];
 
 function cardType(item: InboxItem): InboxCardType {
@@ -67,8 +67,8 @@ function statusMeta(item: InboxItem): { key: string; intent: Intent } {
       PENDING: { key: "awaitingApproval", intent: "warning" },
       REVIEW_REQUESTED: { key: "reviewRequested", intent: "danger" },
       FLAGGED: { key: "flagged", intent: "danger" },
-      APPROVED: { key: "approvedByCso", intent: "success" },
-      DENIED: { key: "deniedByCso", intent: "danger" },
+      APPROVED: { key: "approvedBySm", intent: "success" },
+      DENIED: { key: "deniedBySm", intent: "danger" },
       CANCELLED: { key: "cancelled", intent: "neutral" },
       CHECKED_IN: { key: "onsite", intent: "success" },
       CHECKED_OUT: { key: "checkedOut", intent: "neutral" },

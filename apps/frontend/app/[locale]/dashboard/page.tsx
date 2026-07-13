@@ -45,7 +45,7 @@ import { visitsApi, type VisitListItem } from "@/data/visits/visits.api";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
 
-/** The VMC board only surfaces visits that a CSO has cleared for reception. */
+/** The VMC board only surfaces visits that a Security Manager has cleared for reception. */
 const BOARD_STATUSES = ["APPROVED", "CHECKED_IN", "CHECKED_OUT"] as const;
 
 /**

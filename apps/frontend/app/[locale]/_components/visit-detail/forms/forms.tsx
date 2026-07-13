@@ -62,7 +62,7 @@ export function DenyForm({
   );
 }
 
-/** CSO/admin request-more-info: a reason the host must respond to via notes. */
+/** Security Manager/admin request-more-info: a reason the host must respond to via notes. */
 export function RequestInfoForm({
   onSubmit,
   onCancel,
@@ -106,7 +106,7 @@ export function RequestInfoForm({
   );
 }
 
-/** CSO/admin flag: pick a risk level + reason; raises a security-review alert. */
+/** Security Manager/admin flag: pick a risk level + reason; raises a security-review alert. */
 export function FlagForm({
   onSubmit,
   onCancel,

@@ -3,6 +3,7 @@
     "name": "AATC VMS"
   },
   "nav": {
+    "home": "Home",
     "schedule": "Today's Schedule",
     "myVisits": "My Visits",
     "requests": "Requests & Alerts",
@@ -111,10 +112,10 @@
     "codeSent": "Code sent",
     "notAssigned": "Not Assigned",
     "status": {
-      "awaitingApproval": "Awaiting CSO Approval",
+      "awaitingApproval": "Awaiting SM Approval",
       "needsMoreInfo": "Needs More Info",
-      "approvedByCso": "Approved by CSO",
-      "deniedByCso": "Denied by CSO",
+      "approvedBySm": "Approved by SM",
+      "deniedBySm": "Denied by SM",
       "cancelled": "Cancelled",
       "onsite": "Onsite",
       "checkedOut": "Checked Out",
@@ -128,8 +129,8 @@
     },
     "timeline": {
       "inviteCreated": "Invite Created",
-      "awaitingApproval": "Awaiting CSO Approval",
-      "awaitingCso": "Awaiting CSO Approval",
+      "awaitingApproval": "Awaiting SM Approval",
+      "awaitingSm": "Awaiting SM Approval",
       "checkedIn": "Checked In",
       "passIssued": "Pass Issued",
       "issuedPass": "Issued Pass",
@@ -194,9 +195,9 @@
       "confirmRequestInfo": "Send Request"
     },
     "denyReasonPlaceholder": "Reason for denial",
-    "typeFeedback": "CSO Feedback",
+    "typeFeedback": "SM Feedback",
     "editTitle": "Edit Visit Request",
-    "alertBanner": "Do not check in this guest or issue a pass until the alert is reviewed by CSO/security.",
+    "alertBanner": "Do not check in this guest or issue a pass until the alert is reviewed by the Security Manager/security.",
     "alertNeedsAttention": "Needs Attention",
     "alertDefaultCategory": "Flagged Guest Match",
     "respondPlaceholder": "Respond to alert…",
@@ -210,7 +211,7 @@
       "title": {
         "PENDING": "Visit Request from {host}",
         "REVIEW_REQUESTED": "More Info Requested",
-        "APPROVED": "Request Approved by CSO",
+        "APPROVED": "Request Approved by SM",
         "DENIED": "Visit Request Denied",
         "CHECKED_IN": "{visitor} Checked In",
         "CHECKED_OUT": "{visitor} Checked Out",
@@ -220,9 +221,9 @@
       },
       "desc": {
         "PENDING": "Visit request for {visitor} from",
-        "REVIEW_REQUESTED": "The CSO needs more information for {visitor} from",
+        "REVIEW_REQUESTED": "The Security Manager needs more information for {visitor} from",
         "APPROVED": "{visitor}'s visit to {host} has been approved.",
-        "DENIED": "{visitor}'s visit to {host} was denied by the CSO.",
+        "DENIED": "{visitor}'s visit to {host} was denied by the Security Manager.",
         "CHECKED_IN": "{visitor} is now on site.",
         "CHECKED_OUT": "{visitor} has checked out.",
         "CANCELLED": "The visit request for {visitor} was cancelled.",
@@ -443,7 +444,7 @@
     "guestCount": "{count} Guest",
     "onsiteFor": "For {time} HR",
     "statusSub": {
-      "fromCso": "From CSO"
+      "fromSm": "From SM"
     },
     "myVisits": {
       "title": "My Visits"
@@ -509,7 +510,7 @@
       "updateRequest": "Update Request",
       "category": {
         "ARRIVAL_UPDATE": "Arrival Update",
-        "CSO_FEEDBACK": "CSO Feedback",
+        "SM_FEEDBACK": "SM Feedback",
         "REQUEST_UPDATE": "Request Update",
         "VISIT_STATUS": "Visit Status",
         "SECURITY_ALERT": "Security Alerts"
@@ -606,8 +607,8 @@
       "title": "Notifications",
       "help": "Stay informed about your account activity.",
       "newInviteRequest": "New invite request",
-      "csoDenied": "CSO denied request",
-      "csoApproved": "CSO approved request",
+      "smDenied": "SM denied request",
+      "smApproved": "SM approved request",
       "flaggedVisitor": "Flagged visitor alert"
     }
   },

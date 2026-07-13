@@ -1,9 +1,11 @@
 "use client";
 
+import { homeFor } from "@vms/contracts";
 import { SegmentedControl, TopNav } from "@vms/ui";
 import { useTranslations } from "next-intl";
 import { useInboxUnread } from "@/data/requests/queries";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { useAuth } from "@/shared/auth/AuthContext";
 import { AccountMenu } from "./AccountMenu";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { RoleSwitcher } from "./RoleSwitcher";
@@ -46,6 +48,7 @@ export function AppTopNav({
 }: AppTopNavProps) {
   const tNav = useTranslations("nav");
   const router = useRouter();
+  const { activeRole } = useAuth();
 
   // The nav bubble shows the current user's unread count; staff see their own
   // scope, the VMC sees all. An explicit `requestsCount` overrides it.
@@ -76,7 +79,15 @@ export function AppTopNav({
 
   return (
     <TopNav
-      brand={<BrandMark />}
+      brand={
+        <Link
+          href={homeFor(activeRole)}
+          aria-label={tNav("home")}
+          className="inline-flex rounded-md outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+        >
+          <BrandMark />
+        </Link>
+      }
       center={
         active ? (
           <SegmentedControl

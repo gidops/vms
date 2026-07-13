@@ -259,6 +259,17 @@ export const VisitListQuery = PaginationQuery.extend({
   groupId: z.string().uuid().optional(),
   dateFrom: z.coerce.date().optional(),
   dateTo: z.coerce.date().optional(),
+  /**
+   * Which date column the `dateFrom`/`dateTo` window filters on. Defaults to the
+   * scheduled date (the VMC/admin boards want "who's expected when"); the staff
+   * dashboard passes `createdAt` so its window tracks recently-submitted requests.
+   */
+  dateField: z.enum(["scheduledAt", "createdAt"]).default("scheduledAt"),
+  /**
+   * Free-text search across the visitor (name/email/organization), host name,
+   * floor, and reference/pass code. Opt-in — only the staff dashboard sends it.
+   */
+  search: z.string().trim().min(1).optional(),
 });
 export type VisitListQuery = z.infer<typeof VisitListQuery>;
 
@@ -277,7 +288,7 @@ export const DenyVisitInput = z.object({
 export type DenyVisitInput = z.infer<typeof DenyVisitInput>;
 
 /**
- * CSO/admin flags a visit as a security concern → status FLAGGED + a SECURITY_REVIEW
+ * Security Manager/admin flags a visit as a security concern → status FLAGGED + a SECURITY_REVIEW
  * alert; check-in is blocked until the alert is resolved. The admin picks the risk
  * level (defaults applied server-side when omitted).
  */
@@ -289,7 +300,7 @@ export const FlagVisitInput = z.object({
 export type FlagVisitInput = z.infer<typeof FlagVisitInput>;
 
 /**
- * CSO/admin requests more information on a suspicious visit → status REVIEW_REQUESTED
+ * Security Manager/admin requests more information on a suspicious visit → status REVIEW_REQUESTED
  * + an ADDITIONAL_INFO alert. The host/creator responds via notes and resubmits.
  */
 export const RequestInfoInput = z.object({

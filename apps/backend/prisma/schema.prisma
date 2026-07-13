@@ -129,7 +129,7 @@ model User {
   avatarKey         String?
   timezone          String? // IANA-ish identifier for region/time preference
   assignedDesk      String? // VMC reception desk/location label
-  // Per-channel notification toggles, e.g. { newInviteRequest, csoDenied, ... }.
+  // Per-channel notification toggles, e.g. { newInviteRequest, smDenied, ... }.
   notificationPrefs Json?
   isActive          Boolean      @default(true)
   preferredLocale   Locale       @default(EN)

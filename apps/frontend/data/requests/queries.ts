@@ -88,6 +88,12 @@ export interface MyVisitsParams {
   purpose?: string;
   dateFrom?: string;
   dateTo?: string;
+  /** Which date column `dateFrom`/`dateTo` filter on (default `scheduledAt`). */
+  dateField?: "scheduledAt" | "createdAt";
+  /** Free-text search (guest/host/floor/pass id). */
+  search?: string;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
   page?: number;
   pageSize?: number;
 }
@@ -212,7 +218,7 @@ export function useResubmitVisit(id: string) {
   });
 }
 
-/** CSO/admin flags a visit → FLAGGED + a SECURITY_REVIEW alert (blocks check-in). */
+/** Security Manager/admin flags a visit → FLAGGED + a SECURITY_REVIEW alert (blocks check-in). */
 export function useFlagVisit(id: string) {
   const invalidate = useInvalidate();
   return useMutation({
@@ -222,7 +228,7 @@ export function useFlagVisit(id: string) {
   });
 }
 
-/** CSO/admin requests more info → REVIEW_REQUESTED + an ADDITIONAL_INFO alert. */
+/** Security Manager/admin requests more info → REVIEW_REQUESTED + an ADDITIONAL_INFO alert. */
 export function useRequestInfo(id: string) {
   const invalidate = useInvalidate();
   return useMutation({
@@ -233,7 +239,7 @@ export function useRequestInfo(id: string) {
 }
 
 /**
- * CSO/admin resolves/dismisses a visit's security alert. Keyed by the visit so the
+ * Security Manager/admin resolves/dismisses a visit's security alert. Keyed by the visit so the
  * detail sheet (which now renders alerts inline) refreshes — resolving clears the
  * visit's hold, which the backend reflects in the visit status.
  */

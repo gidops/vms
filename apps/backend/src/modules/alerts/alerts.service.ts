@@ -53,7 +53,7 @@ export class AlertsService {
       });
       // Closing the alert that held the visit clears its hold so VMC can proceed:
       // a resolved flag returns the visit to APPROVED (check-in allowed); a resolved
-      // more-info request returns it to PENDING (back in the CSO decision queue).
+      // more-info request returns it to PENDING (back in the Security Manager decision queue).
       // Only clears once no other open alert of the matching kind remains.
       if (closing && alert.visitId) {
         await this.clearVisitHold(tx, alert.visitId);

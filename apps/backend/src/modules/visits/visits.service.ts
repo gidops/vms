@@ -249,7 +249,7 @@ export class VisitsService {
   }
 
   /**
-   * Host edits & resubmits a request the CSO bounced back (REVIEW_REQUESTED) —
+   * Host edits & resubmits a request the Security Manager bounced back (REVIEW_REQUESTED) —
    * optionally updating purpose/schedule — moving it back to PENDING for review.
    * Authorized by host ownership so STAFF needs no global visit:edit permission.
    */
@@ -460,12 +460,26 @@ export class VisitsService {
   }
 
   /**
-   * Paginated visit list ordered by scheduled date, earliest first (the VMC
+   * The list ordering. Defaults to scheduled date, earliest first (the VMC
    * check-in board surfaces who we're expecting soonest; undated visits sort
-   * last). The admin approval queue passes no scope; the staff dashboard passes
+   * last). Callers may opt into `sortBy: "createdAt"` — the staff dashboard
+   * orders newest-submitted first. Whitelisted so no arbitrary column leaks into
+   * Prisma's `orderBy`.
+   */
+  private buildOrderBy(
+    query: VisitListQuery,
+  ): Prisma.VisitOrderByWithRelationInput {
+    if (query.sortBy === 'createdAt') return { createdAt: query.sortDir };
+    return { scheduledAt: { sort: 'asc', nulls: 'last' } };
+  }
+
+  /**
+   * Paginated visit list. Ordering follows {@link buildOrderBy} (scheduled date
+   * earliest-first by default; `sortBy: "createdAt"` for the staff dashboard).
+   * The admin approval queue passes no scope; the staff dashboard passes
    * `scope: "mine"` to restrict the result to visits the requesting user hosts.
-   * `type`/`purpose` and the `dateFrom`/`dateTo` window (over the scheduled date)
-   * are the staff facets.
+   * `type`/`purpose`, free-text `search`, and the `dateFrom`/`dateTo` window
+   * (over `dateField`, default `scheduledAt`) are the staff facets.
    */
   async list(
     query: VisitListQuery,
@@ -477,13 +491,43 @@ export class VisitsService {
     if (query.type) where.type = query.type;
     if (query.purpose) where.purpose = query.purpose;
     if (query.groupId) where.groupId = query.groupId;
-    if (query.scope === 'mine') where.host = { userId: currentUserId };
     if (query.dateFrom || query.dateTo) {
-      where.scheduledAt = {
+      // The window applies to whichever date column the caller asked for
+      // (`scheduledAt` by default; the staff dashboard passes `createdAt`).
+      where[query.dateField] = {
         ...(query.dateFrom ? { gte: query.dateFrom } : {}),
         ...(query.dateTo ? { lte: query.dateTo } : {}),
       };
     }
+    // Scope and search are each an OR-group; they'd clobber one another as a
+    // single top-level `where.OR`, so AND them together.
+    const and: Prisma.VisitWhereInput[] = [];
+    if (query.scope === 'mine') {
+      // "Mine" = requests I created OR visits I host (a staff sees requests they
+      // raised even when the guest is hosted by someone else).
+      and.push({
+        OR: [
+          { createdById: currentUserId },
+          { host: { userId: currentUserId } },
+        ],
+      });
+    }
+    if (query.search) {
+      // Matches the staff search placeholder ("guest, host, floor, pass id").
+      const contains = { contains: query.search, mode: 'insensitive' } as const;
+      and.push({
+        OR: [
+          { visitor: { fullName: contains } },
+          { visitor: { email: contains } },
+          { visitor: { organization: contains } },
+          { host: { user: { fullName: contains } } },
+          { floor: contains },
+          { referenceCode: contains },
+        ],
+      });
+    }
+    if (and.length) where.AND = and;
+    const orderBy = this.buildOrderBy(query);
     // Fetching one group's members (the group check-in / approval sheets pass a
     // groupId) returns every guest as its own row; any other list collapses each
     // group visit to a single representative row.
@@ -503,7 +547,7 @@ export class VisitsService {
       const keys = await this.prisma.visit.findMany({
         where,
         select: { id: true, groupId: true, isGroupVisit: true },
-        orderBy: { scheduledAt: { sort: 'asc', nulls: 'last' } },
+        orderBy,
       });
       const repIds: string[] = [];
       const seen = new Set<string>();
@@ -533,7 +577,7 @@ export class VisitsService {
         this.prisma.visit.findMany({
           where,
           include: { visitor: true, host: { include: { user: true } } },
-          orderBy: { scheduledAt: { sort: 'asc', nulls: 'last' } },
+          orderBy,
           skip: (query.page - 1) * query.pageSize,
           take: query.pageSize,
         }),
@@ -650,7 +694,7 @@ export class VisitsService {
     }
 
     // Security hold: an open flag / restricted-match alert blocks check-in until the
-    // CSO resolves it (a FLAGGED visit is already blocked by the status check above,
+    // the Security Manager resolves it (a FLAGGED visit is already blocked by the status check above,
     // but a system RESTRICTED_MATCH may sit on an otherwise-approved visit).
     const openSecurityAlert = await this.prisma.alert.findFirst({
       where: {
@@ -902,9 +946,9 @@ export class VisitsService {
   }
 
   /**
-   * CSO/admin flags a visit as a security concern: moves it to FLAGGED and raises a
+   * Security Manager/admin flags a visit as a security concern: moves it to FLAGGED and raises a
    * SECURITY_REVIEW alert (admin-chosen risk level). An open security alert blocks
-   * check-in until the CSO resolves it. Atomic — status change + alert + both events
+   * check-in until the Security Manager resolves it. Atomic — status change + alert + both events
    * (VisitFlagged, AlertCreated) in one transaction.
    */
   async flag(
@@ -953,7 +997,7 @@ export class VisitsService {
   }
 
   /**
-   * CSO/admin requests more information on a suspicious visit: moves it to
+   * Security Manager/admin requests more information on a suspicious visit: moves it to
    * REVIEW_REQUESTED and raises an ADDITIONAL_INFO alert. The host/creator responds
    * via notes and resubmits. Atomic — status change + alert + both events
    * (VisitReviewRequested, AlertCreated) in one transaction.

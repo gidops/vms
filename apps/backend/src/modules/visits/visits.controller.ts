@@ -131,7 +131,7 @@ export class VisitsController {
     return this.visits.deny(id, input.reason, principal.userId);
   }
 
-  /** CSO/admin flags a visit as a security concern → FLAGGED + SECURITY_REVIEW alert. */
+  /** Security Manager/admin flags a visit as a security concern → FLAGGED + SECURITY_REVIEW alert. */
   @Post(':id/flag')
   @RequirePermissions(PERMISSIONS.VISIT_FLAG)
   flag(
@@ -142,7 +142,7 @@ export class VisitsController {
     return this.visits.flag(id, input, principal.userId);
   }
 
-  /** CSO/admin requests more info → REVIEW_REQUESTED + ADDITIONAL_INFO alert. */
+  /** Security Manager/admin requests more info → REVIEW_REQUESTED + ADDITIONAL_INFO alert. */
   @Post(':id/request-info')
   @RequirePermissions(PERMISSIONS.VISIT_REQUEST_INFO)
   requestInfo(

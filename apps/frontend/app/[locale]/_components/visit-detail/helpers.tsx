@@ -97,12 +97,12 @@ export function timelineFor(
   const approved = status === "APPROVED";
   if (variant === "vmc") {
     return toSteps(
-      ["inviteCreated", "awaitingCso", "checkedIn", "passIssued", "checkedOut"],
+      ["inviteCreated", "awaitingSm", "checkedIn", "passIssued", "checkedOut"],
       approved ? 2 : 1,
     );
   }
   return toSteps(
-    ["awaitingCso", "checkedIn", "passIssued", "checkedOut"],
+    ["awaitingSm", "checkedIn", "passIssued", "checkedOut"],
     approved ? 1 : 0,
   );
 }

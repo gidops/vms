@@ -41,7 +41,7 @@ const InboxItemBase = z.object({
 /**
  * A visit request card. Carries structured fields (visitor/host names, type,
  * purpose) so the frontend composes the localized, status-aware title and
- * description — the card label (Visit Request / CSO Feedback) is derived from
+ * description — the card label (Visit Request / SM Feedback) is derived from
  * `status` on the client.
  */
 export const InboxRequestItem = InboxItemBase.extend({
