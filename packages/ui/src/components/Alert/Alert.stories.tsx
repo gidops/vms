@@ -21,7 +21,7 @@ export const Playground: Story = {
     <Alert {...args} className="max-w-md">
       <AlertTitle>Flagged visitor</AlertTitle>
       <AlertDescription>
-        Do not check in this visitor without CSO review.
+        Do not check in this visitor without Security Manager review.
       </AlertDescription>
     </Alert>
   ),

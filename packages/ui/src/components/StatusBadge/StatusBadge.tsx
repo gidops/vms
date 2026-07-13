@@ -11,9 +11,9 @@ type Intent = NonNullable<BadgeProps["intent"]>;
  */
 const STATUS_MAP: Record<VisitStatus, { intent: Intent; label: string }> = {
   PENDING: { intent: "warning", label: "Awaiting Approval" },
-  // The CSO requested more information from the host (an ADDITIONAL_INFO alert).
+  // The Security Manager requested more information from the host (an ADDITIONAL_INFO alert).
   REVIEW_REQUESTED: { intent: "danger", label: "Review Requested" },
-  // The CSO flagged the visit as a security concern; check-in is blocked.
+  // The Security Manager flagged the visit as a security concern; check-in is blocked.
   FLAGGED: { intent: "danger", label: "Flagged" },
   // An approved, not-yet-arrived visit is shown to gate staff as "Expected".
   APPROVED: { intent: "info", label: "Expected" },

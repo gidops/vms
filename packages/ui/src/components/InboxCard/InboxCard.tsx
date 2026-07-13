@@ -3,16 +3,16 @@ import * as React from "react";
 import { cn } from "../../foundations/cn";
 import { Badge } from "../../primitives/Badge/index";
 
-/** Card category: a live request, a CSO feedback update, or a security alert. */
+/** Card category: a live request, a Security Manager feedback update, or a security alert. */
 export type InboxCardType = "request" | "feedback" | "alert";
 
 export interface InboxCardProps {
   /**
-   * "request" tints the type pill teal (people icon); "feedback" amber (CSO
+   * "request" tints the type pill teal (people icon); "feedback" amber (Security Manager
    * update); "alert" red (flag).
    */
   type: InboxCardType;
-  /** Localised label for the type pill ("Visit Request" / "CSO Feedback" / "Security Alerts"). */
+  /** Localised label for the type pill ("Visit Request" / "SM Feedback" / "Security Alerts"). */
   typeLabel: string;
   title: React.ReactNode;
   description: React.ReactNode;

@@ -81,7 +81,7 @@ export function VisitProgressSection({
   const labels = {
     gateValidated: t("timeline.gateValidated"),
     inviteCreated: t("timeline.inviteCreated"),
-    awaitingCso: t("timeline.awaitingCso"),
+    awaitingSm: t("timeline.awaitingSm"),
     checkedIn: t("timeline.checkedIn"),
     passIssued: t("timeline.issuedPass"),
     checkedOut: t("timeline.checkedOut"),

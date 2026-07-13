@@ -249,7 +249,7 @@ export class VisitsService {
   }
 
   /**
-   * Host edits & resubmits a request the CSO bounced back (REVIEW_REQUESTED) —
+   * Host edits & resubmits a request the Security Manager bounced back (REVIEW_REQUESTED) —
    * optionally updating purpose/schedule — moving it back to PENDING for review.
    * Authorized by host ownership so STAFF needs no global visit:edit permission.
    */
@@ -694,7 +694,7 @@ export class VisitsService {
     }
 
     // Security hold: an open flag / restricted-match alert blocks check-in until the
-    // CSO resolves it (a FLAGGED visit is already blocked by the status check above,
+    // the Security Manager resolves it (a FLAGGED visit is already blocked by the status check above,
     // but a system RESTRICTED_MATCH may sit on an otherwise-approved visit).
     const openSecurityAlert = await this.prisma.alert.findFirst({
       where: {
@@ -946,9 +946,9 @@ export class VisitsService {
   }
 
   /**
-   * CSO/admin flags a visit as a security concern: moves it to FLAGGED and raises a
+   * Security Manager/admin flags a visit as a security concern: moves it to FLAGGED and raises a
    * SECURITY_REVIEW alert (admin-chosen risk level). An open security alert blocks
-   * check-in until the CSO resolves it. Atomic — status change + alert + both events
+   * check-in until the Security Manager resolves it. Atomic — status change + alert + both events
    * (VisitFlagged, AlertCreated) in one transaction.
    */
   async flag(
@@ -997,7 +997,7 @@ export class VisitsService {
   }
 
   /**
-   * CSO/admin requests more information on a suspicious visit: moves it to
+   * Security Manager/admin requests more information on a suspicious visit: moves it to
    * REVIEW_REQUESTED and raises an ADDITIONAL_INFO alert. The host/creator responds
    * via notes and resubmits. Atomic — status change + alert + both events
    * (VisitReviewRequested, AlertCreated) in one transaction.

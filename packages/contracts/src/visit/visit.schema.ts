@@ -288,7 +288,7 @@ export const DenyVisitInput = z.object({
 export type DenyVisitInput = z.infer<typeof DenyVisitInput>;
 
 /**
- * CSO/admin flags a visit as a security concern → status FLAGGED + a SECURITY_REVIEW
+ * Security Manager/admin flags a visit as a security concern → status FLAGGED + a SECURITY_REVIEW
  * alert; check-in is blocked until the alert is resolved. The admin picks the risk
  * level (defaults applied server-side when omitted).
  */
@@ -300,7 +300,7 @@ export const FlagVisitInput = z.object({
 export type FlagVisitInput = z.infer<typeof FlagVisitInput>;
 
 /**
- * CSO/admin requests more information on a suspicious visit → status REVIEW_REQUESTED
+ * Security Manager/admin requests more information on a suspicious visit → status REVIEW_REQUESTED
  * + an ADDITIONAL_INFO alert. The host/creator responds via notes and resubmits.
  */
 export const RequestInfoInput = z.object({

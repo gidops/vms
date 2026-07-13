@@ -20,7 +20,7 @@ const STEPS: TimelineStep[] = [
   },
   {
     key: "approval",
-    label: "Awaiting CSO Approval",
+    label: "Awaiting SM Approval",
     description: "Approved by J. Francis",
     state: "complete",
   },

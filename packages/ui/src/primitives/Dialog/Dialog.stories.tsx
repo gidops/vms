@@ -29,7 +29,7 @@ export const Default: Story = {
         <DialogHeader>
           <DialogTitle>Flagged Visitor Alert</DialogTitle>
           <DialogDescription>
-            Do not check in this visitor without CSO review.
+            Do not check in this visitor without Security Manager review.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -38,7 +38,7 @@ export const Default: Story = {
               Close
             </Button>
           </DialogClose>
-          <Button intent="warning">Escalate to CSO</Button>
+          <Button intent="warning">Escalate to SM</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

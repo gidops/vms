@@ -29,8 +29,8 @@ const TIMEZONES = [
 
 const NOTIFICATIONS = [
   "newInviteRequest",
-  "csoDenied",
-  "csoApproved",
+  "smDenied",
+  "smApproved",
   "flaggedVisitor",
 ] as const;
 

@@ -41,18 +41,18 @@ describe('AlertsService.updateStatus', () => {
   it('throws when the alert does not exist', async () => {
     const { service } = setup(null);
     await expect(
-      service.updateStatus('a1', { status: 'RESOLVED' }, 'cso'),
+      service.updateStatus('a1', { status: 'RESOLVED' }, 'sm'),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('resolving a flag clears the hold — visit returns to APPROVED', async () => {
     const { service, tx, publish } = setup();
-    await service.updateStatus('a1', { status: 'RESOLVED' }, 'cso');
+    await service.updateStatus('a1', { status: 'RESOLVED' }, 'sm');
     expect(tx.alert.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           status: 'RESOLVED',
-          resolvedById: 'cso',
+          resolvedById: 'sm',
         }),
       }),
     );
@@ -73,7 +73,7 @@ describe('AlertsService.updateStatus', () => {
       { id: 'a1', visitId: 'v1', type: 'ADDITIONAL_INFO' },
       { status: 'REVIEW_REQUESTED' },
     );
-    await service.updateStatus('a1', { status: 'RESOLVED' }, 'cso');
+    await service.updateStatus('a1', { status: 'RESOLVED' }, 'sm');
     expect(tx.visit.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { status: 'PENDING' } }),
     );
@@ -81,13 +81,13 @@ describe('AlertsService.updateStatus', () => {
 
   it('does not clear the hold while another open security alert remains', async () => {
     const { service, tx } = setup(undefined, { status: 'FLAGGED' }, 1);
-    await service.updateStatus('a1', { status: 'RESOLVED' }, 'cso');
+    await service.updateStatus('a1', { status: 'RESOLVED' }, 'sm');
     expect(tx.visit.update).not.toHaveBeenCalled();
   });
 
   it('acknowledging (non-closing) does not touch the visit or stamp a resolver', async () => {
     const { service, tx } = setup();
-    await service.updateStatus('a1', { status: 'ACKNOWLEDGED' }, 'cso');
+    await service.updateStatus('a1', { status: 'ACKNOWLEDGED' }, 'sm');
     expect(tx.alert.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ resolvedById: null }),

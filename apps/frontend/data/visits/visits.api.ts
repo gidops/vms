@@ -269,14 +269,14 @@ export const visitsApi = {
       body: input,
     });
   },
-  /** CSO/admin flags a visit → FLAGGED + a SECURITY_REVIEW alert (blocks check-in). */
+  /** Security Manager/admin flags a visit → FLAGGED + a SECURITY_REVIEW alert (blocks check-in). */
   flag(id: string, input: FlagVisitInput): Promise<VisitRequestDetail> {
     return api<VisitRequestDetail>(`/visits/${id}/flag`, {
       method: "POST",
       body: input,
     });
   },
-  /** CSO/admin requests more info → REVIEW_REQUESTED + an ADDITIONAL_INFO alert. */
+  /** Security Manager/admin requests more info → REVIEW_REQUESTED + an ADDITIONAL_INFO alert. */
   requestInfo(
     id: string,
     input: RequestInfoInput,

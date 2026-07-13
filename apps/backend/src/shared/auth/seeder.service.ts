@@ -16,7 +16,7 @@ const ROLE_DEFS: Record<
 > = {
   [ROLES.ADMIN]: {
     description:
-      'Administrator (CSO) — manage users and roles, decide/flag visit requests',
+      'Administrator (Security Manager) — manage users and roles, decide/flag visit requests',
     permissions: [
       PERMISSIONS.USER_READ,
       PERMISSIONS.USER_CREATE,
@@ -25,7 +25,7 @@ const ROLE_DEFS: Record<
       PERMISSIONS.ROLE_READ,
       PERMISSIONS.VISIT_APPROVE,
       PERMISSIONS.VISIT_DENY,
-      // The CSO raises and resolves security alerts (flag / request more info);
+      // The Security Manager raises and resolves security alerts (flag / request more info);
       // staff/VMC only respond via notes and cannot resolve.
       PERMISSIONS.VISIT_FLAG,
       PERMISSIONS.VISIT_REQUEST_INFO,
@@ -61,7 +61,7 @@ const ROLE_DEFS: Record<
       PERMISSIONS.VISIT_CHECK_IN,
       PERMISSIONS.VISIT_CHECK_OUT,
       // VMC responds to security alerts via notes only — it cannot resolve them
-      // (that is the CSO/admin's call, and it unblocks check-in).
+      // (that is the Security Manager/admin's call, and it unblocks check-in).
       PERMISSIONS.NOTE_ADD,
     ],
   },
@@ -168,8 +168,8 @@ export class SeederService implements OnApplicationBootstrap {
       });
     }
 
-    // Drop legacy roles no longer in the canonical taxonomy (e.g. CSO,
-    // RECEPTION) — their user assignments cascade away.
+    // Drop legacy roles no longer in the canonical taxonomy (e.g. a deprecated
+    // RECEPTION role) — their user assignments cascade away.
     const canonical = [ROLES.SUPER_ADMIN, ...Object.keys(ROLE_DEFS)];
     await this.prisma.role.deleteMany({
       where: { name: { notIn: canonical } },
@@ -364,7 +364,7 @@ export class SeederService implements OnApplicationBootstrap {
         type: 'SECURITY_REVIEW',
         level: 'HIGH',
         reason:
-          'Guest profile matches a restricted record and requires CSO review before check-in.',
+          'Guest profile matches a restricted record and requires Security Manager review before check-in.',
         category: 'Restricted Guest',
       },
       {
@@ -405,10 +405,10 @@ export class SeederService implements OnApplicationBootstrap {
         visitIdx: 0,
         body: 'Visitor details were provided by Dr Alabi via email.',
       },
-      { visitIdx: 0, body: 'Awaiting CSO confirmation before issuing a pass.' },
+      { visitIdx: 0, body: 'Awaiting SM confirmation before issuing a pass.' },
       {
         visitIdx: 6,
-        body: 'Acknowledged — holding the guest at reception pending CSO review.',
+        body: 'Acknowledged — holding the guest at reception pending Security Manager review.',
       },
       {
         visitIdx: 2,

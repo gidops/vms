@@ -63,8 +63,8 @@ const ACTIVITY_MAP: Record<
     body: (n) => `${n} is checked out.`,
   },
   'note.added': {
-    category: 'CSO_FEEDBACK',
-    title: 'From CSO Desk',
+    category: 'SM_FEEDBACK',
+    title: 'From SM Desk',
     body: (n) => `A new remark was added to ${n}'s visit request.`,
   },
   'visit.flagged': {
@@ -73,9 +73,10 @@ const ACTIVITY_MAP: Record<
     body: (n) => `${n}'s visit was flagged and needs security review.`,
   },
   'visit.review_requested': {
-    category: 'CSO_FEEDBACK',
+    category: 'SM_FEEDBACK',
     title: 'More Information Requested',
-    body: (n) => `The CSO requested more information for ${n}'s visit.`,
+    body: (n) =>
+      `The Security Manager requested more information for ${n}'s visit.`,
   },
   // Note: flag/request-info also emit `alert.created`; we map the visit-centric
   // events above (not alert.created) so each action yields a single feed card

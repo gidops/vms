@@ -12,7 +12,7 @@ type Intent = "info" | "warning" | "success" | "danger" | "neutral";
 
 const CATEGORY_INTENT: Record<StaffActivityCategory, Intent> = {
   ARRIVAL_UPDATE: "info",
-  CSO_FEEDBACK: "warning",
+  SM_FEEDBACK: "warning",
   REQUEST_UPDATE: "success",
   VISIT_STATUS: "info",
   SECURITY_ALERT: "danger",
@@ -22,7 +22,7 @@ const CATEGORY_INTENT: Record<StaffActivityCategory, Intent> = {
 function actionKey(
   category: StaffActivityCategory,
 ): "updateRequest" | "viewDetails" | "viewUpdate" {
-  if (category === "CSO_FEEDBACK") return "updateRequest";
+  if (category === "SM_FEEDBACK") return "updateRequest";
   if (category === "SECURITY_ALERT" || category === "VISIT_STATUS")
     return "viewDetails";
   return "viewUpdate";

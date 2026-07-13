@@ -18,12 +18,12 @@ export type VisitType = z.infer<typeof VisitType>;
 export const VisitStatus = z.enum([
   "PENDING",
   /**
-   * CSO requested more information (raises an ADDITIONAL_INFO security alert); the
+   * Security Manager requested more information (raises an ADDITIONAL_INFO security alert); the
    * host/creator responds via notes and resubmits to PENDING. Formerly
    * NEEDS_MORE_INFO.
    */
   "REVIEW_REQUESTED",
-  /** CSO flagged the visit — a threat/restricted match; check-in is blocked until resolved. */
+  /** Security Manager flagged the visit — a threat/restricted match; check-in is blocked until resolved. */
   "FLAGGED",
   "APPROVED",
   "DENIED",
@@ -64,10 +64,10 @@ export const AlertStatus = z.enum([
 export type AlertStatus = z.infer<typeof AlertStatus>;
 
 /**
- * The kind of security alert raised against a visit. Only the CSO/admin or the
+ * The kind of security alert raised against a visit. Only the Security Manager/admin or the
  * system creates these; staff/VMC respond via notes and cannot resolve them.
- * - SECURITY_REVIEW  — CSO flagged the visit (threat identified); blocks check-in.
- * - ADDITIONAL_INFO  — CSO wants more detail on a suspicious guest before deciding.
+ * - SECURITY_REVIEW  — Security Manager flagged the visit (threat identified); blocks check-in.
+ * - ADDITIONAL_INFO  — Security Manager wants more detail on a suspicious guest before deciding.
  * - RESTRICTED_MATCH — system-generated: the guest matched a restricted profile.
  */
 export const AlertType = z.enum([
