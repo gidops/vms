@@ -36,29 +36,79 @@ export class AlertsService {
     input: UpdateAlertStatusInput,
     actorUserId: string,
   ): Promise<AlertWithVisitor> {
-    const count = await this.prisma.alert.count({ where: { id } });
-    if (count === 0) throw new NotFoundException('Alert not found');
+    const alert = await this.prisma.alert.findUnique({
+      where: { id },
+      select: { id: true, visitId: true, type: true },
+    });
+    if (!alert) throw new NotFoundException('Alert not found');
+    const closing = input.status === 'RESOLVED' || input.status === 'DISMISSED';
 
     await this.txm.run(async (tx) => {
       await tx.alert.update({
         where: { id },
         data: {
           status: input.status,
-          resolvedById:
-            input.status === 'RESOLVED' || input.status === 'DISMISSED'
-              ? actorUserId
-              : null,
+          resolvedById: closing ? actorUserId : null,
         },
       });
+      // Closing the alert that held the visit clears its hold so VMC can proceed:
+      // a resolved flag returns the visit to APPROVED (check-in allowed); a resolved
+      // more-info request returns it to PENDING (back in the CSO decision queue).
+      // Only clears once no other open alert of the matching kind remains.
+      if (closing && alert.visitId) {
+        await this.clearVisitHold(tx, alert.visitId);
+      }
       await this.events.publish(tx, {
         type: EVENT_TYPES.AlertUpdated,
         aggregateType: 'Alert',
         aggregateId: id,
-        payload: { alertId: id, status: input.status },
+        payload: { alertId: id, status: input.status, visitId: alert.visitId },
         metadata: { actorUserId },
       });
     });
     return this.getDetail(id);
+  }
+
+  /**
+   * After a security alert is resolved/dismissed, lift the visit's hold if no other
+   * open alert of the same kind remains: FLAGGED (security review / restricted match)
+   * → APPROVED; REVIEW_REQUESTED (additional info) → PENDING.
+   */
+  private async clearVisitHold(
+    tx: Prisma.TransactionClient,
+    visitId: string,
+  ): Promise<void> {
+    const visit = await tx.visit.findUnique({
+      where: { id: visitId },
+      select: { status: true },
+    });
+    if (!visit) return;
+
+    if (visit.status === 'FLAGGED') {
+      const remaining = await tx.alert.count({
+        where: {
+          visitId,
+          status: 'OPEN',
+          type: { in: ['SECURITY_REVIEW', 'RESTRICTED_MATCH'] },
+        },
+      });
+      if (remaining === 0) {
+        await tx.visit.update({
+          where: { id: visitId },
+          data: { status: 'APPROVED' },
+        });
+      }
+    } else if (visit.status === 'REVIEW_REQUESTED') {
+      const remaining = await tx.alert.count({
+        where: { visitId, status: 'OPEN', type: 'ADDITIONAL_INFO' },
+      });
+      if (remaining === 0) {
+        await tx.visit.update({
+          where: { id: visitId },
+          data: { status: 'PENDING' },
+        });
+      }
+    }
   }
 
   private toDetail(alert: AlertDetailRow): AlertWithVisitor {
@@ -66,6 +116,7 @@ export class AlertsService {
       id: alert.id,
       visitId: alert.visitId,
       visitorId: alert.visitorId,
+      type: alert.type,
       level: alert.level,
       status: alert.status,
       reason: alert.reason,

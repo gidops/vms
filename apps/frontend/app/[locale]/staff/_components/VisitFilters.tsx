@@ -16,7 +16,7 @@ import { useTranslations } from "next-intl";
 
 const STATUSES: VisitStatus[] = [
   "PENDING",
-  "NEEDS_MORE_INFO",
+  "REVIEW_REQUESTED",
   "APPROVED",
   "CHECKED_IN",
   "CHECKED_OUT",
@@ -94,7 +94,10 @@ export function VisitFilters({
           ))}
         </SelectContent>
       </Select>
-      <Select value={value.purpose} onValueChange={(v) => onChange({ purpose: v })}>
+      <Select
+        value={value.purpose}
+        onValueChange={(v) => onChange({ purpose: v })}
+      >
         <SelectTrigger className="w-44">
           <SelectValue />
         </SelectTrigger>

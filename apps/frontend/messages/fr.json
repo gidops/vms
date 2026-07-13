@@ -122,7 +122,9 @@
       "open": "Ouvert",
       "acknowledged": "Pris en compte",
       "resolved": "Résolu",
-      "dismissed": "Rejeté"
+      "dismissed": "Rejeté",
+      "reviewRequested": "Révision demandée",
+      "flagged": "Signalé"
     },
     "timeline": {
       "inviteCreated": "Invitation créée",
@@ -131,7 +133,8 @@
       "checkedIn": "Entré",
       "passIssued": "Pass émis",
       "issuedPass": "Laissez-passer émis",
-      "checkedOut": "Sorti"
+      "checkedOut": "Sorti",
+      "gateValidated": "Validation au portail réussie"
     },
     "sections": {
       "hostDetails": "Détails hôte / unité / étage",
@@ -168,7 +171,9 @@
       "riskLevel": "Niveau de risque",
       "alertCategory": "Catégorie d'alerte",
       "flaggedAt": "Signalé le",
-      "alertReason": "Motif de l'alerte"
+      "alertReason": "Motif de l'alerte",
+      "trackRequestStatus": "Suivi de la demande",
+      "checkedOutBy": "Sorti par"
     },
     "actions": {
       "cancelRequest": "Annuler la demande",
@@ -182,7 +187,11 @@
       "resubmit": "Renvoyer la demande",
       "confirmDeny": "Confirmer le refus",
       "checkIn": "Enregistrer",
-      "checkOut": "Sortie"
+      "checkOut": "Sortie",
+      "requestInfo": "Demander des infos",
+      "flag": "Signaler",
+      "confirmFlag": "Confirmer le signalement",
+      "confirmRequestInfo": "Envoyer la demande"
     },
     "denyReasonPlaceholder": "Motif du refus",
     "typeFeedback": "Retour du CSO",
@@ -200,28 +209,31 @@
       "flaggedTitle": "Correspondance de visiteur signalé",
       "title": {
         "PENDING": "Demande de visite de {host}",
-        "NEEDS_MORE_INFO": "Informations supplémentaires demandées",
+        "REVIEW_REQUESTED": "Informations supplémentaires demandées",
         "APPROVED": "Demande approuvée par le CSO",
         "DENIED": "Demande de visite refusée",
         "CHECKED_IN": "{visitor} enregistré(e)",
         "CHECKED_OUT": "{visitor} sorti(e)",
         "CANCELLED": "Demande annulée",
-        "EXPIRED": "Demande expirée"
+        "EXPIRED": "Demande expirée",
+        "FLAGGED": "Visite signalée"
       },
       "desc": {
         "PENDING": "Demande de visite pour {visitor} de",
-        "NEEDS_MORE_INFO": "Le CSO a besoin d'informations supplémentaires pour {visitor} de",
+        "REVIEW_REQUESTED": "Le CSO a besoin d'informations supplémentaires pour {visitor} de",
         "APPROVED": "La visite de {visitor} à {host} a été approuvée.",
         "DENIED": "La visite de {visitor} à {host} a été refusée par le CSO.",
         "CHECKED_IN": "{visitor} est maintenant sur place.",
         "CHECKED_OUT": "{visitor} est sorti(e).",
         "CANCELLED": "La demande de visite pour {visitor} a été annulée.",
-        "EXPIRED": "La demande de visite pour {visitor} a expiré."
+        "EXPIRED": "La demande de visite pour {visitor} a expiré.",
+        "FLAGGED": "La visite de {visitor} a été signalée pour examen de sécurité."
       }
     },
     "pill": {
       "PENDING": "En attente",
-      "NEEDS_MORE_INFO": "Infos requises",
+      "REVIEW_REQUESTED": "Révision demandée",
+      "FLAGGED": "Signalé",
       "APPROVED": "Attendu",
       "DENIED": "Refusé",
       "CHECKED_IN": "Sur place",
@@ -231,7 +243,7 @@
     },
     "statusOption": {
       "PENDING": "En attente",
-      "NEEDS_MORE_INFO": "Infos requises",
+      "REVIEW_REQUESTED": "Infos requises",
       "APPROVED": "Approuvé",
       "DENIED": "Refusé",
       "CHECKED_IN": "Sur place",
@@ -241,13 +253,27 @@
       "OPEN": "Ouvert",
       "ACKNOWLEDGED": "Pris en compte",
       "RESOLVED": "Résolu",
-      "DISMISSED": "Rejeté"
+      "DISMISSED": "Rejeté",
+      "FLAGGED": "Signalé"
     },
     "typeOption": {
       "WALK_IN": "Sans rendez-vous",
       "PRE_INVITED": "Invité",
       "APPOINTMENT": "Rendez-vous"
-    }
+    },
+    "stripe": {
+      "securityReview": "Examen de sécurité requis",
+      "additionalInfo": "Informations supplémentaires requises"
+    },
+    "riskLevel": {
+      "LOW": "Faible",
+      "MEDIUM": "Moyen",
+      "HIGH": "Élevé",
+      "CRITICAL": "Critique"
+    },
+    "requestInfoPlaceholder": "Quelles informations supplémentaires sont nécessaires ?",
+    "flagReasonPlaceholder": "Décrivez le problème de sécurité…",
+    "createdByYou": "(vous)"
   },
   "language": {
     "select": "Choisir la langue",
@@ -459,7 +485,7 @@
     },
     "status": {
       "PENDING": "En attente d'approbation",
-      "NEEDS_MORE_INFO": "Informations requises",
+      "REVIEW_REQUESTED": "Informations requises",
       "APPROVED": "Attendu",
       "DENIED": "Refusé",
       "CHECKED_IN": "Sur site",

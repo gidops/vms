@@ -22,7 +22,7 @@ import type { VisitListItem } from "@/data/visits/visits.api";
 
 /** A pending/needs-info guest is the only one an admin can still approve or deny. */
 const isActionable = (g: VisitListItem) =>
-  g.status === "PENDING" || g.status === "NEEDS_MORE_INFO";
+  g.status === "PENDING" || g.status === "REVIEW_REQUESTED";
 
 /**
  * Group approval sheet — mirrors the group check-in sheet for the admin approval

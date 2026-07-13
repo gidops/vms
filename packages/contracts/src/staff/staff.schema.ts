@@ -4,7 +4,7 @@ import { PaginationQuery } from "../common/pagination.js";
 /**
  * Staff "Today's Schedule" headline counts, all scoped to the signed-in host.
  * - expectedToday: APPROVED visits scheduled for today (awaiting arrival)
- * - awaitingApproval: PENDING + NEEDS_MORE_INFO (needs the CSO / the host)
+ * - awaitingApproval: PENDING + REVIEW_REQUESTED (needs the CSO / the host)
  * - onsite: currently CHECKED_IN
  */
 export const StaffDashboardStats = z.object({

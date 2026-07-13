@@ -1,16 +1,18 @@
 import { z } from "zod";
-import { AlertStatus, RiskLevel } from "../common/enums.js";
+import { AlertStatus, AlertType, RiskLevel } from "../common/enums.js";
 import { Visitor } from "../visitor/visitor.schema.js";
 import { Note } from "../note/note.schema.js";
 
-/** A flagged-visitor / risk alert raised for CSO review. */
+/** A security alert raised against a visit for CSO review (flag / more-info / restricted match). */
 export const Alert = z.object({
   id: z.string().uuid(),
   visitId: z.string().uuid().nullable().optional(),
   visitorId: z.string().uuid().nullable().optional(),
+  type: AlertType,
   level: RiskLevel,
   status: AlertStatus,
   reason: z.string().min(1),
+  /** Free-text human label for the alert (e.g. "Restricted Guest"). */
   category: z.string().nullable().optional(),
   raisedById: z.string().uuid().nullable().optional(),
   resolvedById: z.string().uuid().nullable().optional(),
@@ -42,3 +44,17 @@ export const UpdateAlertStatusInput = z.object({
   status: z.enum(["ACKNOWLEDGED", "RESOLVED", "DISMISSED"]),
 });
 export type UpdateAlertStatusInput = z.infer<typeof UpdateAlertStatusInput>;
+
+/**
+ * CSO/admin raises a security alert against a visit. Not exposed as a standalone
+ * endpoint today — the visit `flag` / `request-info` actions build this internally
+ * — but shared so both sides describe the same shape.
+ */
+export const RaiseAlertInput = z.object({
+  visitId: z.string().uuid(),
+  type: AlertType,
+  level: RiskLevel,
+  reason: z.string().min(1),
+  category: z.string().min(1).optional(),
+});
+export type RaiseAlertInput = z.infer<typeof RaiseAlertInput>;

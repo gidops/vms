@@ -122,7 +122,9 @@
       "open": "Open",
       "acknowledged": "Acknowledged",
       "resolved": "Resolved",
-      "dismissed": "Dismissed"
+      "dismissed": "Dismissed",
+      "reviewRequested": "Review Requested",
+      "flagged": "Flagged"
     },
     "timeline": {
       "inviteCreated": "Invite Created",
@@ -131,7 +133,8 @@
       "checkedIn": "Checked In",
       "passIssued": "Pass Issued",
       "issuedPass": "Issued Pass",
-      "checkedOut": "Checked out"
+      "checkedOut": "Checked out",
+      "gateValidated": "Gate Validation Successful"
     },
     "sections": {
       "hostDetails": "Host/Unit /Floor Details",
@@ -168,7 +171,9 @@
       "riskLevel": "Risk Level",
       "alertCategory": "Alert Category",
       "flaggedAt": "Flagged At",
-      "alertReason": "Alert Reason"
+      "alertReason": "Alert Reason",
+      "trackRequestStatus": "Track request status",
+      "checkedOutBy": "Checked Out By"
     },
     "actions": {
       "cancelRequest": "Cancel Request",
@@ -182,7 +187,11 @@
       "resubmit": "Resubmit Request",
       "confirmDeny": "Confirm denial",
       "checkIn": "Check-In",
-      "checkOut": "Check-Out"
+      "checkOut": "Check-Out",
+      "requestInfo": "Request Info",
+      "flag": "Flag Visit",
+      "confirmFlag": "Confirm Flag",
+      "confirmRequestInfo": "Send Request"
     },
     "denyReasonPlaceholder": "Reason for denial",
     "typeFeedback": "CSO Feedback",
@@ -200,28 +209,31 @@
       "flaggedTitle": "Flagged Guest Match",
       "title": {
         "PENDING": "Visit Request from {host}",
-        "NEEDS_MORE_INFO": "More Info Requested",
+        "REVIEW_REQUESTED": "More Info Requested",
         "APPROVED": "Request Approved by CSO",
         "DENIED": "Visit Request Denied",
         "CHECKED_IN": "{visitor} Checked In",
         "CHECKED_OUT": "{visitor} Checked Out",
         "CANCELLED": "Request Cancelled",
-        "EXPIRED": "Request Expired"
+        "EXPIRED": "Request Expired",
+        "FLAGGED": "Visit Flagged"
       },
       "desc": {
         "PENDING": "Visit request for {visitor} from",
-        "NEEDS_MORE_INFO": "The CSO needs more information for {visitor} from",
+        "REVIEW_REQUESTED": "The CSO needs more information for {visitor} from",
         "APPROVED": "{visitor}'s visit to {host} has been approved.",
         "DENIED": "{visitor}'s visit to {host} was denied by the CSO.",
         "CHECKED_IN": "{visitor} is now on site.",
         "CHECKED_OUT": "{visitor} has checked out.",
         "CANCELLED": "The visit request for {visitor} was cancelled.",
-        "EXPIRED": "The visit request for {visitor} has expired."
+        "EXPIRED": "The visit request for {visitor} has expired.",
+        "FLAGGED": "{visitor}'s visit has been flagged for security review."
       }
     },
     "pill": {
       "PENDING": "Awaiting Approval",
-      "NEEDS_MORE_INFO": "Needs More Info",
+      "REVIEW_REQUESTED": "Review Requested",
+      "FLAGGED": "Flagged",
       "APPROVED": "Expected",
       "DENIED": "Denied",
       "CHECKED_IN": "Onsite",
@@ -231,7 +243,7 @@
     },
     "statusOption": {
       "PENDING": "Awaiting Approval",
-      "NEEDS_MORE_INFO": "Needs More Info",
+      "REVIEW_REQUESTED": "Needs More Info",
       "APPROVED": "Approved",
       "DENIED": "Denied",
       "CHECKED_IN": "Onsite",
@@ -241,13 +253,27 @@
       "OPEN": "Open",
       "ACKNOWLEDGED": "Acknowledged",
       "RESOLVED": "Resolved",
-      "DISMISSED": "Dismissed"
+      "DISMISSED": "Dismissed",
+      "FLAGGED": "Flagged"
     },
     "typeOption": {
       "WALK_IN": "Walk-in",
       "PRE_INVITED": "Invited",
       "APPOINTMENT": "Appointment"
-    }
+    },
+    "stripe": {
+      "securityReview": "Security Review Required",
+      "additionalInfo": "Additional Information Required"
+    },
+    "riskLevel": {
+      "LOW": "Low",
+      "MEDIUM": "Medium",
+      "HIGH": "High",
+      "CRITICAL": "Critical"
+    },
+    "requestInfoPlaceholder": "What additional information is needed?",
+    "flagReasonPlaceholder": "Describe the security concern…",
+    "createdByYou": "(you)"
   },
   "language": {
     "select": "Select language",
@@ -459,7 +485,7 @@
     },
     "status": {
       "PENDING": "Awaiting Approval",
-      "NEEDS_MORE_INFO": "Needs More Info",
+      "REVIEW_REQUESTED": "Needs More Info",
       "APPROVED": "Expected",
       "DENIED": "Denied",
       "CHECKED_IN": "Onsite",

@@ -10,6 +10,7 @@ import { normalizeE164 } from "../common/phone.js";
 import { Visitor, RegisterVisitorInput } from "../visitor/visitor.schema.js";
 import { HostWithUser } from "../host/host.schema.js";
 import { Note } from "../note/note.schema.js";
+import { Alert } from "../alert/alert.schema.js";
 
 /**
  * Selectable visit-purpose categories and building floors/departments. Kept as
@@ -261,7 +262,7 @@ export const VisitListQuery = PaginationQuery.extend({
 });
 export type VisitListQuery = z.infer<typeof VisitListQuery>;
 
-/** Host resubmits a NEEDS_MORE_INFO visit after editing — transitions back to PENDING. */
+/** Host resubmits a REVIEW_REQUESTED visit after editing — transitions back to PENDING. */
 export const ResubmitVisitInput = z
   .object({
     purpose: z.string().min(1).optional(),
@@ -276,6 +277,27 @@ export const DenyVisitInput = z.object({
 export type DenyVisitInput = z.infer<typeof DenyVisitInput>;
 
 /**
+ * CSO/admin flags a visit as a security concern → status FLAGGED + a SECURITY_REVIEW
+ * alert; check-in is blocked until the alert is resolved. The admin picks the risk
+ * level (defaults applied server-side when omitted).
+ */
+export const FlagVisitInput = z.object({
+  level: RiskLevel.default("HIGH"),
+  reason: z.string().min(1),
+  category: z.string().min(1).optional(),
+});
+export type FlagVisitInput = z.infer<typeof FlagVisitInput>;
+
+/**
+ * CSO/admin requests more information on a suspicious visit → status REVIEW_REQUESTED
+ * + an ADDITIONAL_INFO alert. The host/creator responds via notes and resubmits.
+ */
+export const RequestInfoInput = z.object({
+  reason: z.string().min(1),
+});
+export type RequestInfoInput = z.infer<typeof RequestInfoInput>;
+
+/**
  * Full visit-request detail powering the "Visit Request Details" drawer —
  * visit + visitor + host(+user) + notes, plus origin (who created it, source).
  */
@@ -283,6 +305,12 @@ export const VisitRequestDetail = Visit.extend({
   visitor: Visitor,
   host: HostWithUser.nullable(),
   notes: z.array(Note).default([]),
+  /**
+   * Security alerts raised against this visit (flag / more-info / restricted match).
+   * The detail sheet renders the alert stripe + Alert Summary from the open one(s);
+   * an open security alert blocks check-in. Empty for a normal visit.
+   */
+  alerts: z.array(Alert).default([]),
   source: z.string().nullable().optional(),
   createdById: z.string().uuid().nullable().optional(),
   createdByName: z.string().nullable().optional(),

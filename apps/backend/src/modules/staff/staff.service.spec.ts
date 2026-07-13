@@ -23,9 +23,9 @@ describe('StaffService.stats', () => {
     for (const call of count.mock.calls) {
       expect(call[0].where.host).toEqual({ userId: 'me' });
     }
-    // Awaiting-approval folds in NEEDS_MORE_INFO alongside PENDING.
+    // Awaiting-approval folds in REVIEW_REQUESTED alongside PENDING.
     expect(count.mock.calls[1][0].where.status).toEqual({
-      in: ['PENDING', 'NEEDS_MORE_INFO'],
+      in: ['PENDING', 'REVIEW_REQUESTED'],
     });
   });
 });

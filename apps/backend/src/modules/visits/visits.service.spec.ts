@@ -39,6 +39,7 @@ describe('VisitsService lifecycle', () => {
         updateMany: jest.fn().mockResolvedValue({}),
       },
       gateEvent: { create: jest.fn().mockResolvedValue({}) },
+      alert: { create: jest.fn().mockResolvedValue({ id: 'a1' }) },
     };
     const prisma = {
       visit: {
@@ -46,6 +47,8 @@ describe('VisitsService lifecycle', () => {
         count: jest.fn().mockResolvedValue(1),
       },
       accessCard: { findUnique: jest.fn().mockResolvedValue(card) },
+      // No open security hold by default; the security-hold test overrides this.
+      alert: { findFirst: jest.fn().mockResolvedValue(null) },
     } as unknown as PrismaService;
     const txm = {
       run: (fn: (t: typeof tx) => unknown) => fn(tx),
@@ -118,6 +121,91 @@ describe('VisitsService lifecycle', () => {
     await expect(
       service.checkIn('v1', { accessCardId: 'card1' }, 'actor'),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  it('checkIn rejects an approved visit that has an open security alert', async () => {
+    const { service } = setup();
+    (
+      service as unknown as {
+        prisma: { alert: { findFirst: jest.Mock } };
+      }
+    ).prisma.alert.findFirst.mockResolvedValueOnce({ id: 'a1' });
+    await expect(
+      service.checkIn('v1', { accessCardId: 'card1' }, 'actor'),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('flag moves the visit to FLAGGED and raises a SECURITY_REVIEW alert', async () => {
+    const { service, tx, publish } = setup({
+      id: 'v1',
+      status: 'APPROVED',
+      visitorId: 'vis1',
+    });
+    await service.flag(
+      'v1',
+      { level: 'HIGH', reason: 'Threat identified' },
+      'actor',
+    );
+    expect(tx.visit.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: 'FLAGGED' }),
+      }),
+    );
+    expect(tx.alert.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          type: 'SECURITY_REVIEW',
+          level: 'HIGH',
+          status: 'OPEN',
+          raisedById: 'actor',
+        }),
+      }),
+    );
+    expect(publish).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({ type: EVENT_TYPES.VisitFlagged }),
+    );
+    expect(publish).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({ type: EVENT_TYPES.AlertCreated }),
+    );
+  });
+
+  it('flag rejects a terminal visit', async () => {
+    const { service } = setup({
+      id: 'v1',
+      status: 'CHECKED_OUT',
+      visitorId: 'vis1',
+    });
+    await expect(
+      service.flag('v1', { level: 'HIGH', reason: 'x' }, 'actor'),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('requestInfo moves the visit to REVIEW_REQUESTED and raises an ADDITIONAL_INFO alert', async () => {
+    const { service, tx, publish } = setup({
+      id: 'v1',
+      status: 'PENDING',
+      visitorId: 'vis1',
+    });
+    await service.requestInfo('v1', { reason: 'Need ID' }, 'actor');
+    expect(tx.visit.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: 'REVIEW_REQUESTED' }),
+      }),
+    );
+    expect(tx.alert.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          type: 'ADDITIONAL_INFO',
+          level: 'MEDIUM',
+        }),
+      }),
+    );
+    expect(publish).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({ type: EVENT_TYPES.VisitReviewRequested }),
+    );
   });
 
   it('checkOut returns the pass, releases the badge, and emits VisitorCheckedOut', async () => {
@@ -400,9 +488,9 @@ describe('VisitsService.resubmit', () => {
     return { service, tx, publish };
   }
 
-  it('moves a NEEDS_MORE_INFO request owned by the actor back to PENDING', async () => {
+  it('moves a REVIEW_REQUESTED request owned by the actor back to PENDING', async () => {
     const { service, tx, publish } = setup({
-      status: 'NEEDS_MORE_INFO',
+      status: 'REVIEW_REQUESTED',
       hostUserId: 'me',
     });
     await service.resubmit('v1', { purpose: 'Updated' }, 'me');
@@ -422,7 +510,7 @@ describe('VisitsService.resubmit', () => {
 
   it('forbids resubmitting a request the actor does not host', async () => {
     const { service } = setup({
-      status: 'NEEDS_MORE_INFO',
+      status: 'REVIEW_REQUESTED',
       hostUserId: 'other',
     });
     await expect(service.resubmit('v1', {}, 'me')).rejects.toThrow(
@@ -430,7 +518,7 @@ describe('VisitsService.resubmit', () => {
     );
   });
 
-  it('rejects resubmitting a request that is not NEEDS_MORE_INFO', async () => {
+  it('rejects resubmitting a request that is not REVIEW_REQUESTED', async () => {
     const { service } = setup({ status: 'PENDING', hostUserId: 'me' });
     await expect(service.resubmit('v1', {}, 'me')).rejects.toThrow(
       BadRequestException,

@@ -14,8 +14,10 @@ import {
   CheckOutVisitInput,
   CreateVisitsInput,
   DenyVisitInput,
+  FlagVisitInput,
   PERMISSIONS,
   RateVisitInput,
+  RequestInfoInput,
   ResubmitVisitInput,
   UpdateVisitRequestInput,
   VisitListQuery,
@@ -78,7 +80,7 @@ export class VisitsController {
   }
 
   /**
-   * Host edits & resubmits a NEEDS_MORE_INFO request → back to PENDING. Authorized
+   * Host edits & resubmits a REVIEW_REQUESTED request → back to PENDING. Authorized
    * by host ownership in the service (the host needs no global visit:edit grant).
    */
   @Post(':id/resubmit')
@@ -127,6 +129,28 @@ export class VisitsController {
     @CurrentUser() principal: AuthUser,
   ) {
     return this.visits.deny(id, input.reason, principal.userId);
+  }
+
+  /** CSO/admin flags a visit as a security concern → FLAGGED + SECURITY_REVIEW alert. */
+  @Post(':id/flag')
+  @RequirePermissions(PERMISSIONS.VISIT_FLAG)
+  flag(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(FlagVisitInput)) input: FlagVisitInput,
+    @CurrentUser() principal: AuthUser,
+  ) {
+    return this.visits.flag(id, input, principal.userId);
+  }
+
+  /** CSO/admin requests more info → REVIEW_REQUESTED + ADDITIONAL_INFO alert. */
+  @Post(':id/request-info')
+  @RequirePermissions(PERMISSIONS.VISIT_REQUEST_INFO)
+  requestInfo(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(RequestInfoInput)) input: RequestInfoInput,
+    @CurrentUser() principal: AuthUser,
+  ) {
+    return this.visits.requestInfo(id, input, principal.userId);
   }
 
   /**

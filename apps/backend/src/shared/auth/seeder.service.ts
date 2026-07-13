@@ -16,7 +16,7 @@ const ROLE_DEFS: Record<
 > = {
   [ROLES.ADMIN]: {
     description:
-      'Administrator — manage users and roles, decide visit requests',
+      'Administrator (CSO) — manage users and roles, decide/flag visit requests',
     permissions: [
       PERMISSIONS.USER_READ,
       PERMISSIONS.USER_CREATE,
@@ -25,6 +25,13 @@ const ROLE_DEFS: Record<
       PERMISSIONS.ROLE_READ,
       PERMISSIONS.VISIT_APPROVE,
       PERMISSIONS.VISIT_DENY,
+      // The CSO raises and resolves security alerts (flag / request more info);
+      // staff/VMC only respond via notes and cannot resolve.
+      PERMISSIONS.VISIT_FLAG,
+      PERMISSIONS.VISIT_REQUEST_INFO,
+      PERMISSIONS.ALERT_RESOLVE,
+      PERMISSIONS.ALERT_ESCALATE,
+      PERMISSIONS.NOTE_ADD,
     ],
   },
   [ROLES.AUDITOR]: {
@@ -53,8 +60,8 @@ const ROLE_DEFS: Record<
       // Check-in/out now happen at the VMC station (badge assigned/released here).
       PERMISSIONS.VISIT_CHECK_IN,
       PERMISSIONS.VISIT_CHECK_OUT,
-      PERMISSIONS.ALERT_RESOLVE,
-      PERMISSIONS.ALERT_ESCALATE,
+      // VMC responds to security alerts via notes only — it cannot resolve them
+      // (that is the CSO/admin's call, and it unblocks check-in).
       PERMISSIONS.NOTE_ADD,
     ],
   },
@@ -72,7 +79,7 @@ const ID = {
   sarahHost: '00000000-0000-4000-8000-000000000011',
   visitor: (n: number) => `00000000-0000-4000-8000-0000000000${20 + n}`,
   visit: (n: number) => `00000000-0000-4000-8000-0000000000${30 + n}`,
-  alert: '00000000-0000-4000-8000-000000000040',
+  alert: (n: number) => `00000000-0000-4000-8000-0000000000${40 + n}`,
   note: (n: number) => `00000000-0000-4000-8000-0000000000${50 + n}`,
   audit: (n: number) => `00000000-0000-4000-8000-0000000000${60 + n}`,
 };
@@ -285,7 +292,8 @@ export class SeederService implements OnApplicationBootstrap {
       visitorIdx: number;
       status:
         | 'PENDING'
-        | 'NEEDS_MORE_INFO'
+        | 'REVIEW_REQUESTED'
+        | 'FLAGGED'
         | 'APPROVED'
         | 'DENIED'
         | 'CHECKED_IN'
@@ -301,10 +309,13 @@ export class SeederService implements OnApplicationBootstrap {
         purpose: 'Client Meeting',
         today: true,
       },
-      { visitorIdx: 2, status: 'NEEDS_MORE_INFO', purpose: 'General Enquiry' },
+      { visitorIdx: 2, status: 'REVIEW_REQUESTED', purpose: 'General Enquiry' },
       { visitorIdx: 3, status: 'DENIED', purpose: 'Client Meeting' },
       { visitorIdx: 0, status: 'CHECKED_IN', purpose: 'Official', today: true },
       { visitorIdx: 1, status: 'CHECKED_OUT', purpose: 'Delivery' },
+      // A flagged visit (idx 6) — carries an open SECURITY_REVIEW alert below so
+      // the flagged flow (stripe + Alert Summary + check-in hold) is demoable.
+      { visitorIdx: 3, status: 'FLAGGED', purpose: 'Interview', today: true },
     ];
     for (let i = 0; i < visitSeeds.length; i++) {
       const seed = visitSeeds[i];
@@ -333,36 +344,86 @@ export class SeederService implements OnApplicationBootstrap {
       });
     }
 
-    await this.prisma.alert.upsert({
-      where: { id: ID.alert },
-      update: {},
-      create: {
-        id: ID.alert,
-        visitorId: visitors[1].id,
+    // Security alerts, each tied to a visit (every alert is about a visit). The
+    // flagged visit (idx 6) gets an open SECURITY_REVIEW that holds check-in; the
+    // review-requested visit (idx 2) gets an open ADDITIONAL_INFO request.
+    const alertSeeds: {
+      idx: number;
+      visitIdx: number;
+      visitorIdx: number;
+      type: 'SECURITY_REVIEW' | 'ADDITIONAL_INFO' | 'RESTRICTED_MATCH';
+      level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+      reason: string;
+      category: string;
+    }[] = [
+      {
+        idx: 0,
+        visitIdx: 6,
+        visitorIdx: 3,
+        type: 'SECURITY_REVIEW',
         level: 'HIGH',
-        status: 'OPEN',
         reason:
-          'This visitor matches a flagged profile and requires CSO review.',
-        category: 'Flagged Visitor Match',
-        raisedById: hostUser.id,
+          'Guest profile matches a restricted record and requires CSO review before check-in.',
+        category: 'Restricted Guest',
       },
-    });
-
-    // A couple of notes on the first (pending) request.
-    const noteBodies = [
-      'Visitor details were provided by Dr Alabi via email.',
-      'Awaiting CSO confirmation before issuing a pass.',
+      {
+        idx: 1,
+        visitIdx: 2,
+        visitorIdx: 2,
+        type: 'ADDITIONAL_INFO',
+        level: 'MEDIUM',
+        reason:
+          'Please confirm the visitor’s government-issued ID before this request can be approved.',
+        category: 'Identity Verification',
+      },
     ];
-    for (let i = 0; i < noteBodies.length; i++) {
+    for (const a of alertSeeds) {
+      const fields = {
+        visitId: ID.visit(a.visitIdx),
+        visitorId: visitors[a.visitorIdx].id,
+        type: a.type,
+        level: a.level,
+        status: 'OPEN' as const,
+        reason: a.reason,
+        category: a.category,
+        raisedById: hostUser.id,
+      };
+      // Demo rows are seeder-owned: refresh on every boot (like the visit seeds)
+      // so shape changes take effect and the flagged flow stays consistent.
+      await this.prisma.alert.upsert({
+        where: { id: ID.alert(a.idx) },
+        update: fields,
+        create: { id: ID.alert(a.idx), ...fields },
+      });
+    }
+
+    // Notes on the pending request plus responses on the flagged / review-requested
+    // visits, so the Alert Summary threads aren't empty in dev.
+    const noteSeeds: { visitIdx: number; body: string }[] = [
+      {
+        visitIdx: 0,
+        body: 'Visitor details were provided by Dr Alabi via email.',
+      },
+      { visitIdx: 0, body: 'Awaiting CSO confirmation before issuing a pass.' },
+      {
+        visitIdx: 6,
+        body: 'Acknowledged — holding the guest at reception pending CSO review.',
+      },
+      {
+        visitIdx: 2,
+        body: 'Requested the government ID from the guest; will upload shortly.',
+      },
+    ];
+    for (let i = 0; i < noteSeeds.length; i++) {
       await this.prisma.note.upsert({
         where: { id: ID.note(i) },
         update: {},
         create: {
           id: ID.note(i),
-          visitId: ID.visit(0),
+          visitId: ID.visit(noteSeeds[i].visitIdx),
           authorId: hostUser.id,
           authorName: hostUser.fullName,
-          body: noteBodies[i],
+          body: noteSeeds[i].body,
         },
       });
     }
@@ -388,7 +449,12 @@ export class SeederService implements OnApplicationBootstrap {
       },
       { action: 'visit.denied', entityType: 'Visit', entityId: ID.visit(3) },
       { action: 'note.added', entityType: 'Visit', entityId: ID.visit(2) },
-      { action: 'alert.updated', entityType: 'Alert', entityId: ID.alert },
+      { action: 'visit.flagged', entityType: 'Visit', entityId: ID.visit(6) },
+      {
+        action: 'visit.review_requested',
+        entityType: 'Visit',
+        entityId: ID.visit(2),
+      },
     ];
     for (let i = 0; i < auditSeeds.length; i++) {
       const seed = auditSeeds[i];

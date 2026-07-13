@@ -20,7 +20,7 @@ export interface InboxRequestItem extends InboxItemBase {
   visitId: string;
   status:
     | "PENDING"
-    | "NEEDS_MORE_INFO"
+    | "REVIEW_REQUESTED"
     | "APPROVED"
     | "DENIED"
     | "CHECKED_IN"

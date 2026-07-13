@@ -67,10 +67,23 @@ const ACTIVITY_MAP: Record<
     title: 'From CSO Desk',
     body: (n) => `A new remark was added to ${n}'s visit request.`,
   },
+  'visit.flagged': {
+    category: 'SECURITY_ALERT',
+    title: 'Visit Flagged',
+    body: (n) => `${n}'s visit was flagged and needs security review.`,
+  },
+  'visit.review_requested': {
+    category: 'CSO_FEEDBACK',
+    title: 'More Information Requested',
+    body: (n) => `The CSO requested more information for ${n}'s visit.`,
+  },
+  // Note: flag/request-info also emit `alert.created`; we map the visit-centric
+  // events above (not alert.created) so each action yields a single feed card
+  // with the right category.
   'alert.updated': {
     category: 'SECURITY_ALERT',
-    title: 'Visitor Flagged',
-    body: (n) => `${n}'s visit raised a security alert.`,
+    title: 'Security Alert Updated',
+    body: (n) => `${n}'s security alert was updated.`,
   },
 };
 
@@ -94,7 +107,7 @@ export class StaffService {
       this.prisma.visit.count({
         where: {
           ...hostWhere,
-          status: { in: ['PENDING', 'NEEDS_MORE_INFO'] },
+          status: { in: ['PENDING', 'REVIEW_REQUESTED'] },
         },
       }),
       this.prisma.visit.count({

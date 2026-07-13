@@ -35,7 +35,8 @@ enum VisitType {
 
 enum VisitStatus {
   PENDING
-  NEEDS_MORE_INFO
+  REVIEW_REQUESTED
+  FLAGGED
   APPROVED
   DENIED
   CHECKED_IN
@@ -72,6 +73,12 @@ enum AlertStatus {
   ACKNOWLEDGED
   RESOLVED
   DISMISSED
+}
+
+enum AlertType {
+  SECURITY_REVIEW
+  ADDITIONAL_INFO
+  RESTRICTED_MATCH
 }
 
 enum GateEventType {
@@ -399,6 +406,7 @@ model Alert {
   id           String      @id @default(uuid())
   visitId      String?
   visitorId    String?
+  type         AlertType   @default(SECURITY_REVIEW)
   level        RiskLevel
   status       AlertStatus @default(OPEN)
   reason       String

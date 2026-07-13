@@ -25,7 +25,10 @@ import {
 } from "@/app/[locale]/requests/_components/RequestDrawer";
 import { StaffOverview } from "./_components/StaffOverview";
 import { RecentUpdates } from "./_components/RecentUpdates";
-import { VisitFilters, type VisitFiltersValue } from "./_components/VisitFilters";
+import {
+  VisitFilters,
+  type VisitFiltersValue,
+} from "./_components/VisitFilters";
 import { useMyVisits } from "@/data/requests/queries";
 import { useStaffActivityFeed, useStaffStats } from "@/data/staff/queries";
 import type { StaffActivityItem } from "@/data/staff/staff.api";
@@ -175,13 +178,19 @@ function Staff() {
                           <TableCell>
                             <span className="flex items-center gap-3">
                               <Avatar
-                                name={isGroup ? row.groupName! : row.visitor.fullName}
+                                name={
+                                  isGroup
+                                    ? row.groupName!
+                                    : row.visitor.fullName
+                                }
                                 size="md"
                                 accent={row.isGroupVisit ? "group" : "single"}
                               />
                               <span className="flex flex-col">
                                 <span className="font-medium text-fg">
-                                  {isGroup ? row.groupName : row.visitor.fullName}
+                                  {isGroup
+                                    ? row.groupName
+                                    : row.visitor.fullName}
                                 </span>
                                 <span className="text-xs text-fg-muted">
                                   {isGroup
@@ -196,7 +205,10 @@ function Staff() {
                           </TableCell>
                           <TableCell className="text-fg-muted">
                             <span className="flex items-center gap-1.5">
-                              <CircleUser className="size-4" aria-hidden="true" />
+                              <CircleUser
+                                className="size-4"
+                                aria-hidden="true"
+                              />
                               {t("guestCount", { count: row.groupSize })}
                             </span>
                           </TableCell>

@@ -1,7 +1,12 @@
 import type {
+  AlertStatus,
+  AlertType,
   CheckInVisitInput,
   CheckOutVisitInput,
   CreateVisitsInput,
+  FlagVisitInput,
+  RequestInfoInput,
+  RiskLevel,
   VisitStatus,
   VisitType,
 } from "@vms/contracts";
@@ -66,20 +71,27 @@ export interface VisitNote {
   createdAt: string;
 }
 
+/** A security alert raised against a visit (flag / more-info / restricted match). */
+export interface VisitAlert {
+  id: string;
+  visitId?: string | null;
+  visitorId?: string | null;
+  type: AlertType;
+  level: RiskLevel;
+  status: AlertStatus;
+  reason: string;
+  category?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface VisitRequestDetail {
   id: string;
   visitorId: string;
   hostId: string;
   type: string;
-  status:
-    | "PENDING"
-    | "NEEDS_MORE_INFO"
-    | "APPROVED"
-    | "DENIED"
-    | "CHECKED_IN"
-    | "CHECKED_OUT"
-    | "CANCELLED"
-    | "EXPIRED";
+  /** Derived from the shared contract enum so new statuses (FLAGGED, …) stay in sync. */
+  status: VisitStatus;
   purpose: string;
   floor?: string | null;
   scheduledAt?: string | null;
@@ -113,6 +125,8 @@ export interface VisitRequestDetail {
   checkedInByName?: string | null;
   checkedOutByName?: string | null;
   notes: VisitNote[];
+  /** Security alerts on this visit; the sheet renders the stripe + Alert Summary from the open one. */
+  alerts: VisitAlert[];
 }
 
 export const visitsApi = {
@@ -235,12 +249,29 @@ export const visitsApi = {
       method: "POST",
     });
   },
-  /** Host edits & resubmits a NEEDS_MORE_INFO request → back to PENDING. */
+  /** Host edits & resubmits a REVIEW_REQUESTED request → back to PENDING. */
   resubmit(
     id: string,
     input: { purpose?: string; scheduledAt?: string } = {},
   ): Promise<VisitRequestDetail> {
     return api<VisitRequestDetail>(`/visits/${id}/resubmit`, {
+      method: "POST",
+      body: input,
+    });
+  },
+  /** CSO/admin flags a visit → FLAGGED + a SECURITY_REVIEW alert (blocks check-in). */
+  flag(id: string, input: FlagVisitInput): Promise<VisitRequestDetail> {
+    return api<VisitRequestDetail>(`/visits/${id}/flag`, {
+      method: "POST",
+      body: input,
+    });
+  },
+  /** CSO/admin requests more info → REVIEW_REQUESTED + an ADDITIONAL_INFO alert. */
+  requestInfo(
+    id: string,
+    input: RequestInfoInput,
+  ): Promise<VisitRequestDetail> {
+    return api<VisitRequestDetail>(`/visits/${id}/request-info`, {
       method: "POST",
       body: input,
     });
