@@ -88,6 +88,12 @@ export interface MyVisitsParams {
   purpose?: string;
   dateFrom?: string;
   dateTo?: string;
+  /** Which date column `dateFrom`/`dateTo` filter on (default `scheduledAt`). */
+  dateField?: "scheduledAt" | "createdAt";
+  /** Free-text search (guest/host/floor/pass id). */
+  search?: string;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
   page?: number;
   pageSize?: number;
 }

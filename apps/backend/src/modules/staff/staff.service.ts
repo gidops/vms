@@ -91,27 +91,31 @@ const ACTIVITY_MAP: Record<
 export class StaffService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Headline counts for the signed-in host's "Today's Schedule". */
+  /** Headline counts for the signed-in staff's "Today's Schedule". */
   async stats(userId: string): Promise<StaffDashboardStats> {
-    const hostWhere: Prisma.VisitWhereInput = { host: { userId } };
+    // "Mine" = requests I created OR visits I host, so a staff's counts include
+    // requests they raised even when the guest is hosted by someone else.
+    const mineWhere: Prisma.VisitWhereInput = {
+      OR: [{ createdById: userId }, { host: { userId } }],
+    };
     const { start, end } = dayBounds(new Date());
 
     const [expectedToday, awaitingApproval, onsite] = await Promise.all([
       this.prisma.visit.count({
         where: {
-          ...hostWhere,
+          ...mineWhere,
           status: 'APPROVED',
           scheduledAt: { gte: start, lt: end },
         },
       }),
       this.prisma.visit.count({
         where: {
-          ...hostWhere,
+          ...mineWhere,
           status: { in: ['PENDING', 'REVIEW_REQUESTED'] },
         },
       }),
       this.prisma.visit.count({
-        where: { ...hostWhere, status: 'CHECKED_IN' },
+        where: { ...mineWhere, status: 'CHECKED_IN' },
       }),
     ]);
 
@@ -119,16 +123,17 @@ export class StaffService {
   }
 
   /**
-   * The host's "Recent Updates" feed, read from the append-only AuditLog. Resolves
-   * the host's own visits (+ their visitors' alerts) and surfaces audit rows for
-   * those aggregates, newest first, mapped to human-facing cards.
+   * The staff's "Recent Updates" feed, read from the append-only AuditLog. Resolves
+   * the staff's visits — those they created OR host — (+ their visitors' alerts)
+   * and surfaces audit rows for those aggregates, newest first, mapped to
+   * human-facing cards.
    */
   async activityFeed(
     userId: string,
     query: StaffActivityQuery,
   ): Promise<Paginated<StaffActivityItem>> {
     const visits = await this.prisma.visit.findMany({
-      where: { host: { userId } },
+      where: { OR: [{ createdById: userId }, { host: { userId } }] },
       select: {
         id: true,
         visitorId: true,

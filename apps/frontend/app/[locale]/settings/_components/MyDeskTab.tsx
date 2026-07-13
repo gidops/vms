@@ -9,18 +9,12 @@ import {
   SelectValue,
   Spinner,
 } from "@vms/ui";
+import { FLOORS } from "@vms/contracts";
 import { Monitor } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useSessions, useUpdateMe } from "@/data/settings/queries";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { SettingsDivider, SettingsRow } from "./SettingsRow";
-
-const DESK_OPTIONS = [
-  "Main Lobby - Ground floor",
-  "Main Lobby - 1st floor",
-  "East Wing - Ground floor",
-  "West Wing - Ground floor",
-];
 
 export function MyDeskTab() {
   const t = useTranslations("settings");
@@ -29,7 +23,9 @@ export function MyDeskTab() {
   const updateMe = useUpdateMe();
   const { data: sessions, isLoading } = useSessions();
 
-  const desk = user?.assignedDesk ?? DESK_OPTIONS[0];
+  // The office floor drives the staff dashboard's "Office Floor" panel; offer the
+  // canonical FLOORS list so the two stay in sync.
+  const desk = user?.assignedDesk ?? FLOORS[0];
 
   return (
     <div className="flex flex-col">
@@ -53,7 +49,7 @@ export function MyDeskTab() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {DESK_OPTIONS.map((d) => (
+            {FLOORS.map((d) => (
               <SelectItem key={d} value={d}>
                 {d}
               </SelectItem>

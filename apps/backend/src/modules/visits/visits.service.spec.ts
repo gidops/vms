@@ -547,14 +547,23 @@ describe('VisitsService.list scoping', () => {
     pageSize: 20,
     sortDir: 'desc',
     scope: 'all',
+    dateField: 'scheduledAt',
     ...over,
   });
 
-  it('scopes to the current user as host when scope=mine', async () => {
+  it('scopes to visits the current user created OR hosts when scope=mine', async () => {
     const { service, findMany } = setup();
     await service.list(query({ scope: 'mine' }), 'me');
     expect(findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { host: { userId: 'me' } } }),
+      expect.objectContaining({
+        where: {
+          AND: [
+            {
+              OR: [{ createdById: 'me' }, { host: { userId: 'me' } }],
+            },
+          ],
+        },
+      }),
     );
   });
 
@@ -575,6 +584,79 @@ describe('VisitsService.list scoping', () => {
       }),
     );
   });
+
+  it('orders by createdAt when sortBy=createdAt (staff dashboard)', async () => {
+    const { service, findMany } = setup();
+    await service.list(query({ sortBy: 'createdAt', sortDir: 'desc' }), 'me');
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ orderBy: { createdAt: 'desc' } }),
+    );
+  });
+
+  it('windows the date range on the requested dateField (createdAt)', async () => {
+    const { service, findMany } = setup();
+    const from = new Date('2026-07-01T00:00:00.000Z');
+    const to = new Date('2026-07-13T23:59:59.999Z');
+    await service.list(
+      query({ dateField: 'createdAt', dateFrom: from, dateTo: to }),
+      'me',
+    );
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ createdAt: { gte: from, lte: to } }),
+      }),
+    );
+  });
+
+  it('builds a case-insensitive OR search across guest/host/floor/pass id', async () => {
+    const { service, findMany } = setup();
+    await service.list(query({ search: 'jordan' }), 'me');
+    const c = { contains: 'jordan', mode: 'insensitive' };
+    // scope defaults to 'all' here, so the only AND member is the search group.
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: [
+            {
+              OR: [
+                { visitor: { fullName: c } },
+                { visitor: { email: c } },
+                { visitor: { organization: c } },
+                { host: { user: { fullName: c } } },
+                { floor: c },
+                { referenceCode: c },
+              ],
+            },
+          ],
+        }),
+      }),
+    );
+  });
+
+  it('scope=mine AND search combine as two separate AND groups', async () => {
+    const { service, findMany } = setup();
+    await service.list(query({ scope: 'mine', search: 'jordan' }), 'me');
+    const c = { contains: 'jordan', mode: 'insensitive' };
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: [
+            { OR: [{ createdById: 'me' }, { host: { userId: 'me' } }] },
+            {
+              OR: [
+                { visitor: { fullName: c } },
+                { visitor: { email: c } },
+                { visitor: { organization: c } },
+                { host: { user: { fullName: c } } },
+                { floor: c },
+                { referenceCode: c },
+              ],
+            },
+          ],
+        }),
+      }),
+    );
+  });
 });
 
 describe('VisitsService.list statuses + groupSize', () => {
@@ -583,6 +665,7 @@ describe('VisitsService.list statuses + groupSize', () => {
     pageSize: 20,
     sortDir: 'desc',
     scope: 'all',
+    dateField: 'scheduledAt',
     ...over,
   });
 

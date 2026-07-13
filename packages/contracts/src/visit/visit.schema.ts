@@ -259,6 +259,17 @@ export const VisitListQuery = PaginationQuery.extend({
   groupId: z.string().uuid().optional(),
   dateFrom: z.coerce.date().optional(),
   dateTo: z.coerce.date().optional(),
+  /**
+   * Which date column the `dateFrom`/`dateTo` window filters on. Defaults to the
+   * scheduled date (the VMC/admin boards want "who's expected when"); the staff
+   * dashboard passes `createdAt` so its window tracks recently-submitted requests.
+   */
+  dateField: z.enum(["scheduledAt", "createdAt"]).default("scheduledAt"),
+  /**
+   * Free-text search across the visitor (name/email/organization), host name,
+   * floor, and reference/pass code. Opt-in — only the staff dashboard sends it.
+   */
+  search: z.string().trim().min(1).optional(),
 });
 export type VisitListQuery = z.infer<typeof VisitListQuery>;
 
