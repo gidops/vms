@@ -31,6 +31,9 @@ export const envSchema = z.object({
   // base64-encoded 32-byte key for column encryption; derived from JWT_SECRET in dev if absent.
   ENCRYPTION_KEY: z.string().optional(),
   OUTBOX_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(2000),
+  // Seed demo requests/alerts (dev fixtures, incl. the flagged demo visit). Off by
+  // default so production stays clean; enable per-environment to populate demo data.
+  SEED_DEMO_DATA: boolEnv(false),
   // Seq structured-log / audit mirror (optional). When SEQ_URL is set, audit
   // events are mirrored to Seq for searchable trails; PostgreSQL stays the
   // source of truth. Blank values are treated as unset (mirroring disabled).

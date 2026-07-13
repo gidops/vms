@@ -103,10 +103,11 @@ export class SeederService implements OnApplicationBootstrap {
     // seeded; the first one is created through /signup.
     await this.seedRbac();
     await this.seedAccessCards();
-    await this.seedDemoData();
-    // if (this.config.get('NODE_ENV', { infer: true }) !== 'production') {
-    //   await this.seedDemoData();
-    // }
+    // Demo requests/alerts are opt-in via SEED_DEMO_DATA (default off) so they can
+    // be controlled per-environment, including production.
+    if (this.config.get('SEED_DEMO_DATA', { infer: true })) {
+      await this.seedDemoData();
+    }
   }
 
   private async seedRbac(): Promise<void> {
