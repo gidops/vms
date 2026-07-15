@@ -134,6 +134,7 @@ function Staff() {
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
           <RecordTable
+            frameless
             toolbar={
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="text-xl font-semibold text-primary">

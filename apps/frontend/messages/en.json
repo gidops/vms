@@ -472,7 +472,7 @@
       "searchPlaceholder": "Search visitor, organization, purpose, request id"
     },
     "columns": {
-      "visitor": "Visitor",
+      "visitor": "Guest",
       "organization": "Organization",
       "purpose": "Purpose",
       "noOfGuest": "No of Guest",

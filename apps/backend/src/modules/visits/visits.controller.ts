@@ -28,11 +28,19 @@ import {
   type AuthUser,
 } from '../../shared/auth/auth.decorators';
 import { ZodValidationPipe } from '../../shared/common/pipes/zod-validation.pipe';
-import { VisitsService } from './visits.service';
+import { VisitAccessService } from './access.service';
+import { VisitAuthoringService } from './authoring.service';
+import { VisitModerationService } from './moderation.service';
+import { VisitReadService } from './read.service';
 
 @Controller('visits')
 export class VisitsController {
-  constructor(private readonly visits: VisitsService) {}
+  constructor(
+    private readonly read: VisitReadService,
+    private readonly authoring: VisitAuthoringService,
+    private readonly moderation: VisitModerationService,
+    private readonly access: VisitAccessService,
+  ) {}
 
   /**
    * Visit list. The admin approval queue (filter by status) and — with
@@ -44,7 +52,7 @@ export class VisitsController {
     @Query(new ZodValidationPipe(VisitListQuery)) query: VisitListQuery,
     @CurrentUser() principal: AuthUser,
   ) {
-    return this.visits.list(query, principal.userId);
+    return this.read.list(query, principal.userId);
   }
 
   /** VMC creates invite(s) / walk-in(s) for a host (one visit per visitor). */
@@ -54,18 +62,18 @@ export class VisitsController {
     @Body(new ZodValidationPipe(CreateVisitsInput)) input: CreateVisitsInput,
     @CurrentUser() principal: AuthUser,
   ) {
-    return this.visits.createVisits(input, principal.userId);
+    return this.authoring.createVisits(input, principal.userId);
   }
 
   @Get(':id')
   getOne(@Param('id') id: string) {
-    return this.visits.getDetail(id);
+    return this.read.getDetail(id);
   }
 
   @Post(':id/cancel')
   @RequirePermissions(PERMISSIONS.VISIT_CANCEL)
   cancel(@Param('id') id: string, @CurrentUser() principal: AuthUser) {
-    return this.visits.cancel(id, principal.userId);
+    return this.authoring.cancel(id, principal.userId);
   }
 
   @Patch(':id')
@@ -76,7 +84,7 @@ export class VisitsController {
     input: UpdateVisitRequestInput,
     @CurrentUser() principal: AuthUser,
   ) {
-    return this.visits.update(id, input, principal.userId);
+    return this.authoring.update(id, input, principal.userId);
   }
 
   /**
@@ -90,7 +98,7 @@ export class VisitsController {
     @Body(new ZodValidationPipe(ResubmitVisitInput)) input: ResubmitVisitInput,
     @CurrentUser() principal: AuthUser,
   ) {
-    return this.visits.resubmit(id, input, principal.userId);
+    return this.authoring.resubmit(id, input, principal.userId);
   }
 
   /** Approve several visits at once (group approval sheet — Approve All/Selected). */
@@ -101,7 +109,7 @@ export class VisitsController {
     input: BulkApproveVisitsInput,
     @CurrentUser() principal: AuthUser,
   ) {
-    return this.visits.bulkApprove(input.visitIds, principal.userId);
+    return this.moderation.bulkApprove(input.visitIds, principal.userId);
   }
 
   /** Deny several visits at once with a shared reason (group approval sheet). */
@@ -112,13 +120,17 @@ export class VisitsController {
     input: BulkDenyVisitsInput,
     @CurrentUser() principal: AuthUser,
   ) {
-    return this.visits.bulkDeny(input.visitIds, input.reason, principal.userId);
+    return this.moderation.bulkDeny(
+      input.visitIds,
+      input.reason,
+      principal.userId,
+    );
   }
 
   @Post(':id/approve')
   @RequirePermissions(PERMISSIONS.VISIT_APPROVE)
   approve(@Param('id') id: string, @CurrentUser() principal: AuthUser) {
-    return this.visits.approve(id, principal.userId);
+    return this.moderation.approve(id, principal.userId);
   }
 
   @Post(':id/deny')
@@ -128,7 +140,7 @@ export class VisitsController {
     @Body(new ZodValidationPipe(DenyVisitInput)) input: DenyVisitInput,
     @CurrentUser() principal: AuthUser,
   ) {
-    return this.visits.deny(id, input.reason, principal.userId);
+    return this.moderation.deny(id, input.reason, principal.userId);
   }
 
   /** Security Manager/admin flags a visit as a security concern → FLAGGED + SECURITY_REVIEW alert. */
@@ -139,7 +151,7 @@ export class VisitsController {
     @Body(new ZodValidationPipe(FlagVisitInput)) input: FlagVisitInput,
     @CurrentUser() principal: AuthUser,
   ) {
-    return this.visits.flag(id, input, principal.userId);
+    return this.moderation.flag(id, input, principal.userId);
   }
 
   /** Security Manager/admin requests more info → REVIEW_REQUESTED + ADDITIONAL_INFO alert. */
@@ -150,7 +162,7 @@ export class VisitsController {
     @Body(new ZodValidationPipe(RequestInfoInput)) input: RequestInfoInput,
     @CurrentUser() principal: AuthUser,
   ) {
-    return this.visits.requestInfo(id, input, principal.userId);
+    return this.moderation.requestInfo(id, input, principal.userId);
   }
 
   /**
@@ -160,7 +172,7 @@ export class VisitsController {
   @Post(':id/resend-code')
   @RequirePermissions(PERMISSIONS.INVITATION_CREATE)
   resendCode(@Param('id') id: string, @CurrentUser() principal: AuthUser) {
-    return this.visits.resendCode(id, principal.userId);
+    return this.authoring.resendCode(id, principal.userId);
   }
 
   /** Host rates a completed visit (1-5). Authorized by host/creator in the service. */
@@ -170,7 +182,7 @@ export class VisitsController {
     @Body(new ZodValidationPipe(RateVisitInput)) input: RateVisitInput,
     @CurrentUser() principal: AuthUser,
   ) {
-    return this.visits.rate(id, input, principal.userId);
+    return this.access.rate(id, input, principal.userId);
   }
 
   /** VMC check-in: assign a physical badge to an approved visit, mark it on-site. */
@@ -181,7 +193,7 @@ export class VisitsController {
     @Body(new ZodValidationPipe(CheckInVisitInput)) input: CheckInVisitInput,
     @CurrentUser() principal: AuthUser,
   ) {
-    return this.visits.checkIn(id, input, principal.userId);
+    return this.access.checkIn(id, input, principal.userId);
   }
 
   /** VMC check-out: release the badge and mark the visitor off-site. */
@@ -192,6 +204,6 @@ export class VisitsController {
     @Body(new ZodValidationPipe(CheckOutVisitInput)) input: CheckOutVisitInput,
     @CurrentUser() principal: AuthUser,
   ) {
-    return this.visits.checkOut(id, input, principal.userId);
+    return this.access.checkOut(id, input, principal.userId);
   }
 }
