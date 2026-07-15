@@ -1,7 +1,12 @@
 import type {
+  AlertStatus,
+  AlertType,
   CheckInVisitInput,
   CheckOutVisitInput,
   CreateVisitsInput,
+  FlagVisitInput,
+  RequestInfoInput,
+  RiskLevel,
   VisitStatus,
   VisitType,
 } from "@vms/contracts";
@@ -66,20 +71,27 @@ export interface VisitNote {
   createdAt: string;
 }
 
+/** A security alert raised against a visit (flag / more-info / restricted match). */
+export interface VisitAlert {
+  id: string;
+  visitId?: string | null;
+  visitorId?: string | null;
+  type: AlertType;
+  level: RiskLevel;
+  status: AlertStatus;
+  reason: string;
+  category?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface VisitRequestDetail {
   id: string;
   visitorId: string;
   hostId: string;
   type: string;
-  status:
-    | "PENDING"
-    | "NEEDS_MORE_INFO"
-    | "APPROVED"
-    | "DENIED"
-    | "CHECKED_IN"
-    | "CHECKED_OUT"
-    | "CANCELLED"
-    | "EXPIRED";
+  /** Derived from the shared contract enum so new statuses (FLAGGED, …) stay in sync. */
+  status: VisitStatus;
   purpose: string;
   floor?: string | null;
   scheduledAt?: string | null;
@@ -113,6 +125,8 @@ export interface VisitRequestDetail {
   checkedInByName?: string | null;
   checkedOutByName?: string | null;
   notes: VisitNote[];
+  /** Security alerts on this visit; the sheet renders the stripe + Alert Summary from the open one. */
+  alerts: VisitAlert[];
 }
 
 export const visitsApi = {
@@ -140,6 +154,12 @@ export const visitsApi = {
     groupId?: string;
     dateFrom?: string;
     dateTo?: string;
+    /** Which date column `dateFrom`/`dateTo` filter on (default `scheduledAt`). */
+    dateField?: "scheduledAt" | "createdAt";
+    /** Free-text search (guest/host/floor/pass id). */
+    search?: string;
+    sortBy?: string;
+    sortDir?: "asc" | "desc";
     page?: number;
     pageSize?: number;
   }): Promise<Paginated<VisitListItem>> {
@@ -152,6 +172,10 @@ export const visitsApi = {
     if (params?.groupId) q.set("groupId", params.groupId);
     if (params?.dateFrom) q.set("dateFrom", params.dateFrom);
     if (params?.dateTo) q.set("dateTo", params.dateTo);
+    if (params?.dateField) q.set("dateField", params.dateField);
+    if (params?.search) q.set("search", params.search);
+    if (params?.sortBy) q.set("sortBy", params.sortBy);
+    if (params?.sortDir) q.set("sortDir", params.sortDir);
     if (params?.page) q.set("page", String(params.page));
     if (params?.pageSize) q.set("pageSize", String(params.pageSize));
     const qs = q.toString();
@@ -235,12 +259,29 @@ export const visitsApi = {
       method: "POST",
     });
   },
-  /** Host edits & resubmits a NEEDS_MORE_INFO request → back to PENDING. */
+  /** Host edits & resubmits a REVIEW_REQUESTED request → back to PENDING. */
   resubmit(
     id: string,
     input: { purpose?: string; scheduledAt?: string } = {},
   ): Promise<VisitRequestDetail> {
     return api<VisitRequestDetail>(`/visits/${id}/resubmit`, {
+      method: "POST",
+      body: input,
+    });
+  },
+  /** Security Manager/admin flags a visit → FLAGGED + a SECURITY_REVIEW alert (blocks check-in). */
+  flag(id: string, input: FlagVisitInput): Promise<VisitRequestDetail> {
+    return api<VisitRequestDetail>(`/visits/${id}/flag`, {
+      method: "POST",
+      body: input,
+    });
+  },
+  /** Security Manager/admin requests more info → REVIEW_REQUESTED + an ADDITIONAL_INFO alert. */
+  requestInfo(
+    id: string,
+    input: RequestInfoInput,
+  ): Promise<VisitRequestDetail> {
+    return api<VisitRequestDetail>(`/visits/${id}/request-info`, {
       method: "POST",
       body: input,
     });

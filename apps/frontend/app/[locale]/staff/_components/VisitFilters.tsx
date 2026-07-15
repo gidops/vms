@@ -16,7 +16,7 @@ import { useTranslations } from "next-intl";
 
 const STATUSES: VisitStatus[] = [
   "PENDING",
-  "NEEDS_MORE_INFO",
+  "REVIEW_REQUESTED",
   "APPROVED",
   "CHECKED_IN",
   "CHECKED_OUT",
@@ -38,27 +38,37 @@ export interface VisitFiltersValue {
  * The shared staff filter bar (search + status/type/purpose), used by both the
  * staff dashboard ("Expected Guests") and My Visits so the two stay in sync.
  * Controlled — the parent owns the filter state; `onChange` receives a partial
- * patch. Status/type/purpose narrow the query server-side; search is applied
- * client-side over the fetched page by the caller.
+ * patch. Status/type/purpose narrow the query server-side. When `onSearch` is
+ * provided the Search button / Enter flush the search term immediately (the
+ * staff dashboard searches server-side); callers without it just filter locally.
  */
 export function VisitFilters({
   value,
   onChange,
+  onSearch,
 }: {
   value: VisitFiltersValue;
   onChange: (patch: Partial<VisitFiltersValue>) => void;
+  onSearch?: () => void;
 }) {
   const t = useTranslations("staff");
   const tCommon = useTranslations("common");
   const tDash = useTranslations("dashboard");
 
   return (
-    <FilterBar actions={<Button>{tDash("filters.search")}</Button>}>
+    <FilterBar
+      actions={
+        <Button onClick={onSearch}>{tDash("filters.search")}</Button>
+      }
+    >
       <div className="min-w-56 flex-1">
         <SearchInput
           value={value.search}
           onChange={(e) => onChange({ search: e.target.value })}
           onClear={() => onChange({ search: "" })}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onSearch?.();
+          }}
           placeholder={t("filters.searchPlaceholder")}
         />
       </div>
@@ -94,7 +104,10 @@ export function VisitFilters({
           ))}
         </SelectContent>
       </Select>
-      <Select value={value.purpose} onValueChange={(v) => onChange({ purpose: v })}>
+      <Select
+        value={value.purpose}
+        onValueChange={(v) => onChange({ purpose: v })}
+      >
         <SelectTrigger className="w-44">
           <SelectValue />
         </SelectTrigger>

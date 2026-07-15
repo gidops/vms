@@ -22,7 +22,7 @@ import type { VisitListItem } from "@/data/visits/visits.api";
 
 /** A pending/needs-info guest is the only one an admin can still approve or deny. */
 const isActionable = (g: VisitListItem) =>
-  g.status === "PENDING" || g.status === "NEEDS_MORE_INFO";
+  g.status === "PENDING" || g.status === "REVIEW_REQUESTED";
 
 /**
  * Group approval sheet — mirrors the group check-in sheet for the admin approval
@@ -76,7 +76,7 @@ export function GroupApprovalSheet({
 
   return (
     <Drawer open onOpenChange={(o) => !o && onClose()}>
-      <DrawerContent side="start" className="flex max-w-xl flex-col gap-0 p-0">
+      <DrawerContent side="start" className="flex max-w-2xl flex-col gap-0 p-0">
         <div className="flex items-center justify-between border-b border-border p-5 pe-12">
           <DrawerTitle className="text-xl font-semibold text-fg">
             {t("groupTitle")}

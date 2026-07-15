@@ -9,8 +9,10 @@ import type {
   CheckInVisitInput,
   CheckOutVisitInput,
   CreateVisitsInput,
+  FlagVisitInput,
   Paginated,
   RateVisitInput,
+  RequestInfoInput,
   ResubmitVisitInput,
   UpdateVisitRequestInput,
   VisitListItem,
@@ -38,7 +40,7 @@ const GROUP_INACTIVE_STATUSES = new Set<string>([
 /** Lifecycle statuses that mean a guest has not (yet) checked in. */
 const GROUP_PRE_CHECKIN_STATUSES = new Set<string>([
   'PENDING',
-  'NEEDS_MORE_INFO',
+  'REVIEW_REQUESTED',
   'APPROVED',
 ]);
 
@@ -71,6 +73,7 @@ const detailInclude = Prisma.validator<Prisma.VisitInclude>()({
   createdBy: true,
   notes: { include: { author: true }, orderBy: { createdAt: 'asc' } },
   pass: { include: { accessCard: true } },
+  alerts: { orderBy: { createdAt: 'desc' } },
 });
 
 type VisitDetailRow = Prisma.VisitGetPayload<{ include: typeof detailInclude }>;
@@ -169,7 +172,7 @@ export class VisitsService {
   /**
    * VMC edit of a not-yet-approved request via the pre-filled invite form —
    * covers visitor details and that visit's details. Only the creator can edit,
-   * and only while the request is still PENDING/NEEDS_MORE_INFO (an approved
+   * and only while the request is still PENDING/REVIEW_REQUESTED (an approved
    * request is locked). A named host must still be a STAFF user.
    */
   async update(
@@ -185,7 +188,7 @@ export class VisitsService {
     if (visit.createdById !== actorUserId) {
       throw new ForbiddenException('errors.visit.notOwner');
     }
-    if (visit.status !== 'PENDING' && visit.status !== 'NEEDS_MORE_INFO') {
+    if (visit.status !== 'PENDING' && visit.status !== 'REVIEW_REQUESTED') {
       throw new BadRequestException('errors.visit.notEditable');
     }
     if (input.hostUserId) {
@@ -246,7 +249,7 @@ export class VisitsService {
   }
 
   /**
-   * Host edits & resubmits a request the CSO bounced back (NEEDS_MORE_INFO) —
+   * Host edits & resubmits a request the Security Manager bounced back (REVIEW_REQUESTED) —
    * optionally updating purpose/schedule — moving it back to PENDING for review.
    * Authorized by host ownership so STAFF needs no global visit:edit permission.
    */
@@ -263,7 +266,7 @@ export class VisitsService {
     if (visit.host?.userId !== actorUserId) {
       throw new ForbiddenException('errors.visit.notOwner');
     }
-    if (visit.status !== 'NEEDS_MORE_INFO') {
+    if (visit.status !== 'REVIEW_REQUESTED') {
       throw new BadRequestException('errors.visit.notResubmittable');
     }
     await this.txm.run(async (tx) => {
@@ -457,13 +460,26 @@ export class VisitsService {
   }
 
   /**
-   * Paginated visit list ordered by scheduled date, latest first (the VMC
-   * check-in board surfaces the most recent expected arrivals at the top;
-   * undated visits sort last). The admin approval queue passes no scope; the
-   * staff dashboard passes `scope: "mine"` to restrict the result to visits
-   * the requesting user hosts.
-   * `type`/`purpose` and the `dateFrom`/`dateTo` window (over the scheduled date)
-   * are the staff facets.
+   * The list ordering. Defaults to scheduled date, earliest first (the VMC
+   * check-in board surfaces who we're expecting soonest; undated visits sort
+   * last). Callers may opt into `sortBy: "createdAt"` — the staff dashboard
+   * orders newest-submitted first. Whitelisted so no arbitrary column leaks into
+   * Prisma's `orderBy`.
+   */
+  private buildOrderBy(
+    query: VisitListQuery,
+  ): Prisma.VisitOrderByWithRelationInput {
+    if (query.sortBy === 'createdAt') return { createdAt: query.sortDir };
+    return { scheduledAt: { sort: 'asc', nulls: 'last' } };
+  }
+
+  /**
+   * Paginated visit list. Ordering follows {@link buildOrderBy} (scheduled date
+   * earliest-first by default; `sortBy: "createdAt"` for the staff dashboard).
+   * The admin approval queue passes no scope; the staff dashboard passes
+   * `scope: "mine"` to restrict the result to visits the requesting user hosts.
+   * `type`/`purpose`, free-text `search`, and the `dateFrom`/`dateTo` window
+   * (over `dateField`, default `scheduledAt`) are the staff facets.
    */
   async list(
     query: VisitListQuery,
@@ -475,13 +491,43 @@ export class VisitsService {
     if (query.type) where.type = query.type;
     if (query.purpose) where.purpose = query.purpose;
     if (query.groupId) where.groupId = query.groupId;
-    if (query.scope === 'mine') where.host = { userId: currentUserId };
     if (query.dateFrom || query.dateTo) {
-      where.scheduledAt = {
+      // The window applies to whichever date column the caller asked for
+      // (`scheduledAt` by default; the staff dashboard passes `createdAt`).
+      where[query.dateField] = {
         ...(query.dateFrom ? { gte: query.dateFrom } : {}),
         ...(query.dateTo ? { lte: query.dateTo } : {}),
       };
     }
+    // Scope and search are each an OR-group; they'd clobber one another as a
+    // single top-level `where.OR`, so AND them together.
+    const and: Prisma.VisitWhereInput[] = [];
+    if (query.scope === 'mine') {
+      // "Mine" = requests I created OR visits I host (a staff sees requests they
+      // raised even when the guest is hosted by someone else).
+      and.push({
+        OR: [
+          { createdById: currentUserId },
+          { host: { userId: currentUserId } },
+        ],
+      });
+    }
+    if (query.search) {
+      // Matches the staff search placeholder ("guest, host, floor, pass id").
+      const contains = { contains: query.search, mode: 'insensitive' } as const;
+      and.push({
+        OR: [
+          { visitor: { fullName: contains } },
+          { visitor: { email: contains } },
+          { visitor: { organization: contains } },
+          { host: { user: { fullName: contains } } },
+          { floor: contains },
+          { referenceCode: contains },
+        ],
+      });
+    }
+    if (and.length) where.AND = and;
+    const orderBy = this.buildOrderBy(query);
     // Fetching one group's members (the group check-in / approval sheets pass a
     // groupId) returns every guest as its own row; any other list collapses each
     // group visit to a single representative row.
@@ -501,7 +547,7 @@ export class VisitsService {
       const keys = await this.prisma.visit.findMany({
         where,
         select: { id: true, groupId: true, isGroupVisit: true },
-        orderBy: { scheduledAt: { sort: 'desc', nulls: 'last' } },
+        orderBy,
       });
       const repIds: string[] = [];
       const seen = new Set<string>();
@@ -531,7 +577,7 @@ export class VisitsService {
         this.prisma.visit.findMany({
           where,
           include: { visitor: true, host: { include: { user: true } } },
-          orderBy: { scheduledAt: { sort: 'desc', nulls: 'last' } },
+          orderBy,
           skip: (query.page - 1) * query.pageSize,
           take: query.pageSize,
         }),
@@ -645,6 +691,21 @@ export class VisitsService {
     if (!visit) throw new NotFoundException('errors.visit.notFound');
     if (visit.status !== 'APPROVED') {
       throw new BadRequestException('errors.visit.notCheckInable');
+    }
+
+    // Security hold: an open flag / restricted-match alert blocks check-in until the
+    // the Security Manager resolves it (a FLAGGED visit is already blocked by the status check above,
+    // but a system RESTRICTED_MATCH may sit on an otherwise-approved visit).
+    const openSecurityAlert = await this.prisma.alert.findFirst({
+      where: {
+        visitId: id,
+        status: 'OPEN',
+        type: { in: ['SECURITY_REVIEW', 'RESTRICTED_MATCH'] },
+      },
+      select: { id: true },
+    });
+    if (openSecurityAlert) {
+      throw new BadRequestException('errors.visit.securityHold');
     }
 
     const card = await this.prisma.accessCard.findUnique({
@@ -885,6 +946,120 @@ export class VisitsService {
   }
 
   /**
+   * Security Manager/admin flags a visit as a security concern: moves it to FLAGGED and raises a
+   * SECURITY_REVIEW alert (admin-chosen risk level). An open security alert blocks
+   * check-in until the Security Manager resolves it. Atomic — status change + alert + both events
+   * (VisitFlagged, AlertCreated) in one transaction.
+   */
+  async flag(
+    id: string,
+    input: FlagVisitInput,
+    actorUserId: string,
+  ): Promise<VisitRequestDetail> {
+    const visit = await this.prisma.visit.findUnique({
+      where: { id },
+      select: { id: true, status: true, visitorId: true },
+    });
+    if (!visit) throw new NotFoundException('errors.visit.notFound');
+    if (this.isTerminal(visit.status)) {
+      throw new BadRequestException('errors.visit.notFlaggable');
+    }
+    await this.txm.run(async (tx) => {
+      await tx.visit.update({ where: { id }, data: { status: 'FLAGGED' } });
+      const alert = await tx.alert.create({
+        data: {
+          visitId: id,
+          visitorId: visit.visitorId,
+          type: 'SECURITY_REVIEW',
+          level: input.level,
+          status: 'OPEN',
+          reason: input.reason,
+          category: input.category ?? null,
+          raisedById: actorUserId,
+        },
+      });
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.VisitFlagged,
+        aggregateType: 'Visit',
+        aggregateId: id,
+        payload: { visitId: id, alertId: alert.id, level: input.level },
+        metadata: { actorUserId },
+      });
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.AlertCreated,
+        aggregateType: 'Alert',
+        aggregateId: alert.id,
+        payload: { alertId: alert.id, visitId: id, type: 'SECURITY_REVIEW' },
+        metadata: { actorUserId },
+      });
+    });
+    return this.getDetail(id);
+  }
+
+  /**
+   * Security Manager/admin requests more information on a suspicious visit: moves it to
+   * REVIEW_REQUESTED and raises an ADDITIONAL_INFO alert. The host/creator responds
+   * via notes and resubmits. Atomic — status change + alert + both events
+   * (VisitReviewRequested, AlertCreated) in one transaction.
+   */
+  async requestInfo(
+    id: string,
+    input: RequestInfoInput,
+    actorUserId: string,
+  ): Promise<VisitRequestDetail> {
+    const visit = await this.prisma.visit.findUnique({
+      where: { id },
+      select: { id: true, status: true, visitorId: true },
+    });
+    if (!visit) throw new NotFoundException('errors.visit.notFound');
+    if (this.isTerminal(visit.status)) {
+      throw new BadRequestException('errors.visit.notReviewable');
+    }
+    await this.txm.run(async (tx) => {
+      await tx.visit.update({
+        where: { id },
+        data: { status: 'REVIEW_REQUESTED' },
+      });
+      const alert = await tx.alert.create({
+        data: {
+          visitId: id,
+          visitorId: visit.visitorId,
+          type: 'ADDITIONAL_INFO',
+          level: 'MEDIUM',
+          status: 'OPEN',
+          reason: input.reason,
+          raisedById: actorUserId,
+        },
+      });
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.VisitReviewRequested,
+        aggregateType: 'Visit',
+        aggregateId: id,
+        payload: { visitId: id, alertId: alert.id },
+        metadata: { actorUserId },
+      });
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.AlertCreated,
+        aggregateType: 'Alert',
+        aggregateId: alert.id,
+        payload: { alertId: alert.id, visitId: id, type: 'ADDITIONAL_INFO' },
+        metadata: { actorUserId },
+      });
+    });
+    return this.getDetail(id);
+  }
+
+  /** Terminal states a flag / request-info / info action cannot apply to. */
+  private isTerminal(status: string): boolean {
+    return (
+      status === 'DENIED' ||
+      status === 'CANCELLED' ||
+      status === 'EXPIRED' ||
+      status === 'CHECKED_OUT'
+    );
+  }
+
+  /**
    * Deny several visits at once with a shared reason — the group approval sheet's
    * "Reject Selected". Atomic, one VisitDenied event per visit.
    */
@@ -987,6 +1162,20 @@ export class VisitsService {
         authorName: note.authorName,
         body: note.body,
         createdAt: note.createdAt,
+      })),
+      alerts: (visit.alerts ?? []).map((alert) => ({
+        id: alert.id,
+        visitId: alert.visitId,
+        visitorId: alert.visitorId,
+        type: alert.type,
+        level: alert.level,
+        status: alert.status,
+        reason: alert.reason,
+        category: alert.category,
+        raisedById: alert.raisedById,
+        resolvedById: alert.resolvedById,
+        createdAt: alert.createdAt,
+        updatedAt: alert.updatedAt,
       })),
     };
   }

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { AuthProvider, Locale } from "../common/enums.js";
 import { normalizeE164 } from "../common/phone.js";
 
-/** A user of the system (staff/host, CSO, gate operative, admin). */
+/** A user of the system (staff/host, Security Manager, gate operative, admin). */
 export const User = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
@@ -21,8 +21,8 @@ export type User = z.infer<typeof User>;
 /** Per-channel notification toggles shown on the Preferences tab. */
 export const NotificationPrefs = z.object({
   newInviteRequest: z.boolean().default(true),
-  csoDenied: z.boolean().default(true),
-  csoApproved: z.boolean().default(true),
+  smDenied: z.boolean().default(true),
+  smApproved: z.boolean().default(true),
   flaggedVisitor: z.boolean().default(true),
 });
 export type NotificationPrefs = z.infer<typeof NotificationPrefs>;

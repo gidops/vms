@@ -3,7 +3,7 @@
 A full-project audit of the AATC Visitor Management System (Turborepo monorepo:
 NestJS 11 backend + Next.js 16 frontend + shared zod contracts + Storybook
 design system), presented as a **single sequential checklist** organized in the
-logical order a project is normally *built* — not the order things happened
+logical order a project is normally _built_ — not the order things happened
 historically. Each line is a reasonable, developer-assignable unit of work.
 
 Findings were gathered by reading the full codebase and every doc in `docs/`.

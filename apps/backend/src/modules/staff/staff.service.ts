@@ -63,14 +63,28 @@ const ACTIVITY_MAP: Record<
     body: (n) => `${n} is checked out.`,
   },
   'note.added': {
-    category: 'CSO_FEEDBACK',
-    title: 'From CSO Desk',
+    category: 'SM_FEEDBACK',
+    title: 'From SM Desk',
     body: (n) => `A new remark was added to ${n}'s visit request.`,
   },
+  'visit.flagged': {
+    category: 'SECURITY_ALERT',
+    title: 'Visit Flagged',
+    body: (n) => `${n}'s visit was flagged and needs security review.`,
+  },
+  'visit.review_requested': {
+    category: 'SM_FEEDBACK',
+    title: 'More Information Requested',
+    body: (n) =>
+      `The Security Manager requested more information for ${n}'s visit.`,
+  },
+  // Note: flag/request-info also emit `alert.created`; we map the visit-centric
+  // events above (not alert.created) so each action yields a single feed card
+  // with the right category.
   'alert.updated': {
     category: 'SECURITY_ALERT',
-    title: 'Visitor Flagged',
-    body: (n) => `${n}'s visit raised a security alert.`,
+    title: 'Security Alert Updated',
+    body: (n) => `${n}'s security alert was updated.`,
   },
 };
 
@@ -78,27 +92,31 @@ const ACTIVITY_MAP: Record<
 export class StaffService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Headline counts for the signed-in host's "Today's Schedule". */
+  /** Headline counts for the signed-in staff's "Today's Schedule". */
   async stats(userId: string): Promise<StaffDashboardStats> {
-    const hostWhere: Prisma.VisitWhereInput = { host: { userId } };
+    // "Mine" = requests I created OR visits I host, so a staff's counts include
+    // requests they raised even when the guest is hosted by someone else.
+    const mineWhere: Prisma.VisitWhereInput = {
+      OR: [{ createdById: userId }, { host: { userId } }],
+    };
     const { start, end } = dayBounds(new Date());
 
     const [expectedToday, awaitingApproval, onsite] = await Promise.all([
       this.prisma.visit.count({
         where: {
-          ...hostWhere,
+          ...mineWhere,
           status: 'APPROVED',
           scheduledAt: { gte: start, lt: end },
         },
       }),
       this.prisma.visit.count({
         where: {
-          ...hostWhere,
-          status: { in: ['PENDING', 'NEEDS_MORE_INFO'] },
+          ...mineWhere,
+          status: { in: ['PENDING', 'REVIEW_REQUESTED'] },
         },
       }),
       this.prisma.visit.count({
-        where: { ...hostWhere, status: 'CHECKED_IN' },
+        where: { ...mineWhere, status: 'CHECKED_IN' },
       }),
     ]);
 
@@ -106,16 +124,17 @@ export class StaffService {
   }
 
   /**
-   * The host's "Recent Updates" feed, read from the append-only AuditLog. Resolves
-   * the host's own visits (+ their visitors' alerts) and surfaces audit rows for
-   * those aggregates, newest first, mapped to human-facing cards.
+   * The staff's "Recent Updates" feed, read from the append-only AuditLog. Resolves
+   * the staff's visits — those they created OR host — (+ their visitors' alerts)
+   * and surfaces audit rows for those aggregates, newest first, mapped to
+   * human-facing cards.
    */
   async activityFeed(
     userId: string,
     query: StaffActivityQuery,
   ): Promise<Paginated<StaffActivityItem>> {
     const visits = await this.prisma.visit.findMany({
-      where: { host: { userId } },
+      where: { OR: [{ createdById: userId }, { host: { userId } }] },
       select: {
         id: true,
         visitorId: true,

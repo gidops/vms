@@ -22,7 +22,7 @@ export interface AlertModalProps {
   size?: DialogContentProps["size"];
   /** Body content (e.g. visitor info + alert summary). */
   children?: React.ReactNode;
-  /** Footer actions (e.g. Close / Add Note / Escalate to CSO). */
+  /** Footer actions (e.g. Close / Add Note / Escalate to SM). */
   footer?: React.ReactNode;
 }
 

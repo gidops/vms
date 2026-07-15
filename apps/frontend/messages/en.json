@@ -3,6 +3,7 @@
     "name": "AATC VMS"
   },
   "nav": {
+    "home": "Home",
     "schedule": "Today's Schedule",
     "myVisits": "My Visits",
     "requests": "Requests & Alerts",
@@ -111,10 +112,10 @@
     "codeSent": "Code sent",
     "notAssigned": "Not Assigned",
     "status": {
-      "awaitingApproval": "Awaiting CSO Approval",
+      "awaitingApproval": "Awaiting SM Approval",
       "needsMoreInfo": "Needs More Info",
-      "approvedByCso": "Approved by CSO",
-      "deniedByCso": "Denied by CSO",
+      "approvedBySm": "Approved by SM",
+      "deniedBySm": "Denied by SM",
       "cancelled": "Cancelled",
       "onsite": "Onsite",
       "checkedOut": "Checked Out",
@@ -122,16 +123,19 @@
       "open": "Open",
       "acknowledged": "Acknowledged",
       "resolved": "Resolved",
-      "dismissed": "Dismissed"
+      "dismissed": "Dismissed",
+      "reviewRequested": "Review Requested",
+      "flagged": "Flagged"
     },
     "timeline": {
       "inviteCreated": "Invite Created",
-      "awaitingApproval": "Awaiting CSO Approval",
-      "awaitingCso": "Awaiting CSO Approval",
+      "awaitingApproval": "Awaiting SM Approval",
+      "awaitingSm": "Awaiting SM Approval",
       "checkedIn": "Checked In",
       "passIssued": "Pass Issued",
       "issuedPass": "Issued Pass",
-      "checkedOut": "Checked out"
+      "checkedOut": "Checked out",
+      "gateValidated": "Gate Validation Successful"
     },
     "sections": {
       "hostDetails": "Host/Unit /Floor Details",
@@ -168,7 +172,9 @@
       "riskLevel": "Risk Level",
       "alertCategory": "Alert Category",
       "flaggedAt": "Flagged At",
-      "alertReason": "Alert Reason"
+      "alertReason": "Alert Reason",
+      "trackRequestStatus": "Track request status",
+      "checkedOutBy": "Checked Out By"
     },
     "actions": {
       "cancelRequest": "Cancel Request",
@@ -182,12 +188,16 @@
       "resubmit": "Resubmit Request",
       "confirmDeny": "Confirm denial",
       "checkIn": "Check-In",
-      "checkOut": "Check-Out"
+      "checkOut": "Check-Out",
+      "requestInfo": "Request Info",
+      "flag": "Flag Visit",
+      "confirmFlag": "Confirm Flag",
+      "confirmRequestInfo": "Send Request"
     },
     "denyReasonPlaceholder": "Reason for denial",
-    "typeFeedback": "CSO Feedback",
+    "typeFeedback": "SM Feedback",
     "editTitle": "Edit Visit Request",
-    "alertBanner": "Do not check in this guest or issue a pass until the alert is reviewed by CSO/security.",
+    "alertBanner": "Do not check in this guest or issue a pass until the alert is reviewed by the Security Manager/security.",
     "alertNeedsAttention": "Needs Attention",
     "alertDefaultCategory": "Flagged Guest Match",
     "respondPlaceholder": "Respond to alert…",
@@ -200,28 +210,31 @@
       "flaggedTitle": "Flagged Guest Match",
       "title": {
         "PENDING": "Visit Request from {host}",
-        "NEEDS_MORE_INFO": "More Info Requested",
-        "APPROVED": "Request Approved by CSO",
+        "REVIEW_REQUESTED": "More Info Requested",
+        "APPROVED": "Request Approved by SM",
         "DENIED": "Visit Request Denied",
         "CHECKED_IN": "{visitor} Checked In",
         "CHECKED_OUT": "{visitor} Checked Out",
         "CANCELLED": "Request Cancelled",
-        "EXPIRED": "Request Expired"
+        "EXPIRED": "Request Expired",
+        "FLAGGED": "Visit Flagged"
       },
       "desc": {
         "PENDING": "Visit request for {visitor} from",
-        "NEEDS_MORE_INFO": "The CSO needs more information for {visitor} from",
+        "REVIEW_REQUESTED": "The Security Manager needs more information for {visitor} from",
         "APPROVED": "{visitor}'s visit to {host} has been approved.",
-        "DENIED": "{visitor}'s visit to {host} was denied by the CSO.",
+        "DENIED": "{visitor}'s visit to {host} was denied by the Security Manager.",
         "CHECKED_IN": "{visitor} is now on site.",
         "CHECKED_OUT": "{visitor} has checked out.",
         "CANCELLED": "The visit request for {visitor} was cancelled.",
-        "EXPIRED": "The visit request for {visitor} has expired."
+        "EXPIRED": "The visit request for {visitor} has expired.",
+        "FLAGGED": "{visitor}'s visit has been flagged for security review."
       }
     },
     "pill": {
       "PENDING": "Awaiting Approval",
-      "NEEDS_MORE_INFO": "Needs More Info",
+      "REVIEW_REQUESTED": "Review Requested",
+      "FLAGGED": "Flagged",
       "APPROVED": "Expected",
       "DENIED": "Denied",
       "CHECKED_IN": "Onsite",
@@ -231,7 +244,7 @@
     },
     "statusOption": {
       "PENDING": "Awaiting Approval",
-      "NEEDS_MORE_INFO": "Needs More Info",
+      "REVIEW_REQUESTED": "Needs More Info",
       "APPROVED": "Approved",
       "DENIED": "Denied",
       "CHECKED_IN": "Onsite",
@@ -241,13 +254,27 @@
       "OPEN": "Open",
       "ACKNOWLEDGED": "Acknowledged",
       "RESOLVED": "Resolved",
-      "DISMISSED": "Dismissed"
+      "DISMISSED": "Dismissed",
+      "FLAGGED": "Flagged"
     },
     "typeOption": {
       "WALK_IN": "Walk-in",
       "PRE_INVITED": "Invited",
       "APPOINTMENT": "Appointment"
-    }
+    },
+    "stripe": {
+      "securityReview": "Security Review Required",
+      "additionalInfo": "Additional Information Required"
+    },
+    "riskLevel": {
+      "LOW": "Low",
+      "MEDIUM": "Medium",
+      "HIGH": "High",
+      "CRITICAL": "Critical"
+    },
+    "requestInfoPlaceholder": "What additional information is needed?",
+    "flagReasonPlaceholder": "Describe the security concern…",
+    "createdByYou": "(you)"
   },
   "language": {
     "select": "Select language",
@@ -417,7 +444,7 @@
     "guestCount": "{count} Guest",
     "onsiteFor": "For {time} HR",
     "statusSub": {
-      "fromCso": "From CSO"
+      "fromSm": "From SM"
     },
     "myVisits": {
       "title": "My Visits"
@@ -459,7 +486,7 @@
     },
     "status": {
       "PENDING": "Awaiting Approval",
-      "NEEDS_MORE_INFO": "Needs More Info",
+      "REVIEW_REQUESTED": "Needs More Info",
       "APPROVED": "Expected",
       "DENIED": "Denied",
       "CHECKED_IN": "Onsite",
@@ -483,7 +510,7 @@
       "updateRequest": "Update Request",
       "category": {
         "ARRIVAL_UPDATE": "Arrival Update",
-        "CSO_FEEDBACK": "CSO Feedback",
+        "SM_FEEDBACK": "SM Feedback",
         "REQUEST_UPDATE": "Request Update",
         "VISIT_STATUS": "Visit Status",
         "SECURITY_ALERT": "Security Alerts"
@@ -580,8 +607,8 @@
       "title": "Notifications",
       "help": "Stay informed about your account activity.",
       "newInviteRequest": "New invite request",
-      "csoDenied": "CSO denied request",
-      "csoApproved": "CSO approved request",
+      "smDenied": "SM denied request",
+      "smApproved": "SM approved request",
       "flaggedVisitor": "Flagged visitor alert"
     }
   },

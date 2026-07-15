@@ -36,7 +36,8 @@ type Selected = { kind: "request" | "alert"; id: string };
 const ALL = "all";
 const REQUEST_STATUSES = [
   "PENDING",
-  "NEEDS_MORE_INFO",
+  "REVIEW_REQUESTED",
+  "FLAGGED",
   "APPROVED",
   "DENIED",
   "CHECKED_IN",
@@ -52,8 +53,8 @@ const ALERT_STATUSES = [
 ] as const;
 const VISIT_TYPES = ["WALK_IN", "PRE_INVITED", "APPOINTMENT"] as const;
 
-/** CSO approve/deny/needs-info updates render as "CSO Feedback" cards. */
-const FEEDBACK_STATUSES = ["NEEDS_MORE_INFO", "APPROVED", "DENIED"];
+/** Security Manager approve/deny/needs-info updates render as "Security Manager Feedback" cards. */
+const FEEDBACK_STATUSES = ["REVIEW_REQUESTED", "APPROVED", "DENIED"];
 
 function cardType(item: InboxItem): InboxCardType {
   if (item.kind === "alert") return "alert";
@@ -64,9 +65,10 @@ function statusMeta(item: InboxItem): { key: string; intent: Intent } {
   if (item.kind === "request") {
     const map: Record<string, { key: string; intent: Intent }> = {
       PENDING: { key: "awaitingApproval", intent: "warning" },
-      NEEDS_MORE_INFO: { key: "needsMoreInfo", intent: "danger" },
-      APPROVED: { key: "approvedByCso", intent: "success" },
-      DENIED: { key: "deniedByCso", intent: "danger" },
+      REVIEW_REQUESTED: { key: "reviewRequested", intent: "danger" },
+      FLAGGED: { key: "flagged", intent: "danger" },
+      APPROVED: { key: "approvedBySm", intent: "success" },
+      DENIED: { key: "deniedBySm", intent: "danger" },
       CANCELLED: { key: "cancelled", intent: "neutral" },
       CHECKED_IN: { key: "onsite", intent: "success" },
       CHECKED_OUT: { key: "checkedOut", intent: "neutral" },
@@ -150,9 +152,9 @@ export function RequestsAlertsScreen({
 
   const describe = (item: InboxItem): React.ReactNode => {
     if (item.kind === "alert") return item.reason;
-    // PENDING / NEEDS_MORE_INFO sentences end with "…from" so the org is
+    // PENDING / REVIEW_REQUESTED sentences end with "…from" so the org is
     // emphasised at the end; the other statuses are self-contained sentences.
-    if (item.status === "PENDING" || item.status === "NEEDS_MORE_INFO") {
+    if (item.status === "PENDING" || item.status === "REVIEW_REQUESTED") {
       return (
         <>
           {t(`card.desc.${item.status}`, { visitor: item.visitorName })}

@@ -188,7 +188,7 @@ target). Creates a `Note`; emits `note.added`.
 
 ## Permissions (seeded)
 
-`resource:action` keys. Seeded roles: **ADMIN** (all), **CSO** (`visit:approve`,
+`resource:action` keys. Seeded roles: **ADMIN** (all), **SM** (`visit:approve`,
 `visit:deny`, `alert:resolve`, `alert:escalate`, `note:add`), **RECEPTION**
 (`visitor:register`, `invitation:create`, `visit:cancel`, `visit:edit`, `note:add`).
 

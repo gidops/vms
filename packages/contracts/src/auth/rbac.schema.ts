@@ -33,6 +33,10 @@ export const PERMISSIONS = {
   VISIT_EDIT: "visit:edit",
   VISIT_CHECK_IN: "visit:check_in",
   VISIT_CHECK_OUT: "visit:check_out",
+  /** Security Manager/admin flags a visit as a security concern (creates a SECURITY_REVIEW alert). */
+  VISIT_FLAG: "visit:flag",
+  /** Security Manager/admin requests more information (creates an ADDITIONAL_INFO alert). */
+  VISIT_REQUEST_INFO: "visit:request_info",
   VISITOR_REGISTER: "visitor:register",
   INVITATION_CREATE: "invitation:create",
   ALERT_ESCALATE: "alert:escalate",

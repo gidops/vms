@@ -11,7 +11,7 @@ export const DrawerClose = DialogPrimitive.Close;
 const contentVariants = tv({
   base: [
     "fixed inset-y-0 z-[var(--z-drawer)] flex h-full w-full flex-col bg-surface text-fg shadow-xl outline-none",
-    "max-w-md",
+    "max-w-lg",
   ],
   variants: {
     side: {

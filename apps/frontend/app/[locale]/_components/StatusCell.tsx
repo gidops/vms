@@ -41,7 +41,7 @@ export interface StatusCellProps {
 /**
  * A status badge with a status-specific subtext line, used across the staff
  * dashboard and My Visits tables:
- *  - PENDING          → "From CSO" (awaiting the CSO's decision)
+ *  - PENDING          → "From Security Manager" (awaiting the Security Manager's decision)
  *  - APPROVED         → scheduled arrival time
  *  - CHECKED_IN       → live onsite duration
  *  - CHECKED_OUT      → checkout time
@@ -67,7 +67,7 @@ export function StatusCell({
   let sub: React.ReactNode = null;
   if (status === "PENDING") {
     sub = (
-      <span className="text-xs text-fg-muted">{t("statusSub.fromCso")}</span>
+      <span className="text-xs text-fg-muted">{t("statusSub.fromSm")}</span>
     );
   } else if (status === "APPROVED") {
     sub = timeLabel(scheduledAt);

@@ -28,7 +28,7 @@ Sign in at <http://localhost:3000> with the dev seed account:
 | ---------------- | ----------- |
 | `admin@aatc.org` | `Passw0rd!` |
 
-The backend seeds the permission catalogue, the `ADMIN` / `CSO` / `RECEPTION`
+The backend seeds the permission catalogue, the `ADMIN` / `SM` / `RECEPTION`
 roles, this user, and a set of demo visit requests + an alert on startup in
 non‑production (idempotent) — so the Requests & Alerts inbox renders with data.
 

@@ -88,6 +88,12 @@ export interface MyVisitsParams {
   purpose?: string;
   dateFrom?: string;
   dateTo?: string;
+  /** Which date column `dateFrom`/`dateTo` filter on (default `scheduledAt`). */
+  dateField?: "scheduledAt" | "createdAt";
+  /** Free-text search (guest/host/floor/pass id). */
+  search?: string;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
   page?: number;
   pageSize?: number;
 }
@@ -202,13 +208,47 @@ export function useUpdateVisit(id: string) {
   });
 }
 
-/** Host edits & resubmits a NEEDS_MORE_INFO request → back to PENDING. */
+/** Host edits & resubmits a REVIEW_REQUESTED request → back to PENDING. */
 export function useResubmitVisit(id: string) {
   const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (input: { purpose?: string; scheduledAt?: string } = {}) =>
       visitsApi.resubmit(id, input),
     onSuccess: () => invalidate(keys.visit(id)),
+  });
+}
+
+/** Security Manager/admin flags a visit → FLAGGED + a SECURITY_REVIEW alert (blocks check-in). */
+export function useFlagVisit(id: string) {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (input: Parameters<typeof visitsApi.flag>[1]) =>
+      visitsApi.flag(id, input),
+    onSuccess: () => invalidate(keys.visit(id)),
+  });
+}
+
+/** Security Manager/admin requests more info → REVIEW_REQUESTED + an ADDITIONAL_INFO alert. */
+export function useRequestInfo(id: string) {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (input: Parameters<typeof visitsApi.requestInfo>[1]) =>
+      visitsApi.requestInfo(id, input),
+    onSuccess: () => invalidate(keys.visit(id)),
+  });
+}
+
+/**
+ * Security Manager/admin resolves/dismisses a visit's security alert. Keyed by the visit so the
+ * detail sheet (which now renders alerts inline) refreshes — resolving clears the
+ * visit's hold, which the backend reflects in the visit status.
+ */
+export function useResolveAlert(visitId: string) {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (args: { alertId: string; status: AlertStatusAction }) =>
+      alertsApi.updateStatus(args.alertId, args.status),
+    onSuccess: () => invalidate(keys.visit(visitId)),
   });
 }
 

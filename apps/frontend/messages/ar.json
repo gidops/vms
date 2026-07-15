@@ -3,6 +3,7 @@
     "name": "AATC VMS"
   },
   "nav": {
+    "home": "الرئيسية",
     "schedule": "جدول اليوم",
     "myVisits": "زياراتي",
     "requests": "الطلبات والتنبيهات",
@@ -111,10 +112,10 @@
     "noNotes": "لا توجد ملاحظات بعد.",
     "addNotePlaceholder": "ابدأ الكتابة",
     "status": {
-      "awaitingApproval": "في انتظار موافقة CSO",
+      "awaitingApproval": "في انتظار موافقة SM",
       "needsMoreInfo": "يلزم مزيد من المعلومات",
-      "approvedByCso": "تمت الموافقة من CSO",
-      "deniedByCso": "رُفض من CSO",
+      "approvedBySm": "تمت الموافقة من SM",
+      "deniedBySm": "رُفض من SM",
       "cancelled": "أُلغي",
       "onsite": "متواجد",
       "checkedOut": "سجّل الخروج",
@@ -122,16 +123,19 @@
       "open": "مفتوح",
       "acknowledged": "تم الاطلاع",
       "resolved": "تم الحل",
-      "dismissed": "مرفوض"
+      "dismissed": "مرفوض",
+      "reviewRequested": "مطلوب مراجعة",
+      "flagged": "معلَّم"
     },
     "timeline": {
       "inviteCreated": "تم إنشاء الدعوة",
-      "awaitingApproval": "في انتظار موافقة CSO",
-      "awaitingCso": "في انتظار موافقة CSO",
+      "awaitingApproval": "في انتظار موافقة SM",
+      "awaitingSm": "في انتظار موافقة SM",
       "checkedIn": "تم الدخول",
       "passIssued": "تم إصدار التصريح",
       "issuedPass": "تم إصدار التصريح",
-      "checkedOut": "تم الخروج"
+      "checkedOut": "تم الخروج",
+      "gateValidated": "تم التحقق عند البوابة"
     },
     "sections": {
       "hostDetails": "تفاصيل المضيف / الوحدة / الطابق",
@@ -168,7 +172,9 @@
       "riskLevel": "مستوى الخطورة",
       "alertCategory": "فئة التنبيه",
       "flaggedAt": "تم الإبلاغ في",
-      "alertReason": "سبب التنبيه"
+      "alertReason": "سبب التنبيه",
+      "trackRequestStatus": "تتبع حالة الطلب",
+      "checkedOutBy": "تم الخروج بواسطة"
     },
     "actions": {
       "cancelRequest": "إلغاء الطلب",
@@ -182,12 +188,16 @@
       "resubmit": "إعادة إرسال الطلب",
       "confirmDeny": "تأكيد الرفض",
       "checkIn": "تسجيل الدخول",
-      "checkOut": "تسجيل الخروج"
+      "checkOut": "تسجيل الخروج",
+      "requestInfo": "طلب معلومات",
+      "flag": "تعليم",
+      "confirmFlag": "تأكيد التعليم",
+      "confirmRequestInfo": "إرسال الطلب"
     },
     "denyReasonPlaceholder": "سبب الرفض",
-    "typeFeedback": "ملاحظات CSO",
+    "typeFeedback": "ملاحظات SM",
     "editTitle": "تعديل طلب الزيارة",
-    "alertBanner": "لا تسجّل دخول هذا الضيف أو تُصدر تصريحًا حتى تتم مراجعة التنبيه من قبل CSO/الأمن.",
+    "alertBanner": "لا تسجّل دخول هذا الضيف أو تُصدر تصريحًا حتى تتم مراجعة التنبيه من قبل SM/الأمن.",
     "alertNeedsAttention": "يتطلب الانتباه",
     "alertDefaultCategory": "تطابق ضيف مُعلَّم",
     "respondPlaceholder": "الرد على التنبيه…",
@@ -200,28 +210,31 @@
       "flaggedTitle": "تطابق ضيف مُعلَّم",
       "title": {
         "PENDING": "طلب زيارة من {host}",
-        "NEEDS_MORE_INFO": "مطلوب مزيد من المعلومات",
-        "APPROVED": "تمت الموافقة على الطلب من CSO",
+        "REVIEW_REQUESTED": "مطلوب مزيد من المعلومات",
+        "APPROVED": "تمت الموافقة على الطلب من SM",
         "DENIED": "تم رفض طلب الزيارة",
         "CHECKED_IN": "تم تسجيل دخول {visitor}",
         "CHECKED_OUT": "تم تسجيل خروج {visitor}",
         "CANCELLED": "تم إلغاء الطلب",
-        "EXPIRED": "انتهت صلاحية الطلب"
+        "EXPIRED": "انتهت صلاحية الطلب",
+        "FLAGGED": "تم تعليم الزيارة"
       },
       "desc": {
         "PENDING": "طلب زيارة لـ {visitor} من",
-        "NEEDS_MORE_INFO": "يحتاج CSO إلى مزيد من المعلومات عن {visitor} من",
+        "REVIEW_REQUESTED": "يحتاج SM إلى مزيد من المعلومات عن {visitor} من",
         "APPROVED": "تمت الموافقة على زيارة {visitor} إلى {host}.",
-        "DENIED": "تم رفض زيارة {visitor} إلى {host} من قبل CSO.",
+        "DENIED": "تم رفض زيارة {visitor} إلى {host} من قبل SM.",
         "CHECKED_IN": "{visitor} الآن في الموقع.",
         "CHECKED_OUT": "قام {visitor} بتسجيل الخروج.",
         "CANCELLED": "تم إلغاء طلب الزيارة لـ {visitor}.",
-        "EXPIRED": "انتهت صلاحية طلب الزيارة لـ {visitor}."
+        "EXPIRED": "انتهت صلاحية طلب الزيارة لـ {visitor}.",
+        "FLAGGED": "تم تعليم زيارة {visitor} للمراجعة الأمنية."
       }
     },
     "pill": {
       "PENDING": "بانتظار الموافقة",
-      "NEEDS_MORE_INFO": "مطلوب معلومات",
+      "REVIEW_REQUESTED": "مطلوب مراجعة",
+      "FLAGGED": "معلَّم",
       "APPROVED": "متوقع",
       "DENIED": "مرفوض",
       "CHECKED_IN": "في الموقع",
@@ -231,7 +244,7 @@
     },
     "statusOption": {
       "PENDING": "بانتظار الموافقة",
-      "NEEDS_MORE_INFO": "مطلوب معلومات",
+      "REVIEW_REQUESTED": "مطلوب معلومات",
       "APPROVED": "موافق عليه",
       "DENIED": "مرفوض",
       "CHECKED_IN": "في الموقع",
@@ -241,13 +254,27 @@
       "OPEN": "مفتوح",
       "ACKNOWLEDGED": "تم الإقرار",
       "RESOLVED": "تم الحل",
-      "DISMISSED": "مرفوض"
+      "DISMISSED": "مرفوض",
+      "FLAGGED": "معلَّم"
     },
     "typeOption": {
       "WALK_IN": "بدون موعد",
       "PRE_INVITED": "مدعو",
       "APPOINTMENT": "موعد"
-    }
+    },
+    "stripe": {
+      "securityReview": "مطلوب مراجعة أمنية",
+      "additionalInfo": "مطلوب معلومات إضافية"
+    },
+    "riskLevel": {
+      "LOW": "منخفض",
+      "MEDIUM": "متوسط",
+      "HIGH": "مرتفع",
+      "CRITICAL": "حرج"
+    },
+    "requestInfoPlaceholder": "ما المعلومات الإضافية المطلوبة؟",
+    "flagReasonPlaceholder": "صف المخاوف الأمنية…",
+    "createdByYou": "(أنت)"
   },
   "language": {
     "select": "اختر اللغة",
@@ -417,7 +444,7 @@
     "guestCount": "{count} ضيف",
     "onsiteFor": "منذ {time}",
     "statusSub": {
-      "fromCso": "من CSO"
+      "fromSm": "من SM"
     },
     "myVisits": {
       "title": "زياراتي"
@@ -459,7 +486,7 @@
     },
     "status": {
       "PENDING": "في انتظار الموافقة",
-      "NEEDS_MORE_INFO": "يلزم مزيد من المعلومات",
+      "REVIEW_REQUESTED": "يلزم مزيد من المعلومات",
       "APPROVED": "متوقع",
       "DENIED": "مرفوض",
       "CHECKED_IN": "متواجد",
@@ -483,7 +510,7 @@
       "updateRequest": "تحديث الطلب",
       "category": {
         "ARRIVAL_UPDATE": "تحديث الوصول",
-        "CSO_FEEDBACK": "ملاحظات CSO",
+        "SM_FEEDBACK": "ملاحظات SM",
         "REQUEST_UPDATE": "تحديث الطلب",
         "VISIT_STATUS": "حالة الزيارة",
         "SECURITY_ALERT": "تنبيهات أمنية"
@@ -580,8 +607,8 @@
       "title": "الإشعارات",
       "help": "ابقَ على اطّلاع بنشاط حسابك.",
       "newInviteRequest": "طلب دعوة جديد",
-      "csoDenied": "طلب مرفوض من CSO",
-      "csoApproved": "طلب موافَق عليه من CSO",
+      "smDenied": "طلب مرفوض من SM",
+      "smApproved": "طلب موافَق عليه من SM",
       "flaggedVisitor": "تنبيه زائر مُعلَّم"
     }
   },

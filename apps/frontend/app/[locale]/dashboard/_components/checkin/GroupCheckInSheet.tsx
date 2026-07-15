@@ -19,8 +19,8 @@ import { CheckOutModal } from "./CheckOutModal";
 
 type Active = { visitId: string; action: "in" | "out" } | null;
 
-// Guests still awaiting CSO approval cannot be checked in yet.
-const NOT_APPROVED: VisitListItem["status"][] = ["PENDING", "NEEDS_MORE_INFO"];
+// Guests still awaiting Security Manager approval cannot be checked in yet.
+const NOT_APPROVED: VisitListItem["status"][] = ["PENDING", "REVIEW_REQUESTED"];
 const isApproved = (g: VisitListItem) => g.status === "APPROVED";
 const isNotApproved = (g: VisitListItem) => NOT_APPROVED.includes(g.status);
 const isSelectable = (g: VisitListItem) => isApproved(g) || isNotApproved(g);

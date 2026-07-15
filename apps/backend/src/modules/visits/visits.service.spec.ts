@@ -39,6 +39,7 @@ describe('VisitsService lifecycle', () => {
         updateMany: jest.fn().mockResolvedValue({}),
       },
       gateEvent: { create: jest.fn().mockResolvedValue({}) },
+      alert: { create: jest.fn().mockResolvedValue({ id: 'a1' }) },
     };
     const prisma = {
       visit: {
@@ -46,6 +47,8 @@ describe('VisitsService lifecycle', () => {
         count: jest.fn().mockResolvedValue(1),
       },
       accessCard: { findUnique: jest.fn().mockResolvedValue(card) },
+      // No open security hold by default; the security-hold test overrides this.
+      alert: { findFirst: jest.fn().mockResolvedValue(null) },
     } as unknown as PrismaService;
     const txm = {
       run: (fn: (t: typeof tx) => unknown) => fn(tx),
@@ -118,6 +121,91 @@ describe('VisitsService lifecycle', () => {
     await expect(
       service.checkIn('v1', { accessCardId: 'card1' }, 'actor'),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  it('checkIn rejects an approved visit that has an open security alert', async () => {
+    const { service } = setup();
+    (
+      service as unknown as {
+        prisma: { alert: { findFirst: jest.Mock } };
+      }
+    ).prisma.alert.findFirst.mockResolvedValueOnce({ id: 'a1' });
+    await expect(
+      service.checkIn('v1', { accessCardId: 'card1' }, 'actor'),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('flag moves the visit to FLAGGED and raises a SECURITY_REVIEW alert', async () => {
+    const { service, tx, publish } = setup({
+      id: 'v1',
+      status: 'APPROVED',
+      visitorId: 'vis1',
+    });
+    await service.flag(
+      'v1',
+      { level: 'HIGH', reason: 'Threat identified' },
+      'actor',
+    );
+    expect(tx.visit.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: 'FLAGGED' }),
+      }),
+    );
+    expect(tx.alert.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          type: 'SECURITY_REVIEW',
+          level: 'HIGH',
+          status: 'OPEN',
+          raisedById: 'actor',
+        }),
+      }),
+    );
+    expect(publish).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({ type: EVENT_TYPES.VisitFlagged }),
+    );
+    expect(publish).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({ type: EVENT_TYPES.AlertCreated }),
+    );
+  });
+
+  it('flag rejects a terminal visit', async () => {
+    const { service } = setup({
+      id: 'v1',
+      status: 'CHECKED_OUT',
+      visitorId: 'vis1',
+    });
+    await expect(
+      service.flag('v1', { level: 'HIGH', reason: 'x' }, 'actor'),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('requestInfo moves the visit to REVIEW_REQUESTED and raises an ADDITIONAL_INFO alert', async () => {
+    const { service, tx, publish } = setup({
+      id: 'v1',
+      status: 'PENDING',
+      visitorId: 'vis1',
+    });
+    await service.requestInfo('v1', { reason: 'Need ID' }, 'actor');
+    expect(tx.visit.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: 'REVIEW_REQUESTED' }),
+      }),
+    );
+    expect(tx.alert.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          type: 'ADDITIONAL_INFO',
+          level: 'MEDIUM',
+        }),
+      }),
+    );
+    expect(publish).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({ type: EVENT_TYPES.VisitReviewRequested }),
+    );
   });
 
   it('checkOut returns the pass, releases the badge, and emits VisitorCheckedOut', async () => {
@@ -400,9 +488,9 @@ describe('VisitsService.resubmit', () => {
     return { service, tx, publish };
   }
 
-  it('moves a NEEDS_MORE_INFO request owned by the actor back to PENDING', async () => {
+  it('moves a REVIEW_REQUESTED request owned by the actor back to PENDING', async () => {
     const { service, tx, publish } = setup({
-      status: 'NEEDS_MORE_INFO',
+      status: 'REVIEW_REQUESTED',
       hostUserId: 'me',
     });
     await service.resubmit('v1', { purpose: 'Updated' }, 'me');
@@ -422,7 +510,7 @@ describe('VisitsService.resubmit', () => {
 
   it('forbids resubmitting a request the actor does not host', async () => {
     const { service } = setup({
-      status: 'NEEDS_MORE_INFO',
+      status: 'REVIEW_REQUESTED',
       hostUserId: 'other',
     });
     await expect(service.resubmit('v1', {}, 'me')).rejects.toThrow(
@@ -430,7 +518,7 @@ describe('VisitsService.resubmit', () => {
     );
   });
 
-  it('rejects resubmitting a request that is not NEEDS_MORE_INFO', async () => {
+  it('rejects resubmitting a request that is not REVIEW_REQUESTED', async () => {
     const { service } = setup({ status: 'PENDING', hostUserId: 'me' });
     await expect(service.resubmit('v1', {}, 'me')).rejects.toThrow(
       BadRequestException,
@@ -459,14 +547,23 @@ describe('VisitsService.list scoping', () => {
     pageSize: 20,
     sortDir: 'desc',
     scope: 'all',
+    dateField: 'scheduledAt',
     ...over,
   });
 
-  it('scopes to the current user as host when scope=mine', async () => {
+  it('scopes to visits the current user created OR hosts when scope=mine', async () => {
     const { service, findMany } = setup();
     await service.list(query({ scope: 'mine' }), 'me');
     expect(findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { host: { userId: 'me' } } }),
+      expect.objectContaining({
+        where: {
+          AND: [
+            {
+              OR: [{ createdById: 'me' }, { host: { userId: 'me' } }],
+            },
+          ],
+        },
+      }),
     );
   });
 
@@ -487,6 +584,79 @@ describe('VisitsService.list scoping', () => {
       }),
     );
   });
+
+  it('orders by createdAt when sortBy=createdAt (staff dashboard)', async () => {
+    const { service, findMany } = setup();
+    await service.list(query({ sortBy: 'createdAt', sortDir: 'desc' }), 'me');
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ orderBy: { createdAt: 'desc' } }),
+    );
+  });
+
+  it('windows the date range on the requested dateField (createdAt)', async () => {
+    const { service, findMany } = setup();
+    const from = new Date('2026-07-01T00:00:00.000Z');
+    const to = new Date('2026-07-13T23:59:59.999Z');
+    await service.list(
+      query({ dateField: 'createdAt', dateFrom: from, dateTo: to }),
+      'me',
+    );
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ createdAt: { gte: from, lte: to } }),
+      }),
+    );
+  });
+
+  it('builds a case-insensitive OR search across guest/host/floor/pass id', async () => {
+    const { service, findMany } = setup();
+    await service.list(query({ search: 'jordan' }), 'me');
+    const c = { contains: 'jordan', mode: 'insensitive' };
+    // scope defaults to 'all' here, so the only AND member is the search group.
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: [
+            {
+              OR: [
+                { visitor: { fullName: c } },
+                { visitor: { email: c } },
+                { visitor: { organization: c } },
+                { host: { user: { fullName: c } } },
+                { floor: c },
+                { referenceCode: c },
+              ],
+            },
+          ],
+        }),
+      }),
+    );
+  });
+
+  it('scope=mine AND search combine as two separate AND groups', async () => {
+    const { service, findMany } = setup();
+    await service.list(query({ scope: 'mine', search: 'jordan' }), 'me');
+    const c = { contains: 'jordan', mode: 'insensitive' };
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: [
+            { OR: [{ createdById: 'me' }, { host: { userId: 'me' } }] },
+            {
+              OR: [
+                { visitor: { fullName: c } },
+                { visitor: { email: c } },
+                { visitor: { organization: c } },
+                { host: { user: { fullName: c } } },
+                { floor: c },
+                { referenceCode: c },
+              ],
+            },
+          ],
+        }),
+      }),
+    );
+  });
 });
 
 describe('VisitsService.list statuses + groupSize', () => {
@@ -495,6 +665,7 @@ describe('VisitsService.list statuses + groupSize', () => {
     pageSize: 20,
     sortDir: 'desc',
     scope: 'all',
+    dateField: 'scheduledAt',
     ...over,
   });
 

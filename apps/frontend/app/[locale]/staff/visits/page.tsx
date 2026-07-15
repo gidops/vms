@@ -229,7 +229,7 @@ function MyVisits() {
                           />
                         </TableCell>
                         <TableCell>
-                          {row.status === "NEEDS_MORE_INFO" ? (
+                          {row.status === "REVIEW_REQUESTED" ? (
                             <Button
                               intent="danger"
                               size="sm"
