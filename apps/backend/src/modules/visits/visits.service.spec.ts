@@ -575,12 +575,12 @@ describe('VisitsService.list scoping', () => {
     );
   });
 
-  it('orders by scheduled date ascending with undated visits last', async () => {
+  it('orders by scheduled date descending with undated visits last', async () => {
     const { service, findMany } = setup();
     await service.list(query({ scope: 'all' }), 'me');
     expect(findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        orderBy: { scheduledAt: { sort: 'asc', nulls: 'last' } },
+        orderBy: { scheduledAt: { sort: 'desc', nulls: 'last' } },
       }),
     );
   });

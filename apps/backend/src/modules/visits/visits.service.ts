@@ -570,7 +570,7 @@ export class VisitsService {
           })
         : [];
       const byId = new Map(pageRows.map((r) => [r.id, r]));
-      // `in` doesn't preserve order — restore the scheduledAt-asc page order.
+      // `in` doesn't preserve order — restore the scheduledAt-desc page order.
       rows = pageIds.map((id) => byId.get(id)).filter((r): r is Row => !!r);
     } else {
       [rows, total] = await this.prisma.$transaction([
