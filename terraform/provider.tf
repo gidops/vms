@@ -5,7 +5,7 @@ terraform {
     bucket         = "vms-tfstate-102969867136"
     key            = "app/terraform.tfstate"
     region         = "us-east-1"
-    dynamodb_table = "vms-terraform-locks"
+    use_lockfile   = true          # ← new: S3-native locking
     encrypt        = true
   }
 
