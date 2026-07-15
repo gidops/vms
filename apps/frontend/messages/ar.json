@@ -472,7 +472,7 @@
       "searchPlaceholder": "ابحث عن زائر أو منظمة أو غرض أو رقم طلب"
     },
     "columns": {
-      "visitor": "الزائر",
+      "visitor": "ضيف",
       "organization": "المنظمة",
       "purpose": "الغرض",
       "noOfGuest": "عدد الضيوف",

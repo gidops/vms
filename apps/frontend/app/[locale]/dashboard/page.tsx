@@ -95,6 +95,11 @@ function Dashboard() {
     queryFn: () =>
       visitsApi.list({
         statuses: [...BOARD_STATUSES],
+        // The VMC board is a records log: filter the date window by when the
+        // request was created and show the most recently created first.
+        dateField: "createdAt",
+        sortBy: "createdAt",
+        sortDir: "desc",
         page,
         pageSize: 10,
         dateFrom: dates.dateFrom,

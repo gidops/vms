@@ -3,10 +3,8 @@
 import {
   Avatar,
   Button,
-  Input,
   Pagination,
   RecordTable,
-  SegmentedControl,
   Spinner,
   Table,
   TableBody,
@@ -29,50 +27,22 @@ import {
   VisitFilters,
   type VisitFiltersValue,
 } from "@/app/[locale]/staff/_components/VisitFilters";
+import {
+  fixedTabBounds,
+  MyVisitsRangeFilter,
+  type DateRange,
+  type MyVisitsTab,
+} from "@/app/[locale]/staff/visits/_components/MyVisitsRangeFilter";
 import { useMyVisits } from "@/data/requests/queries";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
-
-type Tab = "today" | "upcoming" | "yesterday" | "pick";
-
-/** [from, to) bounds (ISO) over the scheduled date for each tab. */
-function tabBounds(
-  tab: Tab,
-  pickDate: string,
-): { dateFrom?: string; dateTo?: string } {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  if (tab === "today") {
-    const end = new Date(start);
-    end.setHours(23, 59, 59, 999);
-    return { dateFrom: start.toISOString(), dateTo: end.toISOString() };
-  }
-  if (tab === "yesterday") {
-    const yStart = new Date(start);
-    yStart.setDate(yStart.getDate() - 1);
-    const yEnd = new Date(yStart);
-    yEnd.setHours(23, 59, 59, 999);
-    return { dateFrom: yStart.toISOString(), dateTo: yEnd.toISOString() };
-  }
-  if (tab === "pick") {
-    // No date chosen yet → no bounds (show everything until one is picked).
-    if (!pickDate) return {};
-    const dStart = new Date(pickDate);
-    dStart.setHours(0, 0, 0, 0);
-    const dEnd = new Date(dStart);
-    dEnd.setHours(23, 59, 59, 999);
-    return { dateFrom: dStart.toISOString(), dateTo: dEnd.toISOString() };
-  }
-  // upcoming: from the start of tomorrow onward
-  const tomorrow = new Date(start);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return { dateFrom: tomorrow.toISOString() };
-}
 
 function MyVisits() {
   const t = useTranslations("staff");
 
-  const [tab, setTab] = React.useState<Tab>("today");
-  const [pickDate, setPickDate] = React.useState("");
+  const [tab, setTab] = React.useState<MyVisitsTab>("today");
+  const [dates, setDates] = React.useState<DateRange>(() =>
+    fixedTabBounds("today"),
+  );
   const [filters, setFilters] = React.useState<VisitFiltersValue>({
     search: "",
     status: "all",
@@ -83,8 +53,9 @@ function MyVisits() {
   const [selected, setSelected] = React.useState<SelectedItem | null>(null);
 
   // Changing any filter or tab resets paging to the first page.
-  const onTab = (v: Tab) => {
-    setTab(v);
+  const onRange = (next: MyVisitsTab, window: DateRange) => {
+    setTab(next);
+    setDates(window);
     setPage(1);
   };
   const onFilters = (patch: Partial<VisitFiltersValue>) => {
@@ -93,7 +64,7 @@ function MyVisits() {
   };
 
   const visits = useMyVisits({
-    ...tabBounds(tab, pickDate),
+    ...dates,
     status: filters.status === "all" ? undefined : filters.status,
     type: filters.type === "all" ? undefined : filters.type,
     purpose: filters.purpose === "all" ? undefined : filters.purpose,
@@ -121,34 +92,11 @@ function MyVisits() {
           <h1 className="text-3xl font-semibold text-fg">
             {t("myVisits.title")}
           </h1>
-          <div className="flex flex-wrap items-center gap-3">
-            {tab === "pick" ? (
-              <Input
-                type="date"
-                aria-label={t("range.pickDate")}
-                value={pickDate}
-                onChange={(e) => {
-                  setPickDate(e.target.value);
-                  setPage(1);
-                }}
-                className="w-40"
-              />
-            ) : null}
-            <SegmentedControl
-              aria-label={t("myVisits.title")}
-              value={tab}
-              onValueChange={(v) => onTab(v as Tab)}
-              options={[
-                { value: "today", label: t("range.today") },
-                { value: "upcoming", label: t("range.upcoming") },
-                { value: "yesterday", label: t("range.yesterday") },
-                { value: "pick", label: t("range.pickDate") },
-              ]}
-            />
-          </div>
+          <MyVisitsRangeFilter value={tab} onChange={onRange} />
         </div>
 
         <RecordTable
+          frameless
           pagination={
             visits.data && visits.data.totalPages > 1 ? (
               <Pagination
@@ -233,6 +181,7 @@ function MyVisits() {
                             <Button
                               intent="danger"
                               size="sm"
+                              className="min-w-28 text-xs"
                               onClick={() =>
                                 setSelected({ kind: "request", id: row.id })
                               }
@@ -244,6 +193,7 @@ function MyVisits() {
                               intent="neutral"
                               tone="outline"
                               size="sm"
+                              className="min-w-28 text-xs"
                               onClick={() =>
                                 setSelected({ kind: "request", id: row.id })
                               }
