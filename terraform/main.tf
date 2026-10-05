@@ -1,14 +1,35 @@
+# ---------------------------------------------------------------------------
+# main.tf — Platta Non-Prod Dev environment for the VMS.
+#
+# Implements the corporate network design from the approved infrastructure
+# summary VERBATIM (names, CIDRs, AZs), as code:
+#
+#   Platta-NonProd-VPC 10.20.0.0/16 (Dev uses 10.20.0.0/20)
+#     Public  A/B  10.20.0.0/24, 10.20.1.0/24   — ALB + NAT only
+#     App     A/B  10.20.2.0/24, 10.20.3.0/24   — private; single Docker host
+#     DB      A/B  10.20.4.0/24, 10.20.5.0/24   — private; RDS, no internet route
+#
+# Topology decisions (agreed):
+#   - ONE app host (t3.small, Amazon Linux 2023) runs BOTH containers:
+#     frontend (host 80 → container 3000) and backend (4000). The ALB targets
+#     the same instance on both ports via two target groups (alb.tf).
+#   - No SSH anywhere: operator access is SSM Session Manager (iam.tf).
+#   - Outbound (ECR pulls, Secrets Manager, SSM) flows through the NAT gateway.
+# ---------------------------------------------------------------------------
+
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
-data "aws_ami" "ubuntu_2204" {
+# Amazon Linux 2023, standard (not minimal) x86_64 — matches the corporate
+# host build. AWS CLI v2 ships preinstalled; docker + jq come from dnf.
+data "aws_ami" "al2023" {
   most_recent = true
-  owners      = ["099720109477"] # Canonical
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+    values = ["al2023-ami-2023*-x86_64"]
   }
 
   filter {
@@ -22,13 +43,15 @@ data "aws_ami" "ubuntu_2204" {
   }
 }
 
+# ---------------- VPC + subnets (documented design, verbatim) ----------------
+
 resource "aws_vpc" "main" {
-  cidr_block           = "10.0.0.0/16"
+  cidr_block           = "10.20.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
 
   tags = {
-    Name = "${var.project_name}-vpc"
+    Name = "${var.name_prefix}-VPC"
   }
 }
 
@@ -36,20 +59,96 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "${var.project_name}-igw"
+    Name = "${var.name_prefix}-IGW"
   }
 }
 
-resource "aws_subnet" "public" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = data.aws_availability_zones.available.names[0]
+resource "aws_subnet" "public_a" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.20.0.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  # Deliberate: instances launched here get public IPs (nothing app-related
+  # ever launches here — this tier is for the ALB and NAT gateway only).
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "${var.project_name}-public-subnet"
+    Name = "${var.name_prefix}-${var.env}-Public-A"
   }
 }
+
+resource "aws_subnet" "public_b" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.20.1.0/24"
+  availability_zone       = data.aws_availability_zones.available.names[1]
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "${var.name_prefix}-${var.env}-Public-B"
+  }
+}
+
+resource "aws_subnet" "app_a" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.20.2.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = "${var.name_prefix}-${var.env}-Private-App-A"
+  }
+}
+
+resource "aws_subnet" "app_b" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.20.3.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
+
+  tags = {
+    Name = "${var.name_prefix}-${var.env}-Private-App-B"
+  }
+}
+
+resource "aws_subnet" "db_a" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.20.4.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = "${var.name_prefix}-${var.env}-DB-A"
+  }
+}
+
+resource "aws_subnet" "db_b" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.20.5.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
+
+  tags = {
+    Name = "${var.name_prefix}-${var.env}-DB-B"
+  }
+}
+
+# ---------------- NAT gateway (private tier's outbound path) ----------------
+
+resource "aws_eip" "nat" {
+  domain = "vpc"
+
+  tags = {
+    Name = "${var.name_prefix}-NAT-EIP"
+  }
+}
+
+resource "aws_nat_gateway" "main" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public_a.id
+
+  tags = {
+    Name = "${var.name_prefix}-NAT"
+  }
+
+  depends_on = [aws_internet_gateway.main]
+}
+
+# ---------------- Route tables (documented three-tier routing) ----------------
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
@@ -60,97 +159,35 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "${var.project_name}-public-rt"
+    Name = "${var.name_prefix}-Public-RT"
   }
 }
 
-resource "aws_route_table_association" "public" {
-  subnet_id      = aws_subnet.public.id
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.main.id
+  }
+
+  tags = {
+    Name = "${var.name_prefix}-Private-RT"
+  }
+}
+
+# Local VPC route only — the DB tier has no path to or from the internet.
+resource "aws_route_table" "db" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "${var.name_prefix}-DB-RT"
+  }
+}
+
+resource "aws_route_table_association" "public_a" {
+  subnet_id      = aws_subnet.public_a.id
   route_table_id = aws_route_table.public.id
-}
-
-resource "aws_security_group" "frontend" {
-  name        = "${var.project_name}-frontend-sg"
-  description = "Allow HTTP, HTTPS, and SSH inbound to the frontend instance."
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    description     = "HTTP from ALB only"
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
-  }
-
-  ingress {
-    description = "SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    description = "All outbound"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${var.project_name}-frontend-sg"
-  }
-}
-
-locals {
-  user_data = <<-EOT
-    #!/bin/bash
-    set -euxo pipefail
-    exec > >(tee /var/log/user-data.log) 2>&1
-    export DEBIAN_FRONTEND=noninteractive
-    apt-get update -y
-    apt-get install -y docker.io awscli
-    systemctl enable --now docker
-    aws ecr get-login-password --region ${var.region} | docker login --username AWS --password-stdin ${aws_ecr_repository.frontend.repository_url}
-    docker run -d --name vms-frontend --restart unless-stopped -p 80:3000 ${aws_ecr_repository.frontend.repository_url}:${var.frontend_image_tag}
-  EOT
-}
-
-resource "aws_instance" "frontend" {
-  ami                         = data.aws_ami.ubuntu_2204.id
-  instance_type               = var.instance_type
-  subnet_id                   = aws_subnet.public.id
-  vpc_security_group_ids      = [aws_security_group.frontend.id]
-  associate_public_ip_address = true
-  key_name                    = var.key_name
-  iam_instance_profile        = aws_iam_instance_profile.ec2_ecr.name
-  user_data                   = local.user_data
-  # user_data runs only on first boot, so an in-place update would NOT redeploy
-  # the new image. Force a replacement when user_data changes (e.g. a new tag).
-  user_data_replace_on_change = true
-
-  tags = {
-    Name = "${var.project_name}-frontend"
-  }
-}
-
-# -----------------------------------------------------------------------------
-# Backend + RDS
-# -----------------------------------------------------------------------------
-
-# Second public subnet in a different AZ. RDS DB subnet groups require subnets
-# in at least two distinct Availability Zones, so we add this even though we
-# only deploy the backend EC2 into the first subnet.
-resource "aws_subnet" "public_b" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.2.0/24"
-  availability_zone       = data.aws_availability_zones.available.names[1]
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = "${var.project_name}-public-subnet-b"
-  }
 }
 
 resource "aws_route_table_association" "public_b" {
@@ -158,10 +195,41 @@ resource "aws_route_table_association" "public_b" {
   route_table_id = aws_route_table.public.id
 }
 
-resource "aws_security_group" "backend" {
-  name        = "${var.project_name}-backend-sg"
-  description = "Allow backend API (4000) and SSH inbound."
+resource "aws_route_table_association" "app_a" {
+  subnet_id      = aws_subnet.app_a.id
+  route_table_id = aws_route_table.private.id
+}
+
+resource "aws_route_table_association" "app_b" {
+  subnet_id      = aws_subnet.app_b.id
+  route_table_id = aws_route_table.private.id
+}
+
+resource "aws_route_table_association" "db_a" {
+  subnet_id      = aws_subnet.db_a.id
+  route_table_id = aws_route_table.db.id
+}
+
+resource "aws_route_table_association" "db_b" {
+  subnet_id      = aws_subnet.db_b.id
+  route_table_id = aws_route_table.db.id
+}
+
+# ---------------- Security groups (layered: ALB → app → DB) ----------------
+# The ALB SG lives in alb.tf next to the ALB. App and DB SGs here.
+
+resource "aws_security_group" "app" {
+  name        = "${var.name_prefix}-App-SG"
+  description = "App host: frontend (80) and backend (4000) reachable from the ALB only. No SSH - SSM."
   vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description     = "Frontend from ALB only"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
 
   ingress {
     description     = "Backend API from ALB only"
@@ -171,16 +239,8 @@ resource "aws_security_group" "backend" {
     security_groups = [aws_security_group.alb.id]
   }
 
-  ingress {
-    description = "SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   egress {
-    description = "All outbound"
+    description = "All outbound (ECR, Secrets Manager, SSM via NAT)"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -188,21 +248,21 @@ resource "aws_security_group" "backend" {
   }
 
   tags = {
-    Name = "${var.project_name}-backend-sg"
+    Name = "${var.name_prefix}-App-SG"
   }
 }
 
-resource "aws_security_group" "rds" {
-  name        = "${var.project_name}-rds-sg"
-  description = "Allow Postgres only from the backend security group."
+resource "aws_security_group" "db" {
+  name        = "${var.name_prefix}-DB-SG"
+  description = "Postgres reachable from the app security group only."
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    description     = "Postgres from backend SG"
+    description     = "Postgres from app SG"
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
-    security_groups = [aws_security_group.backend.id]
+    security_groups = [aws_security_group.app.id]
   }
 
   egress {
@@ -214,28 +274,23 @@ resource "aws_security_group" "rds" {
   }
 
   tags = {
-    Name = "${var.project_name}-rds-sg"
+    Name = "${var.name_prefix}-DB-SG"
   }
 }
+
+# ---------------- RDS PostgreSQL (dev: single-AZ) ----------------
 
 resource "aws_db_subnet_group" "main" {
-  name       = "${var.project_name}-db-subnets"
-  subnet_ids = [aws_subnet.public.id, aws_subnet.public_b.id]
+  name       = lower("${var.name_prefix}-${var.env}-db-subnets")
+  subnet_ids = [aws_subnet.db_a.id, aws_subnet.db_b.id]
 
   tags = {
-    Name = "${var.project_name}-db-subnets"
+    Name = "${var.name_prefix}-${var.env}-DB-Subnets"
   }
-}
-
-# Alphanumeric-only to keep the value safe inside a postgres:// URL and inside
-# a bash double-quoted string in user_data.
-resource "random_password" "db" {
-  length  = 32
-  special = false
 }
 
 resource "aws_db_instance" "main" {
-  identifier             = "${var.project_name}-postgres"
+  identifier             = lower("${var.name_prefix}-${var.env}-vms-postgres")
   engine                 = "postgres"
   engine_version         = "16"
   instance_class         = "db.t3.micro"
@@ -245,30 +300,53 @@ resource "aws_db_instance" "main" {
   username               = "vmsuser"
   password               = random_password.db.result
   db_subnet_group_name   = aws_db_subnet_group.main.name
-  vpc_security_group_ids = [aws_security_group.rds.id]
+  vpc_security_group_ids = [aws_security_group.db.id]
   publicly_accessible    = false
-  skip_final_snapshot    = true
+  # Dev only: disposable data, fast teardown. Staging/prod get final snapshots,
+  # deletion protection and Multi-AZ per the approved architecture plan.
+  skip_final_snapshot = true
 
   tags = {
-    Name = "${var.project_name}-postgres"
+    Name = "${var.name_prefix}-${var.env}-VMS-Postgres"
   }
 }
 
+# ---------------- The single app host (Amazon Linux 2023 Docker host) --------
+
 locals {
-  backend_user_data = <<-EOT
+  # APP_PUBLIC_URL: explicit var wins; otherwise derive from the ALB (dev has
+  # no domain yet). Also the browser-facing API base the frontend was baked
+  # with rides on the same ALB, port 8080 (see alb.tf).
+  app_public_url = var.app_public_url != "" ? var.app_public_url : "http://${aws_lb.main.dns_name}"
+
+  # AL2023 bootstrap. AWS CLI v2 is preinstalled; docker + jq via dnf.
+  # Secrets are FETCHED at boot from Secrets Manager (instance role grants
+  # GetSecretValue on this one secret) — never interpolated into user_data.
+  # NOTE for maintainers: $VAR is shell, $${...} would be shell-brace — avoid;
+  # ${...} is Terraform interpolation.
+  user_data = <<-EOT
     #!/bin/bash
     set -euxo pipefail
     exec > >(tee /var/log/user-data.log) 2>&1
-    export DEBIAN_FRONTEND=noninteractive
-    apt-get update -y
-    apt-get install -y docker.io awscli
+
+    dnf install -y docker jq
     systemctl enable --now docker
-    aws ecr get-login-password --region ${var.region} | docker login --username AWS --password-stdin ${aws_ecr_repository.backend.repository_url}
+
+    aws ecr get-login-password --region ${var.region} \
+      | docker login --username AWS --password-stdin ${aws_ecr_repository.backend.repository_url}
+
+    SECRET_JSON=$(aws secretsmanager get-secret-value \
+      --secret-id ${aws_secretsmanager_secret.app.arn} \
+      --region ${var.region} --query SecretString --output text)
+    JWT_SECRET=$(echo "$SECRET_JSON" | jq -r .JWT_SECRET)
+    ENCRYPTION_KEY=$(echo "$SECRET_JSON" | jq -r .ENCRYPTION_KEY)
+    DB_PASSWORD=$(echo "$SECRET_JSON" | jq -r .DB_PASSWORD)
+
     docker run -d --name vms-backend --restart unless-stopped -p 4000:4000 \
-      -e DATABASE_URL="postgres://${aws_db_instance.main.username}:${random_password.db.result}@${aws_db_instance.main.address}:5432/${aws_db_instance.main.db_name}" \
-      -e JWT_SECRET="${random_password.jwt_secret.result}" \
-      -e ENCRYPTION_KEY="${random_bytes.encryption_key.base64}" \
-      -e APP_PUBLIC_URL="${var.app_public_url}" \
+      -e DATABASE_URL="postgres://${aws_db_instance.main.username}:$DB_PASSWORD@${aws_db_instance.main.address}:5432/${aws_db_instance.main.db_name}" \
+      -e JWT_SECRET="$JWT_SECRET" \
+      -e ENCRYPTION_KEY="$ENCRYPTION_KEY" \
+      -e APP_PUBLIC_URL="${local.app_public_url}" \
       -e EMAIL_ENABLED="${var.email_enabled}" \
       -e EMAIL_PROVIDER="${var.email_provider}" \
       -e EMAIL_FROM="${var.email_from}" \
@@ -284,30 +362,31 @@ locals {
       -e TWILIO_AUTH_TOKEN="${var.twilio_auth_token}" \
       -e TWILIO_WHATSAPP_FROM="${var.twilio_whatsapp_from}" \
       ${aws_ecr_repository.backend.repository_url}:${var.backend_image_tag}
+
+    docker run -d --name vms-frontend --restart unless-stopped -p 80:3000 \
+      ${aws_ecr_repository.frontend.repository_url}:${var.frontend_image_tag}
   EOT
 }
 
-resource "aws_instance" "backend" {
-  ami                         = data.aws_ami.ubuntu_2204.id
+resource "aws_instance" "app" {
+  ami                         = data.aws_ami.al2023.id
   instance_type               = var.instance_type
-  subnet_id                   = aws_subnet.public.id
-  vpc_security_group_ids      = [aws_security_group.backend.id]
-  associate_public_ip_address = true
-  key_name                    = var.key_name
-  iam_instance_profile        = aws_iam_instance_profile.ec2_ecr.name
-  user_data                   = local.backend_user_data
+  subnet_id                   = aws_subnet.app_a.id
+  vpc_security_group_ids      = [aws_security_group.app.id]
+  associate_public_ip_address = false
+  iam_instance_profile        = aws_iam_instance_profile.app_host.name
+  user_data                   = local.user_data
   # user_data runs only on first boot, so an in-place update would NOT redeploy
-  # the new image. Force a replacement when user_data changes (e.g. a new tag).
+  # a new image. Force a replacement when user_data changes (e.g. a new tag).
   user_data_replace_on_change = true
 
-  depends_on = [aws_db_instance.main]
+  # user_data needs the internet (dnf, ECR, Secrets Manager) on FIRST boot, and
+  # it runs exactly once. Without this, Terraform may create the instance before
+  # the private subnet's NAT route exists (the instance has no direct dependency
+  # on it) and the bootstrap dies with no network. Learned the hard way.
+  depends_on = [aws_route_table_association.app_a]
 
   tags = {
-    Name = "${var.project_name}-backend"
+    Name = "${var.name_prefix}-${var.env}-App-01"
   }
-}
-
-resource "aws_eip_association" "backend" {
-  instance_id   = aws_instance.backend.id
-  allocation_id = aws_eip.backend.id
 }

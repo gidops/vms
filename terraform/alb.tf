@@ -1,34 +1,45 @@
 # ---------------------------------------------------------------------------
-# alb.tf — Application Load Balancer fronting the VMS app with HTTPS.
+# alb.tf — Application Load Balancer fronting the VMS app (HTTP-only interim).
 #
-#   Browser → https://aatcvms.online       → ALB :443 → frontend target group :80
-#   Browser → https://api.aatcvms.online    → ALB :443 → backend  target group :4000
+#   Browser → http://<alb-dns>/       → ALB :80   → frontend target group :80
+#   Browser → http://<alb-dns>:8080/  → ALB :8080 → backend  target group :4000
 #
-# The ALB terminates TLS using the ACM cert from acm.tf. Traffic from the ALB to
-# the instances stays HTTP on the private VPC network (that hop never leaves AWS).
-# Serving the browser over HTTPS gives the secure context the app needs for
-# cookies / auth to work correctly.
+# There is no corporate domain yet, so no ACM cert and no HTTPS. The backend
+# is exposed on a second listener port (8080) instead of a host-header rule,
+# because host-based routing needs a real domain. When the domain decision
+# lands: add ACM + a :443 listener with the api. host rule, restore the
+# HTTP→HTTPS redirect, and drop the :8080 listener (git history has the
+# previous HTTPS implementation to restore from).
 # ---------------------------------------------------------------------------
 
 # ---------------- ALB security group ----------------
-# Public-facing: accepts HTTPS (443) and HTTP (80, for the redirect) from anywhere.
+# Public-facing. 443 is opened now so the HTTPS listener can be added later
+# without an SG change; nothing listens on it yet.
 resource "aws_security_group" "alb" {
-  name        = "${var.project_name}-alb-sg"
-  description = "Allow HTTP/HTTPS inbound to the ALB from the internet."
+  name        = "${var.name_prefix}-ALB-SG"
+  description = "Allow HTTP (80), backend API (8080) and future HTTPS (443) from the internet."
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    description = "HTTPS from internet"
-    from_port   = 443
-    to_port     = 443
+    description = "Frontend HTTP from internet"
+    from_port   = 80
+    to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
-    description = "HTTP from internet (redirected to HTTPS)"
-    from_port   = 80
-    to_port     = 80
+    description = "Backend API (interim, until a domain enables host routing)"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTPS from internet (future listener)"
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -42,27 +53,31 @@ resource "aws_security_group" "alb" {
   }
 
   tags = {
-    Name = "${var.project_name}-alb-sg"
+    Name = "${var.name_prefix}-ALB-SG"
   }
 }
 
 # ---------------- The load balancer ----------------
+# Named -VMS-ALB: the hand-built Platta-NonProd-Dev-ALB still exists and ALB
+# names are unique per region. The manual one is deleted at cleanup.
 resource "aws_lb" "main" {
-  name               = "${var.project_name}-alb"
+  name               = "${var.name_prefix}-${var.env}-VMS-ALB"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
-  subnets            = [aws_subnet.public.id, aws_subnet.public_b.id]
+  subnets            = [aws_subnet.public_a.id, aws_subnet.public_b.id]
 
   tags = {
-    Name = "${var.project_name}-alb"
+    Name = "${var.name_prefix}-${var.env}-VMS-ALB"
   }
 }
 
 # ---------------- Target groups ----------------
-# Frontend: the instance serves the Next.js app on port 80 (docker -p 80:3000).
+# Both point at the SAME single app host, on different ports.
+
+# Frontend: the host serves the Next.js app on port 80 (docker -p 80:3000).
 resource "aws_lb_target_group" "frontend" {
-  name     = "${var.project_name}-frontend-tg"
+  name     = "${var.name_prefix}-${var.env}-VMS-FE-TG"
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
@@ -78,13 +93,13 @@ resource "aws_lb_target_group" "frontend" {
   }
 
   tags = {
-    Name = "${var.project_name}-frontend-tg"
+    Name = "${var.name_prefix}-${var.env}-VMS-FE-TG"
   }
 }
 
-# Backend: the API serves on port 4000, with a /health endpoint.
+# Backend: the API serves on port 4000, with a DB-aware /health endpoint.
 resource "aws_lb_target_group" "backend" {
-  name     = "${var.project_name}-backend-tg"
+  name     = "${var.name_prefix}-${var.env}-VMS-BE-TG"
   port     = 4000
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
@@ -100,100 +115,48 @@ resource "aws_lb_target_group" "backend" {
   }
 
   tags = {
-    Name = "${var.project_name}-backend-tg"
+    Name = "${var.name_prefix}-${var.env}-VMS-BE-TG"
   }
 }
 
-# ---------------- Register the instances in the target groups ----------------
+# ---------------- Register the single host in both target groups ----------------
 resource "aws_lb_target_group_attachment" "frontend" {
   target_group_arn = aws_lb_target_group.frontend.arn
-  target_id        = aws_instance.frontend.id
+  target_id        = aws_instance.app.id
   port             = 80
 }
 
 resource "aws_lb_target_group_attachment" "backend" {
   target_group_arn = aws_lb_target_group.backend.arn
-  target_id        = aws_instance.backend.id
+  target_id        = aws_instance.app.id
   port             = 4000
 }
 
-# ---------------- Listeners ----------------
-# HTTPS :443 — terminates TLS with the ACM cert. Default action routes to the
-# frontend; a host-based rule sends api.aatcvms.online to the backend.
-resource "aws_lb_listener" "https" {
+# ---------------- Listeners (HTTP interim) ----------------
+resource "aws_lb_listener" "frontend_http" {
   load_balancer_arn = aws_lb.main.arn
-  port              = 443
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
-  certificate_arn   = aws_acm_certificate_validation.vms.certificate_arn
+  port              = 80
+  protocol          = "HTTP"
 
-  # Default: frontend (apex aatcvms.online).
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.frontend.arn
   }
 }
 
-# Route api.aatcvms.online to the backend target group.
-resource "aws_lb_listener_rule" "api" {
-  listener_arn = aws_lb_listener.https.arn
-  priority     = 100
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.backend.arn
-  }
-
-  condition {
-    host_header {
-      values = ["api.aatcvms.online"]
-    }
-  }
-}
-
-# HTTP :80 — redirect everything to HTTPS.
-resource "aws_lb_listener" "http_redirect" {
+resource "aws_lb_listener" "backend_http" {
   load_balancer_arn = aws_lb.main.arn
-  port              = 80
+  port              = 8080
   protocol          = "HTTP"
 
   default_action {
-    type = "redirect"
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_301"
-    }
-  }
-}
-
-# ---------------- DNS: point the domains at the ALB ----------------
-resource "aws_route53_record" "frontend" {
-  zone_id = data.aws_route53_zone.main.zone_id
-  name    = "aatcvms.online"
-  type    = "A"
-
-  alias {
-    name                   = aws_lb.main.dns_name
-    zone_id                = aws_lb.main.zone_id
-    evaluate_target_health = true
-  }
-}
-
-resource "aws_route53_record" "backend" {
-  zone_id = data.aws_route53_zone.main.zone_id
-  name    = "api.aatcvms.online"
-  type    = "A"
-
-  alias {
-    name                   = aws_lb.main.dns_name
-    zone_id                = aws_lb.main.zone_id
-    evaluate_target_health = true
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend.arn
   }
 }
 
 # ---------------- Outputs ----------------
 output "alb_dns_name" {
-  description = "The ALB's DNS name (the domains alias to this)."
+  description = "The ALB's DNS name. Frontend: http://<this>/  Backend API: http://<this>:8080"
   value       = aws_lb.main.dns_name
 }
