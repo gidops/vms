@@ -46,6 +46,7 @@ export const EVENT_TYPES = {
   // Security events recorded directly (no successful business transaction to
   // ride the outbox), via SecurityAuditService → AuditLog + Seq.
   LoginFailed: 'auth.login_failed',
+  SignupBlocked: 'auth.signup_blocked',
   Logout: 'auth.logout',
   TokenRefreshed: 'auth.token_refreshed',
   RefreshReuseDetected: 'auth.refresh_reuse_detected',

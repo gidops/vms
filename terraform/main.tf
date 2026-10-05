@@ -343,7 +343,7 @@ locals {
     DB_PASSWORD=$(echo "$SECRET_JSON" | jq -r .DB_PASSWORD)
 
     docker run -d --name vms-backend --restart unless-stopped -p 4000:4000 \
-      -e DATABASE_URL="postgres://${aws_db_instance.main.username}:$DB_PASSWORD@${aws_db_instance.main.address}:5432/${aws_db_instance.main.db_name}" \
+      -e DATABASE_URL="postgres://${aws_db_instance.main.username}:$DB_PASSWORD@${aws_db_instance.main.address}:5432/${aws_db_instance.main.db_name}?sslmode=require" \
       -e JWT_SECRET="$JWT_SECRET" \
       -e ENCRYPTION_KEY="$ENCRYPTION_KEY" \
       -e APP_PUBLIC_URL="${local.app_public_url}" \
