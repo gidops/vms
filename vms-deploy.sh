@@ -5,9 +5,10 @@
 #
 # TARGET ENVIRONMENT: the Platta Integrated non-prod account (Identity Center
 # SSO profile `platta-nonprod` by default — override with AWS_PROFILE). The
-# stack is a SINGLE private Docker host running both containers behind an ALB:
-#   frontend  http://<alb-dns>/        (ALB :80  → host :80,  container :3000)
-#   backend   http://<alb-dns>:8080/   (ALB :8080 → host :4000)
+# stack is a SINGLE private Docker host running both containers behind an
+# HTTPS ALB with host-based routing:
+#   frontend  https://<domain>/        (ALB :443 → host :80,  container :3000)
+#   backend   https://api.<domain>/    (ALB :443 host rule → host :4000)
 #
 # Why per-app tags:
 #   Terraform has two variables (no defaults), both interpolated into the app
@@ -36,10 +37,10 @@
 #       diff and refuse to touch it).
 #
 # NOTE — Phase A ordering: the ECR repos and the ALB must exist BEFORE any
-# image can be built/pushed (the frontend bakes the ALB's DNS name into
-# NEXT_PUBLIC_API_BASE_URL at build time, and you can't push to a repo that
-# doesn't exist). On a fresh stack the outputs are empty, so --deploy first
-# runs a targeted apply:
+# image can be built/pushed (you can't push to a repo that doesn't exist, and
+# the first apply stores the outputs — including api_base_url, which the
+# frontend bakes into NEXT_PUBLIC_API_BASE_URL at build time). On a fresh
+# stack the outputs are empty, so --deploy first runs a targeted apply:
 #   terraform apply -var=... -target=aws_ecr_repository.backend \
 #     -target=aws_ecr_repository.frontend -target=aws_lb.main
 # (the ALB target pulls in the VPC/subnets/SGs it depends on), then re-reads
@@ -68,10 +69,10 @@ TF="terraform -chdir=terraform"
 # If the session has expired: aws sso login --profile platta-nonprod
 export AWS_PROFILE="${AWS_PROFILE:-platta-nonprod}"
 
-# Frontend API base URL baked into the Next.js bundle at build time. There is
-# no corporate domain yet, so the default is derived from the ALB's DNS name
-# (read from terraform output in read_outputs) on port 8080. Override with
-# VMS_API_BASE_URL once a real domain exists (e.g. https://api.<domain>).
+# Frontend API base URL baked into the Next.js bundle at build time. Default
+# comes from the api_base_url terraform output (https://api.<domain>, routed by
+# the ALB's host-header rule). Override with VMS_API_BASE_URL for one-offs
+# (e.g. a staging domain).
 API_BASE_URL="${VMS_API_BASE_URL:-}"
 
 # Approval flags applied to EVERY `terraform apply`. In CI there is no TTY, so
@@ -129,9 +130,9 @@ read_outputs() {
   CURRENT_BACKEND="$(tf_out backend_image_tag)"
   CURRENT_FRONTEND="$(tf_out frontend_image_tag)"
   REGISTRY="${BACKEND_REPO%/*}" # strip trailing /vms-backend to get the registry host
-  # Resolve the frontend's API base URL now that the ALB DNS is known.
-  if [ -z "$API_BASE_URL" ] && [ -n "$ALB_DNS" ]; then
-    API_BASE_URL="http://$ALB_DNS:8080"
+  # Resolve the frontend's API base URL (https://api.<domain>) from outputs.
+  if [ -z "$API_BASE_URL" ]; then
+    API_BASE_URL="$(tf_out api_base_url)"
   fi
 }
 
@@ -141,6 +142,7 @@ require_outputs() {
   [ -n "$BACKEND_REPO" ] || die "ecr_backend_repository_url missing. Is the stack applied?"
   [ -n "$FRONTEND_REPO" ] || die "ecr_frontend_repository_url missing."
   [ -n "$ALB_DNS" ] || die "alb_dns_name missing. Is the ALB created?"
+  [ -n "$API_BASE_URL" ] || die "api_base_url missing (and no VMS_API_BASE_URL override)."
 }
 
 # Create ONLY the ECR repos + the ALB (and its network dependencies), so images
@@ -162,7 +164,34 @@ bootstrap_phase_a() {
   echo "=== Phase A done. ALB DNS = $ALB_DNS ==="
 }
 
+# Preflight: Docker Desktop's WSL credential helper is broken ("The stub
+# received bad data" on `docker login`), and Docker Desktop silently re-adds
+# `"credsStore": "desktop.exe"` to ~/.docker/config.json on restart/update —
+# so the breakage recurs. Strip it before the ECR login rather than dying
+# mid-deploy. Credentials then land base64-encoded in config.json, which is
+# acceptable: ECR tokens are short-lived (~12h), not long-term secrets.
+preflight_docker_creds() {
+  local cfg="$HOME/.docker/config.json"
+  [ -f "$cfg" ] || return 0
+  grep -q '"credsStore"[[:space:]]*:[[:space:]]*"desktop.exe"' "$cfg" || return 0
+  echo "=== Preflight: removing broken 'desktop.exe' credsStore from $cfg ==="
+  if command -v python3 >/dev/null 2>&1; then
+    python3 - "$cfg" <<'PYEOF'
+import json, sys
+path = sys.argv[1]
+with open(path) as f:
+    cfg = json.load(f)
+cfg.pop("credsStore", None)
+with open(path, "w") as f:
+    json.dump(cfg, f, indent=2)
+PYEOF
+  else
+    die "Docker config uses the broken 'desktop.exe' credsStore and python3 is unavailable to fix it. Remove the \"credsStore\" line from $cfg and re-run."
+  fi
+}
+
 ecr_login() {
+  preflight_docker_creds
   echo "=== Logging in to ECR ($REGISTRY) ==="
   aws ecr get-login-password --region "$REGION" \
     | docker login --username AWS --password-stdin "$REGISTRY"
@@ -266,8 +295,8 @@ do_deploy() {
   echo "=== Deploy complete. Current addresses: ==="
   $TF output
   echo
-  echo "    Frontend: http://$ALB_DNS/"
-  echo "    Backend:  http://$ALB_DNS:8080/health"
+  echo "    Frontend: $(tf_out app_url)/"
+  echo "    Backend:  $API_BASE_URL/health"
 }
 
 do_redeploy() {

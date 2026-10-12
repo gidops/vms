@@ -314,10 +314,10 @@ resource "aws_db_instance" "main" {
 # ---------------- The single app host (Amazon Linux 2023 Docker host) --------
 
 locals {
-  # APP_PUBLIC_URL: explicit var wins; otherwise derive from the ALB (dev has
-  # no domain yet). Also the browser-facing API base the frontend was baked
-  # with rides on the same ALB, port 8080 (see alb.tf).
-  app_public_url = var.app_public_url != "" ? var.app_public_url : "http://${aws_lb.main.dns_name}"
+  # APP_PUBLIC_URL: explicit var wins; otherwise derive from the domain. The
+  # browser-facing API base the frontend is baked with is https://api.<domain>
+  # (see alb.tf), routed by the ALB's host-header rule.
+  app_public_url = var.app_public_url != "" ? var.app_public_url : "https://${var.domain_name}"
 
   # AL2023 bootstrap. AWS CLI v2 is preinstalled; docker + jq via dnf.
   # Secrets are FETCHED at boot from Secrets Manager (instance role grants

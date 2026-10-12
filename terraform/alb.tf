@@ -1,45 +1,39 @@
 # ---------------------------------------------------------------------------
-# alb.tf — Application Load Balancer fronting the VMS app (HTTP-only interim).
+# alb.tf — Application Load Balancer fronting the VMS over HTTPS.
 #
-#   Browser → http://<alb-dns>/       → ALB :80   → frontend target group :80
-#   Browser → http://<alb-dns>:8080/  → ALB :8080 → backend  target group :4000
+#   Browser → https://aatcvms.online      → ALB :443 → frontend target group :80
+#   Browser → https://api.aatcvms.online  → ALB :443 → backend  target group :4000
+#   (http:// on either host → 301 redirect to https://)
 #
-# There is no corporate domain yet, so no ACM cert and no HTTPS. The backend
-# is exposed on a second listener port (8080) instead of a host-header rule,
-# because host-based routing needs a real domain. When the domain decision
-# lands: add ACM + a :443 listener with the api. host rule, restore the
-# HTTP→HTTPS redirect, and drop the :8080 listener (git history has the
-# previous HTTPS implementation to restore from).
+# TLS terminates at the ALB with the ACM cert from acm.tf; the hop from ALB
+# to the instance stays HTTP on the private VPC network. Route 53 ALIAS
+# records point both hostnames at the ALB, and because they are Terraform-
+# managed they re-point automatically whenever the stack is rebuilt — the
+# registrar/nameserver setup is never touched again.
 # ---------------------------------------------------------------------------
 
 # ---------------- ALB security group ----------------
-# Public-facing. 443 is opened now so the HTTPS listener can be added later
-# without an SG change; nothing listens on it yet.
 resource "aws_security_group" "alb" {
-  name        = "${var.name_prefix}-ALB-SG"
+  name = "${var.name_prefix}-ALB-SG"
+  # NOTE: SG descriptions are IMMUTABLE in AWS — changing this string forces a
+  # whole-group replacement, which deadlocks on a fixed-name SG attached to a
+  # live ALB (can't delete old: in use; can't create new first: name taken).
+  # The text is stale (8080 is gone) and must stay until a from-scratch build.
   description = "Allow HTTP (80), backend API (8080) and future HTTPS (443) from the internet."
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    description = "Frontend HTTP from internet"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Backend API (interim, until a domain enables host routing)"
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "HTTPS from internet (future listener)"
+    description = "HTTPS from internet"
     from_port   = 443
     to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTP from internet (redirected to HTTPS)"
+    from_port   = 80
+    to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -58,8 +52,6 @@ resource "aws_security_group" "alb" {
 }
 
 # ---------------- The load balancer ----------------
-# Named -VMS-ALB: the hand-built Platta-NonProd-Dev-ALB still exists and ALB
-# names are unique per region. The manual one is deleted at cleanup.
 resource "aws_lb" "main" {
   name               = "${var.name_prefix}-${var.env}-VMS-ALB"
   internal           = false
@@ -132,11 +124,15 @@ resource "aws_lb_target_group_attachment" "backend" {
   port             = 4000
 }
 
-# ---------------- Listeners (HTTP interim) ----------------
-resource "aws_lb_listener" "frontend_http" {
+# ---------------- Listeners ----------------
+# HTTPS :443 — terminates TLS with the ACM cert. Default action routes to the
+# frontend; a host-based rule sends api.<domain> to the backend.
+resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.main.arn
-  port              = 80
-  protocol          = "HTTP"
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  certificate_arn   = aws_acm_certificate_validation.vms.certificate_arn
 
   default_action {
     type             = "forward"
@@ -144,19 +140,75 @@ resource "aws_lb_listener" "frontend_http" {
   }
 }
 
-resource "aws_lb_listener" "backend_http" {
+resource "aws_lb_listener_rule" "api" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend.arn
+  }
+
+  condition {
+    host_header {
+      values = ["api.${var.domain_name}"]
+    }
+  }
+}
+
+# HTTP :80 — redirect everything to HTTPS.
+resource "aws_lb_listener" "http_redirect" {
   load_balancer_arn = aws_lb.main.arn
-  port              = 8080
+  port              = 80
   protocol          = "HTTP"
 
   default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.backend.arn
+    type = "redirect"
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+}
+
+# ---------------- DNS: point the domains at the ALB ----------------
+resource "aws_route53_record" "frontend" {
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = var.domain_name
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.main.dns_name
+    zone_id                = aws_lb.main.zone_id
+    evaluate_target_health = true
+  }
+}
+
+resource "aws_route53_record" "backend" {
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = "api.${var.domain_name}"
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.main.dns_name
+    zone_id                = aws_lb.main.zone_id
+    evaluate_target_health = true
   }
 }
 
 # ---------------- Outputs ----------------
 output "alb_dns_name" {
-  description = "The ALB's DNS name. Frontend: http://<this>/  Backend API: http://<this>:8080"
+  description = "The ALB's DNS name (the domains alias to this)."
   value       = aws_lb.main.dns_name
+}
+
+output "api_base_url" {
+  description = "Browser-facing API base URL baked into the frontend bundle."
+  value       = "https://api.${var.domain_name}"
+}
+
+output "app_url" {
+  description = "Browser-facing frontend URL."
+  value       = "https://${var.domain_name}"
 }

@@ -19,6 +19,7 @@
     "@vms/contracts": "*",
     "@vms/tokens": "*",
     "@vms/ui": "*",
+    "geist": "^1.7.2",
     "next": "16.2.6",
     "next-intl": "^4.3.0",
     "papaparse": "^5.5.3",

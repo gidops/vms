@@ -47,11 +47,19 @@ variable "frontend_image_tag" {
   type        = string
 }
 
+# The domain the stack serves. Its hosted zone lives OUTSIDE this stack (see
+# acm.tf for why); the registrar's nameservers must point at that zone before
+# the first apply, or ACM validation hangs.
+variable "domain_name" {
+  description = "Public domain for the VMS (apex = frontend, api. = backend)."
+  type        = string
+  default     = "aatcvms.online"
+}
+
 # Public URL of the frontend (APP_PUBLIC_URL); used to build rating/feedback
-# links in emails. Empty = derive from the ALB DNS name (dev default; there is
-# no corporate domain yet). Set explicitly once a real domain exists.
+# links in emails. Empty = derive https://<domain_name>.
 variable "app_public_url" {
-  description = "Public URL of the frontend (APP_PUBLIC_URL). Empty derives http://<alb-dns>."
+  description = "Public URL of the frontend (APP_PUBLIC_URL). Empty derives https://<domain_name>."
   type        = string
   default     = ""
 }
