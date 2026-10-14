@@ -12,7 +12,9 @@
     "switchAccount": "تبديل الحساب",
     "accountSettings": "إعدادات الحساب",
     "help": "المساعدة / الدعم",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "notifications": "الإشعارات",
+    "notificationsUnread": "الإشعارات، {count} غير مقروءة"
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -425,16 +427,115 @@
     "error": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
   },
   "admin": {
-    "welcome": "مرحبًا {name}",
-    "subtitle": "وحدة الإدارة",
-    "userManagement": "إدارة المستخدمين",
-    "userManagementBody": "عرض المستخدمين وإنشاء الحسابات وتعيين الأدوار.",
-    "manageUsers": "إدارة المستخدمين",
     "pendingTitle": "الطلبات المعلّقة",
     "pendingBody": "راجع وقرّر طلبات الزيارة التي تنتظر الموافقة.",
     "pendingEmpty": "لا توجد طلبات تنتظر الموافقة.",
-    "pendingCount": "{count} بانتظار الموافقة",
-    "groupLabel": "{name} · {count} ضيوف"
+    "groupLabel": "{name} · {count} ضيوف",
+    "nav": {
+      "label": "أقسام الإدارة",
+      "overview": "نظرة عامة",
+      "visitors": "الزوار",
+      "requests": "الطلبات والموافقات",
+      "watchlist": "قائمة المراقبة",
+      "users": "المستخدمون وأدوار الموظفين",
+      "floors": "الطوابق والمواقع",
+      "categories": "فئات الزيارة",
+      "analytics": "التحليلات والتقارير",
+      "integrations": "التكاملات",
+      "settings": "الإعدادات",
+      "comingSoon": "قريبًا",
+      "collapse": "طي الشريط الجانبي",
+      "expand": "توسيع الشريط الجانبي"
+    },
+    "requests": {
+      "title": "الطلبات والموافقات",
+      "subtitle": "طلبات الزيارة التي تنتظر قرارًا."
+    },
+    "overview": {
+      "title": "نظرة عامة",
+      "subtitle": "عمليات الزوار على مستوى النظام بلمحة سريعة.",
+      "searchPlaceholder": "ابحث عن الزوار أو المضيفين أو الطوابق…",
+      "sidePanel": "الإجراءات والنشاط",
+      "stats": {
+        "visitorsToday": "زوار اليوم",
+        "fromYesterday": "مقارنة بالأمس",
+        "sameAsYesterday": "مثل الأمس",
+        "expected": "الزوار المتوقعون",
+        "expectedHint": "معتمدون لليوم",
+        "pending": "الطلبات المعلقة",
+        "pendingHint": "{count, plural, =0 {لا شيء بانتظار معلومات إضافية} other {# بانتظار معلومات إضافية}}",
+        "openPending": "فتح الطلبات المعلقة",
+        "onsite": "في الموقع",
+        "onsiteHint": "في الموقع الآن",
+        "checkedOut": "غادروا",
+        "checkedOutHint": "غادروا اليوم"
+      },
+      "traffic": {
+        "title": "حركة اليوم",
+        "range": "فترة الحركة",
+        "today": "اليوم",
+        "yesterday": "أمس",
+        "chartLabelToday": "تسجيلات الدخول في الساعة، اليوم",
+        "chartLabelYesterday": "تسجيلات الدخول في الساعة، أمس"
+      },
+      "breakdown": {
+        "title": "توزيع الحالات",
+        "chartLabel": "نتائج الزيارات اليوم",
+        "checkedIn": "سُجّل دخولهم",
+        "checkedOut": "غادروا",
+        "rejected": "مرفوضون"
+      },
+      "visitors": {
+        "title": "زوار اليوم",
+        "searchPlaceholder": "ابحث عن الزوار…",
+        "columns": {
+          "visitor": "الزائر",
+          "status": "الحالة",
+          "host": "المضيف",
+          "guests": "عدد الضيوف",
+          "time": "الوقت",
+          "action": "الإجراء"
+        },
+        "guestCount": "{count, plural, zero {لا ضيوف} one {ضيف واحد} two {ضيفان} few {# ضيوف} many {# ضيفًا} other {# ضيف}}",
+        "view": "عرض",
+        "viewVisitor": "عرض {name}",
+        "empty": "لا يوجد زوار مجدولون اليوم.",
+        "noMatches": "لا يوجد زوار مطابقون لبحثك."
+      },
+      "quickActions": {
+        "title": "إجراءات سريعة",
+        "addVisitor": "إضافة زائر",
+        "exportData": "تصدير البيانات",
+        "printBadge": "طباعة بطاقة",
+        "scanQr": "مسح رمز QR",
+        "comingSoon": "قريبًا",
+        "exportFailed": "فشل التصدير. حاول مرة أخرى."
+      },
+      "activity": {
+        "title": "النشاط الأخير",
+        "viewAll": "عرض الكل",
+        "empty": "لا يوجد نشاط حديث.",
+        "visitorForHost": "{visitor} لدى {host}",
+        "events": {
+          "alert": "تم رفع تنبيه أمني",
+          "requested": "طلب زيارة جديد",
+          "approved": "تمت الموافقة على طلب الزيارة",
+          "denied": "تم رفض طلب الزيارة",
+          "reviewRequested": "طُلبت معلومات إضافية",
+          "checkedIn": "تم تسجيل دخول الزائر",
+          "checkedOut": "تم تسجيل خروج الزائر",
+          "cancelled": "أُلغيت الزيارة",
+          "expired": "انتهت صلاحية الزيارة"
+        }
+      },
+      "upcoming": {
+        "title": "القادمون",
+        "empty": "لا يُتوقع مزيد من الزوار اليوم.",
+        "host": "المضيف: {name}",
+        "approved": "معتمد",
+        "pending": "معلق"
+      }
+    }
   },
   "staff": {
     "hub": "مساحة الموظفين",

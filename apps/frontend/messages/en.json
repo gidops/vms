@@ -12,7 +12,9 @@
     "switchAccount": "Switch Account",
     "accountSettings": "Account Settings",
     "help": "Help/Support",
-    "logout": "Logout"
+    "logout": "Logout",
+    "notifications": "Notifications",
+    "notificationsUnread": "Notifications, {count} unread"
   },
   "login": {
     "title": "Sign in",
@@ -425,16 +427,115 @@
     "error": "Something went wrong. Please try again."
   },
   "admin": {
-    "welcome": "Welcome {name}",
-    "subtitle": "Administration console",
-    "userManagement": "User Management",
-    "userManagementBody": "View users, create accounts and assign roles.",
-    "manageUsers": "Manage users",
     "pendingTitle": "Pending Requests",
     "pendingBody": "Review and decide visit requests awaiting approval.",
     "pendingEmpty": "No requests awaiting approval.",
-    "pendingCount": "{count} awaiting approval",
-    "groupLabel": "{name} · {count} guests"
+    "groupLabel": "{name} · {count} guests",
+    "nav": {
+      "label": "Admin sections",
+      "overview": "Overview",
+      "visitors": "Visitors",
+      "requests": "Requests & Approvals",
+      "watchlist": "Watchlist",
+      "users": "Users & Staff Roles",
+      "floors": "Floors & Locations",
+      "categories": "Visit Categories",
+      "analytics": "Analytics & Reports",
+      "integrations": "Integrations",
+      "settings": "Settings",
+      "comingSoon": "Coming soon",
+      "collapse": "Collapse sidebar",
+      "expand": "Expand sidebar"
+    },
+    "requests": {
+      "title": "Requests & Approvals",
+      "subtitle": "Visit requests waiting for a decision."
+    },
+    "overview": {
+      "title": "Overview",
+      "subtitle": "System-wide visitor operations at a glance.",
+      "searchPlaceholder": "Search visitors, hosts, floors…",
+      "sidePanel": "Actions and activity",
+      "stats": {
+        "visitorsToday": "Visitors Today",
+        "fromYesterday": "from yesterday",
+        "sameAsYesterday": "Same as yesterday",
+        "expected": "Expected Visitors",
+        "expectedHint": "Approved for today",
+        "pending": "Pending Requests",
+        "pendingHint": "{count, plural, =0 {None awaiting more info} one {# awaiting more info} other {# awaiting more info}}",
+        "openPending": "Open pending requests",
+        "onsite": "Onsite",
+        "onsiteHint": "On site now",
+        "checkedOut": "Checked Out",
+        "checkedOutHint": "Checked out today"
+      },
+      "traffic": {
+        "title": "Today's Traffic",
+        "range": "Traffic period",
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "chartLabelToday": "Check-ins per hour, today",
+        "chartLabelYesterday": "Check-ins per hour, yesterday"
+      },
+      "breakdown": {
+        "title": "Status Breakdown",
+        "chartLabel": "Visit outcomes today",
+        "checkedIn": "Checked-in",
+        "checkedOut": "Checked-out",
+        "rejected": "Rejected"
+      },
+      "visitors": {
+        "title": "Today's Visitors",
+        "searchPlaceholder": "Search visitors…",
+        "columns": {
+          "visitor": "Visitor",
+          "status": "Status",
+          "host": "Host",
+          "guests": "No. of guests",
+          "time": "Time",
+          "action": "Action"
+        },
+        "guestCount": "{count, plural, one {# Guest} other {# Guests}}",
+        "view": "View",
+        "viewVisitor": "View {name}",
+        "empty": "No visitors scheduled today.",
+        "noMatches": "No visitors match your search."
+      },
+      "quickActions": {
+        "title": "Quick Actions",
+        "addVisitor": "Add Visitor",
+        "exportData": "Export Data",
+        "printBadge": "Print Badge",
+        "scanQr": "Scan QR",
+        "comingSoon": "Coming soon",
+        "exportFailed": "Export failed. Try again."
+      },
+      "activity": {
+        "title": "Recent Activity",
+        "viewAll": "View all",
+        "empty": "No recent activity.",
+        "visitorForHost": "{visitor} for {host}",
+        "events": {
+          "alert": "Security alert raised",
+          "requested": "New visit request",
+          "approved": "Visit request approved",
+          "denied": "Visit request denied",
+          "reviewRequested": "More information requested",
+          "checkedIn": "Visitor checked in",
+          "checkedOut": "Visitor checked out",
+          "cancelled": "Visit cancelled",
+          "expired": "Visit expired"
+        }
+      },
+      "upcoming": {
+        "title": "Upcoming",
+        "empty": "No more visitors expected today.",
+        "host": "Host: {name}",
+        "approved": "Approved",
+        "pending": "Pending"
+      }
+    }
   },
   "staff": {
     "hub": "STAFF HUB",

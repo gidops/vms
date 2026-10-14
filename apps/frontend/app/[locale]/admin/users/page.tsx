@@ -19,12 +19,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  TopNavShell,
 } from "@vms/ui";
 import { Trash2, Users } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
-import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
+import { AdminShell } from "@/app/[locale]/admin/_components/AdminShell";
 import { ApiError } from "@/data/http/client";
 import {
   useCreateUser,
@@ -80,7 +79,7 @@ function Users_() {
   const items = data?.items ?? [];
 
   return (
-    <TopNavShell nav={<AppTopNav />}>
+    <AdminShell active="users">
       <div className="flex flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-3xl font-semibold text-primary">{t("title")}</h1>
@@ -194,7 +193,7 @@ function Users_() {
         onOpenChange={(open) => !open && setDeleting(null)}
         onDeleted={() => setDeleting(null)}
       />
-    </TopNavShell>
+    </AdminShell>
   );
 }
 

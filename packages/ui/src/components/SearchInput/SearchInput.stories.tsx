@@ -27,3 +27,15 @@ function SearchDemo() {
 export const Default: Story = {
   render: () => <SearchDemo />,
 };
+
+/** Translucent field for the deep-green TopNav (global search). */
+export const OnEmphasis: Story = {
+  render: () => (
+    <div className="w-[28rem] bg-emphasis p-4">
+      <SearchInput
+        variant="onEmphasis"
+        placeholder="Search visitors, hosts, floors…"
+      />
+    </div>
+  ),
+};

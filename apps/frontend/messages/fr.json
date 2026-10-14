@@ -12,7 +12,9 @@
     "switchAccount": "Changer de compte",
     "accountSettings": "Paramètres du compte",
     "help": "Aide / Support",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "notifications": "Notifications",
+    "notificationsUnread": "Notifications, {count} non lues"
   },
   "login": {
     "title": "Connexion",
@@ -425,16 +427,115 @@
     "error": "Une erreur s'est produite. Veuillez réessayer."
   },
   "admin": {
-    "welcome": "Bienvenue {name}",
-    "subtitle": "Console d'administration",
-    "userManagement": "Gestion des utilisateurs",
-    "userManagementBody": "Consultez les utilisateurs, créez des comptes et attribuez des rôles.",
-    "manageUsers": "Gérer les utilisateurs",
     "pendingTitle": "Demandes en attente",
     "pendingBody": "Examinez et décidez des demandes de visite en attente d'approbation.",
     "pendingEmpty": "Aucune demande en attente d'approbation.",
-    "pendingCount": "{count} en attente d'approbation",
-    "groupLabel": "{name} · {count} invités"
+    "groupLabel": "{name} · {count} invités",
+    "nav": {
+      "label": "Sections d'administration",
+      "overview": "Vue d'ensemble",
+      "visitors": "Visiteurs",
+      "requests": "Demandes et approbations",
+      "watchlist": "Liste de surveillance",
+      "users": "Utilisateurs et rôles",
+      "floors": "Étages et emplacements",
+      "categories": "Catégories de visite",
+      "analytics": "Analyses et rapports",
+      "integrations": "Intégrations",
+      "settings": "Paramètres",
+      "comingSoon": "Bientôt disponible",
+      "collapse": "Réduire la barre latérale",
+      "expand": "Développer la barre latérale"
+    },
+    "requests": {
+      "title": "Demandes et approbations",
+      "subtitle": "Demandes de visite en attente de décision."
+    },
+    "overview": {
+      "title": "Vue d'ensemble",
+      "subtitle": "Les opérations visiteurs de tout le site en un coup d'œil.",
+      "searchPlaceholder": "Rechercher visiteurs, hôtes, étages…",
+      "sidePanel": "Actions et activité",
+      "stats": {
+        "visitorsToday": "Visiteurs du jour",
+        "fromYesterday": "par rapport à hier",
+        "sameAsYesterday": "Comme hier",
+        "expected": "Visiteurs attendus",
+        "expectedHint": "Approuvés pour aujourd'hui",
+        "pending": "Demandes en attente",
+        "pendingHint": "{count, plural, =0 {Aucune en attente d'informations} one {# en attente d'informations} other {# en attente d'informations}}",
+        "openPending": "Ouvrir les demandes en attente",
+        "onsite": "Sur site",
+        "onsiteHint": "Actuellement sur site",
+        "checkedOut": "Sortis",
+        "checkedOutHint": "Sortis aujourd'hui"
+      },
+      "traffic": {
+        "title": "Fréquentation du jour",
+        "range": "Période de fréquentation",
+        "today": "Aujourd'hui",
+        "yesterday": "Hier",
+        "chartLabelToday": "Enregistrements par heure, aujourd'hui",
+        "chartLabelYesterday": "Enregistrements par heure, hier"
+      },
+      "breakdown": {
+        "title": "Répartition des statuts",
+        "chartLabel": "Issues des visites aujourd'hui",
+        "checkedIn": "Enregistrés",
+        "checkedOut": "Sortis",
+        "rejected": "Refusés"
+      },
+      "visitors": {
+        "title": "Visiteurs du jour",
+        "searchPlaceholder": "Rechercher des visiteurs…",
+        "columns": {
+          "visitor": "Visiteur",
+          "status": "Statut",
+          "host": "Hôte",
+          "guests": "Nb d'invités",
+          "time": "Heure",
+          "action": "Action"
+        },
+        "guestCount": "{count, plural, one {# invité} other {# invités}}",
+        "view": "Voir",
+        "viewVisitor": "Voir {name}",
+        "empty": "Aucun visiteur prévu aujourd'hui.",
+        "noMatches": "Aucun visiteur ne correspond à votre recherche."
+      },
+      "quickActions": {
+        "title": "Actions rapides",
+        "addVisitor": "Ajouter un visiteur",
+        "exportData": "Exporter les données",
+        "printBadge": "Imprimer un badge",
+        "scanQr": "Scanner un QR",
+        "comingSoon": "Bientôt disponible",
+        "exportFailed": "L'export a échoué. Réessayez."
+      },
+      "activity": {
+        "title": "Activité récente",
+        "viewAll": "Tout voir",
+        "empty": "Aucune activité récente.",
+        "visitorForHost": "{visitor} pour {host}",
+        "events": {
+          "alert": "Alerte de sécurité émise",
+          "requested": "Nouvelle demande de visite",
+          "approved": "Demande de visite approuvée",
+          "denied": "Demande de visite refusée",
+          "reviewRequested": "Informations complémentaires demandées",
+          "checkedIn": "Visiteur enregistré",
+          "checkedOut": "Visiteur sorti",
+          "cancelled": "Visite annulée",
+          "expired": "Visite expirée"
+        }
+      },
+      "upcoming": {
+        "title": "À venir",
+        "empty": "Plus aucun visiteur attendu aujourd'hui.",
+        "host": "Hôte : {name}",
+        "approved": "Approuvée",
+        "pending": "En attente"
+      }
+    }
   },
   "staff": {
     "hub": "ESPACE PERSONNEL",
