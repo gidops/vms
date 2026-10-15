@@ -18,3 +18,4 @@ export * from "./inbox/inbox.schema.js";
 export * from "./staff/staff.schema.js";
 export * from "./notification/notification.schema.js";
 export * from "./upload/upload.schema.js";
+export * from "./admin/admin.schema.js";

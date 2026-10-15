@@ -2,7 +2,9 @@
 
 import { homeFor } from "@vms/contracts";
 import { SegmentedControl, TopNav } from "@vms/ui";
+import { Bell } from "lucide-react";
 import { useTranslations } from "next-intl";
+import type * as React from "react";
 import { useInboxUnread } from "@/data/requests/queries";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/shared/auth/AuthContext";
@@ -32,6 +34,13 @@ export interface AppTopNavProps {
   requestsCount?: number;
   /** Static centered pill label (e.g. "Account Settings") when there's no toggle. */
   centerLabel?: string;
+  /** Global search field rendered beside the brand (admin console). */
+  search?: React.ReactNode;
+  /**
+   * Show a notifications bell (with the unread count) linking here. Used by
+   * consoles without the Requests & Alerts toggle.
+   */
+  notificationsHref?: string;
 }
 
 /**
@@ -45,6 +54,8 @@ export function AppTopNav({
   app = "vmc",
   requestsCount,
   centerLabel,
+  search,
+  notificationsHref,
 }: AppTopNavProps) {
   const tNav = useTranslations("nav");
   const router = useRouter();
@@ -80,13 +91,18 @@ export function AppTopNav({
   return (
     <TopNav
       brand={
-        <Link
-          href={homeFor(activeRole)}
-          aria-label={tNav("home")}
-          className="inline-flex rounded-md outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
-        >
-          <BrandMark />
-        </Link>
+        <div className="flex min-w-0 flex-1 items-center gap-8">
+          <Link
+            href={homeFor(activeRole)}
+            aria-label={tNav("home")}
+            className="inline-flex shrink-0 rounded-md outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+          >
+            <BrandMark />
+          </Link>
+          {search ? (
+            <div className="hidden w-full max-w-xl md:block">{search}</div>
+          ) : null}
+        </div>
       }
       center={
         active ? (
@@ -113,6 +129,27 @@ export function AppTopNav({
       end={
         <>
           <RoleSwitcher />
+          {notificationsHref ? (
+            <Link
+              href={notificationsHref}
+              aria-label={
+                count
+                  ? tNav("notificationsUnread", { count })
+                  : tNav("notifications")
+              }
+              className="relative inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-emphasis-fg/10 text-emphasis-fg outline-none transition-colors hover:bg-emphasis-fg/20 focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+            >
+              <Bell className="size-5" aria-hidden="true" />
+              {count ? (
+                <span
+                  className="absolute -end-0.5 -top-0.5 inline-flex min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[0.625rem] font-semibold leading-4 text-accent-fg"
+                  aria-hidden="true"
+                >
+                  {count > 99 ? "99+" : count}
+                </span>
+              ) : null}
+            </Link>
+          ) : null}
           <LanguageSwitcher />
           <AccountMenu />
         </>

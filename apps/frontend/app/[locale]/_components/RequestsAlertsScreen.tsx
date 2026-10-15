@@ -17,11 +17,13 @@ import {
   SelectValue,
   Spinner,
   TopNavShell,
+  type TopNavShellProps,
 } from "@vms/ui";
 import { ChevronLeft, ChevronRight, Inbox, MessageSquare } from "lucide-react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
+import { AdminShell } from "@/app/[locale]/admin/_components/AdminShell";
 import { VisitDetailSheet } from "@/app/[locale]/_components/VisitDetailSheet";
 import type { InboxItem, InboxKind } from "@/data/inbox/inbox.api";
 import {
@@ -85,13 +87,24 @@ function statusMeta(item: InboxItem): { key: string; intent: Intent } {
   return map[item.status] ?? { key: "open", intent: "danger" };
 }
 
+function AdminActivityShell({ filterBar, children }: TopNavShellProps) {
+  return (
+    <AdminShell active="requests" filterBar={filterBar}>
+      {children}
+    </AdminShell>
+  );
+}
+
 export function RequestsAlertsScreen({
   app = "vmc",
   scope = "all",
+  admin = false,
 }: {
   app?: "vmc" | "staff";
   scope?: "all" | "mine";
+  admin?: boolean;
 }) {
+  const Shell = admin ? AdminActivityShell : TopNavShell;
   const t = useTranslations("requests");
   const tCommon = useTranslations("common");
   const tDash = useTranslations("dashboard");
@@ -192,7 +205,7 @@ export function RequestsAlertsScreen({
   };
 
   return (
-    <TopNavShell
+    <Shell
       nav={<AppTopNav app={app} active="requests" />}
       filterBar={
         <FilterBar>
@@ -366,6 +379,6 @@ export function RequestsAlertsScreen({
           onClose={() => setSelected(null)}
         />
       ) : null}
-    </TopNavShell>
+    </Shell>
   );
 }
