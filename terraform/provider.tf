@@ -1,11 +1,16 @@
 terraform {
   required_version = "~> 1.15"
 
+  # State lives in the Platta Integrated non-production account, NOT the old
+  # individual account. The bucket is versioned + KMS-encrypted and was created
+  # outside Terraform (bootstrap chicken-and-egg). One key per environment:
+  # nonprod/dev, nonprod/staging (future), etc.
   backend "s3" {
-    bucket       = "vms-tfstate-102969867136"
-    key          = "app/terraform.tfstate"
+    bucket       = "platta-tfstate-912759111217"
+    key          = "nonprod/dev/terraform.tfstate"
     region       = "us-east-1"
-    use_lockfile = true # ← new: S3-native locking
+    profile      = "platta-nonprod"
+    use_lockfile = true
     encrypt      = true
   }
 
@@ -23,4 +28,7 @@ terraform {
 
 provider "aws" {
   region = var.region
+  # Identity Center SSO profile for the Platta non-prod account. Run
+  # `aws sso login --profile platta-nonprod` when the session expires.
+  profile = var.aws_profile
 }

@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
+import { GeistMono } from "geist/font/mono";
+import { GeistSans } from "geist/font/sans";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
-import { Geist, Geist_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
 import { isRtl, routing } from "@/i18n/routing";
 import { AppProviders } from "@/shared/providers/AppProviders";
 import "../globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// Geist via the npm package (fonts ship in node_modules) instead of
+// next/font/google, which downloads from fonts.gstatic.com AT BUILD TIME and
+// makes every Docker/CI build hostage to that CDN being reachable. Same
+// fonts, same CSS variables (--font-geist-sans / --font-geist-mono).
+const geistSans = GeistSans;
+const geistMono = GeistMono;
 
 export const metadata: Metadata = {
   title: "AATC VMS",

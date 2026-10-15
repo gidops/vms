@@ -79,8 +79,25 @@ export class AuthService {
     return this.startSession(user, ctx);
   }
 
-  /** Open signup — creates a SUPER_ADMIN and logs in. */
+  /**
+   * First-run bootstrap: creates the initial SUPER_ADMIN and logs in. Locked
+   * the moment ANY user exists — signup mints a SUPER_ADMIN, so an open route
+   * on a public deployment hands full system access to whoever finds it. The
+   * guard lives HERE (not only in signupAvailable) because attackers call the
+   * endpoint directly; the availability check is just the frontend's signpost.
+   */
   async signup(input: SignupInput, ctx: LoginContext): Promise<AuthResult> {
+    if (!(await this.signupAvailable())) {
+      // No business transaction to ride the outbox — audit directly, like
+      // failed logins, so probing of the bootstrap route is visible.
+      await this.security.record({
+        action: EVENT_TYPES.SignupBlocked,
+        entityType: 'User',
+        level: 'Warning',
+        metadata: { email: input.email },
+      });
+      throw new ForbiddenException('Signup is closed');
+    }
     const user = await this.users.create({
       email: input.email,
       fullName: input.fullName,
@@ -90,9 +107,9 @@ export class AuthService {
     return this.startSession(user, ctx);
   }
 
-  /** Signup is always available (the first-run lock is intentionally disabled). */
-  signupAvailable(): Promise<boolean> {
-    return Promise.resolve(true);
+  /** Signup is open only while the system has no users (first-run bootstrap). */
+  async signupAvailable(): Promise<boolean> {
+    return (await this.prisma.user.count()) === 0;
   }
 
   async refresh(rawToken: string): Promise<AuthResult> {

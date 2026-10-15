@@ -46,7 +46,9 @@ describe('AuthService', () => {
       create: jest.fn(),
     };
     passwords = { verify: jest.fn(), hash: jest.fn() };
-    prisma = { user: { findUnique: jest.fn(), update: jest.fn() } };
+    prisma = {
+      user: { findUnique: jest.fn(), update: jest.fn(), count: jest.fn() },
+    };
     txm = {
       run: jest.fn(async (cb: (tx: unknown) => unknown) =>
         cb({ user: { update: jest.fn().mockResolvedValue({}) } }),
@@ -89,6 +91,43 @@ describe('AuthService', () => {
         metadata: { email: 'bad@b.c' },
       }),
     );
+  });
+
+  it('signup bootstraps the first SUPER_ADMIN while no users exist', async () => {
+    prisma.user.count.mockResolvedValue(0);
+    users.create.mockResolvedValue(user);
+    const result = await svc.signup(
+      { email: 'a@b.c', fullName: 'A', password: 'pw' },
+      {},
+    );
+    expect(users.create).toHaveBeenCalledWith(
+      expect.objectContaining({ roles: ['SUPER_ADMIN'] }),
+    );
+    expect(result.tokens.accessToken).toBe('access');
+  });
+
+  it('signup is refused once any user exists, and records auth.signup_blocked', async () => {
+    prisma.user.count.mockResolvedValue(1);
+    await expect(
+      svc.signup(
+        { email: 'attacker@evil.com', fullName: 'X', password: 'pw' },
+        {},
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(users.create).not.toHaveBeenCalled();
+    expect(security.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: EVENT_TYPES.SignupBlocked,
+        metadata: { email: 'attacker@evil.com' },
+      }),
+    );
+  });
+
+  it('signupAvailable reflects whether any user exists', async () => {
+    prisma.user.count.mockResolvedValue(0);
+    await expect(svc.signupAvailable()).resolves.toBe(true);
+    prisma.user.count.mockResolvedValue(3);
+    await expect(svc.signupAvailable()).resolves.toBe(false);
   });
 
   it('logout revokes the token and records auth.logout', async () => {

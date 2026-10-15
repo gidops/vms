@@ -1,17 +1,27 @@
 # ---------------------------------------------------------------------------
-# acm.tf — TLS certificate for the VMS app, validated via Route 53 DNS.
+# acm.tf — TLS certificate for the VMS, validated via Route 53 DNS.
 # Covers the frontend apex (aatcvms.online) and backend subdomain
-# (api.aatcvms.online). The ALB HTTPS listener (alb.tf, next phase) attaches it.
+# (api.aatcvms.online). The ALB HTTPS listener (alb.tf) attaches it.
+#
+# The hosted zone is a DATA SOURCE on purpose: it was created ONCE, outside
+# this stack (zone Z07657652H1R7QE9UY8MM in the Platta non-prod account),
+# because the registrar (Namecheap) holds the zone's nameserver addresses.
+# If the zone lived in this stack, every destroy/rebuild would mint a new
+# zone with NEW nameservers and silently orphan the registrar setting.
+#
+# PREREQUISITE for the first apply: the domain's nameservers at the registrar
+# must already point at this zone, or the certificate's DNS validation below
+# will hang until timeout.
 # ---------------------------------------------------------------------------
 
 data "aws_route53_zone" "main" {
-  name         = "aatcvms.online"
+  name         = var.domain_name
   private_zone = false
 }
 
 resource "aws_acm_certificate" "vms" {
-  domain_name               = "aatcvms.online"
-  subject_alternative_names = ["api.aatcvms.online"]
+  domain_name               = var.domain_name
+  subject_alternative_names = ["api.${var.domain_name}"]
   validation_method         = "DNS"
 
   lifecycle {
@@ -19,7 +29,7 @@ resource "aws_acm_certificate" "vms" {
   }
 
   tags = {
-    Name = "${var.project_name}-cert"
+    Name = "${var.name_prefix}-${var.env}-VMS-Cert"
   }
 }
 
@@ -43,9 +53,4 @@ resource "aws_route53_record" "cert_validation" {
 resource "aws_acm_certificate_validation" "vms" {
   certificate_arn         = aws_acm_certificate.vms.arn
   validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
-}
-
-output "acm_certificate_arn" {
-  description = "ARN of the validated ACM certificate (used by the ALB HTTPS listener)."
-  value       = aws_acm_certificate_validation.vms.certificate_arn
 }
