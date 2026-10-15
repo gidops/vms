@@ -20,16 +20,15 @@ export interface DateRange {
 /** A fixed tab whose date window is derived deterministically (not the calendar). */
 type FixedTab = "today" | "upcoming" | "yesterday";
 
-const container =
-  "inline-flex items-center gap-1 rounded-full bg-primary-subtle p-1";
+const container = "flex items-center gap-2 bg-primary-subtle px-6";
 
 const pill =
-  "rounded-full border px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]";
+  "rounded-full border bg-surface px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]";
 
 const pillState = (active: boolean) =>
   active
-    ? "border-primary bg-surface text-primary shadow-xs"
-    : "border-transparent text-fg-muted hover:text-fg";
+    ? "border-primary text-primary"
+    : "border-border text-fg-muted hover:text-fg";
 
 /** Local start-of-day / end-of-day ISO for a JS Date (inclusive window bounds). */
 const startOfDayIso = (d: Date) => {
@@ -70,8 +69,10 @@ export function fixedTabBounds(tab: FixedTab): DateRange {
  * Range selector above the staff "My Visits" table: Today / Upcoming / Yesterday
  * pills plus a "Pick date" pill that opens a calendar range picker. Controlled —
  * the parent owns the selected tab and the derived `{ dateFrom, dateTo }` window
- * it feeds to the query. Styled to match the design: a mint (`primary-subtle`)
- * container with the active option a white pill outlined in the brand primary.
+ * it feeds to the query. Styled to match the design: a full-height rectangular
+ * mint (`primary-subtle`) block flush to the right edge of the header card,
+ * holding individually-outlined white pills — the active option outlined in the
+ * brand primary, the rest with a neutral border.
  */
 export function MyVisitsRangeFilter({
   value,
