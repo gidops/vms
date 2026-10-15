@@ -43,6 +43,10 @@ export function UpcomingCard({
               <Skeleton key={i} className="h-10 w-full" />
             ))}
           </div>
+        ) : upcoming.isError ? (
+          <p role="alert" className="text-sm text-danger">
+            {t("loadError")}
+          </p>
         ) : items.length === 0 ? (
           <p className="text-sm text-fg-muted">{t("empty")}</p>
         ) : (

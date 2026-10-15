@@ -452,6 +452,8 @@
       "subtitle": "Visit requests waiting for a decision."
     },
     "overview": {
+      "loadError": "Unable to load dashboard data. Please try again.",
+      "loading": "Loading dashboard…",
       "title": "Overview",
       "subtitle": "System-wide visitor operations at a glance.",
       "searchPlaceholder": "Search visitors, hosts, floors…",
@@ -471,6 +473,7 @@
         "checkedOutHint": "Checked out today"
       },
       "traffic": {
+        "loadError": "Unable to load dashboard data. Please try again.",
         "title": "Today's Traffic",
         "range": "Traffic period",
         "today": "Today",
@@ -486,6 +489,7 @@
         "rejected": "Rejected"
       },
       "visitors": {
+        "loadError": "Unable to load dashboard data. Please try again.",
         "title": "Today's Visitors",
         "searchPlaceholder": "Search visitors…",
         "columns": {
@@ -512,6 +516,7 @@
         "exportFailed": "Export failed. Try again."
       },
       "activity": {
+        "loadError": "Unable to load dashboard data. Please try again.",
         "title": "Recent Activity",
         "viewAll": "View all",
         "empty": "No recent activity.",
@@ -522,6 +527,7 @@
           "approved": "Visit request approved",
           "denied": "Visit request denied",
           "reviewRequested": "More information requested",
+          "flagged": "Visit flagged for security review",
           "checkedIn": "Visitor checked in",
           "checkedOut": "Visitor checked out",
           "cancelled": "Visit cancelled",
@@ -529,6 +535,7 @@
         }
       },
       "upcoming": {
+        "loadError": "Unable to load dashboard data. Please try again.",
         "title": "Upcoming",
         "empty": "No more visitors expected today.",
         "host": "Host: {name}",

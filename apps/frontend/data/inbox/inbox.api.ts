@@ -1,4 +1,4 @@
-import type { VisitType } from "@vms/contracts";
+import type { VisitStatus, VisitType } from "@vms/contracts";
 import { api } from "@/data/http/client";
 
 export type InboxKind = "all" | "requests" | "alerts";
@@ -18,15 +18,7 @@ interface InboxItemBase {
 export interface InboxRequestItem extends InboxItemBase {
   kind: "request";
   visitId: string;
-  status:
-    | "PENDING"
-    | "REVIEW_REQUESTED"
-    | "APPROVED"
-    | "DENIED"
-    | "CHECKED_IN"
-    | "CHECKED_OUT"
-    | "CANCELLED"
-    | "EXPIRED";
+  status: VisitStatus;
   visitorName: string;
   hostName?: string | null;
   type: VisitType;

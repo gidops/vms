@@ -48,6 +48,10 @@ export function TrafficCard({ className }: { className?: string }) {
     >
       {traffic.isLoading ? (
         <Skeleton className="h-[232px] w-full rounded-lg" />
+      ) : traffic.isError ? (
+        <p role="alert" className="text-sm text-danger">
+          {t("loadError")}
+        </p>
       ) : (
         <AreaChart
           data={data}

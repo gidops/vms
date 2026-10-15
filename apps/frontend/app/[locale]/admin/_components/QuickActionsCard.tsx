@@ -7,16 +7,23 @@ import { useTranslations } from "next-intl";
 import Papa from "papaparse";
 import * as React from "react";
 import { dayWindow } from "@/data/admin/queries";
-import { visitsApi } from "@/data/visits/visits.api";
+import { visitsApi, type VisitListItem } from "@/data/visits/visits.api";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { ADMIN_PERMISSIONS } from "./adminAccess";
 import { SectionCard } from "./SectionCard";
 
-/** Today's visits as a CSV download (first 100 rows — the list API's page cap). */
+/** Fetch every page; an API page cap must not truncate the downloaded report. */
 async function exportTodaysVisits(filename: string) {
-  const page = await visitsApi.list({ ...dayWindow(0), pageSize: 100 });
+  const window = dayWindow(0);
+  const items: VisitListItem[] = [];
+  let totalPages = 1;
+  for (let page = 1; page <= totalPages; page++) {
+    const result = await visitsApi.list({ ...window, page, pageSize: 100 });
+    items.push(...result.items);
+    totalPages = result.totalPages;
+  }
   const csv = Papa.unparse(
-    page.items.map((v) => ({
+    items.map((v) => ({
       visitor: v.isGroupVisit && v.groupName ? v.groupName : v.visitor.fullName,
       email: v.isGroupVisit ? (v.groupContact ?? "") : v.visitor.email,
       organization: v.visitor.organization ?? "",
@@ -28,6 +35,7 @@ async function exportTodaysVisits(filename: string) {
       checkInAt: v.checkInAt ?? "",
       checkOutAt: v.checkOutAt ?? "",
     })),
+    { escapeFormulae: true },
   );
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
   const a = document.createElement("a");

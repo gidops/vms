@@ -50,11 +50,22 @@ function Overview() {
             <p className="text-sm text-fg-muted">{t("subtitle")}</p>
           </header>
 
-          <OverviewStats stats={stats.data} loading={stats.isLoading} />
+          {stats.data ? (
+            <OverviewStats stats={stats.data} loading={false} />
+          ) : (
+            <p
+              role={stats.isError ? "alert" : "status"}
+              className={stats.isError ? "text-danger" : "text-fg-muted"}
+            >
+              {stats.isError ? t("loadError") : t("loading")}
+            </p>
+          )}
 
           <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,3fr)]">
             <TrafficCard />
-            <StatusBreakdownCard stats={stats.data} loading={stats.isLoading} />
+            {stats.data ? (
+              <StatusBreakdownCard stats={stats.data} loading={false} />
+            ) : null}
           </div>
 
           <TodaysVisitorsCard

@@ -13,6 +13,7 @@ export interface AdminShellProps {
   active: AdminSection;
   /** Optional global search field for the top nav. */
   search?: React.ReactNode;
+  filterBar?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -20,7 +21,12 @@ export interface AdminShellProps {
  * Admin console frame: brand top nav (search, notifications, role switcher,
  * account) over a permission-filtered section sidebar.
  */
-export function AdminShell({ active, search, children }: AdminShellProps) {
+export function AdminShell({
+  active,
+  search,
+  filterBar,
+  children,
+}: AdminShellProps) {
   const t = useTranslations("admin.nav");
   const { hasPermission } = useAuth();
   const [collapsed, setCollapsed] = React.useState(false);
@@ -39,7 +45,29 @@ export function AdminShell({ active, search, children }: AdminShellProps) {
 
   return (
     <TopNavShell
-      nav={<AppTopNav search={search} notificationsHref="/admin/requests" />}
+      nav={
+        <>
+          <AppTopNav search={search} notificationsHref="/admin/activity" />
+          <nav
+            aria-label={t("label")}
+            className="flex shrink-0 gap-2 overflow-x-auto border-b border-border bg-surface px-4 py-2 md:hidden"
+          >
+            {items
+              .filter((item) => !item.disabled)
+              .map((item) => (
+                <Link
+                  key={item.key}
+                  href={item.href!}
+                  aria-current={item.active ? "page" : undefined}
+                  className="shrink-0 rounded-md px-3 py-2 text-sm font-medium text-primary hover:bg-primary-subtle aria-[current=page]:bg-primary-subtle"
+                >
+                  {item.label}
+                </Link>
+              ))}
+          </nav>
+        </>
+      }
+      filterBar={filterBar}
       sidebar={
         <SideNav
           label={t("label")}

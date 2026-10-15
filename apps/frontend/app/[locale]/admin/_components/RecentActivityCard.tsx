@@ -29,6 +29,8 @@ function describe(item: InboxItem): { tone: Tone; key: string } {
       return { tone: "danger", key: "denied" };
     case "REVIEW_REQUESTED":
       return { tone: "warning", key: "reviewRequested" };
+    case "FLAGGED":
+      return { tone: "danger", key: "flagged" };
     case "CHECKED_IN":
       return { tone: "success", key: "checkedIn" };
     case "CHECKED_OUT":
@@ -61,7 +63,7 @@ export function RecentActivityCard() {
       title={t("title")}
       actions={
         <Link
-          href="/admin/requests"
+          href="/admin/activity"
           className="rounded text-sm font-semibold text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
         >
           {t("viewAll")}
@@ -74,6 +76,10 @@ export function RecentActivityCard() {
             <Skeleton key={i} className="h-10 w-full" />
           ))}
         </div>
+      ) : activity.isError ? (
+        <p role="alert" className="text-sm text-danger">
+          {t("loadError")}
+        </p>
       ) : items.length === 0 ? (
         <p className="text-sm text-fg-muted">{t("empty")}</p>
       ) : (

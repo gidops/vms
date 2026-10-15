@@ -452,6 +452,8 @@
       "subtitle": "Demandes de visite en attente de décision."
     },
     "overview": {
+      "loadError": "Impossible de charger les données. Veuillez réessayer.",
+      "loading": "Chargement du tableau de bord…",
       "title": "Vue d'ensemble",
       "subtitle": "Les opérations visiteurs de tout le site en un coup d'œil.",
       "searchPlaceholder": "Rechercher visiteurs, hôtes, étages…",
@@ -471,6 +473,7 @@
         "checkedOutHint": "Sortis aujourd'hui"
       },
       "traffic": {
+        "loadError": "Impossible de charger les données. Veuillez réessayer.",
         "title": "Fréquentation du jour",
         "range": "Période de fréquentation",
         "today": "Aujourd'hui",
@@ -486,6 +489,7 @@
         "rejected": "Refusés"
       },
       "visitors": {
+        "loadError": "Impossible de charger les données. Veuillez réessayer.",
         "title": "Visiteurs du jour",
         "searchPlaceholder": "Rechercher des visiteurs…",
         "columns": {
@@ -512,6 +516,7 @@
         "exportFailed": "L'export a échoué. Réessayez."
       },
       "activity": {
+        "loadError": "Impossible de charger les données. Veuillez réessayer.",
         "title": "Activité récente",
         "viewAll": "Tout voir",
         "empty": "Aucune activité récente.",
@@ -522,6 +527,7 @@
           "approved": "Demande de visite approuvée",
           "denied": "Demande de visite refusée",
           "reviewRequested": "Informations complémentaires demandées",
+          "flagged": "Visite signalée pour examen de sécurité",
           "checkedIn": "Visiteur enregistré",
           "checkedOut": "Visiteur sorti",
           "cancelled": "Visite annulée",
@@ -529,6 +535,7 @@
         }
       },
       "upcoming": {
+        "loadError": "Impossible de charger les données. Veuillez réessayer.",
         "title": "À venir",
         "empty": "Plus aucun visiteur attendu aujourd'hui.",
         "host": "Hôte : {name}",

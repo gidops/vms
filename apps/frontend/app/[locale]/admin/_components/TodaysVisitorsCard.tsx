@@ -5,6 +5,7 @@ import {
   Badge,
   Button,
   Card,
+  Pagination,
   SearchInput,
   Spinner,
   StatusBadge,
@@ -18,6 +19,7 @@ import {
 } from "@vms/ui";
 import { CircleUserRound } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
+import * as React from "react";
 import type { VisitListItem } from "@/data/visits/visits.api";
 import { useTodaysVisitors } from "@/data/admin/queries";
 
@@ -37,7 +39,13 @@ export function TodaysVisitorsCard({
 }) {
   const t = useTranslations("admin.overview.visitors");
   const format = useFormatter();
-  const visitors = useTodaysVisitors(search);
+  const [page, setPage] = React.useState(1);
+  const [previousSearch, setPreviousSearch] = React.useState(search);
+  if (search !== previousSearch) {
+    setPreviousSearch(search);
+    setPage(1);
+  }
+  const visitors = useTodaysVisitors(search, page);
   const rows = visitors.data?.items ?? [];
 
   const displayName = (row: VisitListItem) =>
@@ -94,6 +102,14 @@ export function TodaysVisitorsCard({
                   <div className="flex justify-center py-10">
                     <Spinner />
                   </div>
+                </TableCell>
+              </TableRow>
+            ) : visitors.isError ? (
+              <TableRow>
+                <TableCell colSpan={COLUMNS}>
+                  <p role="alert" className="py-10 text-center text-danger">
+                    {t("loadError")}
+                  </p>
                 </TableCell>
               </TableRow>
             ) : rows.length === 0 ? (
@@ -164,6 +180,15 @@ export function TodaysVisitorsCard({
           </TableBody>
         </Table>
       </div>
+      {visitors.data && visitors.data.totalPages > 1 ? (
+        <div className="flex justify-center border-t border-border p-4">
+          <Pagination
+            page={page}
+            totalPages={visitors.data.totalPages}
+            onPageChange={setPage}
+          />
+        </div>
+      ) : null}
     </Card>
   );
 }

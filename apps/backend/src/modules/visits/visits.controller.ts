@@ -8,6 +8,8 @@ import {
   Query,
 } from '@nestjs/common';
 import {
+  AdminStatsQuery,
+  AdminTrafficQuery,
   BulkApproveVisitsInput,
   BulkDenyVisitsInput,
   CheckInVisitInput,
@@ -29,6 +31,7 @@ import {
 } from '../../shared/auth/auth.decorators';
 import { ZodValidationPipe } from '../../shared/common/pipes/zod-validation.pipe';
 import { VisitAccessService } from './access.service';
+import { VisitDashboardService } from './dashboard.service';
 import { VisitAuthoringService } from './authoring.service';
 import { VisitModerationService } from './moderation.service';
 import { VisitReadService } from './read.service';
@@ -36,6 +39,7 @@ import { VisitReadService } from './read.service';
 @Controller('visits')
 export class VisitsController {
   constructor(
+    private readonly dashboard: VisitDashboardService,
     private readonly read: VisitReadService,
     private readonly authoring: VisitAuthoringService,
     private readonly moderation: VisitModerationService,
@@ -63,6 +67,22 @@ export class VisitsController {
     @CurrentUser() principal: AuthUser,
   ) {
     return this.authoring.createVisits(input, principal.userId);
+  }
+
+  @Get('dashboard/stats')
+  @RequirePermissions(PERMISSIONS.USER_READ)
+  dashboardStats(
+    @Query(new ZodValidationPipe(AdminStatsQuery)) query: AdminStatsQuery,
+  ) {
+    return this.dashboard.stats(query);
+  }
+
+  @Get('dashboard/traffic')
+  @RequirePermissions(PERMISSIONS.USER_READ)
+  dashboardTraffic(
+    @Query(new ZodValidationPipe(AdminTrafficQuery)) query: AdminTrafficQuery,
+  ) {
+    return this.dashboard.traffic(query);
   }
 
   @Get(':id')
