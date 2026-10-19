@@ -61,6 +61,6 @@ import { WhatsappTransport } from './transports/whatsapp/whatsapp.transport';
       inject: [EmailTransport, SmsTransport, WhatsappTransport],
     },
   ],
-  exports: [NotificationService],
+  exports: [NotificationService, QrService],
 })
 export class NotificationsModule {}

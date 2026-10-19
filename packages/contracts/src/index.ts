@@ -22,3 +22,4 @@ export * from "./admin/admin.schema.js";
 export * from "./evacuation/evacuation.schema.js";
 export * from "./consent/consent.schema.js";
 export * from "./report/report.schema.js";
+export * from "./desk-qr/desk-qr.schema.js";

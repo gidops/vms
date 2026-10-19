@@ -43,6 +43,16 @@ export const EVENT_TYPES = {
   VisitsExported: 'report.visits_exported',
   /** Same export id; the stream broke (client abort, DB error) part-way. */
   VisitsExportFailed: 'report.visits_export_failed',
+  DeskQrCreated: 'desk_qr.created',
+  /** The printed V1 issuer QR was taken over as the desk QR at cutover. */
+  DeskQrImported: 'desk_qr.imported',
+  DeskQrUpdated: 'desk_qr.updated',
+  /** New token: the printed poster stops working. */
+  DeskQrRotated: 'desk_qr.rotated',
+  DeskQrDisabled: 'desk_qr.disabled',
+  DeskQrEnabled: 'desk_qr.enabled',
+  /** A visitor submitted the form; a code went to the desk inbox. */
+  DeskQrCodeSent: 'desk_qr.code_sent',
   ConsentWithdrawn: 'consent.withdrawn',
   ConsentExported: 'consent.exported',
   NotificationRetried: 'notification.retried',

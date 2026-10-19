@@ -6,6 +6,8 @@ export const NOTIFICATION_TEMPLATES = {
   VISIT_APPROVED: 'visit.approved',
   VISITOR_ARRIVED: 'visitor.arrived',
   VISIT_THANK_YOU: 'visit.thank_you',
+  /** The 6-digit code reception reads to a self-registering visitor. */
+  DESK_QR_CODE: 'desk_qr.code',
 } as const;
 
 export type NotificationTemplateKey =
@@ -50,6 +52,10 @@ export const TEMPLATE_META: Record<
   [NOTIFICATION_TEMPLATES.VISIT_THANK_YOU]: {
     emailFile: 'visit-thank-you',
     ns: 'thankYou',
+  },
+  [NOTIFICATION_TEMPLATES.DESK_QR_CODE]: {
+    emailFile: 'desk-qr-code',
+    ns: 'deskQrCode',
   },
 };
 
