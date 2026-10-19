@@ -511,13 +511,16 @@
       "visitors": {
         "loadError": "Unable to load dashboard data. Please try again.",
         "title": "Today's Visitors",
+        "searchPlaceholder": "Search visitors…",
         "columns": {
           "visitor": "Visitor",
           "status": "Status",
           "host": "Host",
+          "guests": "No. of guests",
           "time": "Time",
           "action": "Action"
         },
+        "guestCount": "{count, plural, one {# Guest} other {# Guests}}",
         "view": "View",
         "viewVisitor": "View {name}",
         "noMatches": "No visitors match your search.",
@@ -528,9 +531,7 @@
           "expected": "Expected",
           "out": "Out"
         },
-        "emptyFilter": "No visitors in this view today.",
-        "onsiteFor": "Onsite · {duration}",
-        "range": "{from}–{to} of {total}"
+        "emptyFilter": "No visitors in this view today."
       },
       "quickActions": {
         "title": "Quick Actions",

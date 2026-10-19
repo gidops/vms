@@ -23,7 +23,7 @@ import { RouteGuard } from "@/shared/auth/RouteGuard";
  */
 function Overview() {
   const t = useTranslations("admin.overview");
-  // The top-nav search filters today's visitors.
+  // The top-nav search and the table's own field drive the same filter.
   const [search, setSearch] = React.useState("");
   const [detailId, setDetailId] = React.useState<string | null>(null);
   const [addingVisitor, setAddingVisitor] = React.useState(false);
@@ -52,6 +52,7 @@ function Overview() {
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
           <TodaysVisitorsCard
             search={search}
+            onSearchChange={setSearch}
             onView={setDetailId}
             className="min-w-0 xl:flex-[5]"
           />

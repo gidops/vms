@@ -72,11 +72,11 @@ describe("RecentActivityCard", () => {
   it("lists each event with its detail and how long ago, newest first", () => {
     renderWithIntl(<RecentActivityCard />);
     const [alert, request] = screen.getAllByRole("listitem");
-    expect(alert).toHaveTextContent("Security alert raised · John Doe");
+    expect(alert).toHaveTextContent("Security alert raised");
+    expect(alert).toHaveTextContent("John Doe");
     expect(alert).toHaveTextContent("2 minutes ago");
-    expect(request).toHaveTextContent(
-      "New visit request · Chidi Okonkwo for Mrs. Adebayo",
-    );
+    expect(request).toHaveTextContent("New visit request");
+    expect(request).toHaveTextContent("Chidi Okonkwo for Mrs. Adebayo");
     expect(screen.getByRole("link", { name: "View all" })).toHaveAttribute(
       "href",
       "/admin/activity",

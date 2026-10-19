@@ -6,6 +6,7 @@ import {
   Button,
   Card,
   Pagination,
+  SearchInput,
   SegmentedControl,
   Spinner,
   StatusBadge,
@@ -17,15 +18,14 @@ import {
   TableRow,
   cn,
 } from "@vms/ui";
-import { useFormatter, useNow, useTranslations } from "next-intl";
+import { CircleUserRound } from "lucide-react";
+import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
 import type { VisitStatus } from "@vms/contracts";
 import type { VisitListItem } from "@/data/visits/visits.api";
 import { useTodaysVisitors } from "@/data/admin/queries";
-import { waitingMinutes } from "./pendingApprovals";
 
-const COLUMNS = 5;
-const PAGE_SIZE = 5;
+const COLUMNS = 6;
 
 /** Overview segments → the visit statuses they show ("all" = no filter). */
 export const VISITOR_FILTERS = {
@@ -37,25 +37,22 @@ export const VISITOR_FILTERS = {
 export type VisitorFilter = keyof typeof VISITOR_FILTERS;
 
 /**
- * Today's visitors, earliest first, with an All / Onsite / Expected / Out
- * filter. Onsite rows show how long the visitor has been in, and the time
- * column is the check-in time once they have arrived. Search comes from the
- * top-nav field. Flagged rows are highlighted and lead to review. The card does
- * not render at all when nobody is scheduled today.
+ * Today's scheduled visits; flagged rows are highlighted and lead to review.
+ * The card is left out of the overview when nobody is scheduled today.
  */
 export function TodaysVisitorsCard({
   search,
+  onSearchChange,
   onView,
   className,
 }: {
   search: string;
+  onSearchChange: (value: string) => void;
   onView: (visitId: string) => void;
   className?: string;
 }) {
   const t = useTranslations("admin.overview.visitors");
-  const tApprovals = useTranslations("admin.overview.approvals");
   const format = useFormatter();
-  const now = useNow({ updateInterval: 60_000 });
   const [page, setPage] = React.useState(1);
   const [filter, setFilter] = React.useState<VisitorFilter>("all");
   const [previousSearch, setPreviousSearch] = React.useState(search);
@@ -67,44 +64,22 @@ export function TodaysVisitorsCard({
   const visitors = useTodaysVisitors(
     search,
     page,
-    PAGE_SIZE,
+    5,
     statuses ? [...statuses] : undefined,
   );
   const rows = visitors.data?.items ?? [];
-  const total = visitors.data?.total ?? 0;
 
-  if (visitors.isSuccess && total === 0 && filter === "all" && !search) {
+  if (
+    visitors.isSuccess &&
+    visitors.data.total === 0 &&
+    filter === "all" &&
+    !search
+  ) {
     return null;
   }
 
   const displayName = (row: VisitListItem) =>
     row.isGroupVisit && row.groupName ? row.groupName : row.visitor.fullName;
-
-  const status = (row: VisitListItem) => {
-    if (row.status === "CHECKED_IN" && row.checkInAt) {
-      const mins = waitingMinutes(String(row.checkInAt), now);
-      const duration =
-        mins >= 60
-          ? tApprovals("waitingHours", {
-              hours: Math.floor(mins / 60),
-              minutes: mins % 60,
-            })
-          : tApprovals("waitingMinutes", { minutes: mins });
-      return (
-        <Badge intent="success" tone="soft" className="font-semibold">
-          {t("onsiteFor", { duration })}
-        </Badge>
-      );
-    }
-    return <StatusBadge status={row.status} />;
-  };
-
-  const time = (row: VisitListItem) => {
-    const at = row.checkInAt ?? row.scheduledAt;
-    return at ? format.dateTime(new Date(at), { timeStyle: "short" }) : "—";
-  };
-
-  const first = (page - 1) * PAGE_SIZE + 1;
 
   return (
     <Card
@@ -112,24 +87,41 @@ export function TodaysVisitorsCard({
       aria-labelledby="admin-todays-visitors"
       className={cn("flex flex-col overflow-hidden rounded-2xl", className)}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3 p-4 sm:px-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-4">
         <h2
           id="admin-todays-visitors"
-          className="text-lg font-semibold text-fg"
+          className="flex items-center gap-2 text-lg font-semibold text-fg"
         >
           {t("title")}
+          {visitors.data ? (
+            <Badge intent="primary" tone="soft">
+              {format.number(visitors.data.total)}
+            </Badge>
+          ) : null}
         </h2>
-        <SegmentedControl
-          aria-label={t("filterLabel")}
-          value={filter}
-          onValueChange={(v) => {
-            setFilter(v as VisitorFilter);
-            setPage(1);
-          }}
-          options={(Object.keys(VISITOR_FILTERS) as VisitorFilter[]).map(
-            (key) => ({ value: key, label: t(`filters.${key}`) }),
-          )}
-        />
+        <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
+          <SegmentedControl
+            aria-label={t("filterLabel")}
+            value={filter}
+            onValueChange={(v) => {
+              setFilter(v as VisitorFilter);
+              setPage(1);
+            }}
+            options={(Object.keys(VISITOR_FILTERS) as VisitorFilter[]).map(
+              (key) => ({ value: key, label: t(`filters.${key}`) }),
+            )}
+          />
+          <div className="w-full sm:w-56">
+            <SearchInput
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              onClear={() => onSearchChange("")}
+              placeholder={t("searchPlaceholder")}
+              aria-label={t("searchPlaceholder")}
+              className="rounded-full"
+            />
+          </div>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -137,11 +129,10 @@ export function TodaysVisitorsCard({
           <TableHeader>
             <TableRow>
               <TableHead>{t("columns.visitor")}</TableHead>
-              <TableHead className="hidden sm:table-cell">
-                {t("columns.host")}
-              </TableHead>
-              <TableHead>{t("columns.time")}</TableHead>
               <TableHead>{t("columns.status")}</TableHead>
+              <TableHead>{t("columns.host")}</TableHead>
+              <TableHead>{t("columns.guests")}</TableHead>
+              <TableHead>{t("columns.time")}</TableHead>
               <TableHead>
                 <span className="sr-only">{t("columns.action")}</span>
               </TableHead>
@@ -180,7 +171,6 @@ export function TodaysVisitorsCard({
                 return (
                   <TableRow
                     key={row.id}
-                    data-testid="todays-visitor-row"
                     className={flagged ? "bg-accent-subtle" : undefined}
                   >
                     <TableCell>
@@ -190,30 +180,36 @@ export function TodaysVisitorsCard({
                           size="md"
                           accent={row.isGroupVisit ? "group" : "single"}
                         />
-                        <span className="flex min-w-0 flex-col">
-                          <span className="font-semibold text-fg">{name}</span>
-                          {row.isGroupVisit ? (
-                            <span className="text-xs text-fg-muted">
-                              {tApprovals("groupGuests", {
-                                count: row.groupSize,
-                              })}
-                            </span>
-                          ) : null}
-                        </span>
+                        <span className="font-medium text-fg">{name}</span>
                       </span>
                     </TableCell>
-                    <TableCell className="hidden text-fg-muted sm:table-cell">
+                    <TableCell>
+                      <StatusBadge status={row.status} />
+                    </TableCell>
+                    <TableCell className="text-fg-muted">
                       {row.host?.user.fullName ?? row.floor ?? "—"}
                     </TableCell>
-                    <TableCell className="whitespace-nowrap text-fg-muted">
-                      {time(row)}
+                    <TableCell className="text-fg-muted">
+                      <span className="flex items-center gap-1.5">
+                        <CircleUserRound
+                          className="size-4 text-fg"
+                          aria-hidden="true"
+                        />
+                        {t("guestCount", { count: row.groupSize })}
+                      </span>
                     </TableCell>
-                    <TableCell>{status(row)}</TableCell>
-                    <TableCell className="text-end">
+                    <TableCell className="whitespace-nowrap text-fg-muted">
+                      {row.scheduledAt
+                        ? format.dateTime(new Date(row.scheduledAt), {
+                            timeStyle: "short",
+                          })
+                        : "—"}
+                    </TableCell>
+                    <TableCell>
                       <Button
                         size="sm"
-                        intent="primary"
-                        tone={flagged ? "solid" : "ghost"}
+                        intent={flagged ? "primary" : "neutral"}
+                        tone={flagged ? "solid" : "outline"}
                         onClick={() => onView(row.id)}
                         aria-label={t("viewVisitor", { name })}
                       >
@@ -227,22 +223,13 @@ export function TodaysVisitorsCard({
           </TableBody>
         </Table>
       </div>
-      {visitors.data && total > 0 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3 text-sm sm:px-5">
-          <span className="text-fg-muted">
-            {t("range", {
-              from: first,
-              to: first + rows.length - 1,
-              total,
-            })}
-          </span>
-          {visitors.data.totalPages > 1 ? (
-            <Pagination
-              page={page}
-              totalPages={visitors.data.totalPages}
-              onPageChange={setPage}
-            />
-          ) : null}
+      {visitors.data && visitors.data.totalPages > 1 ? (
+        <div className="flex justify-center border-t border-border p-4">
+          <Pagination
+            page={page}
+            totalPages={visitors.data.totalPages}
+            onPageChange={setPage}
+          />
         </div>
       ) : null}
     </Card>

@@ -511,13 +511,16 @@
       "visitors": {
         "loadError": "تعذر تحميل البيانات. يرجى المحاولة مرة أخرى.",
         "title": "زوار اليوم",
+        "searchPlaceholder": "ابحث عن الزوار…",
         "columns": {
           "visitor": "الزائر",
           "status": "الحالة",
           "host": "المضيف",
+          "guests": "عدد الضيوف",
           "time": "الوقت",
           "action": "الإجراء"
         },
+        "guestCount": "{count, plural, zero {لا ضيوف} one {ضيف واحد} two {ضيفان} few {# ضيوف} many {# ضيفًا} other {# ضيف}}",
         "view": "عرض",
         "viewVisitor": "عرض {name}",
         "noMatches": "لا يوجد زوار مطابقون لبحثك.",
@@ -528,9 +531,7 @@
           "expected": "متوقَّع",
           "out": "غادر"
         },
-        "emptyFilter": "لا يوجد زوار في هذا العرض اليوم.",
-        "onsiteFor": "في الموقع · {duration}",
-        "range": "{from}–{to} من {total}"
+        "emptyFilter": "لا يوجد زوار في هذا العرض اليوم."
       },
       "quickActions": {
         "title": "إجراءات سريعة",

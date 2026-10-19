@@ -72,23 +72,31 @@ describe("TodaysVisitorsCard", () => {
     visitors = ok(rows, 64);
   });
 
-  it("lists visitors with host, time and status like the overview mock", () => {
-    renderWithIntl(<TodaysVisitorsCard search="" onView={vi.fn()} />);
-    const [amaka, group, grace] = screen.getAllByTestId("todays-visitor-row");
-    // Onsite: check-in time and how long they've been in.
+  it("lists visitors with status, host, guests and time as designed", () => {
+    renderWithIntl(
+      <TodaysVisitorsCard
+        search=""
+        onSearchChange={vi.fn()}
+        onView={vi.fn()}
+      />,
+    );
+    const [, amaka, group, grace] = screen.getAllByRole("row");
+    expect(amaka).toHaveTextContent("Amaka Bello");
+    expect(amaka).toHaveTextContent("Onsite");
     expect(amaka).toHaveTextContent("Dr. Okeke");
-    expect(amaka).toHaveTextContent("9:12 AM");
-    expect(amaka).toHaveTextContent("Onsite · 1h 20m");
-    expect(group).toHaveTextContent("Group · 4 guests");
-    // Expected: the scheduled time.
-    expect(grace).toHaveTextContent("10:45 AM");
+    expect(group).toHaveTextContent("4 Guests");
     expect(grace).toHaveTextContent("Expected");
-    expect(screen.getByText("1–3 of 64")).toBeInTheDocument();
+    expect(grace).toHaveTextContent("10:45 AM");
+    // Count badge next to the title, and the card's own search field.
+    expect(screen.getByText("64")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Search visitors…")).toBeInTheDocument();
   });
 
   it("filters by status and opens a visit", () => {
     const onView = vi.fn();
-    renderWithIntl(<TodaysVisitorsCard search="" onView={onView} />);
+    renderWithIntl(
+      <TodaysVisitorsCard search="" onSearchChange={vi.fn()} onView={onView} />,
+    );
     fireEvent.click(screen.getByRole("radio", { name: "Onsite" }));
     expect(calls.at(-1)).toEqual(["", 1, 5, ["CHECKED_IN"]]);
     fireEvent.click(screen.getByRole("button", { name: "View Grace Hassan" }));
@@ -98,14 +106,24 @@ describe("TodaysVisitorsCard", () => {
   it("does not render when nobody is scheduled today", () => {
     visitors = ok([]);
     const { container } = renderWithIntl(
-      <TodaysVisitorsCard search="" onView={vi.fn()} />,
+      <TodaysVisitorsCard
+        search=""
+        onSearchChange={vi.fn()}
+        onView={vi.fn()}
+      />,
     );
     expect(container).toBeEmptyDOMElement();
   });
 
   it("keeps the card with a message when a search or filter matches nothing", () => {
     visitors = ok([]);
-    renderWithIntl(<TodaysVisitorsCard search="zzz" onView={vi.fn()} />);
+    renderWithIntl(
+      <TodaysVisitorsCard
+        search="zzz"
+        onSearchChange={vi.fn()}
+        onView={vi.fn()}
+      />,
+    );
     expect(
       screen.getByText("No visitors match your search."),
     ).toBeInTheDocument();
@@ -114,12 +132,22 @@ describe("TodaysVisitorsCard", () => {
   it("shows a spinner while loading and an alert on error", () => {
     visitors = { isLoading: true, isError: false, isSuccess: false };
     const { unmount } = renderWithIntl(
-      <TodaysVisitorsCard search="" onView={vi.fn()} />,
+      <TodaysVisitorsCard
+        search=""
+        onSearchChange={vi.fn()}
+        onView={vi.fn()}
+      />,
     );
     expect(screen.getByRole("status", { name: "Loading" })).toBeInTheDocument();
     unmount();
     visitors = { isLoading: false, isError: true, isSuccess: false };
-    renderWithIntl(<TodaysVisitorsCard search="" onView={vi.fn()} />);
+    renderWithIntl(
+      <TodaysVisitorsCard
+        search=""
+        onSearchChange={vi.fn()}
+        onView={vi.fn()}
+      />,
+    );
     expect(screen.getByRole("alert")).toHaveTextContent("Unable to load");
   });
 });
