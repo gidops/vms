@@ -82,7 +82,8 @@
       "notFound": "User not found"
     },
     "notification": {
-      "notFound": "Notification not found"
+      "notFound": "Notification not found",
+      "notRetryable": "This message can only be retried after it has failed."
     },
     "auth": {
       "invalidCredentials": "Invalid email or password."

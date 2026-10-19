@@ -25,3 +25,27 @@ export const NotificationQuery = PaginationQuery.extend({
   unreadOnly: z.coerce.boolean().default(false),
 });
 export type NotificationQuery = z.infer<typeof NotificationQuery>;
+
+/** Delivery lifecycle of an out-of-band notification. SENT = accepted by the provider. */
+export const NotificationDeliveryStatus = z.enum(["PENDING", "SENT", "FAILED"]);
+export type NotificationDeliveryStatus = z.infer<
+  typeof NotificationDeliveryStatus
+>;
+
+/**
+ * One email / SMS / WhatsApp message sent about a visit (IN_APP rows are not
+ * exposed). The recipient is masked. `error` is only returned to Security
+ * Manager / System Admin.
+ */
+export const NotificationDelivery = z.object({
+  id: z.string().uuid(),
+  channel: z.enum(["EMAIL", "SMS", "WHATSAPP"]),
+  templateKey: z.string(),
+  recipientMasked: z.string().nullable(),
+  status: NotificationDeliveryStatus,
+  attempts: z.number().int().min(0),
+  error: z.string().nullable(),
+  sentAt: z.coerce.date().nullable(),
+  createdAt: z.coerce.date(),
+});
+export type NotificationDelivery = z.infer<typeof NotificationDelivery>;

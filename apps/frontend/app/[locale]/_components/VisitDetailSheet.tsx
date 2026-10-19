@@ -1,5 +1,6 @@
 "use client";
 
+import { PERMISSIONS } from "@vms/contracts";
 import { Button, DetailDrawer, DetailSection, Spinner } from "@vms/ui";
 import { useTranslations } from "next-intl";
 import * as React from "react";
@@ -30,6 +31,7 @@ import { GuestInformationSection } from "./visit-detail/sections/GuestInformatio
 import { HostUnitFloorSection } from "./visit-detail/sections/HostUnitFloorSection";
 import { NotesSection } from "./visit-detail/sections/NotesSection";
 import { NotificationBanner } from "./visit-detail/sections/NotificationBanner";
+import { NotificationsSection } from "./visit-detail/sections/NotificationsSection";
 import { RateGuestSection } from "./visit-detail/sections/RateGuestSection";
 import { VisitProgressSection } from "./visit-detail/sections/VisitProgressSection";
 import { VisitSummarySection } from "./visit-detail/sections/VisitSummarySection";
@@ -50,8 +52,9 @@ function VisitDetailBody({
   notification?: NotificationContext;
 }) {
   const t = useTranslations("requests");
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const m = useVisitDetailModel(data);
+  const canSeeDeliveries = hasPermission(PERMISSIONS.NOTIFICATION_READ);
 
   const [activeForm, setActiveForm] = React.useState<ActiveForm>(null);
   const [editing, setEditing] = React.useState(false);
@@ -243,6 +246,9 @@ function VisitDetailBody({
               showHostCard={m.showHostCard}
               currentUserId={user?.id}
             />
+            {canSeeDeliveries ? (
+              <NotificationsSection visitId={data.id} />
+            ) : null}
             {m.hasAlert && m.activeAlert ? (
               <AlertSummarySection data={data} alert={m.activeAlert} />
             ) : null}
