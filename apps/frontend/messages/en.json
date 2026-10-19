@@ -876,7 +876,7 @@
       "lastAnswered": "Last answered",
       "sourceVisit": "Source visit"
     },
-    "walkIn": "Walk-in",
+    "viewVisit": "View visit",
     "empty": "No one has opted in yet.",
     "noMatches": "No opt-ins match your search.",
     "loadError": "Couldn't load the opt-ins.",

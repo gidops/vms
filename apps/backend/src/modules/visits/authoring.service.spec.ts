@@ -109,7 +109,7 @@ describe('VisitAuthoringService.createVisits', () => {
         data: expect.objectContaining({
           status: 'APPROVED',
           hostId: null,
-          referenceCode: null,
+          referenceCode: expect.stringMatching(/\S/),
         }),
       }),
     );

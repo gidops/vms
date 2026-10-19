@@ -388,6 +388,23 @@ describe('V1 gap features (e2e)', () => {
       expect(await inList(b)).toBe(true);
     });
 
+    it("shows a walk-in's own visit reference as the source visit", async () => {
+      const d = `consent-d-${run}@x.com`;
+      const v = await walkIn(d, { commsConsent: true });
+      const visit = await prisma.visit.findUnique({ where: { id: v.id } });
+      expect(visit?.referenceCode).toMatch(/\S/);
+      const res = await as(ROLES.READ_ADMIN)
+        .get(`/consent/opt-ins?search=${encodeURIComponent(d)}`)
+        .expect(200);
+      expect(res.body.items).toEqual([
+        expect.objectContaining({
+          email: d,
+          sourceVisitId: v.id,
+          sourceReferenceCode: visit?.referenceCode,
+        }),
+      ]);
+    });
+
     it('withdrawal removes the email immediately and leaves visit records unchanged', async () => {
       const c = `consent-c-${run}@x.com`;
       const v = await walkIn(c, { commsConsent: true });

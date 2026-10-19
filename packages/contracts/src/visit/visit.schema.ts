@@ -77,8 +77,9 @@ export const Visit = z.object({
    */
   groupContact: z.string().nullable().optional(),
   /**
-   * Human-friendly invite code (e.g. "5A19-795") generated for invites at
-   * creation. Encoded in the QR the guest presents; null for walk-ins.
+   * Human-friendly visit reference (e.g. "5A19-795") generated for every visit
+   * at creation. For invites it is also the code in the QR the guest presents;
+   * walk-ins get no QR. Null only on visits created before walk-ins had one.
    */
   referenceCode: z.string().nullable().optional(),
   type: VisitType,

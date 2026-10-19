@@ -53,7 +53,7 @@ function SourceVisit({
       onClick={() => onOpen(item.sourceVisitId!)}
       className="font-semibold tracking-wide text-primary hover:underline"
     >
-      {item.sourceReferenceCode ?? t("walkIn")}
+      {item.sourceReferenceCode ?? t("viewVisit")}
     </button>
   );
 }

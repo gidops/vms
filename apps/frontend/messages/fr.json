@@ -876,7 +876,7 @@
       "lastAnswered": "Dernière réponse",
       "sourceVisit": "Visite d'origine"
     },
-    "walkIn": "Sans rendez-vous",
+    "viewVisit": "Voir la visite",
     "empty": "Personne ne s'est encore abonné.",
     "noMatches": "Aucun abonnement ne correspond à votre recherche.",
     "loadError": "Impossible de charger les abonnements.",

@@ -5,15 +5,20 @@ import type { VisitRequestDetail } from "@/data/visits/visits.api";
 import { timelineFor } from "../helpers";
 import { SheetSection } from "./SheetSection";
 
-/** QR + invite reference code + "Send CODE to guest" (staff, pre-check-in only). */
+/**
+ * QR + visit reference code + "Send CODE to guest" (staff, pre-check-in only).
+ * Walk-ins have a reference but no QR and nothing to send.
+ */
 function QrPanel({
   visitId,
   qrCode,
   referenceCode,
+  canSend,
 }: {
   visitId: string;
   qrCode?: string | null;
   referenceCode?: string | null;
+  canSend: boolean;
 }) {
   const t = useTranslations("requests");
   const resend = useResendCode(visitId);
@@ -34,7 +39,7 @@ function QrPanel({
           {referenceCode}
         </span>
       ) : null}
-      {referenceCode ? (
+      {referenceCode && canSend ? (
         <button
           type="button"
           onClick={() => resend.mutate()}
@@ -103,6 +108,7 @@ export function VisitProgressSection({
             visitId={data.id}
             qrCode={data.qrCode}
             referenceCode={data.referenceCode}
+            canSend={data.type !== "WALK_IN"}
           />
         ) : onsite ? (
           <DestinationCard floor={data.floor} />
