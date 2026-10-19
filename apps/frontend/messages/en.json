@@ -1045,5 +1045,84 @@
       "code": "Reception will read you a code to finish.",
       "footer": "VMC desk · QR created {date}"
     }
+  },
+  "selfRegister": {
+    "brand": "AATC · VMC desk",
+    "title": "Register your visit",
+    "today": "Today, {date}",
+    "expiresIn": "Form expires in {countdown}",
+    "optional": "Optional",
+    "yes": "Yes",
+    "no": "No",
+    "sections": {
+      "contact": "Your contact details",
+      "about": "About you",
+      "visiting": "Who are you visiting?",
+      "visit": "Visit details",
+      "safety": "Safety and communication"
+    },
+    "fields": {
+      "email": "Email address",
+      "phone": "Phone number",
+      "fullName": "Full name",
+      "organization": "Organisation",
+      "floor": "Floor of visit",
+      "floorNotSure": "Not sure / not applicable",
+      "purpose": "Purpose of visit",
+      "evacuation": "In the event of an emergency, would you require assistance with evacuation?",
+      "consent": "Would you like to receive updates on Afreximbank's activities and events?"
+    },
+    "host": {
+      "placeholder": "Type a name",
+      "help": "Leave this empty if your visit is a general enquiry.",
+      "results": "Matching staff",
+      "none": "No matching staff. Leave blank for a general enquiry.",
+      "remove": "Remove {name}"
+    },
+    "errors": {
+      "email": "Enter a full email address, like name@company.com",
+      "phone": "Enter a valid phone number, or leave it empty",
+      "required": "Fill this in",
+      "choose": "Choose one",
+      "yesNo": "Choose Yes or No",
+      "chooseType": "Choose the type of assistance you need",
+      "describeOther": "Describe the assistance you need"
+    },
+    "checkAnswers": "{count, plural, one {Check # answer below.} other {Check # answers below.}}",
+    "submit": "Register my visit",
+    "submitHelp": "Reception will read you a code to finish.",
+    "code": {
+      "heading": "Almost done",
+      "title": "Ask reception for your code",
+      "body": "We've sent a 6-digit code to reception. Tell them your name and they'll read it to you.",
+      "label": "6-digit code",
+      "confirm": "Confirm",
+      "expires": "Code expires in {countdown}"
+    },
+    "codeWrong": "{left, plural, =0 {That code doesn't match.} one {That code doesn't match. Check it with reception and try again. # try left.} other {That code doesn't match. Check it with reception and try again. # tries left.}}",
+    "done": {
+      "title": "You're registered",
+      "body": "Show this reference at the VMC desk to get your visitor badge.",
+      "name": "Name",
+      "visiting": "Visiting",
+      "when": "When"
+    },
+    "inactive": {
+      "title": "This QR code isn't active",
+      "body": "Please register at the VMC desk. Reception will sign you in."
+    },
+    "expired": {
+      "title": "This form has expired",
+      "body": "Please scan the QR code again."
+    },
+    "locked": {
+      "title": "Too many wrong codes",
+      "body": "Please scan the QR code again, or register at the VMC desk."
+    },
+    "startAgain": "Start again",
+    "problems": {
+      "offline": "No connection. Your answers are still here. Try again when you're back online.",
+      "unknown": "Something went wrong. Try again, or register at the VMC desk."
+    }
   }
 }
