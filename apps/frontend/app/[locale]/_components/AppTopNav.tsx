@@ -1,6 +1,6 @@
 "use client";
 
-import { homeFor } from "@vms/contracts";
+import { homeFor, PERMISSIONS } from "@vms/contracts";
 import { SegmentedControl, TopNav } from "@vms/ui";
 import { Bell } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -22,11 +22,18 @@ function BrandMark() {
 export interface AppTopNavProps {
   /**
    * Primary view toggle. The VMC dashboard toggles schedule/requests; the staff
-   * dashboard toggles schedule/visits/updates. Omit on dashboards with no toggle.
+   * dashboard toggles schedule/visits/updates; the admin console toggles
+   * overview/requests/users. Omit on dashboards with no toggle.
    */
-  active?: "schedule" | "visits" | "requests" | "updates";
+  active?:
+    | "schedule"
+    | "visits"
+    | "requests"
+    | "updates"
+    | "overview"
+    | "users";
   /** Which app's nav segments + routes to render (default "vmc"). */
-  app?: "vmc" | "staff";
+  app?: "vmc" | "staff" | "admin";
   /**
    * Override the "Requests & Alerts" pill count. Defaults to the live per-user
    * unread count (scoped to the current app), so callers normally omit this.
@@ -47,7 +54,8 @@ export interface AppTopNavProps {
  * Shared application top bar: brand + an optional primary view toggle + the
  * shared control cluster (role switcher, language, account menu). Used by every
  * dashboard so the nav stays identical and in sync. The `app` prop selects the
- * VMC (schedule/requests) or staff (schedule/visits/requests) segment set.
+ * VMC (schedule/requests), staff (schedule/visits/updates) or admin
+ * (overview/requests/users) segment set.
  */
 export function AppTopNav({
   active,
@@ -59,7 +67,7 @@ export function AppTopNav({
 }: AppTopNavProps) {
   const tNav = useTranslations("nav");
   const router = useRouter();
-  const { activeRole } = useAuth();
+  const { activeRole, hasPermission } = useAuth();
 
   // The nav bubble shows the current user's unread count; staff see their own
   // scope, the VMC sees all. An explicit `requestsCount` overrides it.
@@ -67,26 +75,49 @@ export function AppTopNav({
   const count = requestsCount ?? unreadQ.data?.unread ?? undefined;
 
   const options =
-    app === "staff"
+    app === "admin"
       ? [
-          { value: "schedule", label: tNav("schedule"), route: "/staff" },
-          { value: "visits", label: tNav("myVisits"), route: "/staff/visits" },
-          {
-            value: "updates",
-            label: tNav("updates"),
-            route: "/staff/updates",
-            count,
-          },
-        ]
-      : [
-          { value: "schedule", label: tNav("schedule"), route: "/dashboard" },
+          { value: "overview", label: tNav("overview"), route: "/admin/v2" },
           {
             value: "requests",
             label: tNav("requests"),
-            route: "/requests",
+            route: "/admin/v2/requests",
             count,
           },
-        ];
+          ...(hasPermission(PERMISSIONS.USER_READ)
+            ? [
+                {
+                  value: "users",
+                  label: tNav("users"),
+                  route: "/admin/v2/users",
+                },
+              ]
+            : []),
+        ]
+      : app === "staff"
+        ? [
+            { value: "schedule", label: tNav("schedule"), route: "/staff" },
+            {
+              value: "visits",
+              label: tNav("myVisits"),
+              route: "/staff/visits",
+            },
+            {
+              value: "updates",
+              label: tNav("updates"),
+              route: "/staff/updates",
+              count,
+            },
+          ]
+        : [
+            { value: "schedule", label: tNav("schedule"), route: "/dashboard" },
+            {
+              value: "requests",
+              label: tNav("requests"),
+              route: "/requests",
+              count,
+            },
+          ];
 
   return (
     <TopNav
