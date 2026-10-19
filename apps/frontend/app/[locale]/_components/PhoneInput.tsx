@@ -33,7 +33,9 @@ export function PhoneInput({
   id,
 }: PhoneInputProps) {
   return (
+    // Phone numbers read left to right in every language (no "234+" in Arabic).
     <div
+      dir="ltr"
       className={
         "flex h-10 items-stretch overflow-hidden rounded-md border " +
         (invalid ? "border-danger" : "border-border")
