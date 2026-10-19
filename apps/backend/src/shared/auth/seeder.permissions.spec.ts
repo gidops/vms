@@ -77,6 +77,21 @@ describe('Role → permission matrix (V1 gap features)', () => {
     expect(has(ROLES.AUDITOR, PERMISSIONS.CONSENT_MANAGE)).toBe(false);
   });
 
+  it('opens Analytics & Reports to every admin console role and auditors only', () => {
+    const readers = new Set<string>([
+      ROLES.ADMIN,
+      ROLES.VMC_ADMIN,
+      ROLES.READ_ADMIN,
+      ROLES.AUDITOR,
+    ]);
+    for (const role of Object.keys(SCOPED_ROLE_DEFS)) {
+      expect([role, has(role, PERMISSIONS.REPORT_READ)]).toEqual([
+        role,
+        readers.has(role),
+      ]);
+    }
+  });
+
   it('only uses permission keys from the catalogue', () => {
     const catalogue = new Set<string>(Object.values(PERMISSIONS));
     for (const def of Object.values(SCOPED_ROLE_DEFS)) {

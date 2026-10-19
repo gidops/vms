@@ -16,14 +16,14 @@ import {
 } from "lucide-react";
 
 /**
- * Admin-console permission keys. `report:export` is now issued by the backend
- * (Security Manager + System Admin) and lives in `PERMISSIONS`; the others are
+ * Admin-console permission keys. `report:read` (Analytics) and `report:export`
+ * are issued by the backend and live in `PERMISSIONS`; the others are
  * not seeded yet, so `hasPermission` returns false for them and the gated UI
  * stays hidden. Move each into `PERMISSIONS` in @vms/contracts when it lands.
  */
 export const ADMIN_PERMISSIONS = {
   WATCHLIST_READ: "watchlist:read",
-  REPORT_READ: "report:read",
+  REPORT_READ: PERMISSIONS.REPORT_READ,
   REPORT_EXPORT: PERMISSIONS.REPORT_EXPORT,
   /** Floors, locations and visit categories — System Admin only. */
   CONFIG_MANAGE: "config:manage",
