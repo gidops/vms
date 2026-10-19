@@ -47,6 +47,8 @@ export interface AdminOverviewStats {
   pending: number;
   reviewRequested: number;
   onsite: number;
+  /** Distinct floors the onsite visitors are on (visits with no floor are skipped). */
+  onsiteFloors: number;
   checkedOutToday: number;
   checkedInToday: number;
   deniedToday: number;

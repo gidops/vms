@@ -43,6 +43,7 @@ export class VisitDashboardService {
       checkedOutToday,
       checkedInToday,
       deniedToday,
+      onsiteFloorGroups,
     ] = await Promise.all([
       this.prisma.visit.count({ where: visitors(today) }),
       this.prisma.visit.count({ where: visitors(yesterday) }),
@@ -61,6 +62,11 @@ export class VisitDashboardService {
       this.prisma.visit.count({
         where: { status: 'DENIED', scheduledAt: today },
       }),
+      // Distinct floors with someone on site ("23 onsite across 6 floors").
+      this.prisma.visit.groupBy({
+        by: ['floor'],
+        where: { status: 'CHECKED_IN', floor: { not: null } },
+      }),
     ]);
     return {
       visitorsToday,
@@ -72,6 +78,7 @@ export class VisitDashboardService {
       checkedOutToday,
       checkedInToday,
       deniedToday,
+      onsiteFloors: onsiteFloorGroups.length,
     };
   }
 
