@@ -322,6 +322,11 @@ model Visit {
   // Denormalized creator name, preserved if the creator's account is deleted.
   createdByName String?
   source       String?     @default("VMC_STATION")
+  // Intake answers (null = legacy visit created before the questions existed).
+  // needsEvacuationAssist feeds the live Evacuation Roll; commsConsent is the
+  // answer given at THIS visit (current opt-in status lives in CommsConsentEvent).
+  needsEvacuationAssist Boolean?
+  commsConsent          Boolean?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
@@ -339,6 +344,7 @@ model Visit {
   @@index([visitorId])
   @@index([hostId])
   @@index([groupId])
+  @@index([scheduledAt])
 }
 
 model Invitation {
@@ -499,6 +505,31 @@ model Notification {
 
   @@index([status, availableAt])
   @@index([userId, readAt])
+  @@index([visitId])
+}
+
+// ---------------------------------------------------------------------------
+// Communication consent (NDPR accountability)
+// ---------------------------------------------------------------------------
+enum ConsentSource {
+  VISIT
+  WITHDRAWAL
+}
+
+// Append-only log of every comms-consent answer, keyed on the normalised
+// (trimmed, lower-cased) email. The current status for an email is its latest
+// event; a withdrawal is a new event, so visit history is never rewritten.
+model CommsConsentEvent {
+  id          String        @id @default(uuid())
+  email       String
+  consent     Boolean
+  source      ConsentSource
+  visitId     String?
+  actorUserId String?
+  createdAt   DateTime      @default(now())
+
+  @@index([email, createdAt])
+  @@index([visitId])
 }
 
 // ---------------------------------------------------------------------------
