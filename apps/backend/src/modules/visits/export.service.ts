@@ -82,7 +82,9 @@ type ExportVisit = Awaited<
 /**
  * Visitor export (CSV / Excel) by visit date. The window is the WAT calendar
  * days `from`..`to` inclusive over `scheduledAt` (walk-ins get `now()` at
- * creation). Rows are streamed in batches, and every export is audit-logged.
+ * creation). Rows are streamed in batches. Every export is audit-logged before
+ * the first byte goes out, then again (same export id) when it completes or
+ * fails, so an aborted or broken download still leaves a trace.
  */
 @Injectable()
 export class VisitExportService {
@@ -171,13 +173,70 @@ export class VisitExportService {
     }
   }
 
-  /** Stream the export to `out`, then audit-log it. Resolves to the row count. */
+  private audit(
+    type: (typeof EVENT_TYPES)[
+      | 'VisitsExportStarted'
+      | 'VisitsExported'
+      | 'VisitsExportFailed'],
+    exportId: string,
+    payload: Record<string, unknown>,
+    actorUserId: string,
+  ) {
+    return this.txm.run((tx) =>
+      this.events.publish(tx, {
+        type,
+        aggregateType: 'Report',
+        aggregateId: exportId,
+        payload,
+        metadata: { actorUserId },
+      }),
+    );
+  }
+
+  /**
+   * Audit the start, stream the export to `out`, then audit the outcome.
+   * Resolves to the row count. If the start can't be recorded, nothing is sent.
+   */
   async write(
     q: ExportVisitsQuery,
     out: Writable,
     actorUserId: string,
   ): Promise<number> {
+    const exportId = randomUUID();
+    const range = { from: q.from, to: q.to, format: q.format };
+    await this.audit(
+      EVENT_TYPES.VisitsExportStarted,
+      exportId,
+      range,
+      actorUserId,
+    );
     let rowCount = 0;
+    try {
+      await this.stream(q, out, (n) => (rowCount += n));
+    } catch (err) {
+      await this.audit(
+        EVENT_TYPES.VisitsExportFailed,
+        exportId,
+        { ...range, rowCount },
+        actorUserId,
+      ).catch(() => undefined); // keep the original error
+      throw err;
+    }
+    await this.audit(
+      EVENT_TYPES.VisitsExported,
+      exportId,
+      { ...range, rowCount },
+      actorUserId,
+    );
+    return rowCount;
+  }
+
+  /** Write every row to `out`, reporting each batch's size to `add`. */
+  private async stream(
+    q: ExportVisitsQuery,
+    out: Writable,
+    add: (rows: number) => void,
+  ): Promise<void> {
     if (q.format === 'xlsx') {
       const wb = new ExcelJS.stream.xlsx.WorkbookWriter({
         stream: out,
@@ -194,7 +253,7 @@ export class VisitExportService {
       ws.getRow(1).commit();
       for await (const rows of this.batches(q)) {
         for (const r of rows) ws.addRow(r).commit();
-        rowCount += rows.length;
+        add(rows.length);
       }
       ws.commit();
       await wb.commit();
@@ -214,20 +273,9 @@ export class VisitExportService {
             )
             .join(''),
         );
-        rowCount += rows.length;
+        add(rows.length);
       }
       out.end();
     }
-
-    await this.txm.run((tx) =>
-      this.events.publish(tx, {
-        type: EVENT_TYPES.VisitsExported,
-        aggregateType: 'Report',
-        aggregateId: randomUUID(),
-        payload: { from: q.from, to: q.to, format: q.format, rowCount },
-        metadata: { actorUserId },
-      }),
-    );
-    return rowCount;
   }
 }

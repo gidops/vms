@@ -512,6 +512,13 @@ describe('V1 gap features (e2e)', () => {
         (m) => m.from === '2001-03-17' && m.format === 'csv',
       );
       expect(audit?.metadata).toMatchObject({ rowCount: 1 });
+      // Recorded before streaming began, under the same export id.
+      const started = await waitForAudit(
+        'report.visits_export_started',
+        (m) => m.from === '2001-03-17' && m.format === 'csv',
+      );
+      expect(started?.metadata).not.toHaveProperty('rowCount');
+      expect(started?.entityId).toBe(audit?.entityId);
     });
 
     it('streams a valid xlsx', async () => {

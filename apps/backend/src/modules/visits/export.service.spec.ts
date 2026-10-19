@@ -113,6 +113,83 @@ describe('VisitExportService', () => {
     );
   });
 
+  it('audits the start before the first byte, then completion under the same export id', async () => {
+    const { service, publish } = setup([row(), row({ id: 'v2' })]);
+    const out = new PassThrough();
+    let bytesAtStart = -1;
+    let written = 0;
+    out.on('data', (c: Buffer) => (written += c.length));
+    publish.mockImplementation((_tx: unknown, e: { type: string }) => {
+      if (e.type === EVENT_TYPES.VisitsExportStarted) bytesAtStart = written;
+      return Promise.resolve({});
+    });
+    await service.write(
+      { from: '2026-10-17', to: '2026-10-17', format: 'csv' },
+      out,
+      'actor',
+    );
+    expect(bytesAtStart).toBe(0);
+    const [start, end] = publish.mock.calls.map(
+      (c: unknown[]) =>
+        c[1] as { type: string; aggregateId: string; payload: unknown },
+    );
+    expect(start.type).toBe(EVENT_TYPES.VisitsExportStarted);
+    expect(start.payload).toEqual({
+      from: '2026-10-17',
+      to: '2026-10-17',
+      format: 'csv',
+    });
+    expect(end.type).toBe(EVENT_TYPES.VisitsExported);
+    expect(end.payload).toMatchObject({ rowCount: 2 });
+    expect(end.aggregateId).toBe(start.aggregateId);
+  });
+
+  it('audits a failed export with the rows sent so far and rethrows', async () => {
+    const { service, findMany, publish } = setup([]);
+    findMany.mockReset();
+    findMany
+      .mockResolvedValueOnce(
+        Array.from({ length: 500 }, (_, i) => row({ id: `v${i}` })),
+      )
+      .mockRejectedValueOnce(new Error('db gone'));
+    const out = new PassThrough();
+    out.resume();
+    await expect(
+      service.write(
+        { from: '2026-10-17', to: '2026-10-17', format: 'csv' },
+        out,
+        'actor',
+      ),
+    ).rejects.toThrow('db gone');
+    const types = publish.mock.calls.map(
+      (c: unknown[]) => (c[1] as { type: string }).type,
+    );
+    expect(types).toEqual([
+      EVENT_TYPES.VisitsExportStarted,
+      EVENT_TYPES.VisitsExportFailed,
+    ]);
+    expect(publish.mock.calls[1][1]).toMatchObject({
+      payload: { rowCount: 500 },
+    });
+  });
+
+  it('sends nothing when the start cannot be audited', async () => {
+    const { service, findMany, publish } = setup([row()]);
+    publish.mockRejectedValueOnce(new Error('outbox down'));
+    const out = new PassThrough();
+    let written = 0;
+    out.on('data', (c: Buffer) => (written += c.length));
+    await expect(
+      service.write(
+        { from: '2026-10-17', to: '2026-10-17', format: 'csv' },
+        out,
+        'actor',
+      ),
+    ).rejects.toThrow('outbox down');
+    expect(written).toBe(0);
+    expect(findMany).not.toHaveBeenCalled();
+  });
+
   it('maps every column, WAT times, escaping and the latest email status', async () => {
     const { service } = setup([row()], [{ visitId: 'v1', status: 'FAILED' }]);
     const out = new PassThrough();
