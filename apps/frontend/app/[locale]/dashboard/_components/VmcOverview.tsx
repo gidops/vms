@@ -2,9 +2,16 @@
 
 import { PERMISSIONS } from "@vms/contracts";
 import { Button } from "@vms/ui";
-import { ChevronDown, LifeBuoy, MailCheck, SquareActivity } from "lucide-react";
+import {
+  ChevronDown,
+  Download,
+  LifeBuoy,
+  MailCheck,
+  SquareActivity,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
+import { ExportVisitorsDialog } from "@/app/[locale]/_components/ExportVisitorsDialog";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/shared/auth/AuthContext";
 
@@ -74,6 +81,9 @@ function QuickActions({
   const { hasPermission } = useAuth();
   const canEvacuation = hasPermission(PERMISSIONS.EVACUATION_READ);
   const canOptIns = hasPermission(PERMISSIONS.CONSENT_READ);
+  // V1 parity: reception keeps the visitor export (report:export).
+  const canExport = hasPermission(PERMISSIONS.REPORT_EXPORT);
+  const [exportOpen, setExportOpen] = React.useState(false);
   return (
     <>
       <DecorChevrons />
@@ -110,7 +120,20 @@ function QuickActions({
             </Link>
           </Button>
         ) : null}
+        {canExport ? (
+          <Button
+            intent="accent"
+            tone="outline"
+            onClick={() => setExportOpen(true)}
+          >
+            <Download className="size-4" aria-hidden="true" />
+            {t("quickActions.export")}
+          </Button>
+        ) : null}
       </div>
+      {canExport ? (
+        <ExportVisitorsDialog open={exportOpen} onOpenChange={setExportOpen} />
+      ) : null}
     </>
   );
 }

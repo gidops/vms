@@ -54,7 +54,8 @@
       "formComingSoonTitle": "قريبًا",
       "formComingSoon": "هذا النموذج قيد الإنشاء وسيتوفر قريبًا.",
       "evacuation": "قائمة الإخلاء",
-      "optIns": "الاشتراكات"
+      "optIns": "الاشتراكات",
+      "export": "تصدير البيانات"
     },
     "activity": {
       "title": "عرض نشاطك"

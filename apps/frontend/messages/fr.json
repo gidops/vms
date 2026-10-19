@@ -54,7 +54,8 @@
       "formComingSoonTitle": "Bientôt disponible",
       "formComingSoon": "Ce formulaire est en cours de création et sera bientôt disponible.",
       "evacuation": "Liste d'évacuation",
-      "optIns": "Abonnements"
+      "optIns": "Abonnements",
+      "export": "Exporter les données"
     },
     "activity": {
       "title": "Voir votre activité"

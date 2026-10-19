@@ -38,7 +38,8 @@ const ROLE_DEFS: Record<
       PERMISSIONS.EVACUATION_READ,
       PERMISSIONS.CONSENT_READ,
       PERMISSIONS.CONSENT_MANAGE,
-      // Bulk personal-data exports are Security Manager + System Admin only.
+      // Bulk personal-data exports: Security Manager, System Admin and reception
+      // (VMC + VMC Admin, V1 parity). Read Admin, Auditor, Staff and Gate never.
       PERMISSIONS.CONSENT_EXPORT,
       PERMISSIONS.REPORT_EXPORT,
       PERMISSIONS.NOTIFICATION_READ,
@@ -47,7 +48,7 @@ const ROLE_DEFS: Record<
   },
   [ROLES.VMC_ADMIN]: {
     description:
-      'VMC Admin — supervises reception from the admin console (no approvals, no bulk exports)',
+      'VMC Admin — supervises reception from the admin console (no approvals; keeps visitor and opt-in export)',
     permissions: [
       PERMISSIONS.USER_READ,
       PERMISSIONS.ROLE_READ,
@@ -64,6 +65,9 @@ const ROLE_DEFS: Record<
       PERMISSIONS.EVACUATION_READ,
       PERMISSIONS.CONSENT_READ,
       PERMISSIONS.CONSENT_MANAGE,
+      // V1 parity: reception keeps visitor and opt-in export.
+      PERMISSIONS.CONSENT_EXPORT,
+      PERMISSIONS.REPORT_EXPORT,
       PERMISSIONS.NOTIFICATION_READ,
       PERMISSIONS.NOTIFICATION_RETRY,
     ],
@@ -123,9 +127,12 @@ const ROLE_DEFS: Record<
       PERMISSIONS.ISSUER_READ,
       PERMISSIONS.ISSUER_MANAGE,
       PERMISSIONS.EVACUATION_READ,
-      // Reception can view opt-ins and record a withdrawal, but not bulk-export.
+      // Reception views opt-ins, records withdrawals and (V1 parity) keeps
+      // visitor and opt-in export.
       PERMISSIONS.CONSENT_READ,
       PERMISSIONS.CONSENT_MANAGE,
+      PERMISSIONS.CONSENT_EXPORT,
+      PERMISSIONS.REPORT_EXPORT,
       PERMISSIONS.NOTIFICATION_READ,
       PERMISSIONS.NOTIFICATION_RETRY,
     ],

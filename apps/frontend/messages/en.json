@@ -54,7 +54,8 @@
       "formComingSoonTitle": "Coming soon",
       "formComingSoon": "This form is being built and will be available shortly.",
       "evacuation": "Evacuation Roll",
-      "optIns": "Comms Opt-ins"
+      "optIns": "Comms Opt-ins",
+      "export": "Export Data"
     },
     "activity": {
       "title": "View your activity"
