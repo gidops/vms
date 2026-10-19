@@ -98,3 +98,62 @@ export async function api<T>(
 
   return json as T;
 }
+
+/** Pull `filename="…"` out of a Content-Disposition header. */
+export function filenameFromDisposition(
+  header: string | null,
+  fallback: string,
+): string {
+  const match = header?.match(/filename="?([^";]+)"?/i);
+  return match?.[1] ?? fallback;
+}
+
+/**
+ * Authenticated file download (CSV / Excel exports). Same auth + one-shot
+ * refresh as {@link api}, but resolves to the response body as a Blob and
+ * saves it through a temporary object URL.
+ */
+export async function apiDownload(
+  path: string,
+  fallbackName: string,
+  _retry = false,
+): Promise<{ filename: string; size: number }> {
+  const headers: Record<string, string> = {
+    "x-correlation-id": crypto.randomUUID(),
+    "x-locale": currentLocale(),
+  };
+  const token = tokenStore.getAccessToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const response = await fetch(`${BASE_URL}${path}`, { headers });
+  if (response.status === 401 && !_retry && unauthorizedHandler) {
+    const refreshed = await unauthorizedHandler();
+    if (refreshed) return apiDownload(path, fallbackName, true);
+  }
+  if (!response.ok) {
+    let body: unknown;
+    try {
+      body = await response.json();
+    } catch {
+      body = undefined;
+    }
+    const title =
+      (body as { title?: string } | undefined)?.title ?? response.statusText;
+    throw new ApiError(response.status, title, body);
+  }
+
+  const blob = await response.blob();
+  const filename = filenameFromDisposition(
+    response.headers.get("Content-Disposition"),
+    fallbackName,
+  );
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return { filename, size: blob.size };
+}

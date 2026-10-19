@@ -3,6 +3,8 @@ import {
   ChartColumn,
   ClipboardCheck,
   LayoutGrid,
+  LifeBuoy,
+  MailCheck,
   MapPin,
   Puzzle,
   Settings,
@@ -14,16 +16,15 @@ import {
 } from "lucide-react";
 
 /**
- * Admin-console permission keys that the backend does not issue yet. The admin
- * roles (System Admin, VMC Admin, Security Manager, Read Admin, Auditor, Data
- * Officer) are being added in a separate backend change; until those keys are
- * seeded, `hasPermission` returns false for them and the gated UI stays hidden.
- * Keep this list in sync with `PERMISSIONS` in @vms/contracts once they land.
+ * Admin-console permission keys. `report:export` is now issued by the backend
+ * (Security Manager + System Admin) and lives in `PERMISSIONS`; the others are
+ * not seeded yet, so `hasPermission` returns false for them and the gated UI
+ * stays hidden. Move each into `PERMISSIONS` in @vms/contracts when it lands.
  */
 export const ADMIN_PERMISSIONS = {
   WATCHLIST_READ: "watchlist:read",
   REPORT_READ: "report:read",
-  REPORT_EXPORT: "report:export",
+  REPORT_EXPORT: PERMISSIONS.REPORT_EXPORT,
   /** Floors, locations and visit categories — System Admin only. */
   CONFIG_MANAGE: "config:manage",
   INTEGRATION_MANAGE: "integration:manage",
@@ -34,6 +35,8 @@ export type AdminSection =
   | "visitors"
   | "requests"
   | "watchlist"
+  | "evacuation"
+  | "optIns"
   | "users"
   | "floors"
   | "categories"
@@ -59,6 +62,18 @@ export const ADMIN_SECTIONS: AdminSectionDef[] = [
     key: "watchlist",
     icon: ShieldAlert,
     permission: ADMIN_PERMISSIONS.WATCHLIST_READ,
+  },
+  {
+    key: "evacuation",
+    icon: LifeBuoy,
+    href: "/admin/evacuation",
+    permission: PERMISSIONS.EVACUATION_READ,
+  },
+  {
+    key: "optIns",
+    icon: MailCheck,
+    href: "/admin/opt-ins",
+    permission: PERMISSIONS.CONSENT_READ,
   },
   {
     key: "users",
