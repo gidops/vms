@@ -492,7 +492,7 @@ export function DeskQrScreen() {
 
             {failed ? (
               <Alert intent="danger">
-                <span role="alert">{failed}</span>
+                <span>{failed}</span>
               </Alert>
             ) : null}
 
