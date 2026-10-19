@@ -73,6 +73,8 @@ export function ConfirmStep({
   const hostName =
     hosts.find((h) => h.userId === source.hostUserId)?.fullName ?? "";
   const scheduled = scheduledAtOf(source);
+  const yesNo = (v: boolean | null) =>
+    v === null ? "" : v ? t("fields.yes") : t("fields.no");
 
   return (
     <div className="flex flex-col gap-6">
@@ -105,7 +107,7 @@ export function ConfirmStep({
             <Row label={t("fields.groupContact")} value={group.groupContact} />
           </>
         ) : null}
-        {mode === "invite" && !fixedHostName ? (
+        {!fixedHostName && (mode === "invite" || hostName) ? (
           <Row label={t("confirm.host")} value={hostName} />
         ) : null}
         <Row label={t("confirm.floor")} value={source.floor} />
@@ -124,6 +126,18 @@ export function ConfirmStep({
           />
         ) : null}
         <Row label={t("confirm.notes")} value={source.notes} />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <CardHeader title={t("sections.safetyConsent")} />
+        <Row
+          label={t("fields.evacuationAssist")}
+          value={yesNo(guest.needsEvacuationAssist)}
+        />
+        <Row
+          label={t("fields.commsConsent")}
+          value={yesNo(guest.commsConsent)}
+        />
       </div>
     </div>
   );

@@ -45,6 +45,22 @@ export function GuestInformationSection({
               {visitor.email}
               {visitor.phone ? ` · ${visitor.phone}` : ""}
             </span>
+            <span className="text-sm text-fg-muted">
+              {t("evacuationAssist")}:{" "}
+              <span
+                className={
+                  data.needsEvacuationAssist
+                    ? "font-semibold text-warning"
+                    : "font-medium text-fg"
+                }
+              >
+                {data.needsEvacuationAssist == null
+                  ? t("notAsked")
+                  : data.needsEvacuationAssist
+                    ? t("yes")
+                    : t("no")}
+              </span>
+            </span>
           </div>
         </div>
         {hasAlert ? (

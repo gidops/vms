@@ -104,6 +104,10 @@ export interface VisitRequestDetail {
   gateValidatedAt?: string | null;
   checkInAt?: string | null;
   checkOutAt?: string | null;
+  /** Intake answer; null = legacy visit, never asked. */
+  needsEvacuationAssist?: boolean | null;
+  /** Comms-consent answer given at this visit; null = legacy. */
+  commsConsent?: boolean | null;
   createdAt: string;
   source?: string | null;
   createdById?: string | null;

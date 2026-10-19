@@ -52,7 +52,9 @@
       "registerWalkIn": "تسجيل زائر بدون موعد",
       "newInvite": "طلب دعوة جديد",
       "formComingSoonTitle": "قريبًا",
-      "formComingSoon": "هذا النموذج قيد الإنشاء وسيتوفر قريبًا."
+      "formComingSoon": "هذا النموذج قيد الإنشاء وسيتوفر قريبًا.",
+      "evacuation": "قائمة الإخلاء",
+      "optIns": "الاشتراكات"
     },
     "activity": {
       "title": "عرض نشاطك"
@@ -87,7 +89,8 @@
   "common": {
     "notifications": "الإشعارات",
     "logout": "تسجيل الخروج",
-    "allStatus": "كل الحالات"
+    "allStatus": "كل الحالات",
+    "noAccess": "ليس لديك صلاحية الوصول إلى هذه الصفحة."
   },
   "requests": {
     "title": "الطلبات والتنبيهات",
@@ -276,7 +279,11 @@
     },
     "requestInfoPlaceholder": "ما المعلومات الإضافية المطلوبة؟",
     "flagReasonPlaceholder": "صف المخاوف الأمنية…",
-    "createdByYou": "(أنت)"
+    "createdByYou": "(أنت)",
+    "evacuationAssist": "المساعدة في الإخلاء",
+    "notAsked": "لم يُسأل",
+    "yes": "نعم",
+    "no": "لا"
   },
   "language": {
     "select": "اختر اللغة",
@@ -285,12 +292,14 @@
     "ar": "العربية"
   },
   "roles": {
-    "SUPER_ADMIN": "مدير عام",
-    "ADMIN": "مدير",
+    "SUPER_ADMIN": "مسؤول النظام",
+    "ADMIN": "مدير الأمن",
     "AUDITOR": "مدقق",
     "STAFF": "موظف",
     "VMC": "استقبال VMC",
-    "GATE": "البوابة"
+    "GATE": "البوابة",
+    "VMC_ADMIN": "مسؤول مركز الزوار",
+    "READ_ADMIN": "مسؤول (قراءة فقط)"
   },
   "signup": {
     "title": "إنشاء حساب مسؤول",
@@ -320,7 +329,8 @@
     "useSameVisitDetails": "استخدام نفس تفاصيل الزيارة",
     "sections": {
       "guestDetails": "تفاصيل الضيف",
-      "visitDetails": "تفاصيل الزيارة"
+      "visitDetails": "تفاصيل الزيارة",
+      "safetyConsent": "السلامة والموافقة"
     },
     "guestLabel": "الضيف {index}",
     "fields": {
@@ -346,7 +356,14 @@
       "groupName": "اسم المجموعة",
       "groupNamePlaceholder": "مثال: وفد شركة Acme",
       "groupContact": "جهة اتصال المجموعة",
-      "groupContactPlaceholder": "البريد الإلكتروني أو رقم الهاتف"
+      "groupContactPlaceholder": "البريد الإلكتروني أو رقم الهاتف",
+      "optional": "اختياري",
+      "noHost": "بدون مضيف",
+      "evacuationAssist": "هل تحتاج إلى مساعدة في الإخلاء في حالات الطوارئ؟",
+      "commsConsent": "هل ترغب في تلقي أخبار فعاليات Afreximbank؟",
+      "yes": "نعم",
+      "no": "لا",
+      "chooseYesNo": "اختر نعم أو لا"
     },
     "confirm": {
       "title": "تأكيد دعوة الزيارة",
@@ -445,7 +462,9 @@
       "settings": "الإعدادات",
       "comingSoon": "قريبًا",
       "collapse": "طي الشريط الجانبي",
-      "expand": "توسيع الشريط الجانبي"
+      "expand": "توسيع الشريط الجانبي",
+      "evacuation": "قائمة الإخلاء",
+      "optIns": "الاشتراك في المراسلات"
     },
     "requests": {
       "title": "الطلبات والموافقات",
@@ -629,7 +648,8 @@
     "welcome": "مرحبًا {name}",
     "subtitle": "عمليات البوابة",
     "placeholderTitle": "لوحة البوابة",
-    "placeholderBody": "هذه اللوحة مؤقتة وسيتم تطويرها قريبًا."
+    "placeholderBody": "هذه اللوحة مؤقتة وسيتم تطويرها قريبًا.",
+    "evacuationRoll": "قائمة الإخلاء"
   },
   "users": {
     "title": "إدارة المستخدمين",
@@ -731,5 +751,108 @@
     "rejectSelected": "رفض المحدد ({count})",
     "approveAll": "الموافقة على الكل",
     "reasonPlaceholder": "سبب الرفض (مطلوب للرفض)"
+  },
+  "evacuation": {
+    "title": "قائمة الإخلاء",
+    "subtitle": "الزوار الموجودون في المبنى الذين طلبوا المساعدة في الإخلاء.",
+    "refresh": "تحديث",
+    "countBanner": "في الموقع يحتاجون إلى مساعدة في الإخلاء",
+    "floors": "{count, plural, one {طابق واحد} two {طابقان} few {# طوابق} many {# طابقًا} other {# طابق}}",
+    "generated": "أُنشئت <b>{time}</b>",
+    "refreshesEvery": "تتحدث كل دقيقة",
+    "noFloor": "الطابق غير محدد",
+    "loadError": "تعذر تحميل قائمة الإخلاء. اضغط تحديث.",
+    "columns": {
+      "visitor": "الزائر",
+      "floor": "الطابق / الجناح",
+      "host": "المضيف",
+      "phone": "الهاتف",
+      "checkedIn": "وقت الدخول",
+      "organization": "الجهة",
+      "badge": "البطاقة"
+    },
+    "empty": {
+      "title": "لا أحد في الموقع يحتاج إلى مساعدة في الإخلاء",
+      "body": "{count, plural, =0 {لا يوجد زوار في المبنى حاليًا.} one {زائر واحد في المبنى ولم يطلب المساعدة.} other {# زوار في المبنى ولم يطلب أي منهم المساعدة.}}"
+    },
+    "print": {
+      "button": "طباعة لمسؤولي الإخلاء",
+      "heading": "AATC أبوجا · قائمة الإخلاء",
+      "generated": "أُنشئت {datetime} بتوقيت غرب أفريقيا",
+      "count": "{count, plural, one {زائر واحد يحتاج إلى مساعدة في الإخلاء} other {# زوار يحتاجون إلى مساعدة في الإخلاء}}"
+    }
+  },
+  "consent": {
+    "title": "الاشتراك في المراسلات",
+    "subtitle": "الزوار الذين وافقوا على تلقي أخبار Afreximbank. العبرة بآخر إجابة.",
+    "exportCsv": "تصدير CSV",
+    "exportError": "فشل التصدير. يرجى المحاولة مرة أخرى.",
+    "optedIn": "مشترك",
+    "searchPlaceholder": "ابحث بالبريد الإلكتروني أو الاسم",
+    "columns": {
+      "email": "البريد الإلكتروني",
+      "name": "الاسم",
+      "lastAnswered": "آخر إجابة",
+      "sourceVisit": "الزيارة المصدر"
+    },
+    "walkIn": "زيارة مباشرة",
+    "empty": "لم يشترك أحد بعد.",
+    "noMatches": "لا توجد اشتراكات تطابق بحثك.",
+    "loadError": "تعذر تحميل الاشتراكات.",
+    "range": "{from}–{to} من {total}",
+    "withdrawTitle": "سحب الموافقة",
+    "withdrawHelp": "يوقف المراسلات إلى هذا البريد حتى يوافق صاحبه في زيارة لاحقة.",
+    "email": "البريد الإلكتروني",
+    "emailPlaceholder": "name@company.com",
+    "withdraw": "سحب",
+    "invalidEmail": "أدخل بريدًا إلكترونيًا صالحًا.",
+    "confirmTitle": "سحب الموافقة؟",
+    "confirmBody": "سيُزال <b>{email}</b> من قائمة المشتركين الآن. تبقى سجلات الزيارات السابقة كما هي.",
+    "cancel": "إلغاء",
+    "done": "تم سحب الموافقة لـ {email}.",
+    "notFound": "لا توجد سجلات لهذا البريد الإلكتروني.",
+    "error": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+  },
+  "export": {
+    "title": "تصدير بيانات الزوار",
+    "subtitle": "اختر الفترة الزمنية والصيغة.",
+    "dateRange": "الفترة",
+    "from": "من",
+    "to": "إلى",
+    "hint": "حسب تاريخ الزيارة بتوقيت غرب أفريقيا. حتى 366 يومًا.",
+    "format": "صيغة الملف",
+    "csv": "CSV",
+    "excel": "Excel",
+    "cancel": "إلغاء",
+    "submit": "تصدير",
+    "exporting": "جارٍ التصدير…",
+    "rangeTooLong": "اختر فترة لا تتجاوز 366 يومًا.",
+    "rangeInvalid": "يجب أن يكون تاريخ الانتهاء في يوم البدء أو بعده.",
+    "error": "فشل التصدير. يرجى المحاولة مرة أخرى."
+  },
+  "delivery": {
+    "title": "الإشعارات",
+    "failedCount": "{count} فشل",
+    "channel": {
+      "EMAIL": "البريد الإلكتروني",
+      "SMS": "رسالة نصية",
+      "WHATSAPP": "واتساب"
+    },
+    "template": {
+      "inviteCode": "رمز الدعوة",
+      "visitorArrived": "وصول الزائر",
+      "thankYou": "شكر",
+      "other": "رسالة"
+    },
+    "status": {
+      "SENT": "أُرسلت",
+      "PENDING": "في الانتظار",
+      "FAILED": "فشلت"
+    },
+    "attempts": "{count, plural, one {محاولة واحدة} two {محاولتان} few {# محاولات} many {# محاولة} other {# محاولة}}",
+    "retry": "إعادة المحاولة",
+    "empty": "لم تُرسل أي رسائل لهذه الزيارة بعد.",
+    "loadError": "تعذر تحميل الإشعارات.",
+    "retryError": "فشلت إعادة المحاولة. يرجى المحاولة مرة أخرى."
   }
 }

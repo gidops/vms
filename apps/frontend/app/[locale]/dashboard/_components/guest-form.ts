@@ -19,6 +19,12 @@ export interface GuestEntry {
   scheduledTime: string; // HH:mm
   notes: string;
   /**
+   * Required intake answers with NO default (`null` = not answered yet). They
+   * belong to the person, so "Use same visit details" never copies them.
+   */
+  needsEvacuationAssist: boolean | null;
+  commsConsent: boolean | null;
+  /**
    * "Use same visit details" — whether this guest's visit details were sourced
    * from the previous guest. Only meaningful for guests after the first. Drives
    * the copy-from-previous on check and the carry-forward on Add Guest.
@@ -64,6 +70,8 @@ export function blankGuest(): GuestEntry {
     scheduledDate: "",
     scheduledTime: "",
     notes: "",
+    needsEvacuationAssist: null,
+    commsConsent: null,
     useSame: true,
   };
 }
@@ -100,9 +108,24 @@ export function guestDetailsValid(g: GuestEntry): boolean {
 
 export function visitDetailsValid(g: GuestEntry, mode: VisitFormMode): boolean {
   // Notes are optional; floor + purpose are required for every visit type.
+  // The host is optional for walk-ins and required for invites.
   const base = Boolean(g.floor) && Boolean(g.purpose);
   if (mode === "walkin") return base;
   return base && Boolean(g.hostUserId) && Boolean(scheduledAtOf(g));
+}
+
+/** Both "Safety & consent" questions answered (Yes or No — never defaulted). */
+export function safetyConsentValid(
+  g: Pick<GuestEntry, "needsEvacuationAssist" | "commsConsent">,
+): boolean {
+  return g.needsEvacuationAssist !== null && g.commsConsent !== null;
+}
+
+/** A guest is ready to submit: details, visit details and both answers. */
+export function guestComplete(g: GuestEntry, mode: VisitFormMode): boolean {
+  return (
+    guestDetailsValid(g) && visitDetailsValid(g, mode) && safetyConsentValid(g)
+  );
 }
 
 /** Group-visit metadata collected once for the whole submission. */
@@ -118,10 +141,17 @@ export function groupNameValid(group: GroupInfo): boolean {
   return !group.isGroupVisit || group.groupName.trim().length > 0;
 }
 
+/** Never turn an unanswered question into a silent "No". */
+function requireAnswer(v: boolean | null): boolean {
+  if (v === null) throw new Error("Unanswered safety/consent question");
+  return v;
+}
+
 /**
  * Build the create payload. Each guest carries its own visit details (the
  * "Use same visit details" copy-forward already materialized them per guest).
- * Walk-ins omit host + schedule. A group visit adds the shared group name/email;
+ * Walk-ins omit the schedule and send the host only when one was picked
+ * (optional). A group visit adds the shared group name/email;
  * a bulk submission leaves those off so each visit stays independent.
  */
 export function buildCreateInput(
@@ -143,11 +173,13 @@ export function buildCreateInput(
       email: g.email.trim(),
       phone: formatPhone(g) || undefined,
       organization: g.organization.trim() || undefined,
-      hostUserId: isInvite && g.hostUserId ? g.hostUserId : undefined,
+      hostUserId: g.hostUserId || undefined,
       floor: g.floor,
       purpose: g.purpose,
       scheduledAt: isInvite ? scheduledAtOf(g) : undefined,
       notes: g.notes.trim() || undefined,
+      needsEvacuationAssist: requireAnswer(g.needsEvacuationAssist),
+      commsConsent: requireAnswer(g.commsConsent),
     })),
   };
 }

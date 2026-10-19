@@ -22,9 +22,8 @@ import {
   blankGuest,
   buildCreateInput,
   groupNameValid,
-  guestDetailsValid,
+  guestComplete,
   visitDetailFields,
-  visitDetailsValid,
   type GuestEntry,
   type VisitFormMode,
 } from "./guest-form";
@@ -102,11 +101,10 @@ export function VisitRequestForm({
 
   const hostList = hosts.data ?? [];
 
-  // Every guest now carries its own visit details, so all must be complete; a
-  // group visit also needs a group name.
+  // Every guest now carries its own visit details and safety/consent answers,
+  // so all must be complete; a group visit also needs a group name.
   const formValid =
-    guests.every((g) => guestDetailsValid(g) && visitDetailsValid(g, mode)) &&
-    groupNameValid(group);
+    guests.every((g) => guestComplete(g, mode)) && groupNameValid(group);
 
   // ── Guest list helpers ──────────────────────────────────────────────────
   const patchGuest = (i: number, patch: Partial<GuestEntry>) =>
@@ -233,8 +231,7 @@ export function VisitRequestForm({
   // Gate "Add Guest" on the visitor currently on screen being complete (guest +
   // visit details) — this also covers CSV-imported guests, whose visit details
   // still need filling in.
-  const currentGuestComplete =
-    guestDetailsValid(activeGuest) && visitDetailsValid(activeGuest, mode);
+  const currentGuestComplete = guestComplete(activeGuest, mode);
 
   return (
     <>

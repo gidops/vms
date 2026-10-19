@@ -41,6 +41,7 @@ export * from "./components/StatusBadge/index";
 export * from "./components/Table/index";
 export * from "./components/Timeline/index";
 export * from "./components/Toast/index";
+export * from "./components/YesNoControl/index";
 
 // Patterns (tier 3)
 export * from "./patterns/AlertModal/index";

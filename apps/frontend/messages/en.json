@@ -52,7 +52,9 @@
       "registerWalkIn": "Register Walk-In",
       "newInvite": "New Invite Request",
       "formComingSoonTitle": "Coming soon",
-      "formComingSoon": "This form is being built and will be available shortly."
+      "formComingSoon": "This form is being built and will be available shortly.",
+      "evacuation": "Evacuation Roll",
+      "optIns": "Comms Opt-ins"
     },
     "activity": {
       "title": "View your activity"
@@ -87,7 +89,8 @@
   "common": {
     "notifications": "Notifications",
     "logout": "Log out",
-    "allStatus": "All Status"
+    "allStatus": "All Status",
+    "noAccess": "You don't have access to this page."
   },
   "requests": {
     "title": "Requests & Alerts",
@@ -276,7 +279,11 @@
     },
     "requestInfoPlaceholder": "What additional information is needed?",
     "flagReasonPlaceholder": "Describe the security concern…",
-    "createdByYou": "(you)"
+    "createdByYou": "(you)",
+    "evacuationAssist": "Evacuation help",
+    "notAsked": "Not asked",
+    "yes": "Yes",
+    "no": "No"
   },
   "language": {
     "select": "Select language",
@@ -285,12 +292,14 @@
     "ar": "Arabic"
   },
   "roles": {
-    "SUPER_ADMIN": "Super Admin",
-    "ADMIN": "Admin",
+    "SUPER_ADMIN": "System Admin",
+    "ADMIN": "Security Manager",
     "AUDITOR": "Auditor",
     "STAFF": "Staff",
     "VMC": "VMC Reception",
-    "GATE": "Gate"
+    "GATE": "Gate",
+    "VMC_ADMIN": "VMC Admin",
+    "READ_ADMIN": "Read Admin"
   },
   "signup": {
     "title": "Create admin account",
@@ -320,7 +329,8 @@
     "useSameVisitDetails": "Use same visit details",
     "sections": {
       "guestDetails": "Guest Details",
-      "visitDetails": "Visit Details"
+      "visitDetails": "Visit Details",
+      "safetyConsent": "Safety & consent"
     },
     "guestLabel": "Guest {index}",
     "fields": {
@@ -346,7 +356,14 @@
       "groupName": "Group Name",
       "groupNamePlaceholder": "e.g. Acme Corp delegation",
       "groupContact": "Group Contact",
-      "groupContactPlaceholder": "Email or phone number"
+      "groupContactPlaceholder": "Email or phone number",
+      "optional": "Optional",
+      "noHost": "No host",
+      "evacuationAssist": "Need help evacuating in an emergency?",
+      "commsConsent": "Get updates on Afreximbank events?",
+      "yes": "Yes",
+      "no": "No",
+      "chooseYesNo": "Choose Yes or No"
     },
     "confirm": {
       "title": "Confirm Visit Invite",
@@ -445,7 +462,9 @@
       "settings": "Settings",
       "comingSoon": "Coming soon",
       "collapse": "Collapse sidebar",
-      "expand": "Expand sidebar"
+      "expand": "Expand sidebar",
+      "evacuation": "Evacuation Roll",
+      "optIns": "Comms Opt-ins"
     },
     "requests": {
       "title": "Requests & Approvals",
@@ -629,7 +648,8 @@
     "welcome": "Welcome {name}",
     "subtitle": "Gate operations",
     "placeholderTitle": "Gate dashboard",
-    "placeholderBody": "This dashboard is a placeholder and will be built out soon."
+    "placeholderBody": "This dashboard is a placeholder and will be built out soon.",
+    "evacuationRoll": "Evacuation Roll"
   },
   "users": {
     "title": "User Management",
@@ -731,5 +751,108 @@
     "rejectSelected": "Reject Selected ({count})",
     "approveAll": "Approve All",
     "reasonPlaceholder": "Rejection reason (required to reject)"
+  },
+  "evacuation": {
+    "title": "Evacuation Roll",
+    "subtitle": "Checked-in visitors who asked for help evacuating.",
+    "refresh": "Refresh",
+    "countBanner": "on site need evacuation help",
+    "floors": "{count, plural, one {# floor} other {# floors}}",
+    "generated": "Generated <b>{time}</b>",
+    "refreshesEvery": "refreshes every minute",
+    "noFloor": "Floor not set",
+    "loadError": "Couldn't load the evacuation roll. Try Refresh.",
+    "columns": {
+      "visitor": "Visitor",
+      "floor": "Floor / Wing",
+      "host": "Host",
+      "phone": "Phone",
+      "checkedIn": "Checked in",
+      "organization": "Organization",
+      "badge": "Badge"
+    },
+    "empty": {
+      "title": "No one on site needs evacuation help",
+      "body": "{count, plural, =0 {No visitors are checked in right now.} one {# visitor is checked in. They did not ask for assistance.} other {# visitors are checked in. None asked for assistance.}}"
+    },
+    "print": {
+      "button": "Print for wardens",
+      "heading": "AATC Abuja · Evacuation Roll",
+      "generated": "Generated {datetime} WAT",
+      "count": "{count, plural, one {# visitor needs evacuation assistance} other {# visitors need evacuation assistance}}"
+    }
+  },
+  "consent": {
+    "title": "Comms Opt-ins",
+    "subtitle": "Visitors who said yes to Afreximbank updates. Latest answer wins.",
+    "exportCsv": "Export CSV",
+    "exportError": "The export failed. Please try again.",
+    "optedIn": "opted in",
+    "searchPlaceholder": "Search email or name",
+    "columns": {
+      "email": "Email",
+      "name": "Name",
+      "lastAnswered": "Last answered",
+      "sourceVisit": "Source visit"
+    },
+    "walkIn": "Walk-in",
+    "empty": "No one has opted in yet.",
+    "noMatches": "No opt-ins match your search.",
+    "loadError": "Couldn't load the opt-ins.",
+    "range": "{from}–{to} of {total}",
+    "withdrawTitle": "Withdraw consent",
+    "withdrawHelp": "Stops updates to this email until they say yes at a later visit.",
+    "email": "Email",
+    "emailPlaceholder": "name@company.com",
+    "withdraw": "Withdraw",
+    "invalidEmail": "Enter a valid email address.",
+    "confirmTitle": "Withdraw consent?",
+    "confirmBody": "<b>{email}</b> leaves the opt-in list now. Past visit records stay as they are.",
+    "cancel": "Cancel",
+    "done": "Consent withdrawn for {email}.",
+    "notFound": "No records for this email.",
+    "error": "Something went wrong. Please try again."
+  },
+  "export": {
+    "title": "Export Visitor Data",
+    "subtitle": "Choose the date range and format.",
+    "dateRange": "Date range",
+    "from": "From",
+    "to": "To",
+    "hint": "By visit date, WAT. Up to 366 days.",
+    "format": "File format",
+    "csv": "CSV",
+    "excel": "Excel",
+    "cancel": "Cancel",
+    "submit": "Export",
+    "exporting": "Exporting…",
+    "rangeTooLong": "Pick a range of 366 days or less.",
+    "rangeInvalid": "The end date must be on or after the start date.",
+    "error": "The export failed. Please try again."
+  },
+  "delivery": {
+    "title": "Notifications",
+    "failedCount": "{count} failed",
+    "channel": {
+      "EMAIL": "Email",
+      "SMS": "SMS",
+      "WHATSAPP": "WhatsApp"
+    },
+    "template": {
+      "inviteCode": "Invite code",
+      "visitorArrived": "Visitor arrived",
+      "thankYou": "Thank you",
+      "other": "Message"
+    },
+    "status": {
+      "SENT": "Sent",
+      "PENDING": "Queued",
+      "FAILED": "Failed"
+    },
+    "attempts": "{count, plural, one {# attempt} other {# attempts}}",
+    "retry": "Retry",
+    "empty": "No messages have been sent for this visit yet.",
+    "loadError": "Couldn't load notifications.",
+    "retryError": "Retry failed. Please try again."
   }
 }
