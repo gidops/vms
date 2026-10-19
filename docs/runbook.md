@@ -181,6 +181,28 @@ Prerequisites: AWS credentials, an existing EC2 key pair (`vms-key`), and images
 pushed to ECR. State is local — move to an encrypted remote backend before team
 use (it holds the generated DB password and JWT/encryption secrets).
 
+## Desk QR (visitor self-registration)
+
+One QR printed at the VMC desk. Visitors scan it, fill in the form on their
+phone, and reception reads them a 6-digit code that is **emailed** to the desk
+inbox set on the Desk QR page (`/dashboard/desk-qr`, `/admin/desk-qr`). The
+code step needs email delivery: with `EMAIL_ENABLED=false` the visitor is told
+to register at the desk instead.
+
+**Cutover from V1** — keep the QR already printed at the desk working:
+
+```bash
+npm run desk-qr:import-v1 -w @vms/backend -- "https://aatcabuja.com.ng/qr.php?i=<32 hex>" desk-inbox@example.org
+```
+
+In a built image: `node dist/scripts/import-v1-desk-qr.js <link> <email>`. Once
+the domain serves v2, `/qr.php?i=<hex>` redirects to the v2 form. Re-running is
+safe; "New QR" on the page later replaces the imported token.
+
+**Rate limits** are counted in memory per backend process (per phone IP and per
+QR). Behind a proxy, set Express `trust proxy` or every phone shares the proxy's
+IP; with more than one backend instance, move the counts to a shared store.
+
 ## Troubleshooting
 
 - **Backend 500s / `database: "disconnected"`** — Postgres not up or
