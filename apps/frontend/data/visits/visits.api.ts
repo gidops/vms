@@ -36,6 +36,8 @@ export interface VisitListItem {
   checkOutAt?: string | null;
   createdAt: string;
   createdByName?: string | null;
+  /** Where the visit came from (e.g. "QR_SELF_REGISTER" for the desk QR). */
+  source?: string | null;
   /** True when this row is a group visit's representative (the group signal). */
   isGroupVisit: boolean;
   /** Group display name / contact — email or phone (group visits only). */

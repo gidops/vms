@@ -1,8 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { VISIT_SOURCE_DESK_QR } from "@vms/contracts";
 import {
   Avatar,
+  Badge,
   Button,
   FilterBar,
   Pagination,
@@ -302,7 +304,14 @@ function Dashboard() {
                       </span>
                     </TableCell>
                     <TableCell className="text-fg-muted">
-                      {channelLabel(row.type)}
+                      <span className="flex items-center gap-1.5">
+                        {channelLabel(row.type)}
+                        {row.source === VISIT_SOURCE_DESK_QR ? (
+                          <Badge intent="primary" tone="soft" size="sm">
+                            {t("channel.qr")}
+                          </Badge>
+                        ) : null}
+                      </span>
                     </TableCell>
                     <TableCell className="text-fg-muted">
                       {hostUnit(row)}

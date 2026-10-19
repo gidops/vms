@@ -55,7 +55,8 @@
       "formComingSoon": "This form is being built and will be available shortly.",
       "evacuation": "Evacuation Roll",
       "optIns": "Comms Opt-ins",
-      "export": "Export Data"
+      "export": "Export Data",
+      "deskQr": "Desk QR"
     },
     "activity": {
       "title": "View your activity"
@@ -67,7 +68,8 @@
     },
     "channel": {
       "invited": "Invited",
-      "walkIn": "Walk-in"
+      "walkIn": "Walk-in",
+      "qr": "QR"
     },
     "actions": {
       "checkIn": "Check-In",
@@ -284,7 +286,11 @@
     "evacuationAssist": "Evacuation help",
     "notAsked": "Not asked",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "sources": {
+      "deskQr": "Desk QR (self-registered)",
+      "selfRegistered": "Visitor, via the desk QR"
+    }
   },
   "language": {
     "select": "Select language",
@@ -465,7 +471,8 @@
       "collapse": "Collapse sidebar",
       "expand": "Expand sidebar",
       "evacuation": "Evacuation Roll",
-      "optIns": "Comms Opt-ins"
+      "optIns": "Comms Opt-ins",
+      "deskQr": "Desk QR"
     },
     "requests": {
       "title": "Requests & Approvals",
@@ -957,5 +964,86 @@
     "otherPlaceholder": "For example, needs a ramp",
     "chooseType": "Choose the type of assistance needed",
     "describeOther": "Describe the assistance needed"
+  },
+  "deskQr": {
+    "title": "Desk QR",
+    "subtitle": "Visitors scan this at the VMC desk to register themselves as today's walk-ins.",
+    "walkInBadge": "Walk-in · no approval needed",
+    "status": {
+      "active": "Active",
+      "disabled": "Disabled"
+    },
+    "qrAlt": "Desk QR code",
+    "copyLink": "Copy link",
+    "copied": "Copied",
+    "scansToday": "Scans today",
+    "lastScan": "Last scan {time} WAT",
+    "noScans": "No scans yet today",
+    "disabledAt": "Disabled {time} WAT",
+    "created": "Created",
+    "createdBy": "{time} by {name}",
+    "visitsItCreates": "Visits it creates",
+    "visitsItCreatesValue": "Walk-in, today only, tagged QR",
+    "print": "Print poster",
+    "downloadPng": "Download PNG",
+    "rotate": "New QR",
+    "disable": "Disable",
+    "enable": "Enable",
+    "rotateHelp": "New QR replaces the code. The printed poster stops working at once, so print the new one before you press it.",
+    "enableHelp": "Scanning shows \"Please register at the VMC desk\". Enable brings back the same code, so the poster on the desk works again.",
+    "disabledOverlay": "Scanning shows \"Please register at the VMC desk\"",
+    "codes": {
+      "title": "Verification codes",
+      "emailedTo": "Codes are emailed to",
+      "change": "Change",
+      "help": "After a visitor fills in the form, a 6-digit code goes to this inbox. Read it to the visitor at the desk to finish their registration. Codes work once and expire after 10 minutes."
+    },
+    "codeEmail": {
+      "createTitle": "Set up the desk QR",
+      "changeTitle": "Change where codes go",
+      "help": "Verification codes for visitors are emailed here. Use an inbox someone at the VMC desk is reading.",
+      "label": "Email for verification codes",
+      "invalid": "Enter an email address, like reception@aatc.org",
+      "save": "Save"
+    },
+    "empty": {
+      "title": "No desk QR yet",
+      "body": "Create the QR, print the poster and put it on the VMC desk. Visitors who scan it register as today's walk-ins.",
+      "readOnly": "Reception hasn't set up the desk QR yet.",
+      "create": "Create desk QR"
+    },
+    "loadError": {
+      "title": "Couldn't load the desk QR.",
+      "body": "Check your connection, then try again. The poster on the desk keeps working."
+    },
+    "retry": "Try again",
+    "errors": {
+      "create": "The desk QR wasn't created. Try again in a moment.",
+      "update": "The email wasn't changed. Try again in a moment.",
+      "rotate": "New QR wasn't created. The current QR still works. Try again in a moment.",
+      "disable": "The QR wasn't disabled. It still works. Try again in a moment.",
+      "enable": "The QR wasn't enabled. Try again in a moment.",
+      "download": "The PNG didn't download. Try again in a moment.",
+      "image": "Couldn't show the QR."
+    },
+    "confirmRotate": {
+      "title": "Replace the desk QR?",
+      "body": "The QR on the desk poster <b>stops working immediately</b>. Visitors who scan it will be asked to register at the desk. Print and put up the new poster straight after.",
+      "confirm": "Create new QR"
+    },
+    "confirmDisable": {
+      "title": "Disable the desk QR?",
+      "body": "Visitors can't register by scanning until you enable it again. Reception can still register walk-ins as usual.",
+      "confirm": "Disable"
+    },
+    "cancel": "Cancel",
+    "poster": {
+      "brand": "AFREXIMBANK AFRICAN TRADE CENTRE · ABUJA",
+      "title": "Scan to register your visit",
+      "subtitle": "Abuja-AATC Visitor Management",
+      "then": "Then fill in the short form on your phone.",
+      "code": "Reception will read you a code to finish.",
+      "footer": "VMC desk · QR created {date}"
+    }
   }
 }

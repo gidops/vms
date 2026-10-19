@@ -109,15 +109,13 @@ export function filenameFromDisposition(
 }
 
 /**
- * Authenticated file download (CSV / Excel exports). Same auth + one-shot
- * refresh as {@link api}, but resolves to the response body as a Blob and
- * saves it through a temporary object URL.
+ * Authenticated binary GET (images, CSV / Excel). Same auth + one-shot refresh
+ * as {@link api}; resolves to the body as a Blob with the response headers.
  */
-export async function apiDownload(
+export async function apiBlob(
   path: string,
-  fallbackName: string,
   _retry = false,
-): Promise<{ filename: string; size: number }> {
+): Promise<{ blob: Blob; headers: Headers }> {
   const headers: Record<string, string> = {
     "x-correlation-id": crypto.randomUUID(),
     "x-locale": currentLocale(),
@@ -128,7 +126,7 @@ export async function apiDownload(
   const response = await fetch(`${BASE_URL}${path}`, { headers });
   if (response.status === 401 && !_retry && unauthorizedHandler) {
     const refreshed = await unauthorizedHandler();
-    if (refreshed) return apiDownload(path, fallbackName, true);
+    if (refreshed) return apiBlob(path, true);
   }
   if (!response.ok) {
     let body: unknown;
@@ -141,10 +139,20 @@ export async function apiDownload(
       (body as { title?: string } | undefined)?.title ?? response.statusText;
     throw new ApiError(response.status, title, body);
   }
+  return { blob: await response.blob(), headers: response.headers };
+}
 
-  const blob = await response.blob();
+/**
+ * Authenticated file download (CSV / Excel exports): fetches through
+ * {@link apiBlob} and saves it through a temporary object URL.
+ */
+export async function apiDownload(
+  path: string,
+  fallbackName: string,
+): Promise<{ filename: string; size: number }> {
+  const { blob, headers } = await apiBlob(path);
   const filename = filenameFromDisposition(
-    response.headers.get("Content-Disposition"),
+    headers.get("Content-Disposition"),
     fallbackName,
   );
   const url = URL.createObjectURL(blob);

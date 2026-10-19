@@ -1,3 +1,4 @@
+import { VISIT_SOURCE_DESK_QR } from "@vms/contracts";
 import { Badge } from "@vms/ui";
 import { useFormatter, useTranslations } from "next-intl";
 import type { VisitRequestDetail } from "@/data/visits/visits.api";
@@ -96,16 +97,22 @@ export function VisitSummarySection({
 
         {isVmcOrAdmin ? (
           <>
-            <Field label={t("sections.source")}>{data.source ?? "—"}</Field>
+            <Field label={t("sections.source")}>
+              {data.source === VISIT_SOURCE_DESK_QR
+                ? t("sources.deskQr")
+                : (data.source ?? "—")}
+            </Field>
             <Field label={t("sections.staffRole")}>
               {data.host?.department ?? "—"}
             </Field>
             <Field label={t("sections.createdByLabel")}>
-              {data.createdByName
-                ? data.createdById === currentUserId
-                  ? `${data.createdByName} ${t("createdByYou")}`
-                  : data.createdByName
-                : "—"}
+              {data.source === VISIT_SOURCE_DESK_QR && !data.createdByName
+                ? t("sources.selfRegistered")
+                : data.createdByName
+                  ? data.createdById === currentUserId
+                    ? `${data.createdByName} ${t("createdByYou")}`
+                    : data.createdByName
+                  : "—"}
             </Field>
             <Field label={t("sections.timeCreated")}>
               {fmt(data.createdAt)}

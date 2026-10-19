@@ -178,6 +178,8 @@ export const VisitListItem = Visit.extend({
   visitor: Visitor,
   host: HostWithUser.nullable(),
   createdByName: z.string().nullable().optional(),
+  /** Where the visit came from (e.g. VMC_STATION, QR_SELF_REGISTER). */
+  source: z.string().nullable().optional(),
   /**
    * For a group visit's representative row, the number of guests in the group.
    * A row is a group when `isGroupVisit === true` (not `groupSize > 1`); bulk and

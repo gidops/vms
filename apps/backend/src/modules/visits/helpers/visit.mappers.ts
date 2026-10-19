@@ -124,6 +124,7 @@ export function toListItem(
 ): VisitListItem {
   return {
     id: visit.id,
+    source: visit.source,
     visitorId: visit.visitorId,
     hostId: visit.hostId,
     invitationId: visit.invitationId,
