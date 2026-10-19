@@ -90,6 +90,7 @@ export const ADMIN_SECTIONS: AdminSectionDef[] = [
   {
     key: "analytics",
     icon: ChartColumn,
+    href: "/admin/analytics",
     permission: ADMIN_PERMISSIONS.REPORT_READ,
   },
   {
