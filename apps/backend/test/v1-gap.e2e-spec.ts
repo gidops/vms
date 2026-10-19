@@ -148,6 +148,36 @@ describe('V1 gap features (e2e)', () => {
         },
       ],
       [
+        // Overview + analytics counts: every admin console role, no one else.
+        'GET',
+        '/visits/dashboard/stats?dateFrom=2026-10-18T23:00:00Z&dateTo=2026-10-19T22:59:59Z&yesterdayFrom=2026-10-17T23:00:00Z&yesterdayTo=2026-10-18T22:59:59Z',
+        {
+          SUPER_ADMIN: 200,
+          ADMIN: 200,
+          VMC_ADMIN: 200,
+          READ_ADMIN: 200,
+          AUDITOR: 200,
+          VMC: 403,
+          GATE: 403,
+          STAFF: 403,
+        },
+      ],
+      [
+        // Analytics-only chart, gated by report:read.
+        'GET',
+        '/visits/dashboard/traffic?dateFrom=2026-10-18T23:00:00Z&dateTo=2026-10-19T22:59:59Z&timeZone=Africa/Lagos',
+        {
+          SUPER_ADMIN: 200,
+          ADMIN: 200,
+          VMC_ADMIN: 200,
+          READ_ADMIN: 200,
+          AUDITOR: 200,
+          VMC: 403,
+          GATE: 403,
+          STAFF: 403,
+        },
+      ],
+      [
         'GET',
         '/consent/opt-ins',
         {

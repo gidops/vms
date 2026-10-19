@@ -137,8 +137,9 @@ export class VisitsController {
     return this.dashboard.stats(query);
   }
 
+  /** Check-ins per hour, shown only on Analytics & Reports. */
   @Get('dashboard/traffic')
-  @RequirePermissions(PERMISSIONS.USER_READ)
+  @RequirePermissions(PERMISSIONS.REPORT_READ)
   dashboardTraffic(
     @Query(new ZodValidationPipe(AdminTrafficQuery)) query: AdminTrafficQuery,
   ) {
