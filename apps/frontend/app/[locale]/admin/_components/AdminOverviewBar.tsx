@@ -10,8 +10,7 @@ import {
   OverviewBar,
   type OverviewStat,
 } from "@/app/[locale]/_components/OverviewBar";
-import { useAdminOverviewStats } from "@/data/admin/queries";
-import { usePendingVisits } from "@/data/requests/queries";
+import { useAdminOverviewStats, useApprovalQueue } from "@/data/admin/queries";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { ADMIN_PERMISSIONS } from "./adminAccess";
@@ -25,13 +24,12 @@ export function dayPart(now: Date): "morning" | "afternoon" | "evening" {
 
 function Heading() {
   const t = useTranslations("admin.overview.bar");
-  const tRoles = useTranslations("roles");
   const { user, activeRole } = useAuth();
   const now = useNow({ updateInterval: 60_000 });
-  const eyebrow =
-    activeRole && tRoles.has(activeRole as "ADMIN")
-      ? tRoles(activeRole as "ADMIN")
-      : t("eyebrow");
+  // Each admin role has its own console name ("Security console" for the
+  // Security Manager); anything else falls back to "Admin console".
+  const consoleKey = `console.${activeRole ?? ""}` as "console.ADMIN";
+  const eyebrow = t.has(consoleKey) ? t(consoleKey) : t("eyebrow");
   const first = user?.fullName?.split(" ")[0];
   return (
     <div className="flex flex-col gap-1">
@@ -104,25 +102,35 @@ export function AdminOverviewBar({
 }) {
   const t = useTranslations("admin.overview.bar");
   const stats = useAdminOverviewStats();
-  const pending = usePendingVisits();
+  const queue = useApprovalQueue();
   const now = useNow({ updateInterval: 60_000 });
   const value = (n: number | undefined) => n ?? "—";
-  const overdue = pending.data ? countOverdue(pending.data.items, now) : 0;
+  const overdue = queue.data ? countOverdue(queue.data.items, now) : 0;
+  // Same count as the pending approvals card: requests to decide plus those
+  // sent back to the host for more information.
+  const moreInfo = stats.data?.reviewRequested ?? 0;
+  const awaiting = stats.data ? stats.data.pending + moreInfo : undefined;
+  const awaitingHint =
+    overdue > 0
+      ? t("awaitingOverdue", { count: overdue })
+      : awaiting === 0
+        ? t("awaitingNone")
+        : moreInfo > 0
+          ? t("awaitingMoreInfo", { count: moreInfo })
+          : t("awaitingHint");
+  const floors = stats.data?.onsiteFloors ?? 0;
 
   const cells: OverviewStat[] = [
     {
       label: t("awaiting"),
-      value: value(stats.data?.pending),
+      value: value(awaiting),
       tone: "warning",
-      hint:
-        overdue > 0
-          ? t("awaitingOverdue", { count: overdue })
-          : t("awaitingHint"),
+      hint: awaitingHint,
     },
     {
       label: t("onsite"),
       value: value(stats.data?.onsite),
-      hint: t("onsiteHint"),
+      hint: floors > 0 ? t("onsiteFloors", { count: floors }) : t("onsiteHint"),
     },
     {
       label: t("expected"),

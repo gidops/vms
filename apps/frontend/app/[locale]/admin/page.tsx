@@ -18,11 +18,12 @@ import { RouteGuard } from "@/shared/auth/RouteGuard";
  * approvals preview (approvers only, oldest first), today's visitors and recent
  * activity. Trends and outcomes live on /admin/analytics. Every block is gated
  * by permission, so the same page serves System Admin, Security Manager, VMC
- * Admin and Read Admin; without approve rights the visitors table leads.
+ * Admin and Read Admin; without approve rights the visitors table leads. Each
+ * block has its own loading and error state, and an empty block is left out.
  */
 function Overview() {
   const t = useTranslations("admin.overview");
-  // The top-nav search and the table's own field drive the same filter.
+  // The top-nav search filters today's visitors.
   const [search, setSearch] = React.useState("");
   const [detailId, setDetailId] = React.useState<string | null>(null);
   const [addingVisitor, setAddingVisitor] = React.useState(false);
@@ -46,13 +47,15 @@ function Overview() {
 
         <PendingApprovalsCard />
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,5fr)_minmax(0,2.4fr)] xl:items-start">
+        {/* Flex, not grid: an empty block doesn't render, and the other one
+            then takes the full width instead of leaving a hole. */}
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
           <TodaysVisitorsCard
             search={search}
-            onSearchChange={setSearch}
             onView={setDetailId}
+            className="min-w-0 xl:flex-[5]"
           />
-          <RecentActivityCard />
+          <RecentActivityCard className="min-w-0 xl:flex-[2.4]" />
         </div>
       </div>
 

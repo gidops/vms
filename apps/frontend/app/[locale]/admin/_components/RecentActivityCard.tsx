@@ -9,12 +9,12 @@ import { SectionCard } from "./SectionCard";
 
 type Tone = "danger" | "success" | "info" | "neutral" | "warning";
 
-const TONE_CLASS: Record<Tone, { ring: string; dot: string }> = {
-  danger: { ring: "bg-danger-subtle", dot: "bg-danger" },
-  success: { ring: "bg-success-subtle", dot: "bg-success" },
-  info: { ring: "bg-info-subtle", dot: "bg-info" },
-  warning: { ring: "bg-warning-subtle", dot: "bg-warning" },
-  neutral: { ring: "bg-surface-muted", dot: "bg-fg-subtle" },
+const TONE_CLASS: Record<Tone, string> = {
+  danger: "bg-danger",
+  success: "bg-success",
+  info: "bg-info",
+  warning: "bg-warning",
+  neutral: "bg-fg-subtle",
 };
 
 /** Event tone + i18n key for an inbox item (request status change or alert). */
@@ -42,13 +42,18 @@ function describe(item: InboxItem): { tone: Tone; key: string } {
   }
 }
 
-/** Latest request/alert events across the site, newest first. */
-export function RecentActivityCard() {
+/**
+ * Latest request/alert events across the site, newest first. Not rendered when
+ * there is nothing to show.
+ */
+export function RecentActivityCard({ className }: { className?: string }) {
   const t = useTranslations("admin.overview.activity");
   const format = useFormatter();
   const now = useNow({ updateInterval: 60_000 });
   const activity = useRecentActivity();
   const items = activity.data?.items ?? [];
+
+  if (activity.isSuccess && items.length === 0) return null;
 
   const subtitle = (item: InboxItem) => {
     if (item.kind === "alert") return item.visitorName ?? item.reason;
@@ -61,6 +66,7 @@ export function RecentActivityCard() {
     <SectionCard
       titleId="admin-activity"
       title={t("title")}
+      className={className}
       actions={
         <Link
           href="/admin/activity"
@@ -80,39 +86,35 @@ export function RecentActivityCard() {
         <p role="alert" className="text-sm text-danger">
           {t("loadError")}
         </p>
-      ) : items.length === 0 ? (
-        <p className="text-sm text-fg-muted">{t("empty")}</p>
       ) : (
-        <ul className="flex flex-col gap-4">
+        <ul className="flex flex-col divide-y divide-border">
           {items.map((item) => {
             const { tone, key } = describe(item);
+            const detail = subtitle(item);
             return (
-              <li key={item.id} className="flex items-start gap-3">
+              <li
+                key={item.id}
+                className="flex items-start gap-3 py-3 first:pt-0 last:pb-0"
+              >
                 <span
                   className={cn(
-                    "flex size-8 shrink-0 items-center justify-center rounded-full",
-                    TONE_CLASS[tone].ring,
+                    "mt-1.5 size-2 shrink-0 rounded-full",
+                    TONE_CLASS[tone],
                   )}
                   aria-hidden="true"
-                >
-                  <span
-                    className={cn("size-2 rounded-full", TONE_CLASS[tone].dot)}
-                  />
-                </span>
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="text-sm font-semibold text-fg">
-                    {t(`events.${key}`)}
+                />
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="text-sm text-fg">
+                    <span className="font-semibold">{t(`events.${key}`)}</span>
+                    {detail ? ` · ${detail}` : null}
                   </span>
-                  <span className="truncate text-xs text-fg-muted">
-                    {subtitle(item)}
-                  </span>
+                  <time
+                    dateTime={item.updatedAt}
+                    className="text-xs text-fg-muted"
+                  >
+                    {format.relativeTime(new Date(item.updatedAt), now)}
+                  </time>
                 </span>
-                <time
-                  dateTime={item.updatedAt}
-                  className="shrink-0 text-xs text-fg-muted"
-                >
-                  {format.relativeTime(new Date(item.updatedAt), now)}
-                </time>
               </li>
             );
           })}

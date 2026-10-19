@@ -36,6 +36,28 @@ export function useAdminOverviewStats() {
   });
 }
 
+/**
+ * The Security Manager's queue: requests to decide plus those sent back to the
+ * host for more information (they return to PENDING when resubmitted).
+ */
+export const APPROVAL_QUEUE_STATUSES = [
+  "PENDING",
+  "REVIEW_REQUESTED",
+] as const satisfies readonly VisitStatus[];
+
+/** Every open request in the approval queue; the overview sorts and slices. */
+export function useApprovalQueue() {
+  return useQuery({
+    queryKey: ["visits", "admin", "approvalQueue"] as const,
+    queryFn: () =>
+      visitsApi.list({
+        statuses: [...APPROVAL_QUEUE_STATUSES],
+        pageSize: 100,
+      }),
+    refetchInterval: 30_000,
+  });
+}
+
 /** All arrivals in the selected local day, including unscheduled walk-ins. */
 export function useTraffic(dayOffset: 0 | -1 = 0) {
   const params = {

@@ -7,6 +7,7 @@ import { renderWithIntl } from "@/test/render";
 import { PendingApprovalsCard } from "./PendingApprovalsCard";
 import {
   countOverdue,
+  matchesApprovalFilter,
   sortOldestFirst,
   waitingMinutes,
 } from "./pendingApprovals";
@@ -46,8 +47,8 @@ let pending: {
   isError: boolean;
   data?: { items: VisitListItem[]; total: number };
 };
-vi.mock("@/data/requests/queries", () => ({
-  usePendingVisits: () => pending,
+vi.mock("@/data/admin/queries", () => ({
+  useApprovalQueue: () => pending,
 }));
 
 const NOW = new Date("2026-10-19T12:00:00+01:00");
@@ -72,6 +73,7 @@ function visit(
     visitor: { id: `v-${id}`, fullName: name, email: `${id}@x.com` },
     host: {
       id: "h",
+      department: "Trade Finance",
       user: { id: "u", fullName: "Mrs. Adebayo", email: "a@x.com" },
     },
     ...over,
@@ -109,6 +111,23 @@ describe("pending approvals helpers", () => {
     expect(waitingMinutes(minsAgo(72), NOW)).toBe(72);
     expect(waitingMinutes(minsAgo(-5), NOW)).toBe(0);
     expect(countOverdue(items, NOW)).toBe(2);
+  });
+  it("never counts a request sent back for more info as overdue", () => {
+    const bounced = visit("9", "Bounced", 300, { status: "REVIEW_REQUESTED" });
+    expect(countOverdue([bounced], NOW)).toBe(0);
+  });
+  it("splits the queue into walk-in, invite and group segments", () => {
+    const walkIn = visit("a", "A", 1);
+    const invite = visit("b", "B", 1, { type: "PRE_INVITED" });
+    const appointment = visit("c", "C", 1, { type: "APPOINTMENT" });
+    const group = visit("d", "D", 1, { isGroupVisit: true, groupId: "g" });
+    const queue = [walkIn, invite, appointment, group];
+    const ids = (f: Parameters<typeof matchesApprovalFilter>[1]) =>
+      queue.filter((v) => matchesApprovalFilter(v, f)).map((v) => v.id);
+    expect(ids("all")).toEqual(["a", "b", "c", "d"]);
+    expect(ids("walkIn")).toEqual(["a"]);
+    expect(ids("invite")).toEqual(["b", "c"]);
+    expect(ids("group")).toEqual(["d"]);
   });
 });
 
@@ -177,16 +196,55 @@ describe("PendingApprovalsCard", () => {
     });
   });
 
-  it("collapses to a one-line All caught up when nothing is waiting", () => {
+  it("shows Host · Unit and today's visit time", () => {
+    renderWithIntl(<PendingApprovalsCard />);
+    const first = screen.getAllByTestId("pending-approval-row")[0]!;
+    expect(first).toHaveTextContent("Mrs. Adebayo · Trade Finance");
+    expect(first).toHaveTextContent("Today, 1:00 PM");
+  });
+
+  it("filters by type and keeps the overall count in the header", () => {
+    renderWithIntl(<PendingApprovalsCard />);
+    fireEvent.click(screen.getByRole("radio", { name: "Group" }));
+    const rows = screen.getAllByTestId("pending-approval-row");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toHaveTextContent("Ecowas Youth Delegation");
+    expect(screen.getByText("Showing 1 of 1")).toBeInTheDocument();
+    expect(screen.getByText("6 waiting")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: "Invite" }));
+    expect(screen.queryByTestId("pending-approval-row")).toBeNull();
+    expect(
+      screen.getByText("No requests of this type are waiting."),
+    ).toBeInTheDocument();
+  });
+
+  it("marks a request sent back for more info and opens it read-only", () => {
+    pending = {
+      isLoading: false,
+      isError: false,
+      data: {
+        items: [visit("7", "Kwame Mensah", 90, { status: "REVIEW_REQUESTED" })],
+        total: 1,
+      },
+    };
+    renderWithIntl(<PendingApprovalsCard />);
+    expect(screen.getByText("More info asked")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Approve/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Deny/ })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "View Kwame Mensah" }));
+    expect(sheet).toHaveBeenLastCalledWith(
+      expect.objectContaining({ id: "7", initialForm: null }),
+    );
+  });
+
+  it("does not render when nothing is waiting", () => {
     pending = {
       isLoading: false,
       isError: false,
       data: { items: [], total: 0 },
     };
-    renderWithIntl(<PendingApprovalsCard />);
-    expect(screen.getByRole("status")).toHaveTextContent("All caught up");
-    expect(screen.queryByRole("region")).toBeNull();
-    expect(screen.queryByRole("table")).toBeNull();
+    const { container } = renderWithIntl(<PendingApprovalsCard />);
+    expect(container).toBeEmptyDOMElement();
   });
 
   it("shows loading and error lines", () => {

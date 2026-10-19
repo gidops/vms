@@ -51,6 +51,8 @@ export interface VisitListItem {
   };
   host: {
     id: string;
+    /** The host's unit, shown as "Host · Unit" in the approval queue. */
+    department?: string | null;
     user: { id: string; fullName: string; email: string };
   } | null;
 }

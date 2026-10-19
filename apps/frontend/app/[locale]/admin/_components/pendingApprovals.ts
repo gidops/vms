@@ -6,6 +6,27 @@ export const PENDING_PREVIEW = 4;
 /** A request waiting longer than this is "overdue" (red chip, bar hint). */
 export const OVERDUE_MINUTES = 60;
 
+/** The pending approvals card's segments, in display order. */
+export const APPROVAL_FILTERS = ["all", "walkIn", "invite", "group"] as const;
+export type ApprovalFilter = (typeof APPROVAL_FILTERS)[number];
+
+/** Whether a queue row belongs in a segment (a group is never a walk-in/invite row). */
+export function matchesApprovalFilter(
+  v: Pick<VisitListItem, "type" | "isGroupVisit">,
+  filter: ApprovalFilter,
+): boolean {
+  switch (filter) {
+    case "all":
+      return true;
+    case "group":
+      return v.isGroupVisit;
+    case "walkIn":
+      return !v.isGroupVisit && v.type === "WALK_IN";
+    case "invite":
+      return !v.isGroupVisit && v.type !== "WALK_IN";
+  }
+}
+
 /** Oldest request first (by when it was raised), without mutating the input. */
 export function sortOldestFirst<T extends Pick<VisitListItem, "createdAt">>(
   items: readonly T[],
@@ -23,12 +44,18 @@ export function waitingMinutes(createdAt: string, now: Date): number {
   );
 }
 
-/** Number of requests waiting longer than {@link OVERDUE_MINUTES}. */
+/**
+ * Number of requests awaiting a decision for longer than
+ * {@link OVERDUE_MINUTES}. Requests sent back for more information are waiting
+ * on the host, not the approver, so they never count.
+ */
 export function countOverdue(
-  items: readonly Pick<VisitListItem, "createdAt">[],
+  items: readonly Pick<VisitListItem, "createdAt" | "status">[],
   now: Date,
 ): number {
   return items.filter(
-    (v) => waitingMinutes(v.createdAt, now) >= OVERDUE_MINUTES,
+    (v) =>
+      v.status === "PENDING" &&
+      waitingMinutes(v.createdAt, now) >= OVERDUE_MINUTES,
   ).length;
 }

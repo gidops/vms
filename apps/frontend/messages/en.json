@@ -511,19 +511,15 @@
       "visitors": {
         "loadError": "Unable to load dashboard data. Please try again.",
         "title": "Today's Visitors",
-        "searchPlaceholder": "Search visitors…",
         "columns": {
           "visitor": "Visitor",
           "status": "Status",
           "host": "Host",
-          "guests": "No. of guests",
           "time": "Time",
           "action": "Action"
         },
-        "guestCount": "{count, plural, one {# Guest} other {# Guests}}",
         "view": "View",
         "viewVisitor": "View {name}",
-        "empty": "No visitors scheduled today.",
         "noMatches": "No visitors match your search.",
         "filterLabel": "Filter visitors",
         "filters": {
@@ -532,7 +528,9 @@
           "expected": "Expected",
           "out": "Out"
         },
-        "emptyFilter": "No visitors in this view today."
+        "emptyFilter": "No visitors in this view today.",
+        "onsiteFor": "Onsite · {duration}",
+        "range": "{from}–{to} of {total}"
       },
       "quickActions": {
         "title": "Quick Actions",
@@ -547,7 +545,6 @@
         "loadError": "Unable to load dashboard data. Please try again.",
         "title": "Recent Activity",
         "viewAll": "View all",
-        "empty": "No recent activity.",
         "visitorForHost": "{visitor} for {host}",
         "events": {
           "alert": "Security alert raised",
@@ -577,6 +574,7 @@
         "awaiting": "Awaiting approval",
         "awaitingHint": "Visit requests to decide",
         "awaitingOverdue": "{count, plural, one {# waiting over 1 hour} other {# waiting over 1 hour}}",
+        "awaitingMoreInfo": "{count, plural, one {# waiting on more info} other {# waiting on more info}}",
         "onsite": "Onsite now",
         "onsiteHint": "Checked in, not yet out",
         "expected": "Expected today",
@@ -586,7 +584,16 @@
         "addVisitor": "Add visitor",
         "export": "Export",
         "readOnly": "Read-only access",
-        "loadError": "Unable to load dashboard data. Please try again."
+        "loadError": "Unable to load dashboard data. Please try again.",
+        "awaitingNone": "All caught up",
+        "onsiteFloors": "{count, plural, one {across # floor} other {across # floors}}",
+        "console": {
+          "SUPER_ADMIN": "System console",
+          "ADMIN": "Security console",
+          "VMC_ADMIN": "VMC console",
+          "READ_ADMIN": "Read-only console",
+          "AUDITOR": "Audit console"
+        }
       },
       "approvals": {
         "title": "Pending approvals",
@@ -611,9 +618,20 @@
         "reviewGroupFor": "Review group {name}",
         "showing": "Showing {shown} of {total}",
         "seeAll": "See all {total}",
-        "allCaughtUp": "All caught up. No requests waiting for approval.",
         "loading": "Loading approvals…",
-        "loadError": "Unable to load pending approvals. Please try again."
+        "loadError": "Unable to load pending approvals. Please try again.",
+        "todayAt": "Today, {time}",
+        "moreInfoAsked": "More info asked",
+        "view": "View",
+        "viewFor": "View {name}",
+        "filterLabel": "Filter requests by type",
+        "filters": {
+          "all": "All",
+          "walkIn": "Walk-in",
+          "invite": "Invite",
+          "group": "Group"
+        },
+        "emptyFilter": "No requests of this type are waiting."
       }
     },
     "analytics": {

@@ -25,18 +25,11 @@ let statsQuery: {
   isError: boolean;
   data?: Record<string, number>;
 };
+const minsAgo = (m: number) => new Date(Date.now() - m * 60_000).toISOString();
+let queueItems: { createdAt: string; status: string }[];
 vi.mock("@/data/admin/queries", () => ({
   useAdminOverviewStats: () => statsQuery,
-}));
-vi.mock("@/data/requests/queries", () => ({
-  usePendingVisits: () => ({
-    data: {
-      items: [
-        { createdAt: new Date(Date.now() - 90 * 60_000).toISOString() },
-        { createdAt: new Date(Date.now() - 5 * 60_000).toISOString() },
-      ],
-    },
-  }),
+  useApprovalQueue: () => ({ data: { items: queueItems } }),
 }));
 
 const desktop = () => within(screen.getByTestId("overview-bar-desktop"));
@@ -47,14 +40,20 @@ describe("AdminOverviewBar", () => {
     statsQuery = {
       isLoading: false,
       isError: false,
-      data: { pending: 7, onsite: 23, expected: 41 },
+      data: { pending: 7, onsite: 23, onsiteFloors: 6, expected: 41 },
     };
+    queueItems = [
+      { createdAt: minsAgo(90), status: "PENDING" },
+      { createdAt: minsAgo(5), status: "PENDING" },
+      // Sent back to the host: not waiting on the approver, never overdue.
+      { createdAt: minsAgo(240), status: "REVIEW_REQUESTED" },
+    ];
   });
 
   it("shows Awaiting approval as the hero, then Onsite now and Expected today", () => {
     renderWithIntl(<AdminOverviewBar onAddVisitor={vi.fn()} />);
     const bar = desktop();
-    expect(bar.getByText("Security Manager")).toBeInTheDocument();
+    expect(bar.getByText("Security console")).toBeInTheDocument();
     const labels = ["Awaiting approval", "Onsite now", "Expected today"];
     for (const l of labels) expect(bar.getByText(l)).toBeInTheDocument();
     expect(
@@ -64,6 +63,34 @@ describe("AdminOverviewBar", () => {
     expect(bar.getByText("23")).toBeInTheDocument();
     expect(bar.getByText("41")).toBeInTheDocument();
     expect(bar.getByText("1 waiting over 1 hour")).toBeInTheDocument();
+    expect(bar.getByText("across 6 floors")).toBeInTheDocument();
+    expect(bar.getByText("Approved, not arrived")).toBeInTheDocument();
+  });
+
+  it("counts requests sent back for more info in the hero, like the approvals card", () => {
+    statsQuery = {
+      isLoading: false,
+      isError: false,
+      data: { pending: 6, reviewRequested: 1, onsite: 2, expected: 3 },
+    };
+    queueItems = [{ createdAt: minsAgo(5), status: "PENDING" }];
+    renderWithIntl(<AdminOverviewBar onAddVisitor={vi.fn()} />);
+    const bar = desktop();
+    expect(bar.getByText("7")).toBeInTheDocument();
+    expect(bar.getByText("1 waiting on more info")).toBeInTheDocument();
+  });
+
+  it("says All caught up when nothing is waiting and nobody is on a floor", () => {
+    statsQuery = {
+      isLoading: false,
+      isError: false,
+      data: { pending: 0, onsite: 0, onsiteFloors: 0, expected: 3 },
+    };
+    queueItems = [];
+    renderWithIntl(<AdminOverviewBar onAddVisitor={vi.fn()} />);
+    const bar = desktop();
+    expect(bar.getByText("All caught up")).toBeInTheDocument();
+    expect(bar.getByText("Checked in, not yet out")).toBeInTheDocument();
   });
 
   it("gates the quick actions and opens the export dialog", () => {
