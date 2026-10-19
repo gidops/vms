@@ -524,7 +524,15 @@
         "view": "عرض",
         "viewVisitor": "عرض {name}",
         "empty": "لا يوجد زوار مجدولون اليوم.",
-        "noMatches": "لا يوجد زوار مطابقون لبحثك."
+        "noMatches": "لا يوجد زوار مطابقون لبحثك.",
+        "filterLabel": "تصفية الزوار",
+        "filters": {
+          "all": "الكل",
+          "onsite": "في الموقع",
+          "expected": "متوقَّع",
+          "out": "غادر"
+        },
+        "emptyFilter": "لا يوجد زوار في هذا العرض اليوم."
       },
       "quickActions": {
         "title": "إجراءات سريعة",
@@ -561,7 +569,61 @@
         "host": "المضيف: {name}",
         "approved": "معتمد",
         "pending": "معلق"
+      },
+      "bar": {
+        "eyebrow": "وحدة تحكم الإدارة",
+        "greeting": "{part, select, morning {صباح الخير} afternoon {مساء الخير} other {مساء الخير}}",
+        "greetingName": "{part, select, morning {صباح الخير} afternoon {مساء الخير} other {مساء الخير}}، {name}",
+        "awaiting": "بانتظار الموافقة",
+        "awaitingHint": "طلبات زيارة تنتظر القرار",
+        "awaitingOverdue": "{count, plural, zero {لا طلبات تنتظر أكثر من ساعة} one {طلب واحد ينتظر أكثر من ساعة} two {طلبان ينتظران أكثر من ساعة} few {# طلبات تنتظر أكثر من ساعة} many {# طلبًا ينتظر أكثر من ساعة} other {# طلب ينتظر أكثر من ساعة}}",
+        "onsite": "في الموقع الآن",
+        "onsiteHint": "سجّلوا الدخول ولم يغادروا بعد",
+        "expected": "المتوقعون اليوم",
+        "expectedHint": "تمت الموافقة، لم يصلوا بعد",
+        "actionsTitle": "إجراءات سريعة",
+        "reviewApprovals": "مراجعة الطلبات",
+        "addVisitor": "إضافة زائر",
+        "export": "تصدير",
+        "readOnly": "صلاحية قراءة فقط",
+        "loadError": "تعذّر تحميل بيانات لوحة التحكم. يُرجى المحاولة مرة أخرى."
+      },
+      "approvals": {
+        "title": "موافقات معلّقة",
+        "waitingCount": "{count, plural, zero {لا شيء في الانتظار} one {طلب واحد في الانتظار} two {طلبان في الانتظار} few {# طلبات في الانتظار} many {# طلبًا في الانتظار} other {# طلب في الانتظار}}",
+        "oldestFirst": "الأقدم أولًا",
+        "openQueue": "فتح قائمة الانتظار",
+        "columns": {
+          "visitor": "الزائر",
+          "host": "المضيف · الوحدة",
+          "time": "وقت الزيارة",
+          "waiting": "مدة الانتظار",
+          "decision": "القرار"
+        },
+        "groupGuests": "{count, plural, zero {مجموعة · بلا ضيوف} one {مجموعة · ضيف واحد} two {مجموعة · ضيفان} few {مجموعة · # ضيوف} many {مجموعة · # ضيفًا} other {مجموعة · # ضيف}}",
+        "waitingHours": "{hours} س {minutes} د",
+        "waitingMinutes": "{minutes} د",
+        "approve": "موافقة",
+        "deny": "رفض",
+        "reviewGroup": "مراجعة المجموعة",
+        "approveFor": "الموافقة على {name}",
+        "denyFor": "رفض {name}",
+        "reviewGroupFor": "مراجعة المجموعة {name}",
+        "showing": "عرض {shown} من {total}",
+        "seeAll": "عرض الكل ({total})",
+        "allCaughtUp": "لا شيء معلّق. لا توجد طلبات بانتظار الموافقة.",
+        "loading": "جارٍ تحميل الموافقات…",
+        "loadError": "تعذّر تحميل الموافقات المعلّقة. يُرجى المحاولة مرة أخرى."
       }
+    },
+    "analytics": {
+      "title": "التحليلات والتقارير",
+      "subtitle": "اتجاهات الزيارات ونتائجها. كل ما خرج من النظرة العامة موجود هنا.",
+      "export": "تصدير CSV",
+      "denied": "مرفوضة",
+      "deniedHint": "طلبات رُفضت اليوم",
+      "loading": "جارٍ تحميل التحليلات…",
+      "loadError": "تعذّر تحميل التحليلات. يُرجى المحاولة مرة أخرى."
     }
   },
   "staff": {

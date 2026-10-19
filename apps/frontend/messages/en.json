@@ -524,7 +524,15 @@
         "view": "View",
         "viewVisitor": "View {name}",
         "empty": "No visitors scheduled today.",
-        "noMatches": "No visitors match your search."
+        "noMatches": "No visitors match your search.",
+        "filterLabel": "Filter visitors",
+        "filters": {
+          "all": "All",
+          "onsite": "Onsite",
+          "expected": "Expected",
+          "out": "Out"
+        },
+        "emptyFilter": "No visitors in this view today."
       },
       "quickActions": {
         "title": "Quick Actions",
@@ -561,7 +569,61 @@
         "host": "Host: {name}",
         "approved": "Approved",
         "pending": "Pending"
+      },
+      "bar": {
+        "eyebrow": "Admin console",
+        "greeting": "Good {part, select, morning {morning} afternoon {afternoon} other {evening}}",
+        "greetingName": "Good {part, select, morning {morning} afternoon {afternoon} other {evening}}, {name}",
+        "awaiting": "Awaiting approval",
+        "awaitingHint": "Visit requests to decide",
+        "awaitingOverdue": "{count, plural, one {# waiting over 1 hour} other {# waiting over 1 hour}}",
+        "onsite": "Onsite now",
+        "onsiteHint": "Checked in, not yet out",
+        "expected": "Expected today",
+        "expectedHint": "Approved, not arrived",
+        "actionsTitle": "Quick actions",
+        "reviewApprovals": "Review approvals",
+        "addVisitor": "Add visitor",
+        "export": "Export",
+        "readOnly": "Read-only access",
+        "loadError": "Unable to load dashboard data. Please try again."
+      },
+      "approvals": {
+        "title": "Pending approvals",
+        "waitingCount": "{count, plural, one {# waiting} other {# waiting}}",
+        "oldestFirst": "Oldest first",
+        "openQueue": "Open queue",
+        "columns": {
+          "visitor": "Visitor",
+          "host": "Host · Unit",
+          "time": "Visit time",
+          "waiting": "Waiting",
+          "decision": "Decision"
+        },
+        "groupGuests": "{count, plural, one {Group · # guest} other {Group · # guests}}",
+        "waitingHours": "{hours}h {minutes}m",
+        "waitingMinutes": "{minutes}m",
+        "approve": "Approve",
+        "deny": "Deny",
+        "reviewGroup": "Review group",
+        "approveFor": "Approve {name}",
+        "denyFor": "Deny {name}",
+        "reviewGroupFor": "Review group {name}",
+        "showing": "Showing {shown} of {total}",
+        "seeAll": "See all {total}",
+        "allCaughtUp": "All caught up. No requests waiting for approval.",
+        "loading": "Loading approvals…",
+        "loadError": "Unable to load pending approvals. Please try again."
       }
+    },
+    "analytics": {
+      "title": "Analytics & Reports",
+      "subtitle": "Visitor trends and outcomes. Everything that left the overview lives here.",
+      "export": "Export CSV",
+      "denied": "Denied",
+      "deniedHint": "Requests denied today",
+      "loading": "Loading analytics…",
+      "loadError": "Unable to load analytics. Please try again."
     }
   },
   "staff": {
