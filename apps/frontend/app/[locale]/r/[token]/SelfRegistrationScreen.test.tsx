@@ -157,6 +157,13 @@ describe("SelfRegistrationScreen", () => {
       "Check 6 answers below.",
     );
     expect(api.submit).not.toHaveBeenCalled();
+    // The count follows the visitor's fixes.
+    fireEvent.change(screen.getByLabelText(/Full name/), {
+      target: { value: "Ifeoma Chukwu" },
+    });
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Check 5 answers below.",
+    );
   });
 
   it("sends the form, asks for the desk code and shows the reference", async () => {

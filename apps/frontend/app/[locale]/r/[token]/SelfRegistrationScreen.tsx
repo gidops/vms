@@ -364,15 +364,19 @@ export function SelfRegistrationScreen({ token }: { token: string }) {
   const err = (field: SelfFormField) =>
     showErrors && errors[field] ? t(`errors.${errors[field]}`) : undefined;
   const errorCount = Object.keys(errors).length;
+  // Counts down live as the visitor fixes answers; gone once all are fine.
+  const formBanner =
+    banner ??
+    (showErrors && errorCount > 0
+      ? t("checkAnswers", { count: errorCount })
+      : null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (phase.kind !== "form") return;
     setShowErrors(true);
-    if (errorCount > 0) {
-      setBanner(t("checkAnswers", { count: errorCount }));
-      return;
-    }
+    setBanner(null);
+    if (errorCount > 0) return;
     setBusy(true);
     setBanner(null);
     try {
@@ -556,9 +560,9 @@ export function SelfRegistrationScreen({ token }: { token: string }) {
       body = (
         <form noValidate onSubmit={submit} className="flex flex-1 flex-col">
           <div className="flex flex-col gap-5 px-5 py-6">
-            {banner ? (
+            {formBanner ? (
               <Alert intent="danger">
-                <span>{banner}</span>
+                <span>{formBanner}</span>
               </Alert>
             ) : null}
 
