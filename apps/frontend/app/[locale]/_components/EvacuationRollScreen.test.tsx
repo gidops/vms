@@ -1,3 +1,4 @@
+import type { EvacuationRollRow } from "@vms/contracts";
 import type { EvacuationRoll } from "@vms/contracts";
 import { screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -20,6 +21,8 @@ const row = (
   floor: string | null,
   fullName: string,
   checkInAt = "2026-10-18T20:30:00Z",
+  assistTypes: EvacuationRollRow["assistTypes"] = ["MOBILITY"],
+  assistOther: string | null = null,
 ) => ({
   visitId,
   fullName,
@@ -28,6 +31,8 @@ const row = (
   floor,
   hostName: "Amb. Yusuf Danjuma",
   checkInAt: new Date(checkInAt),
+  assistTypes,
+  assistOther,
   badge: null,
 });
 
@@ -60,7 +65,14 @@ describe("EvacuationRollScreen", () => {
       rows: [
         row("a", "5th Floor", "Chukwuma Eze"),
         row("b", "5th Floor", "Aisha Mohammed"),
-        row("c", "Ground Floor", "Blessing Okafor", "2026-10-18T22:05:00Z"),
+        row(
+          "c",
+          "Ground Floor",
+          "Blessing Okafor",
+          "2026-10-18T22:05:00Z",
+          ["HEARING", "OTHER"],
+          "Needs a ramp",
+        ),
       ],
     };
     renderWithIntl(<EvacuationRollScreen />);
@@ -68,6 +80,10 @@ describe("EvacuationRollScreen", () => {
     expect(within(banner).getByText("3")).toBeInTheDocument();
     expect(banner).toHaveTextContent("on site need evacuation help");
     expect(banner).toHaveTextContent("2 floors");
+    // What help each visitor asked for, under their name.
+    expect(
+      screen.getAllByText("Hearing, Other: Needs a ramp").length,
+    ).toBeGreaterThan(0);
     // 22:52 UTC is 23:52 in Lagos.
     expect(banner).toHaveTextContent("Generated 23:52");
     expect(screen.getAllByText("Chukwuma Eze").length).toBeGreaterThan(0);

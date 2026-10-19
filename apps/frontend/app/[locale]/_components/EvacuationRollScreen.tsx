@@ -8,6 +8,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { useEvacuationRoll } from "@/data/evacuation/queries";
 import { formatWatDateTime, formatWatTime } from "@/shared/wat";
+import { useEvacuationAssistText } from "./EvacuationAssist";
 
 export interface FloorGroup {
   floor: string | null;
@@ -94,6 +95,7 @@ function FloorLabel({ floor }: { floor: string | null }) {
 
 function RollTable({ groups }: { groups: FloorGroup[] }) {
   const t = useTranslations("evacuation");
+  const assistText = useEvacuationAssistText();
   const locale = useLocale();
   return (
     <>
@@ -147,6 +149,11 @@ function RollTable({ groups }: { groups: FloorGroup[] }) {
                         {r.organization}
                       </span>
                     ) : null}
+                    {r.assistTypes.length ? (
+                      <span className="text-sm font-medium text-warning">
+                        {assistText(r.assistTypes, r.assistOther)}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
                 <span role="cell" className="truncate text-fg">
@@ -198,6 +205,11 @@ function RollTable({ groups }: { groups: FloorGroup[] }) {
                         {r.organization}
                       </span>
                     ) : null}
+                    {r.assistTypes.length ? (
+                      <span className="text-sm font-medium text-warning">
+                        {assistText(r.assistTypes, r.assistOther)}
+                      </span>
+                    ) : null}
                     <span className="text-sm text-fg">
                       <FloorLabel floor={r.floor} />
                       {r.hostName ? (
@@ -242,6 +254,7 @@ function PrintRoll({
   groups: FloorGroup[];
 }) {
   const t = useTranslations("evacuation");
+  const assistText = useEvacuationAssistText();
   const locale = useLocale();
   // Portals need document.body, which only exists on the client.
   const mounted = React.useSyncExternalStore(
@@ -284,7 +297,15 @@ function PrintRoll({
             </tr>
             {g.rows.map((r) => (
               <tr key={r.visitId}>
-                <td>{r.fullName}</td>
+                <td>
+                  {r.fullName}
+                  {r.assistTypes.length ? (
+                    <>
+                      <br />
+                      {assistText(r.assistTypes, r.assistOther)}
+                    </>
+                  ) : null}
+                </td>
                 <td>{r.organization ?? ""}</td>
                 <td>{r.hostName ?? "—"}</td>
                 <td dir="ltr">{r.phone ?? "—"}</td>

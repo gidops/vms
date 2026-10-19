@@ -40,6 +40,50 @@ export const FLOORS = [
 ] as const;
 
 /**
+ * Kinds of help a visitor can ask for when they answer "Yes" to the evacuation
+ * question (V1 parity). OTHER needs a short description.
+ */
+export const EVACUATION_ASSIST_TYPES = [
+  "MOBILITY",
+  "VISUAL",
+  "HEARING",
+  "MEDICAL",
+  "OTHER",
+] as const;
+export const EvacuationAssistType = z.enum(EVACUATION_ASSIST_TYPES);
+export type EvacuationAssistType = z.infer<typeof EvacuationAssistType>;
+
+/** Longest "Other (please specify)" answer we store. */
+export const EVACUATION_ASSIST_OTHER_MAX = 200;
+
+/**
+ * Field-level problems with an evacuation answer, as [path, message] pairs:
+ * "Yes" needs at least one assistance type, OTHER needs a description, and "No"
+ * carries no types. Shared by every intake path (reception and self-registration).
+ */
+export function evacuationAssistIssues(answer: {
+  needsEvacuationAssist: boolean;
+  evacuationAssistTypes?: readonly EvacuationAssistType[];
+  evacuationAssistOther?: string | null;
+}): [string, string][] {
+  const types = answer.evacuationAssistTypes ?? [];
+  const issues: [string, string][] = [];
+  if (!answer.needsEvacuationAssist) {
+    if (types.length > 0)
+      issues.push([
+        "evacuationAssistTypes",
+        "Assistance types only apply when assistance is needed",
+      ]);
+    return issues;
+  }
+  if (types.length === 0)
+    issues.push(["evacuationAssistTypes", "Choose the assistance needed"]);
+  if (types.includes("OTHER") && !answer.evacuationAssistOther?.trim())
+    issues.push(["evacuationAssistOther", "Describe the assistance needed"]);
+  return issues;
+}
+
+/**
  * The ordered lifecycle a visit moves through. The UI Timeline/stepper and the
  * backend state machine both derive their steps from this single list.
  */
@@ -98,6 +142,10 @@ export const Visit = z.object({
    * `null` = legacy visit, never asked.
    */
   needsEvacuationAssist: z.boolean().nullable().optional(),
+  /** The help asked for when `needsEvacuationAssist` is true (empty otherwise). */
+  evacuationAssistTypes: z.array(EvacuationAssistType).default([]),
+  /** Free-text detail when OTHER is among the types. */
+  evacuationAssistOther: z.string().nullable().optional(),
   /**
    * Intake answer: does the visitor want updates on Afreximbank events? The
    * answer given at THIS visit (`null` = legacy). The current opt-in status is
@@ -164,6 +212,13 @@ export const CreateVisitGuest = RegisterVisitorInput.extend({
   notes: z.string().max(2000).optional(),
   /** Required Yes/No, no default: needs help evacuating in an emergency. */
   needsEvacuationAssist: z.boolean(),
+  /** Required (one or more) when the answer above is Yes. */
+  evacuationAssistTypes: z.array(EvacuationAssistType).max(5).optional(),
+  evacuationAssistOther: z
+    .string()
+    .trim()
+    .max(EVACUATION_ASSIST_OTHER_MAX)
+    .optional(),
   /** Required Yes/No, no default: wants updates on Afreximbank events. */
   commsConsent: z.boolean(),
 });
@@ -195,6 +250,14 @@ export const CreateVisitsInput = z
         path: ["groupName"],
         message: "Group name is required for a group visit",
       });
+    val.guests.forEach((g, i) => {
+      for (const [field, message] of evacuationAssistIssues(g))
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["guests", i, field],
+          message,
+        });
+    });
     if (val.type === "WALK_IN") return;
     val.guests.forEach((g, i) => {
       if (!g.hostUserId)
@@ -375,8 +438,23 @@ export const UpdateVisitRequestInput = z
     purpose: z.string().min(1).optional(),
     scheduledAt: z.coerce.date().optional(),
     needsEvacuationAssist: z.boolean().optional(),
+    evacuationAssistTypes: z.array(EvacuationAssistType).max(5).optional(),
+    evacuationAssistOther: z
+      .string()
+      .trim()
+      .max(EVACUATION_ASSIST_OTHER_MAX)
+      .optional(),
   })
   .refine((v) => Object.values(v).some((x) => x !== undefined), {
     message: "Provide at least one field to update",
+  })
+  .superRefine((v, ctx) => {
+    if (v.needsEvacuationAssist === undefined) return;
+    for (const [field, message] of evacuationAssistIssues({
+      needsEvacuationAssist: v.needsEvacuationAssist,
+      evacuationAssistTypes: v.evacuationAssistTypes,
+      evacuationAssistOther: v.evacuationAssistOther,
+    }))
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: [field], message });
   });
 export type UpdateVisitRequestInput = z.infer<typeof UpdateVisitRequestInput>;

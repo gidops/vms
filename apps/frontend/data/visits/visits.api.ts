@@ -1,5 +1,6 @@
 import type {
   AlertStatus,
+  EvacuationAssistType,
   AlertType,
   CheckInVisitInput,
   CheckOutVisitInput,
@@ -108,6 +109,9 @@ export interface VisitRequestDetail {
   checkOutAt?: string | null;
   /** Intake answer; null = legacy visit, never asked. */
   needsEvacuationAssist?: boolean | null;
+  /** The help asked for when the answer is Yes. */
+  evacuationAssistTypes?: EvacuationAssistType[];
+  evacuationAssistOther?: string | null;
   /** Comms-consent answer given at this visit; null = legacy. */
   commsConsent?: boolean | null;
   createdAt: string;

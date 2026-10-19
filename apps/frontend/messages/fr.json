@@ -936,5 +936,26 @@
     "empty": "Aucun message n'a encore été envoyé pour cette visite.",
     "loadError": "Impossible de charger les notifications.",
     "retryError": "La nouvelle tentative a échoué. Veuillez réessayer."
+  },
+  "evacuationAssist": {
+    "question": "De quelle aide auriez-vous besoin ?",
+    "types": {
+      "MOBILITY": "Aide à la mobilité (fauteuil roulant, difficulté à marcher ou à prendre les escaliers)",
+      "VISUAL": "Assistance pour déficience visuelle",
+      "HEARING": "Assistance pour déficience auditive",
+      "MEDICAL": "Assistance médicale",
+      "OTHER": "Autre (veuillez préciser)"
+    },
+    "short": {
+      "MOBILITY": "Mobilité",
+      "VISUAL": "Vue",
+      "HEARING": "Audition",
+      "MEDICAL": "Médical",
+      "OTHER": "Autre"
+    },
+    "otherLabel": "Décrivez l'aide nécessaire",
+    "otherPlaceholder": "Par exemple, besoin d'une rampe",
+    "chooseType": "Choisissez le type d'aide nécessaire",
+    "describeOther": "Décrivez l'aide nécessaire"
   }
 }

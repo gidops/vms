@@ -264,6 +264,20 @@ describe('V1 gap features (e2e)', () => {
         .expect(400);
     });
 
+    it('asks what help is needed when the evacuation answer is Yes', async () => {
+      // Yes without a type, OTHER without a description, No with a type.
+      for (const over of [
+        { needsEvacuationAssist: true },
+        { needsEvacuationAssist: true, evacuationAssistTypes: ['OTHER'] },
+        { needsEvacuationAssist: false, evacuationAssistTypes: ['VISUAL'] },
+      ]) {
+        await as(ROLES.VMC)
+          .post('/visits')
+          .send({ type: 'WALK_IN', guests: [guest(`t-${run}@x.com`, over)] })
+          .expect(400);
+      }
+    });
+
     it('stores the answers and an optional walk-in host', async () => {
       // A STAFF user is a valid host.
       const res = await as(ROLES.VMC)
@@ -274,6 +288,8 @@ describe('V1 gap features (e2e)', () => {
             guest(`host-${run}@x.com`, {
               hostUserId: userIds[ROLES.STAFF],
               needsEvacuationAssist: true,
+              evacuationAssistTypes: ['MOBILITY', 'OTHER'],
+              evacuationAssistOther: 'Needs a ramp',
               commsConsent: true,
             }),
           ],
@@ -281,6 +297,8 @@ describe('V1 gap features (e2e)', () => {
         .expect(201);
       expect(res.body[0]).toMatchObject({
         needsEvacuationAssist: true,
+        evacuationAssistTypes: ['MOBILITY', 'OTHER'],
+        evacuationAssistOther: 'Needs a ramp',
         commsConsent: true,
         host: { userId: userIds[ROLES.STAFF] },
       });
@@ -323,6 +341,7 @@ describe('V1 gap features (e2e)', () => {
     it('shows checked-in Yes visitors only, and drops them at check-out', async () => {
       const yes = await walkIn(`evac-yes-${run}@x.com`, {
         needsEvacuationAssist: true,
+        evacuationAssistTypes: ['HEARING'],
         floor: '5th Floor',
       });
       const no = await walkIn(`evac-no-${run}@x.com`, {
@@ -350,6 +369,11 @@ describe('V1 gap features (e2e)', () => {
       );
       expect(ids).toContain(yes.id);
       expect(ids).not.toContain(no.id);
+      expect(
+        (roll.body.rows as { visitId: string; assistTypes: string[] }[]).find(
+          (r) => r.visitId === yes.id,
+        )?.assistTypes,
+      ).toEqual(['HEARING']);
       expect(roll.body.count).toBe(ids.length);
       expect(roll.body.checkedInTotal).toBeGreaterThanOrEqual(3);
 

@@ -9,6 +9,7 @@ import { WAT_OFFSET_MS, formatWat, watDayRange } from '../../shared/common/wat';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
 import { EventPublisher } from '../../shared/events/event-publisher';
 import { TransactionManager } from '../../shared/events/transaction.manager';
+import { evacuationAssistLabel } from './helpers/evacuation-assist';
 
 /** Rows fetched per round-trip while streaming an export. */
 const BATCH = 500;
@@ -31,6 +32,7 @@ export const EXPORT_COLUMNS = [
   'Group name',
   'Badge',
   'Evacuation assist',
+  'Evacuation assistance',
   'Comms consent',
   'Email status',
   'Created by',
@@ -154,6 +156,7 @@ export class VisitExportService {
       v.groupName ?? '',
       card ? [card.zone, card.cardNumber].filter(Boolean).join(' · ') : '',
       yesNo(v.needsEvacuationAssist),
+      evacuationAssistLabel(v.evacuationAssistTypes, v.evacuationAssistOther),
       yesNo(v.commsConsent),
       emailStatusLabel(emailStatus),
       v.createdByName ?? '',

@@ -23,6 +23,8 @@ const row = (over: Record<string, unknown> = {}) => ({
   checkInAt: new Date('2026-10-17T08:05:00Z'),
   checkOutAt: null,
   needsEvacuationAssist: true,
+  evacuationAssistTypes: ['MOBILITY', 'OTHER'],
+  evacuationAssistOther: 'Needs a ramp',
   commsConsent: null,
   createdByName: 'Judith Francis',
   visitor: {
@@ -219,6 +221,7 @@ describe('VisitExportService', () => {
         '',
         '4th Floor · 0019',
         'Yes',
+        'Mobility; Other: Needs a ramp',
         'Not asked',
         'Failed',
         'Judith Francis',
@@ -246,7 +249,7 @@ describe('VisitExportService', () => {
     expect(visitDate).toBeInstanceOf(Date);
     // Stored as WAT wall-clock (Excel has no time zones).
     expect(visitDate.toISOString()).toBe('2026-10-17T00:30:00.000Z');
-    expect(ws.getRow(2).getCell(19).value).toBe('Sent');
+    expect(ws.getRow(2).getCell(20).value).toBe('Sent');
   });
 
   it('names the file after the range', () => {

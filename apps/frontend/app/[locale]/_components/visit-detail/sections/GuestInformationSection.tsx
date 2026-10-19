@@ -1,5 +1,6 @@
 import { Avatar, Badge } from "@vms/ui";
 import { useTranslations } from "next-intl";
+import { useEvacuationAssistText } from "../../EvacuationAssist";
 import type { VisitRequestDetail } from "@/data/visits/visits.api";
 import type { VisitStatus } from "../helpers";
 import { SheetSection } from "./SheetSection";
@@ -28,6 +29,7 @@ export function GuestInformationSection({
   hasAlert: boolean;
 }) {
   const t = useTranslations("requests");
+  const assistText = useEvacuationAssistText();
   const { visitor } = data;
   return (
     <SheetSection title={t("sections.visitorInfo")}>
@@ -60,6 +62,16 @@ export function GuestInformationSection({
                     ? t("yes")
                     : t("no")}
               </span>
+              {data.needsEvacuationAssist &&
+              data.evacuationAssistTypes?.length ? (
+                <span className="text-fg">
+                  {" · "}
+                  {assistText(
+                    data.evacuationAssistTypes,
+                    data.evacuationAssistOther,
+                  )}
+                </span>
+              ) : null}
             </span>
           </div>
         </div>

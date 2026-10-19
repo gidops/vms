@@ -16,6 +16,7 @@ import {
 } from "@vms/ui";
 import { useTranslations } from "next-intl";
 import * as React from "react";
+import { EvacuationAssistFields } from "../../_components/EvacuationAssist";
 import { PhoneInput } from "../../_components/PhoneInput";
 import {
   guestDetailsValid,
@@ -387,13 +388,33 @@ export function GuestBlock({
             label={t("fields.evacuationAssist")}
             value={value.needsEvacuationAssist}
             onChange={(needsEvacuationAssist) =>
-              onChange({ needsEvacuationAssist })
+              onChange(
+                needsEvacuationAssist
+                  ? { needsEvacuationAssist }
+                  : {
+                      needsEvacuationAssist,
+                      evacuationAssistTypes: [],
+                      evacuationAssistOther: "",
+                    },
+              )
             }
             showErrors={showErrors}
             yesLabel={t("fields.yes")}
             noLabel={t("fields.no")}
             errorLabel={t("fields.chooseYesNo")}
           />
+          {value.needsEvacuationAssist ? (
+            <EvacuationAssistFields
+              id={id("evacuationTypes")}
+              value={{
+                evacuationAssistTypes: value.evacuationAssistTypes,
+                evacuationAssistOther: value.evacuationAssistOther,
+              }}
+              onChange={onChange}
+              showErrors={showErrors}
+              className="md:mb-3"
+            />
+          ) : null}
           <YesNoQuestion
             id={id("consent")}
             label={t("fields.commsConsent")}

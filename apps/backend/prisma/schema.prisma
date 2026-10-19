@@ -326,6 +326,10 @@ model Visit {
   // needsEvacuationAssist feeds the live Evacuation Roll; commsConsent is the
   // answer given at THIS visit (current opt-in status lives in CommsConsentEvent).
   needsEvacuationAssist Boolean?
+  // When the answer is Yes: MOBILITY | VISUAL | HEARING | MEDICAL | OTHER
+  // (contracts EVACUATION_ASSIST_TYPES), plus free text for OTHER.
+  evacuationAssistTypes String[] @default([])
+  evacuationAssistOther String?
   commsConsent          Boolean?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt

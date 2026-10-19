@@ -936,5 +936,26 @@
     "empty": "No messages have been sent for this visit yet.",
     "loadError": "Couldn't load notifications.",
     "retryError": "Retry failed. Please try again."
+  },
+  "evacuationAssist": {
+    "question": "What help would you need?",
+    "types": {
+      "MOBILITY": "Mobility assistance (wheelchair, difficulty walking or using stairs)",
+      "VISUAL": "Visual impairment support",
+      "HEARING": "Hearing impairment support",
+      "MEDICAL": "Medical assistance",
+      "OTHER": "Other (please specify)"
+    },
+    "short": {
+      "MOBILITY": "Mobility",
+      "VISUAL": "Visual",
+      "HEARING": "Hearing",
+      "MEDICAL": "Medical",
+      "OTHER": "Other"
+    },
+    "otherLabel": "Describe the assistance needed",
+    "otherPlaceholder": "For example, needs a ramp",
+    "chooseType": "Choose the type of assistance needed",
+    "describeOther": "Describe the assistance needed"
   }
 }

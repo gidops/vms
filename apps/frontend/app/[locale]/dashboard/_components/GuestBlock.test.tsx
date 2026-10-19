@@ -61,6 +61,37 @@ describe("GuestBlock — Safety & consent", () => {
     expect(onChange).toHaveBeenCalledWith({ needsEvacuationAssist: true });
   });
 
+  it("asks what help is needed once the evacuation answer is Yes", () => {
+    const { onChange } = setup({ needsEvacuationAssist: true });
+    expect(
+      screen.getByRole("group", { name: "What help would you need?" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText("Visual impairment support"));
+    expect(onChange).toHaveBeenCalledWith({
+      evacuationAssistTypes: ["VISUAL"],
+    });
+  });
+
+  it("hides the help types and clears them on No", () => {
+    const { onChange } = setup({
+      needsEvacuationAssist: true,
+      evacuationAssistTypes: ["OTHER"],
+      evacuationAssistOther: "Ramp",
+    });
+    expect(screen.getByLabelText("Describe the assistance needed")).toHaveValue(
+      "Ramp",
+    );
+    const evac = screen.getByRole("radiogroup", {
+      name: /Need help evacuating/,
+    });
+    fireEvent.click(evac.querySelector('[role="radio"]:last-child')!);
+    expect(onChange).toHaveBeenCalledWith({
+      needsEvacuationAssist: false,
+      evacuationAssistTypes: [],
+      evacuationAssistOther: "",
+    });
+  });
+
   it("flags only the unanswered question after a submit attempt", () => {
     setup({ needsEvacuationAssist: true }, { showErrors: true });
     expect(screen.getAllByText("Choose Yes or No")).toHaveLength(1);

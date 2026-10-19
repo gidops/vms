@@ -19,6 +19,7 @@ const filled = (over: Partial<GuestEntry> = {}): GuestEntry => ({
   floor: "4th Floor",
   purpose: "Official",
   needsEvacuationAssist: true,
+  evacuationAssistTypes: ["MOBILITY"],
   commsConsent: false,
   ...over,
 });
@@ -65,6 +66,42 @@ describe("guest-form safety & consent", () => {
       [true, false],
       [true, true],
     ]);
+  });
+
+  it("needs the kind of help when the evacuation answer is Yes", () => {
+    expect(safetyConsentValid(filled({ evacuationAssistTypes: [] }))).toBe(
+      false,
+    );
+    expect(
+      safetyConsentValid(filled({ evacuationAssistTypes: ["OTHER"] })),
+    ).toBe(false);
+    expect(
+      safetyConsentValid(
+        filled({
+          evacuationAssistTypes: ["OTHER"],
+          evacuationAssistOther: "Needs a ramp",
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it("sends the help types with a Yes and nothing with a No", () => {
+    const [yes, no] = buildCreateInput(
+      [
+        filled({
+          evacuationAssistTypes: ["HEARING", "OTHER"],
+          evacuationAssistOther: "  Needs a ramp ",
+        }),
+        filled({ email: "b@x.com", needsEvacuationAssist: false }),
+      ],
+      "walkin",
+      noGroup,
+    ).guests;
+    expect(yes).toMatchObject({
+      evacuationAssistTypes: ["HEARING", "OTHER"],
+      evacuationAssistOther: "Needs a ramp",
+    });
+    expect(no).not.toHaveProperty("evacuationAssistTypes");
   });
 
   it("refuses to turn an unanswered question into a silent No", () => {

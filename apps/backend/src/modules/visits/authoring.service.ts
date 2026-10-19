@@ -16,6 +16,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
 import { EventPublisher } from '../../shared/events/event-publisher';
 import { TransactionManager } from '../../shared/events/transaction.manager';
+import { evacuationAssistData } from './helpers/evacuation-assist';
 import { generateReferenceCode } from './helpers/visit.codes';
 import { VisitReadService } from './read.service';
 
@@ -126,6 +127,7 @@ export class VisitAuthoringService {
             createdByName: actor?.fullName ?? null,
             source: 'VMC_STATION',
             needsEvacuationAssist: g.needsEvacuationAssist,
+            ...evacuationAssistData(g),
             commsConsent: g.commsConsent,
           },
         });
@@ -236,6 +238,13 @@ export class VisitAuthoringService {
           purpose: input.purpose,
           scheduledAt: input.scheduledAt,
           needsEvacuationAssist: input.needsEvacuationAssist,
+          ...(input.needsEvacuationAssist === undefined
+            ? {}
+            : evacuationAssistData({
+                needsEvacuationAssist: input.needsEvacuationAssist,
+                evacuationAssistTypes: input.evacuationAssistTypes,
+                evacuationAssistOther: input.evacuationAssistOther,
+              })),
         },
       });
       await this.events.publish(tx, {
