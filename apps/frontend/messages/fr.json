@@ -40,7 +40,12 @@
       "searchPlaceholder": "Rechercher visiteur, hôte, étage, ID de pass",
       "allVisitTypes": "Tous les types de visite",
       "allPurpose": "Tous les motifs",
-      "search": "Rechercher"
+      "search": "Rechercher",
+      "status": {
+        "APPROVED": "Attendu",
+        "CHECKED_IN": "Sur site",
+        "CHECKED_OUT": "Parti"
+      }
     },
     "stats": {
       "onsite": "Visiteurs sur site",

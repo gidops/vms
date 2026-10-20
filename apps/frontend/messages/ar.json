@@ -40,7 +40,12 @@
       "searchPlaceholder": "ابحث عن زائر أو مضيف أو طابق أو رقم تصريح",
       "allVisitTypes": "كل أنواع الزيارة",
       "allPurpose": "كل الأغراض",
-      "search": "بحث"
+      "search": "بحث",
+      "status": {
+        "APPROVED": "متوقع",
+        "CHECKED_IN": "في الموقع",
+        "CHECKED_OUT": "غادر"
+      }
     },
     "stats": {
       "onsite": "الزوّار المتواجدون",

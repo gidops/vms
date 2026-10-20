@@ -1,5 +1,6 @@
 import type {
   AlertStatus,
+  DeskStats,
   EvacuationAssistType,
   AlertType,
   CheckInVisitInput,
@@ -192,6 +193,10 @@ export const visitsApi = {
     if (params?.pageSize) q.set("pageSize", String(params.pageSize));
     const qs = q.toString();
     return api<Paginated<VisitListItem>>(`/visits${qs ? `?${qs}` : ""}`);
+  },
+  /** Reception's onsite / checked in today / checked out today numbers. */
+  deskStats(): Promise<DeskStats> {
+    return api<DeskStats>(`/visits/dashboard/desk-stats`);
   },
   cancel(id: string): Promise<VisitRequestDetail> {
     return api<VisitRequestDetail>(`/visits/${id}/cancel`, { method: "POST" });

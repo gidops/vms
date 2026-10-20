@@ -137,6 +137,13 @@ export class VisitsController {
     return this.dashboard.stats(query);
   }
 
+  /** The VMC overview's onsite / checked in / checked out counts for today. */
+  @Get('dashboard/desk-stats')
+  @RequirePermissions(PERMISSIONS.VISIT_CHECK_IN)
+  deskStats() {
+    return this.dashboard.deskStats();
+  }
+
   /** Check-ins per hour, shown only on Analytics & Reports. */
   @Get('dashboard/traffic')
   @RequirePermissions(PERMISSIONS.REPORT_READ)

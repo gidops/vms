@@ -40,7 +40,12 @@
       "searchPlaceholder": "Search visitor, host, floor, pass id",
       "allVisitTypes": "All Visit types",
       "allPurpose": "All Purpose",
-      "search": "Search"
+      "search": "Search",
+      "status": {
+        "APPROVED": "Expected",
+        "CHECKED_IN": "Onsite",
+        "CHECKED_OUT": "Checked out"
+      }
     },
     "stats": {
       "onsite": "Onsite Visitors",

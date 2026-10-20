@@ -131,4 +131,26 @@ describe('VisitDashboardService', () => {
       }).success,
     ).toBe(true);
   });
+
+  it("counts reception's numbers over today's WAT day", async () => {
+    const count = jest
+      .fn()
+      .mockResolvedValueOnce(4)
+      .mockResolvedValueOnce(9)
+      .mockResolvedValueOnce(5);
+    const prisma = { visit: { count } } as unknown as PrismaService;
+    // 23:30 UTC on the 18th is already 00:30 WAT on the 19th.
+    const stats = await new VisitDashboardService(prisma).deskStats(
+      new Date('2026-10-18T23:30:00Z'),
+    );
+    expect(stats).toEqual({ onsite: 4, checkedInToday: 9, checkedOutToday: 5 });
+    const day = {
+      gte: new Date('2026-10-18T23:00:00Z'),
+      lt: new Date('2026-10-19T23:00:00Z'),
+    };
+    expect(count).toHaveBeenCalledWith({ where: { status: 'CHECKED_IN' } });
+    // Arrivals include people who have since left.
+    expect(count).toHaveBeenCalledWith({ where: { checkInAt: day } });
+    expect(count).toHaveBeenCalledWith({ where: { checkOutAt: day } });
+  });
 });

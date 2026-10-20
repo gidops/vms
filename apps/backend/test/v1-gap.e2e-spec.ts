@@ -163,6 +163,21 @@ describe('V1 gap features (e2e)', () => {
         },
       ],
       [
+        // Reception's onsite / checked in / checked out numbers.
+        'GET',
+        '/visits/dashboard/desk-stats',
+        {
+          SUPER_ADMIN: 200,
+          ADMIN: 403,
+          VMC_ADMIN: 200,
+          READ_ADMIN: 403,
+          AUDITOR: 403,
+          VMC: 200,
+          GATE: 200,
+          STAFF: 403,
+        },
+      ],
+      [
         // Analytics-only chart, gated by report:read.
         'GET',
         '/visits/dashboard/traffic?dateFrom=2026-10-18T23:00:00Z&dateTo=2026-10-19T22:59:59Z&timeZone=Africa/Lagos',
