@@ -10,8 +10,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function SearchDemo() {
-  const [value, setValue] = React.useState("");
+function SearchDemo({ initial = "" }: { initial?: string }) {
+  const [value, setValue] = React.useState(initial);
   return (
     <div className="w-80">
       <SearchInput
@@ -26,6 +26,11 @@ function SearchDemo() {
 
 export const Default: Story = {
   render: () => <SearchDemo />,
+};
+
+/** Filled in: one clear button only (the browser's own "x" is hidden). */
+export const WithValue: Story = {
+  render: () => <SearchDemo initial="Ifeoma" />,
 };
 
 /** Translucent field for the deep-green TopNav (global search). */
