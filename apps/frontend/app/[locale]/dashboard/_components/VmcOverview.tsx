@@ -1,9 +1,12 @@
 "use client";
 
+import { PERMISSIONS } from "@vms/contracts";
 import { Button } from "@vms/ui";
-import { ChevronDown, SquareActivity } from "lucide-react";
+import { ChevronDown, LifeBuoy, MailCheck, SquareActivity } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
+import { Link } from "@/i18n/navigation";
+import { useAuth } from "@/shared/auth/AuthContext";
 
 export interface OverviewStat {
   label: string;
@@ -68,6 +71,9 @@ function QuickActions({
   onNewInvite,
 }: Pick<VmcOverviewProps, "onRegisterWalkIn" | "onNewInvite">) {
   const t = useTranslations("dashboard");
+  const { hasPermission } = useAuth();
+  const canEvacuation = hasPermission(PERMISSIONS.EVACUATION_READ);
+  const canOptIns = hasPermission(PERMISSIONS.CONSENT_READ);
   return (
     <>
       <DecorChevrons />
@@ -88,6 +94,22 @@ function QuickActions({
         <Button intent="accent" onClick={onNewInvite}>
           {t("quickActions.newInvite")}
         </Button>
+        {canEvacuation ? (
+          <Button asChild intent="accent" tone="outline">
+            <Link href="/dashboard/evacuation">
+              <LifeBuoy className="size-4" aria-hidden="true" />
+              {t("quickActions.evacuation")}
+            </Link>
+          </Button>
+        ) : null}
+        {canOptIns ? (
+          <Button asChild intent="accent" tone="outline">
+            <Link href="/dashboard/opt-ins">
+              <MailCheck className="size-4" aria-hidden="true" />
+              {t("quickActions.optIns")}
+            </Link>
+          </Button>
+        ) : null}
       </div>
     </>
   );

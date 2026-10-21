@@ -52,7 +52,9 @@
       "registerWalkIn": "Enregistrer une arrivée",
       "newInvite": "Nouvelle invitation",
       "formComingSoonTitle": "Bientôt disponible",
-      "formComingSoon": "Ce formulaire est en cours de création et sera bientôt disponible."
+      "formComingSoon": "Ce formulaire est en cours de création et sera bientôt disponible.",
+      "evacuation": "Liste d'évacuation",
+      "optIns": "Abonnements"
     },
     "activity": {
       "title": "Voir votre activité"
@@ -87,7 +89,8 @@
   "common": {
     "notifications": "Notifications",
     "logout": "Se déconnecter",
-    "allStatus": "Tous les statuts"
+    "allStatus": "Tous les statuts",
+    "noAccess": "Vous n'avez pas accès à cette page."
   },
   "requests": {
     "title": "Demandes et alertes",
@@ -276,7 +279,9 @@
     },
     "requestInfoPlaceholder": "Quelles informations supplémentaires sont nécessaires ?",
     "flagReasonPlaceholder": "Décrivez le problème de sécurité…",
-    "createdByYou": "(vous)"
+    "createdByYou": "(vous)",
+    "evacuationAssistYes": "A besoin d'aide pour l'évacuation",
+    "evacuationAssistNo": "Aide à l'évacuation : non"
   },
   "language": {
     "select": "Choisir la langue",
@@ -285,12 +290,14 @@
     "ar": "Arabe"
   },
   "roles": {
-    "SUPER_ADMIN": "Super administrateur",
-    "ADMIN": "Administrateur",
+    "SUPER_ADMIN": "Administrateur système",
+    "ADMIN": "Responsable de la sécurité",
     "AUDITOR": "Auditeur",
     "STAFF": "Personnel",
     "VMC": "Réception VMC",
-    "GATE": "Portail"
+    "GATE": "Portail",
+    "VMC_ADMIN": "Administrateur VMC",
+    "READ_ADMIN": "Administrateur (lecture seule)"
   },
   "signup": {
     "title": "Créer un compte administrateur",
@@ -320,7 +327,8 @@
     "useSameVisitDetails": "Mêmes détails de visite",
     "sections": {
       "guestDetails": "Détails de l'invité",
-      "visitDetails": "Détails de la visite"
+      "visitDetails": "Détails de la visite",
+      "safetyConsent": "Sécurité et consentement"
     },
     "guestLabel": "Invité {index}",
     "fields": {
@@ -346,7 +354,14 @@
       "groupName": "Nom du groupe",
       "groupNamePlaceholder": "ex. délégation Acme Corp",
       "groupContact": "Contact du groupe",
-      "groupContactPlaceholder": "E-mail ou téléphone"
+      "groupContactPlaceholder": "E-mail ou téléphone",
+      "optional": "Facultatif",
+      "noHost": "Aucun hôte",
+      "evacuationAssist": "Besoin d'aide pour évacuer en cas d'urgence ?",
+      "commsConsent": "Recevoir des nouvelles des événements d'Afreximbank ?",
+      "yes": "Oui",
+      "no": "Non",
+      "chooseYesNo": "Choisissez Oui ou Non"
     },
     "confirm": {
       "title": "Confirmer l'invitation",
@@ -445,7 +460,9 @@
       "settings": "Paramètres",
       "comingSoon": "Bientôt disponible",
       "collapse": "Réduire la barre latérale",
-      "expand": "Développer la barre latérale"
+      "expand": "Développer la barre latérale",
+      "evacuation": "Liste d'évacuation",
+      "optIns": "Abonnements aux communications"
     },
     "requests": {
       "title": "Demandes et approbations",
@@ -629,7 +646,8 @@
     "welcome": "Bienvenue {name}",
     "subtitle": "Opérations de portail",
     "placeholderTitle": "Tableau de bord du portail",
-    "placeholderBody": "Ce tableau de bord est provisoire et sera développé bientôt."
+    "placeholderBody": "Ce tableau de bord est provisoire et sera développé bientôt.",
+    "evacuationRoll": "Liste d'évacuation"
   },
   "users": {
     "title": "Gestion des utilisateurs",
@@ -731,5 +749,105 @@
     "rejectSelected": "Rejeter la sélection ({count})",
     "approveAll": "Tout approuver",
     "reasonPlaceholder": "Motif du rejet (obligatoire pour rejeter)"
+  },
+  "evacuation": {
+    "title": "Liste d'évacuation",
+    "refresh": "Actualiser",
+    "countBanner": "sur place ont besoin d'aide pour évacuer",
+    "floors": "{count, plural, one {# étage} other {# étages}}",
+    "generated": "Générée à <b>{time}</b>",
+    "refreshesEvery": "actualisée chaque minute",
+    "noFloor": "Étage non renseigné",
+    "loadError": "Impossible de charger la liste d'évacuation. Réessayez avec Actualiser.",
+    "columns": {
+      "visitor": "Visiteur",
+      "floor": "Étage / Aile",
+      "host": "Hôte",
+      "phone": "Téléphone",
+      "checkedIn": "Arrivée",
+      "organization": "Organisation",
+      "badge": "Badge"
+    },
+    "empty": {
+      "title": "Personne sur place n'a besoin d'aide pour évacuer",
+      "body": "{count, plural, =0 {Aucun visiteur n'est enregistré pour le moment.} one {# visiteur est enregistré. Il n'a pas demandé d'aide.} other {# visiteurs sont enregistrés. Aucun n'a demandé d'aide.}}"
+    },
+    "print": {
+      "button": "Imprimer pour les serre-files",
+      "heading": "AATC Abuja · Liste d'évacuation",
+      "generated": "Générée le {datetime} WAT",
+      "count": "{count, plural, one {# visiteur a besoin d'aide pour évacuer} other {# visiteurs ont besoin d'aide pour évacuer}}"
+    }
+  },
+  "consent": {
+    "title": "Abonnements aux communications",
+    "exportCsv": "Exporter en CSV",
+    "exportError": "L'export a échoué. Veuillez réessayer.",
+    "optedIn": "abonnés",
+    "searchPlaceholder": "Rechercher un e-mail ou un nom",
+    "columns": {
+      "email": "E-mail",
+      "name": "Nom",
+      "lastAnswered": "Dernière réponse",
+      "sourceVisit": "Visite d'origine"
+    },
+    "walkIn": "Sans rendez-vous",
+    "empty": "Personne ne s'est encore abonné.",
+    "noMatches": "Aucun abonnement ne correspond à votre recherche.",
+    "loadError": "Impossible de charger les abonnements.",
+    "withdrawTitle": "Retirer le consentement",
+    "withdrawHelp": "Arrête les envois à cet e-mail jusqu'à ce que la personne accepte lors d'une prochaine visite.",
+    "email": "E-mail",
+    "emailPlaceholder": "nom@entreprise.com",
+    "withdraw": "Retirer",
+    "invalidEmail": "Saisissez une adresse e-mail valide.",
+    "confirmTitle": "Retirer le consentement ?",
+    "confirmBody": "<b>{email}</b> quitte la liste des abonnés dès maintenant. Les visites passées restent inchangées.",
+    "cancel": "Annuler",
+    "done": "Consentement retiré pour {email}.",
+    "notFound": "Aucun enregistrement pour cet e-mail.",
+    "error": "Une erreur s'est produite. Veuillez réessayer."
+  },
+  "export": {
+    "title": "Exporter les données visiteurs",
+    "subtitle": "Choisissez la période et le format.",
+    "dateRange": "Période",
+    "from": "Du",
+    "to": "Au",
+    "hint": "Par date de visite, heure WAT. 366 jours maximum.",
+    "format": "Format du fichier",
+    "csv": "CSV",
+    "excel": "Excel",
+    "cancel": "Annuler",
+    "submit": "Exporter",
+    "exporting": "Export en cours…",
+    "rangeTooLong": "Choisissez une période de 366 jours maximum.",
+    "rangeInvalid": "La date de fin doit être postérieure ou égale à la date de début.",
+    "error": "L'export a échoué. Veuillez réessayer."
+  },
+  "delivery": {
+    "title": "Notifications",
+    "failedCount": "{count} en échec",
+    "channel": {
+      "EMAIL": "E-mail",
+      "SMS": "SMS",
+      "WHATSAPP": "WhatsApp"
+    },
+    "template": {
+      "inviteCode": "Code d'invitation",
+      "visitorArrived": "Visiteur arrivé",
+      "thankYou": "Remerciement",
+      "other": "Message"
+    },
+    "status": {
+      "SENT": "Envoyé",
+      "PENDING": "En file",
+      "FAILED": "Échec"
+    },
+    "attempts": "{count, plural, one {# tentative} other {# tentatives}}",
+    "retry": "Réessayer",
+    "empty": "Aucun message n'a encore été envoyé pour cette visite.",
+    "loadError": "Impossible de charger les notifications.",
+    "retryError": "La nouvelle tentative a échoué. Veuillez réessayer."
   }
 }

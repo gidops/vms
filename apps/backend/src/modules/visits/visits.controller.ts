@@ -2,11 +2,16 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  Logger,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import {
   AdminStatsQuery,
   AdminTrafficQuery,
@@ -16,6 +21,7 @@ import {
   CheckOutVisitInput,
   CreateVisitsInput,
   DenyVisitInput,
+  ExportVisitsQuery,
   FlagVisitInput,
   PERMISSIONS,
   RateVisitInput,
@@ -29,34 +35,81 @@ import {
   RequirePermissions,
   type AuthUser,
 } from '../../shared/auth/auth.decorators';
+import { canReadAllVisits } from '../../shared/auth/visit-scope';
 import { ZodValidationPipe } from '../../shared/common/pipes/zod-validation.pipe';
 import { VisitAccessService } from './access.service';
 import { VisitDashboardService } from './dashboard.service';
 import { VisitAuthoringService } from './authoring.service';
+import { VisitDeliveriesService } from './deliveries.service';
+import { VisitEvacuationService } from './evacuation.service';
+import { VisitExportService } from './export.service';
 import { VisitModerationService } from './moderation.service';
 import { VisitReadService } from './read.service';
 
 @Controller('visits')
 export class VisitsController {
+  private readonly logger = new Logger(VisitsController.name);
+
   constructor(
     private readonly dashboard: VisitDashboardService,
     private readonly read: VisitReadService,
     private readonly authoring: VisitAuthoringService,
     private readonly moderation: VisitModerationService,
     private readonly access: VisitAccessService,
+    private readonly evacuation: VisitEvacuationService,
+    private readonly exporter: VisitExportService,
+    private readonly deliveries: VisitDeliveriesService,
   ) {}
 
   /**
    * Visit list. The admin approval queue (filter by status) and — with
    * `scope=mine` — the staff "My Visits" / "Recent Visitors" views, which are
-   * restricted to the requesting user's hosted visits.
+   * restricted to the requesting user's hosted visits. Principals without
+   * `visit:read` (staff, gate) are always limited to the "mine" scope.
    */
   @Get()
   list(
     @Query(new ZodValidationPipe(VisitListQuery)) query: VisitListQuery,
     @CurrentUser() principal: AuthUser,
   ) {
-    return this.read.list(query, principal.userId);
+    return this.read.list(query, principal.userId, canReadAllVisits(principal));
+  }
+
+  /** Live Evacuation Roll — checked-in visitors who need evacuation help. */
+  @Get('evacuation-roll')
+  @RequirePermissions(PERMISSIONS.EVACUATION_READ)
+  evacuationRoll() {
+    return this.evacuation.roll();
+  }
+
+  /**
+   * Visitor export (CSV / Excel) by WAT visit date, max 366 days. Streamed as a
+   * download; audit-logged with the range, format and row count.
+   */
+  @Get('export')
+  @RequirePermissions(PERMISSIONS.REPORT_EXPORT)
+  async export(
+    @Query(new ZodValidationPipe(ExportVisitsQuery)) query: ExportVisitsQuery,
+    @CurrentUser() principal: AuthUser,
+    @Res() res: Response,
+  ): Promise<void> {
+    res.setHeader('Content-Type', this.exporter.contentType(query));
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${this.exporter.filename(query)}"`,
+    );
+    res.setHeader('Cache-Control', 'no-store');
+    try {
+      await this.exporter.write(query, res, principal.userId);
+    } catch (err) {
+      // Once bytes have gone out the status can't change, so the exception
+      // filter can't answer; log it and cut the download short instead.
+      if (!res.headersSent) throw err;
+      this.logger.error(
+        `Visitor export failed after streaming began: ${String(err)}`,
+      );
+      res.destroy(err instanceof Error ? err : undefined);
+    }
   }
 
   /** VMC creates invite(s) / walk-in(s) for a host (one visit per visitor). */
@@ -86,8 +139,36 @@ export class VisitsController {
   }
 
   @Get(':id')
-  getOne(@Param('id') id: string) {
+  async getOne(@Param('id') id: string, @CurrentUser() principal: AuthUser) {
+    if (!canReadAllVisits(principal)) {
+      await this.read.assertCanView(id, principal.userId);
+    }
     return this.read.getDetail(id);
+  }
+
+  /** Email / SMS / WhatsApp delivery status for a visit (Guest Details). */
+  @Get(':id/notifications')
+  @RequirePermissions(PERMISSIONS.NOTIFICATION_READ)
+  notifications(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() principal: AuthUser,
+  ) {
+    return this.deliveries.list(id, principal);
+  }
+
+  /** Re-queue a failed notification for this visit. */
+  @Post(':id/notifications/:notificationId/retry')
+  @HttpCode(200)
+  @RequirePermissions(
+    PERMISSIONS.NOTIFICATION_READ,
+    PERMISSIONS.NOTIFICATION_RETRY,
+  )
+  retryNotification(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('notificationId', ParseUUIDPipe) notificationId: string,
+    @CurrentUser() principal: AuthUser,
+  ) {
+    return this.deliveries.retry(id, notificationId, principal);
   }
 
   @Post(':id/cancel')

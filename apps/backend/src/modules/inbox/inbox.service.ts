@@ -40,9 +40,11 @@ export class InboxService {
   async list(
     query: InboxQuery,
     currentUserId: string,
+    /** False for principals without `visit:read` — forces the "mine" scope. */
+    canReadAll = true,
   ): Promise<Paginated<InboxItem>> {
     const seenAt = await this.lastSeenAt(currentUserId);
-    const items = await this.collect(query, currentUserId, seenAt);
+    const items = await this.collect(query, currentUserId, seenAt, canReadAll);
 
     const total = items.length;
     const start = (query.page - 1) * query.pageSize;
@@ -59,9 +61,10 @@ export class InboxService {
   async unreadCount(
     query: InboxQuery,
     currentUserId: string,
+    canReadAll = true,
   ): Promise<InboxUnreadCount> {
     const seenAt = await this.lastSeenAt(currentUserId);
-    const items = await this.collect(query, currentUserId, seenAt);
+    const items = await this.collect(query, currentUserId, seenAt, canReadAll);
     return { unread: items.filter((i) => i.unread).length };
   }
 
@@ -88,6 +91,7 @@ export class InboxService {
     query: InboxQuery,
     currentUserId: string,
     seenAt: Date,
+    canReadAll: boolean,
   ): Promise<InboxItem[]> {
     // A status filter matches one side only (VisitStatus and AlertStatus share no
     // values), so it also disambiguates which kind the user is filtering.
@@ -113,8 +117,9 @@ export class InboxService {
       !requestOnly && (query.kind === 'all' || query.kind === 'alerts');
 
     // `scope=mine` restricts to the signed-in host: their own visit requests, and
-    // alerts raised against any visitor they host.
-    const mine = query.scope === 'mine';
+    // alerts raised against any visitor they host. Principals without
+    // `visit:read` (staff, gate) are always limited to it.
+    const mine = query.scope === 'mine' || !canReadAll;
     const requestWhere: Prisma.VisitWhereInput = {
       ...(mine ? { host: { userId: currentUserId } } : {}),
       ...(query.type ? { type: query.type } : {}),

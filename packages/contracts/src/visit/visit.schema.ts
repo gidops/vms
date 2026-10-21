@@ -92,6 +92,17 @@ export const Visit = z.object({
   gateValidatedAt: z.coerce.date().nullable().optional(),
   checkInAt: z.coerce.date().nullable().optional(),
   checkOutAt: z.coerce.date().nullable().optional(),
+  /**
+   * Intake answer: would the visitor need help evacuating in an emergency?
+   * `null` = legacy visit, never asked.
+   */
+  needsEvacuationAssist: z.boolean().nullable().optional(),
+  /**
+   * Intake answer: does the visitor want updates on Afreximbank events? The
+   * answer given at THIS visit (`null` = legacy). The current opt-in status is
+   * the latest consent event for the email, not this field.
+   */
+  commsConsent: z.boolean().nullable().optional(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
@@ -150,6 +161,10 @@ export const CreateVisitGuest = RegisterVisitorInput.extend({
   purpose: z.string().min(1),
   scheduledAt: z.coerce.date().optional(),
   notes: z.string().max(2000).optional(),
+  /** Required Yes/No, no default: needs help evacuating in an emergency. */
+  needsEvacuationAssist: z.boolean(),
+  /** Required Yes/No, no default: wants updates on Afreximbank events. */
+  commsConsent: z.boolean(),
 });
 export type CreateVisitGuest = z.infer<typeof CreateVisitGuest>;
 
@@ -358,6 +373,7 @@ export const UpdateVisitRequestInput = z
     floor: z.string().min(1).optional(),
     purpose: z.string().min(1).optional(),
     scheduledAt: z.coerce.date().optional(),
+    needsEvacuationAssist: z.boolean().optional(),
   })
   .refine((v) => Object.values(v).some((x) => x !== undefined), {
     message: "Provide at least one field to update",

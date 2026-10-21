@@ -39,6 +39,8 @@ function guestFromDetail(d: VisitRequestDetail): GuestEntry {
     scheduledTime: sched
       ? `${pad(sched.getHours())}:${pad(sched.getMinutes())}`
       : "",
+    needsEvacuationAssist: d.needsEvacuationAssist ?? null,
+    commsConsent: d.commsConsent ?? null,
     useSame: false,
   };
 }
@@ -70,6 +72,7 @@ export function EditVisitForm({
         floor: guest.floor || undefined,
         purpose: guest.purpose || undefined,
         scheduledAt: scheduledAt ? scheduledAt.toISOString() : undefined,
+        needsEvacuationAssist: guest.needsEvacuationAssist ?? undefined,
       },
       { onSuccess: onDone },
     );
@@ -84,6 +87,7 @@ export function EditVisitForm({
         hosts={hosts.data ?? []}
         onUseSameChange={() => {}}
         showErrors={false}
+        safety="evacuationOnly"
         onChange={(patch) => setGuest((g) => ({ ...g, ...patch }))}
       />
       <div className="flex items-center gap-2">

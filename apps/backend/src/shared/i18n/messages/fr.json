@@ -82,7 +82,8 @@
       "notFound": "Utilisateur introuvable"
     },
     "notification": {
-      "notFound": "Notification introuvable"
+      "notFound": "Notification introuvable",
+      "notRetryable": "Ce message ne peut être renvoyé qu'après un échec."
     },
     "auth": {
       "invalidCredentials": "E-mail ou mot de passe invalide."

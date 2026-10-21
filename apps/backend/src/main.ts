@@ -12,7 +12,8 @@ async function bootstrap() {
   app.useLogger(app.get(Logger));
 
   app.use(helmet());
-  app.enableCors();
+  // Expose Content-Disposition so the browser can read export filenames.
+  app.enableCors({ exposedHeaders: ['Content-Disposition'] });
   app.enableShutdownHooks();
 
   // AllExceptionsFilter is registered as a global APP_FILTER provider in

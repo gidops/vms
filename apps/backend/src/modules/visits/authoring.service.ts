@@ -4,11 +4,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type {
-  CreateVisitsInput,
-  ResubmitVisitInput,
-  UpdateVisitRequestInput,
-  VisitRequestDetail,
+import {
+  normalizeConsentEmail,
+  type CreateVisitsInput,
+  type ResubmitVisitInput,
+  type UpdateVisitRequestInput,
+  type VisitRequestDetail,
 } from '@vms/contracts';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -122,9 +123,23 @@ export class VisitAuthoringService {
             createdById: actorUserId,
             createdByName: actor?.fullName ?? null,
             source: 'VMC_STATION',
+            needsEvacuationAssist: g.needsEvacuationAssist,
+            commsConsent: g.commsConsent,
           },
         });
         createdIds.push(visit.id);
+
+        // Every intake answer is a consent event keyed on the normalised email;
+        // the latest event per email is that person's current opt-in status.
+        await tx.commsConsentEvent.create({
+          data: {
+            email: normalizeConsentEmail(g.email),
+            consent: g.commsConsent,
+            source: 'VISIT',
+            visitId: visit.id,
+            actorUserId,
+          },
+        });
 
         if (g.notes) {
           await tx.note.create({
@@ -218,6 +233,7 @@ export class VisitAuthoringService {
           floor: input.floor,
           purpose: input.purpose,
           scheduledAt: input.scheduledAt,
+          needsEvacuationAssist: input.needsEvacuationAssist,
         },
       });
       await this.events.publish(tx, {

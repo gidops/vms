@@ -31,6 +31,24 @@ import {
 export class VisitReadService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * Ownership gate for principals without `visit:read`: they may only open a
+   * visit they created or host. Anything else reads as "not found" so the
+   * endpoint never confirms another visit exists.
+   */
+  async assertCanView(id: string, userId: string): Promise<void> {
+    const visit = await this.prisma.visit.findUnique({
+      where: { id },
+      select: { createdById: true, host: { select: { userId: true } } },
+    });
+    if (
+      !visit ||
+      (visit.createdById !== userId && visit.host?.userId !== userId)
+    ) {
+      throw new NotFoundException('errors.visit.notFound');
+    }
+  }
+
   async getDetail(id: string): Promise<VisitRequestDetail> {
     const visit = await this.prisma.visit.findUnique({
       where: { id },
@@ -96,6 +114,8 @@ export class VisitReadService {
   async list(
     query: VisitListQuery,
     currentUserId: string,
+    /** False for principals without `visit:read` — forces the "mine" scope. */
+    canReadAll = true,
   ): Promise<Paginated<VisitListItem>> {
     const where: Prisma.VisitWhereInput = {};
     if (query.statuses?.length) where.status = { in: query.statuses };
@@ -114,7 +134,7 @@ export class VisitReadService {
     // Scope and search are each an OR-group; they'd clobber one another as a
     // single top-level `where.OR`, so AND them together.
     const and: Prisma.VisitWhereInput[] = [];
-    if (query.scope === 'mine') {
+    if (query.scope === 'mine' || !canReadAll) {
       // "Mine" = requests I created OR visits I host (a staff sees requests they
       // raised even when the guest is hosted by someone else).
       and.push({

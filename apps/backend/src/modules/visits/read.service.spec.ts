@@ -39,6 +39,22 @@ describe('VisitReadService.list scoping', () => {
     );
   });
 
+  it('forces the "mine" scope for a principal without visit:read, even with scope=all', async () => {
+    const { service, findMany } = setup();
+    await service.list(
+      query({ scope: 'all', groupId: undefined }),
+      'me',
+      false,
+    );
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          AND: [{ OR: [{ createdById: 'me' }, { host: { userId: 'me' } }] }],
+        },
+      }),
+    );
+  });
+
   it('does not host-scope the admin queue (scope=all)', async () => {
     const { service, findMany } = setup();
     await service.list(query({ status: 'PENDING' }), 'me');
@@ -400,5 +416,38 @@ describe('VisitReadService.getDetail', () => {
     const detail = await service.getDetail('v1');
     expect(detail.checkedInByName).toBe('Alice');
     expect(detail.checkedOutByName).toBe('Bob');
+  });
+});
+
+describe('VisitReadService.assertCanView', () => {
+  function setup(visit: unknown) {
+    const prisma = {
+      visit: { findUnique: jest.fn().mockResolvedValue(visit) },
+    } as unknown as PrismaService;
+    return new VisitReadService(prisma);
+  }
+
+  it('allows the creator or the host', async () => {
+    await expect(
+      setup({ createdById: 'me', host: null }).assertCanView('v', 'me'),
+    ).resolves.toBeUndefined();
+    await expect(
+      setup({ createdById: 'x', host: { userId: 'me' } }).assertCanView(
+        'v',
+        'me',
+      ),
+    ).resolves.toBeUndefined();
+  });
+
+  it("reads another user's visit (or a missing one) as not found", async () => {
+    await expect(
+      setup({ createdById: 'x', host: { userId: 'y' } }).assertCanView(
+        'v',
+        'me',
+      ),
+    ).rejects.toThrow('errors.visit.notFound');
+    await expect(setup(null).assertCanView('v', 'me')).rejects.toThrow(
+      'errors.visit.notFound',
+    );
   });
 });

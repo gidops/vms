@@ -19,3 +19,6 @@ export * from "./staff/staff.schema.js";
 export * from "./notification/notification.schema.js";
 export * from "./upload/upload.schema.js";
 export * from "./admin/admin.schema.js";
+export * from "./evacuation/evacuation.schema.js";
+export * from "./consent/consent.schema.js";
+export * from "./report/report.schema.js";

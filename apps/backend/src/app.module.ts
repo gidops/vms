@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AccessCardsModule } from './modules/access-cards/access-cards.module';
 import { AlertsModule } from './modules/alerts/alerts.module';
+import { ConsentModule } from './modules/consent/consent.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { InboxModule } from './modules/inbox/inbox.module';
 import { NotesModule } from './modules/notes/notes.module';
@@ -35,6 +36,7 @@ import { StorageModule } from './shared/storage/storage.module';
     AuthModule,
     InboxModule,
     VisitsModule,
+    ConsentModule,
     AccessCardsModule,
     AlertsModule,
     NotesModule,

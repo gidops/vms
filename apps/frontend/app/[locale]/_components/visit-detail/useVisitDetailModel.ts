@@ -1,3 +1,4 @@
+import { homeFor } from "@vms/contracts";
 import * as React from "react";
 import type { VisitAlert, VisitRequestDetail } from "@/data/visits/visits.api";
 import { useAuth } from "@/shared/auth/AuthContext";
@@ -48,7 +49,9 @@ export function useVisitDetailModel(
 
   return React.useMemo(() => {
     const isStaff = activeRole === "STAFF";
-    const isAdmin = activeRole === "ADMIN" || activeRole === "SUPER_ADMIN";
+    // Any admin-console role (System Admin, Security Manager, VMC Admin, Read
+    // Admin, Auditor). Display-only: actions stay gated by permissions.
+    const isAdmin = homeFor(activeRole) === "/admin";
     const isVmc = activeRole === "VMC";
 
     const status = data.status;

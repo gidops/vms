@@ -16,13 +16,14 @@ const ROLE_DEFS: Record<
 > = {
   [ROLES.ADMIN]: {
     description:
-      'Administrator (Security Manager) — manage users and roles, decide/flag visit requests',
+      'Security Manager — manage users and roles, decide/flag visit requests, bulk exports',
     permissions: [
       PERMISSIONS.USER_READ,
       PERMISSIONS.USER_CREATE,
       PERMISSIONS.USER_UPDATE,
       PERMISSIONS.USER_DELETE,
       PERMISSIONS.ROLE_READ,
+      PERMISSIONS.VISIT_READ,
       PERMISSIONS.VISIT_APPROVE,
       PERMISSIONS.VISIT_DENY,
       // The Security Manager raises and resolves security alerts (flag / request more info);
@@ -32,11 +33,65 @@ const ROLE_DEFS: Record<
       PERMISSIONS.ALERT_RESOLVE,
       PERMISSIONS.ALERT_ESCALATE,
       PERMISSIONS.NOTE_ADD,
+      PERMISSIONS.ISSUER_READ,
+      PERMISSIONS.ISSUER_MANAGE,
+      PERMISSIONS.EVACUATION_READ,
+      PERMISSIONS.CONSENT_READ,
+      PERMISSIONS.CONSENT_MANAGE,
+      // Bulk personal-data exports are Security Manager + System Admin only.
+      PERMISSIONS.CONSENT_EXPORT,
+      PERMISSIONS.REPORT_EXPORT,
+      PERMISSIONS.NOTIFICATION_READ,
+      PERMISSIONS.NOTIFICATION_RETRY,
+    ],
+  },
+  [ROLES.VMC_ADMIN]: {
+    description:
+      'VMC Admin — supervises reception from the admin console (no approvals, no bulk exports)',
+    permissions: [
+      PERMISSIONS.USER_READ,
+      PERMISSIONS.ROLE_READ,
+      PERMISSIONS.VISIT_READ,
+      PERMISSIONS.VISITOR_REGISTER,
+      PERMISSIONS.INVITATION_CREATE,
+      PERMISSIONS.VISIT_CANCEL,
+      PERMISSIONS.VISIT_EDIT,
+      PERMISSIONS.VISIT_CHECK_IN,
+      PERMISSIONS.VISIT_CHECK_OUT,
+      PERMISSIONS.NOTE_ADD,
+      PERMISSIONS.ISSUER_READ,
+      PERMISSIONS.ISSUER_MANAGE,
+      PERMISSIONS.EVACUATION_READ,
+      PERMISSIONS.CONSENT_READ,
+      PERMISSIONS.CONSENT_MANAGE,
+      PERMISSIONS.NOTIFICATION_READ,
+      PERMISSIONS.NOTIFICATION_RETRY,
+    ],
+  },
+  [ROLES.READ_ADMIN]: {
+    description:
+      'Read Admin — read-only admin console; no writes and no personal-data exports',
+    permissions: [
+      PERMISSIONS.USER_READ,
+      PERMISSIONS.ROLE_READ,
+      PERMISSIONS.VISIT_READ,
+      PERMISSIONS.ISSUER_READ,
+      PERMISSIONS.EVACUATION_READ,
+      PERMISSIONS.CONSENT_READ,
+      PERMISSIONS.NOTIFICATION_READ,
     ],
   },
   [ROLES.AUDITOR]: {
     description: 'Auditor — read-only access to users and records',
-    permissions: [PERMISSIONS.USER_READ, PERMISSIONS.ROLE_READ],
+    permissions: [
+      PERMISSIONS.USER_READ,
+      PERMISSIONS.ROLE_READ,
+      PERMISSIONS.VISIT_READ,
+      PERMISSIONS.ISSUER_READ,
+      PERMISSIONS.EVACUATION_READ,
+      PERMISSIONS.CONSENT_READ,
+      PERMISSIONS.NOTIFICATION_READ,
+    ],
   },
   [ROLES.STAFF]: {
     description: 'Staff member — hosts visitors, self-serves invite requests',
@@ -44,6 +99,7 @@ const ROLE_DEFS: Record<
       // Self-serve host: raise own invite requests, annotate, cancel, and
       // edit/resubmit a "needs more info" request. Host-ownership is enforced
       // in the services so these grants never reach another host's visits.
+      // No visit:read — staff only ever see visits they created or host.
       PERMISSIONS.INVITATION_CREATE,
       PERMISSIONS.NOTE_ADD,
       PERMISSIONS.VISIT_CANCEL,
@@ -52,6 +108,7 @@ const ROLE_DEFS: Record<
   [ROLES.VMC]: {
     description: 'VMC Reception — registers visitors and checks them in/out',
     permissions: [
+      PERMISSIONS.VISIT_READ,
       PERMISSIONS.VISITOR_REGISTER,
       PERMISSIONS.INVITATION_CREATE,
       PERMISSIONS.VISIT_CANCEL,
@@ -63,13 +120,29 @@ const ROLE_DEFS: Record<
       // VMC responds to security alerts via notes only — it cannot resolve them
       // (that is the Security Manager/admin's call, and it unblocks check-in).
       PERMISSIONS.NOTE_ADD,
+      PERMISSIONS.ISSUER_READ,
+      PERMISSIONS.ISSUER_MANAGE,
+      PERMISSIONS.EVACUATION_READ,
+      // Reception can view opt-ins and record a withdrawal, but not bulk-export.
+      PERMISSIONS.CONSENT_READ,
+      PERMISSIONS.CONSENT_MANAGE,
+      PERMISSIONS.NOTIFICATION_READ,
+      PERMISSIONS.NOTIFICATION_RETRY,
     ],
   },
   [ROLES.GATE]: {
     description: 'Gate operative — checks visitors in and out',
-    permissions: [PERMISSIONS.VISIT_CHECK_IN, PERMISSIONS.VISIT_CHECK_OUT],
+    permissions: [
+      PERMISSIONS.VISIT_CHECK_IN,
+      PERMISSIONS.VISIT_CHECK_OUT,
+      // Gate staff may be first responders in an evacuation.
+      PERMISSIONS.EVACUATION_READ,
+    ],
   },
 };
+
+/** Exposed for tests: the scoped role → permission matrix. */
+export const SCOPED_ROLE_DEFS = ROLE_DEFS;
 
 // Stable IDs so demo seeding is idempotent (upsert by id).
 const ID = {
@@ -122,8 +195,11 @@ export class SeederService implements OnApplicationBootstrap {
     // SUPER_ADMIN holds every permission.
     const superAdminRole = await this.prisma.role.upsert({
       where: { name: ROLES.SUPER_ADMIN },
-      update: { description: 'Full system access' },
-      create: { name: ROLES.SUPER_ADMIN, description: 'Full system access' },
+      update: { description: 'System Admin — full system access' },
+      create: {
+        name: ROLES.SUPER_ADMIN,
+        description: 'System Admin — full system access',
+      },
     });
 
     const permissions = await this.prisma.permission.findMany();

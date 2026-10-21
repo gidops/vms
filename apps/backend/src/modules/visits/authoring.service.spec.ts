@@ -22,6 +22,7 @@ describe('VisitAuthoringService.createVisits', () => {
       },
       note: { create: jest.fn().mockResolvedValue({}) },
       pass: { upsert: jest.fn().mockResolvedValue({}) },
+      commsConsentEvent: { create: jest.fn().mockResolvedValue({}) },
     };
     const prisma = {
       user: {
@@ -49,6 +50,8 @@ describe('VisitAuthoringService.createVisits', () => {
     floor: 'Floor Mezzanine',
     purpose: 'Client Meeting',
     scheduledAt: new Date(),
+    needsEvacuationAssist: false,
+    commsConsent: false,
     ...over,
   });
 
@@ -94,6 +97,8 @@ describe('VisitAuthoringService.createVisits', () => {
             email: 'w@x.com',
             floor: '1st Floor',
             purpose: 'Delivery',
+            needsEvacuationAssist: false,
+            commsConsent: false,
           },
         ],
       },
@@ -113,6 +118,85 @@ describe('VisitAuthoringService.createVisits', () => {
     expect(publish).toHaveBeenCalledWith(
       tx,
       expect.objectContaining({ type: EVENT_TYPES.VisitApproved }),
+    );
+  });
+
+  it('persists both intake answers per guest and logs a consent event keyed on the normalised email', async () => {
+    const { service, tx } = setup(true);
+    await service.createVisits(
+      {
+        type: 'PRE_INVITED',
+        isGroupVisit: false,
+        guests: [
+          inviteGuest({
+            email: '  Ada@Example.COM ',
+            needsEvacuationAssist: true,
+            commsConsent: true,
+          }),
+          inviteGuest({
+            email: 'b@x.com',
+            needsEvacuationAssist: false,
+            commsConsent: false,
+          }),
+        ],
+      },
+      'actor',
+    );
+    expect(tx.visit.create).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        data: expect.objectContaining({
+          needsEvacuationAssist: true,
+          commsConsent: true,
+        }),
+      }),
+    );
+    expect(tx.visit.create).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        data: expect.objectContaining({
+          needsEvacuationAssist: false,
+          commsConsent: false,
+        }),
+      }),
+    );
+    expect(tx.commsConsentEvent.create).toHaveBeenCalledTimes(2);
+    expect(tx.commsConsentEvent.create).toHaveBeenNthCalledWith(1, {
+      data: {
+        email: 'ada@example.com',
+        consent: true,
+        source: 'VISIT',
+        visitId: 'v1',
+        actorUserId: 'actor',
+      },
+    });
+  });
+
+  it('accepts an optional host on a walk-in', async () => {
+    const { service, tx } = setup(true);
+    await service.createVisits(
+      {
+        type: 'WALK_IN',
+        isGroupVisit: false,
+        guests: [
+          {
+            fullName: 'Walk',
+            email: 'w@x.com',
+            hostUserId: HOST,
+            floor: '1st Floor',
+            purpose: 'Delivery',
+            needsEvacuationAssist: true,
+            commsConsent: false,
+          },
+        ],
+      },
+      'actor',
+    );
+    expect(tx.host.upsert).toHaveBeenCalled();
+    expect(tx.visit.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ hostId: 'host1', status: 'APPROVED' }),
+      }),
     );
   });
 

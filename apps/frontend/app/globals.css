@@ -11,3 +11,69 @@ body {
   color: var(--color-fg);
   font-family: var(--font-sans);
 }
+
+/* ── Evacuation Roll: print for wardens ─────────────────────────────────────
+ * The print copy is portalled to <body>; while it exists, printing hides every
+ * other top-level node (app chrome, drawers, toasts) and shows only the roll.
+ * <thead> repeats the AATC header + generated time on each A4 page. */
+.evac-print-root {
+  display: none;
+}
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+  body:has(> .evac-print-root) > *:not(.evac-print-root) {
+    display: none !important;
+  }
+  body:has(> .evac-print-root) {
+    background: #fff !important;
+  }
+  .evac-print-root {
+    display: block !important;
+    color: #000;
+    font-size: 10pt;
+  }
+  .evac-print-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .evac-print-table thead {
+    display: table-header-group;
+  }
+  .evac-print-table tr {
+    break-inside: avoid;
+  }
+  .evac-print-table th,
+  .evac-print-table td {
+    border-bottom: 1px solid #bbb;
+    padding: 4pt 6pt;
+    text-align: start;
+    vertical-align: top;
+  }
+  .evac-print-header {
+    border-bottom: 2px solid #000 !important;
+    padding-bottom: 6pt !important;
+  }
+  .evac-print-brand {
+    font-size: 14pt;
+    font-weight: 700;
+  }
+  .evac-print-meta {
+    font-size: 9pt;
+    font-weight: 400;
+    margin-top: 2pt;
+  }
+  .evac-print-cols th {
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .evac-print-floor td {
+    background: #eee !important;
+    font-weight: 700;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
