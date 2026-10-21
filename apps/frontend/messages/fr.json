@@ -280,10 +280,8 @@
     "requestInfoPlaceholder": "Quelles informations supplémentaires sont nécessaires ?",
     "flagReasonPlaceholder": "Décrivez le problème de sécurité…",
     "createdByYou": "(vous)",
-    "evacuationAssist": "Aide à l'évacuation",
-    "notAsked": "Non demandé",
-    "yes": "Oui",
-    "no": "Non"
+    "evacuationAssistYes": "A besoin d'aide pour l'évacuation",
+    "evacuationAssistNo": "Aide à l'évacuation : non"
   },
   "language": {
     "select": "Choisir la langue",
@@ -754,7 +752,6 @@
   },
   "evacuation": {
     "title": "Liste d'évacuation",
-    "subtitle": "Visiteurs enregistrés ayant demandé de l'aide pour évacuer.",
     "refresh": "Actualiser",
     "countBanner": "sur place ont besoin d'aide pour évacuer",
     "floors": "{count, plural, one {# étage} other {# étages}}",
@@ -784,7 +781,6 @@
   },
   "consent": {
     "title": "Abonnements aux communications",
-    "subtitle": "Visiteurs ayant accepté de recevoir les nouvelles d'Afreximbank. La dernière réponse fait foi.",
     "exportCsv": "Exporter en CSV",
     "exportError": "L'export a échoué. Veuillez réessayer.",
     "optedIn": "abonnés",
@@ -799,7 +795,6 @@
     "empty": "Personne ne s'est encore abonné.",
     "noMatches": "Aucun abonnement ne correspond à votre recherche.",
     "loadError": "Impossible de charger les abonnements.",
-    "range": "{from}–{to} sur {total}",
     "withdrawTitle": "Retirer le consentement",
     "withdrawHelp": "Arrête les envois à cet e-mail jusqu'à ce que la personne accepte lors d'une prochaine visite.",
     "email": "E-mail",

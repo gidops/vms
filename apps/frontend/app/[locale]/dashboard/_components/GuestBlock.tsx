@@ -58,9 +58,9 @@ function Field({
 const NO_HOST = "__none__";
 
 /**
- * One required Yes/No question. Desktop: question and control on one row;
- * phone: the control goes full width under the question. Unanswered after a
- * submit attempt shows the red outline and "Choose Yes or No".
+ * One required Yes/No question: the control goes full width under the question
+ * (the form lives in a narrow drawer, so there's no room for one row).
+ * Unanswered after a submit attempt shows the red outline and "Choose Yes or No".
  */
 function YesNoQuestion({
   id,
@@ -83,7 +83,7 @@ function YesNoQuestion({
 }) {
   const invalid = showErrors && value === null;
   return (
-    <div className="flex flex-col gap-2 py-1 md:flex-row md:items-center md:justify-between md:gap-4 md:py-3">
+    <div className="flex flex-col gap-2">
       <span id={`${id}-label`} className="text-sm font-medium text-fg">
         {label} <span className="text-danger">*</span>
       </span>
@@ -97,7 +97,7 @@ function YesNoQuestion({
           invalid={invalid}
           aria-labelledby={`${id}-label`}
           aria-describedby={invalid ? `${id}-error` : undefined}
-          className="w-full md:w-auto"
+          className="w-full"
           fullWidth
         />
         {invalid ? (
@@ -130,6 +130,12 @@ export interface GuestBlockProps {
   groupContact?: string;
   onGroupNameChange?: (v: string) => void;
   onGroupContactChange?: (v: string) => void;
+  /**
+   * Which intake questions to show. Editing an existing visit shows only the
+   * evacuation answer: comms consent is the visitor's recorded choice and is
+   * changed through the opt-ins register, not the visit.
+   */
+  safety?: "full" | "evacuationOnly";
 }
 
 /** One guest's Guest Details + Visit Details. */
@@ -147,6 +153,7 @@ export function GuestBlock({
   groupContact = "",
   onGroupNameChange,
   onGroupContactChange,
+  safety = "full",
 }: GuestBlockProps) {
   const t = useTranslations("invite");
   const id = (f: string) => `guest-${index}-${f}`;
@@ -166,7 +173,7 @@ export function GuestBlock({
             onChange={(e) => onChange({ fullName: e.target.value })}
           />
         </Field>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="flex flex-col gap-4">
           <Field label={t("fields.email")} required htmlFor={id("email")}>
             <Input
               id={id("email")}
@@ -295,7 +302,7 @@ export function GuestBlock({
           </Field>
         ) : null}
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="flex flex-col gap-4">
           <Field label={t("fields.floor")} required>
             <Select
               value={value.floor}
@@ -381,7 +388,7 @@ export function GuestBlock({
       {/* Safety & consent — required per guest, no default answer */}
       <div className="flex flex-col gap-2">
         <SectionHeader>{t("sections.safetyConsent")}</SectionHeader>
-        <div className="flex flex-col gap-3 md:gap-0 md:divide-y md:divide-border md:border-t md:border-border">
+        <div className="flex flex-col gap-4">
           <YesNoQuestion
             id={id("evacuation")}
             label={t("fields.evacuationAssist")}
@@ -394,16 +401,18 @@ export function GuestBlock({
             noLabel={t("fields.no")}
             errorLabel={t("fields.chooseYesNo")}
           />
-          <YesNoQuestion
-            id={id("consent")}
-            label={t("fields.commsConsent")}
-            value={value.commsConsent}
-            onChange={(commsConsent) => onChange({ commsConsent })}
-            showErrors={showErrors}
-            yesLabel={t("fields.yes")}
-            noLabel={t("fields.no")}
-            errorLabel={t("fields.chooseYesNo")}
-          />
+          {safety === "full" ? (
+            <YesNoQuestion
+              id={id("consent")}
+              label={t("fields.commsConsent")}
+              value={value.commsConsent}
+              onChange={(commsConsent) => onChange({ commsConsent })}
+              showErrors={showErrors}
+              yesLabel={t("fields.yes")}
+              noLabel={t("fields.no")}
+              errorLabel={t("fields.chooseYesNo")}
+            />
+          ) : null}
         </div>
       </div>
     </div>

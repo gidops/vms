@@ -287,6 +287,22 @@ describe('V1 gap features (e2e)', () => {
         staffList.body.total as number,
       );
     });
+
+    it('forces the inbox to "mine" for roles without visit:read', async () => {
+      const other = await walkIn(`inbox-${run}@x.com`);
+      const ids = (body: { items: { id: string }[] }) =>
+        body.items.map((i) => i.id);
+
+      const staff = await as(ROLES.STAFF)
+        .get('/inbox?kind=requests&scope=all&pageSize=100')
+        .expect(200);
+      expect(ids(staff.body)).not.toContain(other.id);
+
+      const vmc = await as(ROLES.VMC)
+        .get('/inbox?kind=requests&scope=all&pageSize=100')
+        .expect(200);
+      expect(ids(vmc.body)).toContain(other.id);
+    });
   });
 
   describe('evacuation roll', () => {

@@ -45,22 +45,21 @@ export function GuestInformationSection({
               {visitor.email}
               {visitor.phone ? ` · ${visitor.phone}` : ""}
             </span>
-            <span className="text-sm text-fg-muted">
-              {t("evacuationAssist")}:{" "}
-              <span
-                className={
-                  data.needsEvacuationAssist
-                    ? "font-semibold text-warning"
-                    : "font-medium text-fg"
-                }
+            {/* Old visits predate the question (null) and show nothing. */}
+            {data.needsEvacuationAssist ? (
+              <Badge
+                intent="warning"
+                tone="soft"
+                dot
+                className="mt-1 self-start"
               >
-                {data.needsEvacuationAssist == null
-                  ? t("notAsked")
-                  : data.needsEvacuationAssist
-                    ? t("yes")
-                    : t("no")}
+                {t("evacuationAssistYes")}
+              </Badge>
+            ) : data.needsEvacuationAssist === false ? (
+              <span className="text-sm text-fg-muted">
+                {t("evacuationAssistNo")}
               </span>
-            </span>
+            ) : null}
           </div>
         </div>
         {hasAlert ? (

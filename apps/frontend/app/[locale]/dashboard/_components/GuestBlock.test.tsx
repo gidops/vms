@@ -76,6 +76,19 @@ describe("GuestBlock — Safety & consent", () => {
     expect(screen.getByText("Optional")).toBeInTheDocument();
   });
 
+  it("shows only the evacuation question when editing a visit", () => {
+    setup({ needsEvacuationAssist: true }, { safety: "evacuationOnly" });
+    const evac = screen.getByRole("radiogroup", {
+      name: /Need help evacuating/,
+    });
+    expect(evac.querySelector('[aria-checked="true"]')).toHaveTextContent(
+      "Yes",
+    );
+    expect(
+      screen.queryByRole("radiogroup", { name: /Get updates on Afreximbank/ }),
+    ).not.toBeInTheDocument();
+  });
+
   it("marks the host required on invites", () => {
     setup({}, { mode: "invite" });
     expect(screen.queryByText("Optional")).not.toBeInTheDocument();

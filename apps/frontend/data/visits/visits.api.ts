@@ -240,6 +240,7 @@ export const visitsApi = {
       floor?: string;
       purpose?: string;
       scheduledAt?: string;
+      needsEvacuationAssist?: boolean;
     },
   ): Promise<VisitRequestDetail> {
     return api<VisitRequestDetail>(`/visits/${id}`, {

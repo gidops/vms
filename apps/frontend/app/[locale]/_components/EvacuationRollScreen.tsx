@@ -1,8 +1,24 @@
 "use client";
 
 import type { EvacuationRoll, EvacuationRollRow } from "@vms/contracts";
-import { Avatar, Button, Spinner, cn } from "@vms/ui";
-import { Check, LifeBuoy, Printer, RefreshCw } from "lucide-react";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Avatar,
+  Button,
+  EmptyState,
+  RecordTable,
+  Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  cn,
+} from "@vms/ui";
+import { CheckCircle2, LifeBuoy, Printer, RefreshCw } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { createPortal } from "react-dom";
@@ -28,9 +44,6 @@ export function groupByFloor(rows: EvacuationRollRow[]): FloorGroup[] {
   return groups;
 }
 
-const COLS =
-  "grid-cols-[minmax(0,1.6fr)_minmax(0,1.1fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,0.7fr)]";
-
 function CountBanner({
   roll,
   floors,
@@ -42,48 +55,32 @@ function CountBanner({
   const locale = useLocale();
   const empty = roll.count === 0;
   return (
-    <div
+    // A polite live region: the roll refreshes every minute and shouldn't
+    // interrupt like an alert would.
+    <Alert
       role="status"
-      className={cn(
-        "flex flex-col gap-2 rounded-xl border px-5 py-4 sm:flex-row sm:items-center sm:justify-between",
-        empty
-          ? "border-success/30 bg-success-subtle"
-          : "border-warning/30 bg-warning-subtle",
-      )}
+      intent={empty ? "success" : "warning"}
+      icon={empty ? CheckCircle2 : LifeBuoy}
     >
-      <div className="flex items-center gap-3">
-        {empty ? (
-          <Check className="size-6 text-success" aria-hidden="true" />
-        ) : (
-          <LifeBuoy className="size-6 text-warning" aria-hidden="true" />
-        )}
-        <p className="text-base text-fg">
-          <span
-            className={cn(
-              "me-2 text-2xl font-bold",
-              empty ? "text-success" : "text-warning",
-            )}
-          >
-            {roll.count}
+      <AlertTitle className="text-base">
+        <span className="me-2">{roll.count}</span>
+        {t("countBanner")}
+        {!empty ? (
+          <span className="font-normal text-fg-muted">
+            {" · "}
+            {t("floors", { count: floors })}
           </span>
-          <span className="font-semibold">{t("countBanner")}</span>
-          {!empty ? (
-            <span className="text-fg-muted">
-              {" · "}
-              {t("floors", { count: floors })}
-            </span>
-          ) : null}
-        </p>
-      </div>
-      <p className="text-sm text-fg-muted">
+        ) : null}
+      </AlertTitle>
+      <AlertDescription>
         {t.rich("generated", {
           time: formatWatTime(roll.generatedAt, locale),
           b: (chunks) => <b className="font-semibold text-fg">{chunks}</b>,
         })}
         {" · "}
         {t("refreshesEvery")}
-      </p>
-    </div>
+      </AlertDescription>
+    </Alert>
   );
 }
 
@@ -92,86 +89,82 @@ function FloorLabel({ floor }: { floor: string | null }) {
   return <>{floor ?? t("noFloor")}</>;
 }
 
+const COLUMN_COUNT = 5;
+
 function RollTable({ groups }: { groups: FloorGroup[] }) {
   const t = useTranslations("evacuation");
   const locale = useLocale();
   return (
     <>
-      {/* Desktop / tablet: grouped table */}
-      <div role="table" aria-label={t("title")} className="hidden md:block">
-        <div role="rowgroup">
-          <div
-            role="row"
-            className={cn(
-              "grid gap-4 border-b border-border bg-surface-muted px-6 py-3 text-xs font-semibold uppercase tracking-wide text-fg-muted",
-              COLS,
-            )}
-          >
-            <span role="columnheader">{t("columns.visitor")}</span>
-            <span role="columnheader">{t("columns.floor")}</span>
-            <span role="columnheader">{t("columns.host")}</span>
-            <span role="columnheader">{t("columns.phone")}</span>
-            <span role="columnheader">{t("columns.checkedIn")}</span>
-          </div>
-        </div>
-        {groups.map((g) => (
-          <div role="rowgroup" key={g.floor ?? "none"}>
-            <div
-              role="row"
-              className="border-b border-border bg-primary-subtle/60 px-6 py-2.5 text-sm font-semibold text-primary"
-            >
-              <span role="cell">
-                <FloorLabel floor={g.floor} />
-                <span className="ms-2 font-normal text-fg-muted">
-                  · {g.rows.length}
-                </span>
-              </span>
-            </div>
-            {g.rows.map((r) => (
-              <div
-                role="row"
-                key={r.visitId}
-                className={cn(
-                  "grid items-center gap-4 border-b border-border px-6 py-3 last:border-b-0",
-                  COLS,
-                )}
-              >
-                <div role="cell" className="flex min-w-0 items-center gap-3">
-                  <Avatar name={r.fullName} accent="single" />
-                  <div className="flex min-w-0 flex-col">
-                    <span className="truncate font-semibold text-fg">
-                      {r.fullName}
-                    </span>
-                    {r.organization ? (
-                      <span className="truncate text-sm text-fg-muted">
-                        {r.organization}
+      {/* Desktop / tablet: the standard records table, one body per floor */}
+      <div className="hidden md:block">
+        <Table aria-label={t("title")}>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("columns.visitor")}</TableHead>
+              <TableHead>{t("columns.floor")}</TableHead>
+              <TableHead>{t("columns.host")}</TableHead>
+              <TableHead>{t("columns.phone")}</TableHead>
+              <TableHead>{t("columns.checkedIn")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          {groups.map((g) => (
+            <TableBody striped key={g.floor ?? "none"}>
+              <TableRow className="bg-primary-subtle hover:bg-primary-subtle">
+                <TableCell
+                  colSpan={COLUMN_COUNT}
+                  className="py-2.5 font-semibold text-primary"
+                >
+                  <FloorLabel floor={g.floor} />
+                  <span className="ms-2 font-normal text-fg-muted">
+                    · {g.rows.length}
+                  </span>
+                </TableCell>
+              </TableRow>
+              {g.rows.map((r) => (
+                <TableRow key={r.visitId}>
+                  <TableCell>
+                    <span className="flex items-center gap-3">
+                      <Avatar name={r.fullName} size="md" accent="single" />
+                      <span className="flex min-w-0 flex-col">
+                        <span className="font-medium text-fg">
+                          {r.fullName}
+                        </span>
+                        {r.organization ? (
+                          <span className="text-xs text-fg-muted">
+                            {r.organization}
+                          </span>
+                        ) : null}
                       </span>
-                    ) : null}
-                  </div>
-                </div>
-                <span role="cell" className="truncate text-fg">
-                  <FloorLabel floor={r.floor} />
-                </span>
-                <span role="cell" className="truncate text-fg-muted">
-                  {r.hostName ?? "—"}
-                </span>
-                <span role="cell" className="truncate text-fg" dir="ltr">
-                  {r.phone ?? "—"}
-                </span>
-                <span role="cell" className="text-fg-muted">
-                  {formatWatTime(r.checkInAt, locale)}
-                </span>
-              </div>
-            ))}
-          </div>
-        ))}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-fg-muted">
+                    <FloorLabel floor={r.floor} />
+                  </TableCell>
+                  <TableCell className="text-fg-muted">
+                    {r.hostName ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-fg-muted" dir="ltr">
+                    {r.phone ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-fg-muted">
+                    {formatWatTime(r.checkInAt, locale)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          ))}
+        </Table>
       </div>
 
-      {/* Phone: grouped cards */}
-      <ul className="flex flex-col md:hidden" aria-label={t("title")}>
+      {/* Phone: grouped cards (wardens use this on the move) */}
+      <ul
+        className="flex flex-col overflow-hidden rounded-lg border border-border md:hidden"
+        aria-label={t("title")}
+      >
         {groups.map((g) => (
           <li key={g.floor ?? "none"}>
-            <p className="border-b border-border bg-primary-subtle/60 px-4 py-2 text-sm font-semibold text-primary">
+            <p className="border-b border-border-subtle bg-primary-subtle px-4 py-2 text-sm font-semibold text-primary">
               <FloorLabel floor={g.floor} />
               <span className="ms-2 font-normal text-fg-muted">
                 · {g.rows.length}
@@ -181,12 +174,12 @@ function RollTable({ groups }: { groups: FloorGroup[] }) {
               {g.rows.map((r) => (
                 <li
                   key={r.visitId}
-                  className="flex items-start gap-3 border-b border-border px-4 py-3"
+                  className="flex items-start gap-3 border-b border-border-subtle px-4 py-3"
                 >
-                  <Avatar name={r.fullName} accent="single" />
+                  <Avatar name={r.fullName} size="md" accent="single" />
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <div className="flex items-baseline justify-between gap-2">
-                      <span className="truncate font-semibold text-fg">
+                      <span className="truncate font-medium text-fg">
                         {r.fullName}
                       </span>
                       <span className="shrink-0 text-sm text-fg-muted">
@@ -194,7 +187,7 @@ function RollTable({ groups }: { groups: FloorGroup[] }) {
                       </span>
                     </div>
                     {r.organization ? (
-                      <span className="truncate text-sm text-fg-muted">
+                      <span className="truncate text-xs text-fg-muted">
                         {r.organization}
                       </span>
                     ) : null}
@@ -210,7 +203,7 @@ function RollTable({ groups }: { groups: FloorGroup[] }) {
                     {r.phone ? (
                       <a
                         href={`tel:${r.phone}`}
-                        className="text-sm font-medium text-primary"
+                        className="rounded-sm text-sm font-medium text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
                         dir="ltr"
                       >
                         {r.phone}
@@ -323,12 +316,9 @@ export function EvacuationRollScreen() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-bold text-fg">{t("title")}</h1>
-          <p className="text-fg-muted">{t("subtitle")}</p>
-        </div>
-        <div className="flex gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-semibold text-primary">{t("title")}</h1>
+        <div className="flex flex-wrap gap-3">
           <Button
             intent="neutral"
             tone="outline"
@@ -342,62 +332,40 @@ export function EvacuationRollScreen() {
             />
             {t("refresh")}
           </Button>
-          <Button
-            intent="primary"
-            onClick={() => window.print()}
-            disabled={!data || empty}
-          >
+          <Button onClick={() => window.print()} disabled={!data || empty}>
             <Printer className="size-4" aria-hidden="true" />
             {t("print.button")}
           </Button>
         </div>
-      </header>
+      </div>
 
       {data ? <CountBanner roll={data} floors={groups.length} /> : null}
 
-      <section
-        aria-label={t("title")}
-        className="overflow-hidden rounded-xl border border-border bg-surface"
-      >
-        {roll.isLoading ? (
-          <div className="flex justify-center py-16">
-            <Spinner />
-          </div>
-        ) : roll.isError && !data ? (
-          <p role="alert" className="px-6 py-10 text-center text-danger">
-            {t("loadError")}
-          </p>
-        ) : empty ? (
-          <>
-            <div
-              aria-hidden="true"
-              className={cn(
-                "hidden gap-4 border-b border-border bg-surface-muted px-6 py-3 text-xs font-semibold uppercase tracking-wide text-fg-muted md:grid",
-                COLS,
-              )}
-            >
-              <span>{t("columns.visitor")}</span>
-              <span>{t("columns.floor")}</span>
-              <span>{t("columns.host")}</span>
-              <span>{t("columns.phone")}</span>
-              <span>{t("columns.checkedIn")}</span>
-            </div>
-            <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
-              <span className="flex size-14 items-center justify-center rounded-full border border-success/30 bg-success-subtle">
-                <Check className="size-7 text-success" aria-hidden="true" />
-              </span>
-              <p className="text-lg font-semibold text-fg">
-                {t("empty.title")}
-              </p>
-              <p className="text-fg-muted">
-                {t("empty.body", { count: data!.checkedInTotal })}
-              </p>
-            </div>
-          </>
-        ) : (
+      {roll.isLoading ? (
+        <div className="flex justify-center py-16">
+          <Spinner />
+        </div>
+      ) : roll.isError && !data ? (
+        <Alert intent="danger">
+          <AlertDescription>{t("loadError")}</AlertDescription>
+        </Alert>
+      ) : (
+        <RecordTable
+          frameless
+          isEmpty={empty}
+          emptyState={
+            <EmptyState
+              icon={CheckCircle2}
+              title={t("empty.title")}
+              description={t("empty.body", {
+                count: data?.checkedInTotal ?? 0,
+              })}
+            />
+          }
+        >
           <RollTable groups={groups} />
-        )}
-      </section>
+        </RecordTable>
+      )}
 
       {data && !empty ? <PrintRoll roll={data} groups={groups} /> : null}
     </div>
