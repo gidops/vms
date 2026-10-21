@@ -35,6 +35,7 @@ import {
   RequirePermissions,
   type AuthUser,
 } from '../../shared/auth/auth.decorators';
+import { canReadAllVisits } from '../../shared/auth/visit-scope';
 import { ZodValidationPipe } from '../../shared/common/pipes/zod-validation.pipe';
 import { VisitAccessService } from './access.service';
 import { VisitDashboardService } from './dashboard.service';
@@ -60,10 +61,6 @@ export class VisitsController {
     private readonly deliveries: VisitDeliveriesService,
   ) {}
 
-  private static canReadAll(principal: AuthUser): boolean {
-    return principal.permissions.includes(PERMISSIONS.VISIT_READ);
-  }
-
   /**
    * Visit list. The admin approval queue (filter by status) and — with
    * `scope=mine` — the staff "My Visits" / "Recent Visitors" views, which are
@@ -75,11 +72,7 @@ export class VisitsController {
     @Query(new ZodValidationPipe(VisitListQuery)) query: VisitListQuery,
     @CurrentUser() principal: AuthUser,
   ) {
-    return this.read.list(
-      query,
-      principal.userId,
-      VisitsController.canReadAll(principal),
-    );
+    return this.read.list(query, principal.userId, canReadAllVisits(principal));
   }
 
   /** Live Evacuation Roll — checked-in visitors who need evacuation help. */
@@ -155,7 +148,7 @@ export class VisitsController {
 
   @Get(':id')
   async getOne(@Param('id') id: string, @CurrentUser() principal: AuthUser) {
-    if (!VisitsController.canReadAll(principal)) {
+    if (!canReadAllVisits(principal)) {
       await this.read.assertCanView(id, principal.userId);
     }
     return this.read.getDetail(id);

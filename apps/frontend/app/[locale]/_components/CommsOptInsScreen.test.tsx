@@ -1,7 +1,7 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render";
-import { CommsOptInsScreen, WithdrawConsentCard } from "./CommsOptInsScreen";
+import { CommsOptInsScreen, WithdrawConsentDialog } from "./CommsOptInsScreen";
 
 const mutate = vi.fn();
 const exportMutate = vi.fn();
@@ -40,48 +40,55 @@ vi.mock("@/data/consent/queries", () => ({
   }),
 }));
 
-describe("WithdrawConsentCard", () => {
+describe("WithdrawConsentDialog", () => {
   beforeEach(() => {
     // Block body: a returned mock would be run by vitest as a cleanup hook.
     mutate.mockReset();
   });
 
-  it("validates the email before asking", () => {
-    renderWithIntl(<WithdrawConsentCard />);
-    fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
+  async function openDialog(onWithdrawn = vi.fn()) {
+    renderWithIntl(<WithdrawConsentDialog onWithdrawn={onWithdrawn} />);
+    fireEvent.click(screen.getByRole("button", { name: "Withdraw consent" }));
+    return screen.findByRole("dialog");
+  }
+
+  it("validates the email before asking", async () => {
+    const dialog = await openDialog();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Withdraw" }));
     expect(
-      screen.getByText("Enter a valid email address."),
+      within(dialog).getByText("Enter a valid email address."),
     ).toBeInTheDocument();
     expect(mutate).not.toHaveBeenCalled();
   });
 
-  it("only withdraws after the confirm dialog", async () => {
-    renderWithIntl(<WithdrawConsentCard />);
-    fireEvent.change(screen.getByLabelText("Email"), {
+  it("only withdraws after confirming the warning", async () => {
+    const onWithdrawn = vi.fn();
+    mutate.mockImplementation((_e, opts) => opts.onSuccess({ affected: true }));
+    const dialog = await openDialog(onWithdrawn);
+    fireEvent.change(within(dialog).getByLabelText("Email"), {
       target: { value: "emeka.obi@accessbankplc.com" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
-    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Withdraw" }));
     expect(dialog).toHaveTextContent("Withdraw consent?");
     expect(dialog).toHaveTextContent(
       "emeka.obi@accessbankplc.com leaves the opt-in list now. Past visit records stay as they are.",
     );
     expect(mutate).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-    await waitFor(() =>
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
-    );
+    // Cancel backs out of the confirmation without withdrawing.
+    fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(dialog).not.toHaveTextContent("Withdraw consent?");
     expect(mutate).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
-    const again = await screen.findByRole("dialog");
-    fireEvent.click(
-      again.querySelector("button:last-of-type") as HTMLButtonElement,
-    );
+    fireEvent.click(within(dialog).getByRole("button", { name: "Withdraw" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Withdraw" }));
     expect(mutate).toHaveBeenCalledWith(
       "emeka.obi@accessbankplc.com",
       expect.any(Object),
+    );
+    expect(onWithdrawn).toHaveBeenCalledWith("emeka.obi@accessbankplc.com");
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
     );
   });
 
@@ -89,17 +96,14 @@ describe("WithdrawConsentCard", () => {
     mutate.mockImplementation((_e, opts) =>
       opts.onSuccess({ affected: false }),
     );
-    renderWithIntl(<WithdrawConsentCard />);
-    fireEvent.change(screen.getByLabelText("Email"), {
+    const dialog = await openDialog();
+    fireEvent.change(within(dialog).getByLabelText("Email"), {
       target: { value: "nobody@x.com" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
-    const dialog = await screen.findByRole("dialog");
-    fireEvent.click(
-      dialog.querySelector("button:last-of-type") as HTMLButtonElement,
-    );
+    fireEvent.click(within(dialog).getByRole("button", { name: "Withdraw" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Withdraw" }));
     expect(
-      await screen.findByText("No records for this email."),
+      await within(dialog).findByText("No records for this email."),
     ).toBeInTheDocument();
   });
 });
@@ -117,9 +121,10 @@ describe("CommsOptInsScreen", () => {
       screen.getAllByText("ngozi.achebe@dangote.com").length,
     ).toBeGreaterThan(0);
     expect(screen.getAllByText("VST-20481").length).toBeGreaterThan(0);
-    expect(screen.getByText("1–8 of 1,284")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Export CSV/ })).toBeNull();
-    expect(screen.queryByText("Withdraw consent")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Withdraw consent" }),
+    ).toBeNull();
   });
 
   it("offers export and withdraw to holders of consent:export / consent:manage", () => {
@@ -129,6 +134,8 @@ describe("CommsOptInsScreen", () => {
     renderWithIntl(<CommsOptInsScreen />);
     fireEvent.click(screen.getByRole("button", { name: /Export CSV/ }));
     expect(exportMutate).toHaveBeenCalled();
-    expect(screen.getByText("Withdraw consent")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Withdraw consent" }),
+    ).toBeInTheDocument();
   });
 });

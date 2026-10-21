@@ -87,13 +87,16 @@ export function EvacuationAssistFields({
             maxLength={EVACUATION_ASSIST_OTHER_MAX}
             placeholder={t("otherPlaceholder")}
             aria-label={t("otherLabel")}
-            aria-invalid={noOther || undefined}
+            invalid={noOther}
+            aria-describedby={noOther ? `${id}-other-error` : undefined}
             onChange={(e) =>
               onChange({ evacuationAssistOther: e.target.value })
             }
           />
           {noOther ? (
-            <span className="text-sm text-danger">{t("describeOther")}</span>
+            <span id={`${id}-other-error`} className="text-sm text-danger">
+              {t("describeOther")}
+            </span>
           ) : null}
         </div>
       ) : null}

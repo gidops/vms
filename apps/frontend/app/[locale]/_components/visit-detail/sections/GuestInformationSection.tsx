@@ -1,6 +1,6 @@
 import { Avatar, Badge } from "@vms/ui";
 import { useTranslations } from "next-intl";
-import { useEvacuationAssistText } from "../../EvacuationAssist";
+import { useEvacuationAssistText } from "@/app/[locale]/_components/EvacuationAssist";
 import type { VisitRequestDetail } from "@/data/visits/visits.api";
 import type { VisitStatus } from "../helpers";
 import { SheetSection } from "./SheetSection";
@@ -47,32 +47,26 @@ export function GuestInformationSection({
               {visitor.email}
               {visitor.phone ? ` · ${visitor.phone}` : ""}
             </span>
-            <span className="text-sm text-fg-muted">
-              {t("evacuationAssist")}:{" "}
-              <span
-                className={
-                  data.needsEvacuationAssist
-                    ? "font-semibold text-warning"
-                    : "font-medium text-fg"
-                }
-              >
-                {data.needsEvacuationAssist == null
-                  ? t("notAsked")
-                  : data.needsEvacuationAssist
-                    ? t("yes")
-                    : t("no")}
+            {/* Old visits predate the question (null) and show nothing. */}
+            {data.needsEvacuationAssist ? (
+              <span className="mt-1 flex flex-wrap items-center gap-2">
+                <Badge intent="warning" tone="soft" dot>
+                  {t("evacuationAssistYes")}
+                </Badge>
+                {data.evacuationAssistTypes?.length ? (
+                  <span className="text-sm text-fg-muted">
+                    {assistText(
+                      data.evacuationAssistTypes,
+                      data.evacuationAssistOther,
+                    )}
+                  </span>
+                ) : null}
               </span>
-              {data.needsEvacuationAssist &&
-              data.evacuationAssistTypes?.length ? (
-                <span className="text-fg">
-                  {" · "}
-                  {assistText(
-                    data.evacuationAssistTypes,
-                    data.evacuationAssistOther,
-                  )}
-                </span>
-              ) : null}
-            </span>
+            ) : data.needsEvacuationAssist === false ? (
+              <span className="text-sm text-fg-muted">
+                {t("evacuationAssistNo")}
+              </span>
+            ) : null}
           </div>
         </div>
         {hasAlert ? (

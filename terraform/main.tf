@@ -347,6 +347,7 @@ locals {
       -e JWT_SECRET="$JWT_SECRET" \
       -e ENCRYPTION_KEY="$ENCRYPTION_KEY" \
       -e APP_PUBLIC_URL="${local.app_public_url}" \
+      -e TRUST_PROXY_HOPS="1" \
       -e EMAIL_ENABLED="${var.email_enabled}" \
       -e EMAIL_PROVIDER="${var.email_provider}" \
       -e EMAIL_FROM="${var.email_from}" \

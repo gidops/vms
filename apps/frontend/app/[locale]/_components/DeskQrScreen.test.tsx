@@ -92,9 +92,14 @@ describe("DeskQrScreen", () => {
     expect(within(card).getByText("37")).toBeInTheDocument();
     expect(within(card).getByText("Last scan 10:42 WAT")).toBeInTheDocument();
     expect(within(card).getByText("reception@aatc.org")).toBeInTheDocument();
-    for (const name of ["Print poster", "Download PNG", "New QR", "Disable"])
+    for (const name of ["New QR", "Disable"])
       expect(
         within(card).getByRole("button", { name: new RegExp(name) }),
+      ).toBeInTheDocument();
+    // Print / Download sit in the page header row (staff/VMC pattern).
+    for (const name of ["Print poster", "Download PNG"])
+      expect(
+        screen.getByRole("button", { name: new RegExp(name) }),
       ).toBeInTheDocument();
   });
 

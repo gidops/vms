@@ -92,7 +92,9 @@
       "guestCount": "No of Guest"
     },
     "guestCount": "{count} Guest",
-    "onsiteElapsed": "{time} hr"
+    "onsiteElapsed": "{time} hr",
+    "noVisits": "No visits to show.",
+    "noMatches": "No visits match your search or filters."
   },
   "common": {
     "notifications": "Notifications",
@@ -288,10 +290,8 @@
     "requestInfoPlaceholder": "What additional information is needed?",
     "flagReasonPlaceholder": "Describe the security concern…",
     "createdByYou": "(you)",
-    "evacuationAssist": "Evacuation help",
-    "notAsked": "Not asked",
-    "yes": "Yes",
-    "no": "No",
+    "evacuationAssistYes": "Needs evacuation help",
+    "evacuationAssistNo": "Evacuation help: No",
     "sources": {
       "deskQr": "Desk QR (self-registered)",
       "selfRegistered": "Visitor, via the desk QR"
@@ -848,7 +848,6 @@
   },
   "evacuation": {
     "title": "Evacuation Roll",
-    "subtitle": "Checked-in visitors who asked for help evacuating.",
     "refresh": "Refresh",
     "countBanner": "on site need evacuation help",
     "floors": "{count, plural, one {# floor} other {# floors}}",
@@ -878,7 +877,6 @@
   },
   "consent": {
     "title": "Comms Opt-ins",
-    "subtitle": "Visitors who said yes to Afreximbank updates. Latest answer wins.",
     "exportCsv": "Export CSV",
     "exportError": "The export failed. Please try again.",
     "optedIn": "opted in",
@@ -893,7 +891,6 @@
     "empty": "No one has opted in yet.",
     "noMatches": "No opt-ins match your search.",
     "loadError": "Couldn't load the opt-ins.",
-    "range": "{from}–{to} of {total}",
     "withdrawTitle": "Withdraw consent",
     "withdrawHelp": "Stops updates to this email until they say yes at a later visit.",
     "email": "Email",
@@ -972,7 +969,6 @@
   },
   "deskQr": {
     "title": "Desk QR",
-    "subtitle": "Visitors scan this at the VMC desk to register themselves as today's walk-ins.",
     "walkInBadge": "Walk-in · no approval needed",
     "status": {
       "active": "Active",

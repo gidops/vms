@@ -86,13 +86,38 @@ describe("VMC dashboard", () => {
     expect(bar.queryByText("28")).toBeNull();
   });
 
+  it("searches as you type, like the staff dashboard", async () => {
+    renderWithIntl(<DashboardPage />);
+    await waitFor(() => expect(list).toHaveBeenCalled());
+    const box = screen.getByLabelText(/Search visitor, host, floor, pass id/);
+    fireEvent.change(box, { target: { value: "Adaeze " } });
+    // Not on every keystroke: after a short pause, trimmed.
+    expect(list.mock.calls.at(-1)?.[0]).not.toHaveProperty("search");
+    await waitFor(() =>
+      expect(list.mock.calls.at(-1)?.[0]).toMatchObject({
+        search: "Adaeze",
+        page: 1,
+      }),
+    );
+  });
+
+  it("shows an empty row when nothing matches", async () => {
+    list.mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 10,
+      total: 0,
+      totalPages: 1,
+    });
+    renderWithIntl(<DashboardPage />);
+    expect(await screen.findByText("No visits to show.")).toBeInTheDocument();
+  });
+
   it("searches on Search and on Enter, and clears back to everything", async () => {
     renderWithIntl(<DashboardPage />);
     await waitFor(() => expect(list).toHaveBeenCalled());
     const box = screen.getByLabelText(/Search visitor, host, floor, pass id/);
     fireEvent.change(box, { target: { value: "Ifeoma" } });
-    // Typing alone doesn't search.
-    expect(list.mock.calls.at(-1)?.[0]).not.toHaveProperty("search");
     fireEvent.click(screen.getByRole("button", { name: "Search" }));
     await waitFor(() =>
       expect(list.mock.calls.at(-1)?.[0]).toMatchObject({

@@ -213,14 +213,26 @@ export class PublicRegistrationService {
     if (!reg) throw new NotFoundException('errors.deskQr.registrationNotFound');
     if (reg.expiresAt <= now)
       throw new GoneException('errors.deskQr.codeExpired');
-    if (reg.attempts >= DESK_QR_CODE_ATTEMPTS) {
+    // Claim one try before comparing. A read-then-increment would let parallel
+    // guesses all see the same count and slip past the limit; the conditional
+    // increment is atomic, so at most DESK_QR_CODE_ATTEMPTS checks ever run.
+    const claimed = await this.prisma.deskQrRegistration.updateMany({
+      where: {
+        id: reg.id,
+        visitId: null,
+        attempts: { lt: DESK_QR_CODE_ATTEMPTS },
+      },
+      data: { attempts: { increment: 1 } },
+    });
+    if (claimed.count === 0) {
       throw new HttpException('errors.deskQr.tooManyTries', HttpStatus.LOCKED);
     }
     if (!verificationCodeMatches(this.secret, reg.id, code, reg.codeHash)) {
-      const { attempts } = await this.prisma.deskQrRegistration.update({
+      const after = await this.prisma.deskQrRegistration.findUnique({
         where: { id: reg.id },
-        data: { attempts: { increment: 1 } },
+        select: { attempts: true },
       });
+      const attempts = after?.attempts ?? DESK_QR_CODE_ATTEMPTS;
       throw attempts >= DESK_QR_CODE_ATTEMPTS
         ? new HttpException('errors.deskQr.tooManyTries', HttpStatus.LOCKED)
         : new UnprocessableEntityException('errors.deskQr.codeWrong');

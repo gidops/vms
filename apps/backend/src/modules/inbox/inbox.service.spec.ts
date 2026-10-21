@@ -125,6 +125,23 @@ describe('InboxService.list', () => {
     expect(findManyVisit).not.toHaveBeenCalled();
   });
 
+  it('forces the "mine" scope for principals who cannot read all visits', async () => {
+    const { service, findManyVisit, findManyAlert } = setup({});
+    await service.list(query({ scope: 'all' }), 'me', false);
+    expect(findManyVisit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ host: { userId: 'me' } }),
+      }),
+    );
+    expect(findManyAlert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          visitor: { visits: { some: { host: { userId: 'me' } } } },
+        }),
+      }),
+    );
+  });
+
   it('searches across structured fields', async () => {
     const { service } = setup({
       requests: [

@@ -200,8 +200,11 @@ the domain serves v2, `/qr.php?i=<hex>` redirects to the v2 form. Re-running is
 safe; "New QR" on the page later replaces the imported token.
 
 **Rate limits** are counted in memory per backend process (per phone IP and per
-QR). Behind a proxy, set Express `trust proxy` or every phone shares the proxy's
-IP; with more than one backend instance, move the counts to a shared store.
+QR). Behind a proxy, set `TRUST_PROXY_HOPS` to the number of proxies in front of
+the backend (`1` behind the AWS ALB); otherwise every phone shares the proxy's IP.
+Never set Express `trust proxy` to `true`: clients could then spoof
+`X-Forwarded-For` and bypass the per-IP limits. With more than one backend
+instance, move the counts to a shared store.
 
 ## Troubleshooting
 

@@ -34,7 +34,9 @@ function setup(qr: Partial<typeof QR> | null = QR) {
       deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
       delete: jest.fn().mockResolvedValue({}),
       findFirst: jest.fn(),
+      findUnique: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
   };
   const tx = { deskQrRegistration: { create: jest.fn() } };
@@ -220,21 +222,37 @@ describe('PublicRegistrationService', () => {
     it('counts wrong codes and locks on the third', async () => {
       const s = setup();
       s.prisma.deskQrRegistration.findFirst.mockResolvedValue(reg());
-      s.prisma.deskQrRegistration.update.mockResolvedValueOnce({ attempts: 1 });
+      s.prisma.deskQrRegistration.findUnique.mockResolvedValueOnce({
+        attempts: 1,
+      });
       expect(await status(s.service.verify(TOKEN, 'r1', '000000', NOW))).toBe(
         422,
       );
-      s.prisma.deskQrRegistration.update.mockResolvedValueOnce({ attempts: 3 });
+      s.prisma.deskQrRegistration.findUnique.mockResolvedValueOnce({
+        attempts: 3,
+      });
       expect(await status(s.service.verify(TOKEN, 'r1', '000000', NOW))).toBe(
         423,
       );
-      s.prisma.deskQrRegistration.findFirst.mockResolvedValue(
-        reg({ attempts: 3 }),
-      );
+      // Out of tries: the conditional claim matches nothing.
+      s.prisma.deskQrRegistration.updateMany.mockResolvedValue({ count: 0 });
       expect(await status(s.service.verify(TOKEN, 'r1', '123456', NOW))).toBe(
         423,
       );
       expect(s.createSelfRegisteredWalkIn).not.toHaveBeenCalled();
+    });
+
+    it('claims each try atomically before comparing the code', async () => {
+      const s = setup();
+      s.prisma.deskQrRegistration.findFirst.mockResolvedValue(reg());
+      s.prisma.deskQrRegistration.findUnique.mockResolvedValue({
+        attempts: 1,
+      });
+      await status(s.service.verify(TOKEN, 'r1', '000000', NOW));
+      expect(s.prisma.deskQrRegistration.updateMany).toHaveBeenCalledWith({
+        where: { id: 'r1', visitId: null, attempts: { lt: 3 } },
+        data: { attempts: { increment: 1 } },
+      });
     });
 
     it('refuses expired, used and unknown registrations', async () => {

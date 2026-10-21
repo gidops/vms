@@ -2,18 +2,32 @@
 
 import { PERMISSIONS, type OptInItem } from "@vms/contracts";
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
   Button,
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
   DialogTitle,
+  DialogTrigger,
+  EmptyState,
   Input,
   Label,
   Pagination,
+  RecordTable,
   SearchInput,
   Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@vms/ui";
-import { AlertTriangle, Download } from "lucide-react";
+import { Download, MailCheck } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import {
@@ -51,155 +65,159 @@ function SourceVisit({
     <button
       type="button"
       onClick={() => onOpen(item.sourceVisitId!)}
-      className="font-semibold tracking-wide text-primary hover:underline"
+      className="rounded-sm font-semibold tracking-wide text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
     >
       {item.sourceReferenceCode ?? t("viewVisit")}
     </button>
   );
 }
 
+type WithdrawResult = { kind: "notFound" } | { kind: "error" } | null;
+
 /**
- * Withdraw-consent form + its confirm dialog. Withdrawal is a new consent
- * event: the email leaves the list now, past visit records stay unchanged.
+ * "Withdraw consent" → dialog: enter the email, then confirm against a warning
+ * banner. Withdrawal is a new consent event: the email leaves the list now,
+ * past visit records stay unchanged. `onWithdrawn` reports a success so the
+ * page can confirm it after the dialog closes.
  */
-export function WithdrawConsentCard() {
+export function WithdrawConsentDialog({
+  onWithdrawn,
+}: {
+  onWithdrawn?: (email: string) => void;
+}) {
   const t = useTranslations("consent");
   const withdraw = useWithdrawConsent();
+  const [open, setOpen] = React.useState(false);
   const [email, setEmail] = React.useState("");
   const [confirming, setConfirming] = React.useState(false);
   const [showError, setShowError] = React.useState(false);
-  const [result, setResult] = React.useState<
-    { kind: "done" | "notFound"; email: string } | { kind: "error" } | null
-  >(null);
+  const [result, setResult] = React.useState<WithdrawResult>(null);
 
   const trimmed = email.trim();
   const valid = EMAIL_RE.test(trimmed);
+  const invalid = showError && !valid;
 
-  const ask = (e: React.FormEvent) => {
+  const reset = () => {
+    setEmail("");
+    setConfirming(false);
+    setShowError(false);
+    setResult(null);
+  };
+
+  const submit = (e: React.FormEvent) => {
     e.preventDefault();
     setResult(null);
     if (!valid) {
       setShowError(true);
       return;
     }
-    setShowError(false);
-    setConfirming(true);
-  };
-
-  const confirm = () => {
+    if (!confirming) {
+      setConfirming(true);
+      return;
+    }
     withdraw.mutate(trimmed, {
       onSuccess: (r) => {
-        setResult({ kind: r.affected ? "done" : "notFound", email: trimmed });
-        if (r.affected) setEmail("");
-        setConfirming(false);
+        if (r.affected) {
+          setOpen(false);
+          reset();
+          onWithdrawn?.(trimmed);
+        } else {
+          setConfirming(false);
+          setResult({ kind: "notFound" });
+        }
       },
       onError: () => {
-        setResult({ kind: "error" });
         setConfirming(false);
+        setResult({ kind: "error" });
       },
     });
   };
 
   return (
-    <section
-      aria-labelledby="withdraw-consent-title"
-      className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-6"
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (withdraw.isPending) return;
+        setOpen(o);
+        if (!o) reset();
+      }}
     >
-      <div className="flex flex-col gap-1">
-        <h2
-          id="withdraw-consent-title"
-          className="text-lg font-semibold text-fg"
-        >
+      <DialogTrigger asChild>
+        <Button intent="danger" tone="outline">
           {t("withdrawTitle")}
-        </h2>
-        <p className="text-sm text-fg-muted">{t("withdrawHelp")}</p>
-      </div>
-      <form className="flex flex-col gap-3" onSubmit={ask} noValidate>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="withdraw-email">{t("email")}</Label>
-          <Input
-            id="withdraw-email"
-            type="email"
-            autoComplete="off"
-            value={email}
-            invalid={showError && !valid}
-            aria-describedby={
-              showError && !valid ? "withdraw-email-error" : undefined
-            }
-            placeholder={t("emailPlaceholder")}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          {showError && !valid ? (
-            <span id="withdraw-email-error" className="text-sm text-danger">
-              {t("invalidEmail")}
-            </span>
-          ) : null}
-        </div>
-        <Button type="submit" intent="danger" tone="outline" fullWidth>
-          {t("withdraw")}
         </Button>
-        {result ? (
-          <p
-            role="status"
-            className={
-              result.kind === "done"
-                ? "text-sm text-success"
-                : result.kind === "notFound"
-                  ? "text-sm text-fg-muted"
-                  : "text-sm text-danger"
-            }
-          >
-            {result.kind === "done"
-              ? t("done", { email: result.email })
-              : result.kind === "notFound"
-                ? t("notFound")
-                : t("error")}
-          </p>
-        ) : null}
-      </form>
-
-      <Dialog
-        open={confirming}
-        onOpenChange={(o) => !withdraw.isPending && setConfirming(o)}
-      >
-        <DialogContent size="md" hideClose className="gap-5">
-          <span className="flex size-12 items-center justify-center rounded-full bg-danger-subtle text-danger">
-            <AlertTriangle className="size-6" aria-hidden="true" />
-          </span>
-          <div className="flex flex-col gap-2">
-            <DialogTitle className="text-xl">{t("confirmTitle")}</DialogTitle>
-            <DialogDescription className="text-base">
-              {t.rich("confirmBody", {
-                email: trimmed,
-                b: (chunks) => (
-                  <b className="font-semibold text-fg">{chunks}</b>
-                ),
-              })}
-            </DialogDescription>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t("withdrawTitle")}</DialogTitle>
+          <DialogDescription>{t("withdrawHelp")}</DialogDescription>
+        </DialogHeader>
+        <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
+          {result ? (
+            <Alert intent={result.kind === "error" ? "danger" : "neutral"}>
+              <AlertDescription>
+                {result.kind === "error" ? t("error") : t("notFound")}
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="withdraw-email">{t("email")}</Label>
+            <Input
+              id="withdraw-email"
+              type="email"
+              autoComplete="off"
+              value={email}
+              invalid={invalid}
+              aria-describedby={invalid ? "withdraw-email-error" : undefined}
+              placeholder={t("emailPlaceholder")}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setConfirming(false);
+              }}
+            />
+            {invalid ? (
+              <span id="withdraw-email-error" className="text-xs text-danger">
+                {t("invalidEmail")}
+              </span>
+            ) : null}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          {confirming ? (
+            <Alert intent="warning">
+              <AlertTitle>{t("confirmTitle")}</AlertTitle>
+              <AlertDescription>
+                {t.rich("confirmBody", {
+                  email: trimmed,
+                  b: (chunks) => (
+                    <b className="font-semibold text-fg">{chunks}</b>
+                  ),
+                })}
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          <DialogFooter>
+            {confirming ? (
+              <Button
+                type="button"
+                intent="neutral"
+                tone="outline"
+                onClick={() => setConfirming(false)}
+                disabled={withdraw.isPending}
+              >
+                {t("cancel")}
+              </Button>
+            ) : null}
             <Button
-              intent="neutral"
-              tone="outline"
-              size="lg"
-              onClick={() => setConfirming(false)}
-              disabled={withdraw.isPending}
-            >
-              {t("cancel")}
-            </Button>
-            <Button
+              type="submit"
               intent="danger"
-              size="lg"
-              onClick={confirm}
               disabled={withdraw.isPending}
               aria-busy={withdraw.isPending || undefined}
             >
               {t("withdraw")}
             </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </section>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -219,6 +237,7 @@ export function CommsOptInsScreen() {
   const [search, setSearch] = React.useState("");
   const [page, setPage] = React.useState(1);
   const [visitId, setVisitId] = React.useState<string | null>(null);
+  const [withdrawn, setWithdrawn] = React.useState<string | null>(null);
   const debounced = useDebounced(search.trim());
 
   const list = useOptIns({
@@ -229,20 +248,17 @@ export function CommsOptInsScreen() {
   const exporter = useExportOptIns();
   const data = list.data;
   const nf = new Intl.NumberFormat(locale);
-  const first = data && data.total > 0 ? (page - 1) * PAGE_SIZE + 1 : 0;
-  const last = data ? Math.min(page * PAGE_SIZE, data.total) : 0;
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-bold text-fg">{t("title")}</h1>
-          <p className="text-fg-muted">{t("subtitle")}</p>
-        </div>
-        {canExport ? (
-          <div className="flex flex-col items-start gap-1 sm:items-end">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-semibold text-primary">{t("title")}</h1>
+        <div className="flex flex-wrap gap-3">
+          {canManage ? (
+            <WithdrawConsentDialog onWithdrawn={setWithdrawn} />
+          ) : null}
+          {canExport ? (
             <Button
-              intent="primary"
               onClick={() => exporter.mutate()}
               disabled={exporter.isPending}
               aria-busy={exporter.isPending || undefined}
@@ -250,27 +266,32 @@ export function CommsOptInsScreen() {
               <Download className="size-4" aria-hidden="true" />
               {t("exportCsv")}
             </Button>
-            {exporter.isError ? (
-              <span role="alert" className="text-sm text-danger">
-                {t("exportError")}
-              </span>
-            ) : null}
-          </div>
-        ) : null}
-      </header>
+          ) : null}
+        </div>
+      </div>
 
-      <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
-        <section
-          aria-label={t("title")}
-          className="min-w-0 flex-1 overflow-hidden rounded-xl border border-border bg-surface"
-        >
-          <div className="flex flex-col gap-3 border-b border-border p-6 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-fg" aria-live="polite">
-              <span className="me-2 text-3xl font-bold">
-                {data ? nf.format(data.total) : "—"}
-              </span>
-              <span className="font-semibold">{t("optedIn")}</span>
-            </p>
+      {exporter.isError ? (
+        <Alert intent="danger">
+          <AlertDescription>{t("exportError")}</AlertDescription>
+        </Alert>
+      ) : null}
+      {withdrawn ? (
+        <Alert intent="success" role="status">
+          <AlertDescription>{t("done", { email: withdrawn })}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <RecordTable
+        frameless
+        toolbar={
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2
+              className="text-xl font-semibold text-primary"
+              aria-live="polite"
+            >
+              {data ? nf.format(data.total) : "—"}{" "}
+              <span className="font-normal text-fg-muted">{t("optedIn")}</span>
+            </h2>
             <SearchInput
               value={search}
               onChange={(e) => {
@@ -286,111 +307,91 @@ export function CommsOptInsScreen() {
               className="sm:w-80"
             />
           </div>
-
-          {list.isLoading ? (
-            <div className="flex justify-center py-16">
-              <Spinner />
-            </div>
-          ) : list.isError && !data ? (
-            <p role="alert" className="px-6 py-10 text-center text-danger">
-              {t("loadError")}
-            </p>
-          ) : data && data.items.length === 0 ? (
-            <p className="px-6 py-16 text-center text-fg-muted">
-              {debounced ? t("noMatches") : t("empty")}
-            </p>
-          ) : data ? (
-            <>
-              <table className="hidden w-full text-start md:table">
-                <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-fg-muted">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-start">
-                      {t("columns.email")}
-                    </th>
-                    <th scope="col" className="px-4 py-3 text-start">
-                      {t("columns.name")}
-                    </th>
-                    <th scope="col" className="px-4 py-3 text-start">
-                      {t("columns.lastAnswered")}
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-start">
-                      {t("columns.sourceVisit")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.items.map((item) => (
-                    <tr
-                      key={item.email}
-                      className="border-t border-border align-middle"
-                    >
-                      <td className="max-w-0 truncate px-6 py-4 text-fg">
-                        {item.email}
-                      </td>
-                      <td className="px-4 py-4 text-fg-muted">
-                        {item.fullName ?? "—"}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-4 text-fg-muted">
-                        {formatWatDateTime(item.consentedAt, locale)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <SourceVisit item={item} onOpen={setVisitId} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <ul className="flex flex-col md:hidden">
-                {data.items.map((item) => (
-                  <li
-                    key={item.email}
-                    className="flex flex-col gap-0.5 border-t border-border px-4 py-3 first:border-t-0"
-                  >
-                    <span className="truncate font-medium text-fg">
-                      {item.email}
-                    </span>
-                    <span className="text-sm text-fg-muted">
-                      {[
-                        item.fullName,
-                        formatWatDateTime(item.consentedAt, locale),
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </span>
-                    <span className="text-sm">
-                      <SourceVisit item={item} onOpen={setVisitId} />
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="flex flex-col gap-2 border-t border-border px-6 py-3 text-sm text-fg-muted sm:flex-row sm:items-center sm:justify-between">
-                <span>
-                  {t("range", {
-                    from: nf.format(first),
-                    to: nf.format(last),
-                    total: nf.format(data.total),
-                  })}
-                </span>
-                {data.totalPages > 1 ? (
-                  <Pagination
-                    page={page}
-                    totalPages={data.totalPages}
-                    onPageChange={setPage}
-                  />
-                ) : null}
-              </div>
-            </>
-          ) : null}
-        </section>
-
-        {canManage ? (
-          <div className="w-full shrink-0 xl:w-[400px]">
-            <WithdrawConsentCard />
+        }
+        isEmpty={!!data && data.items.length === 0}
+        emptyState={
+          <EmptyState
+            icon={MailCheck}
+            title={debounced ? t("noMatches") : t("empty")}
+          />
+        }
+        pagination={
+          data && data.totalPages > 1 ? (
+            <Pagination
+              page={page}
+              totalPages={data.totalPages}
+              onPageChange={setPage}
+            />
+          ) : undefined
+        }
+      >
+        {list.isLoading ? (
+          <div className="flex justify-center py-16">
+            <Spinner />
           </div>
+        ) : list.isError && !data ? (
+          <Alert intent="danger">
+            <AlertDescription>{t("loadError")}</AlertDescription>
+          </Alert>
+        ) : data ? (
+          <>
+            <div className="hidden md:block">
+              <Table aria-label={t("title")}>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("columns.email")}</TableHead>
+                    <TableHead>{t("columns.name")}</TableHead>
+                    <TableHead>{t("columns.lastAnswered")}</TableHead>
+                    <TableHead>{t("columns.sourceVisit")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody striped>
+                  {data.items.map((item) => (
+                    <TableRow key={item.email}>
+                      <TableCell className="font-medium">
+                        {item.email}
+                      </TableCell>
+                      <TableCell className="text-fg-muted">
+                        {item.fullName ?? "—"}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-fg-muted">
+                        {formatWatDateTime(item.consentedAt, locale)}
+                      </TableCell>
+                      <TableCell>
+                        <SourceVisit item={item} onOpen={setVisitId} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            <ul className="flex flex-col overflow-hidden rounded-lg border border-border md:hidden">
+              {data.items.map((item) => (
+                <li
+                  key={item.email}
+                  className="flex flex-col gap-0.5 border-b border-border-subtle px-4 py-3 last:border-b-0"
+                >
+                  <span className="truncate font-medium text-fg">
+                    {item.email}
+                  </span>
+                  <span className="text-sm text-fg-muted">
+                    {[
+                      item.fullName,
+                      formatWatDateTime(item.consentedAt, locale),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                  <span className="text-sm">
+                    <SourceVisit item={item} onOpen={setVisitId} />
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
         ) : null}
-      </div>
+      </RecordTable>
 
       {visitId ? (
         <VisitDetailSheet

@@ -92,7 +92,9 @@
       "guestCount": "عدد الضيوف"
     },
     "guestCount": "{count} ضيف",
-    "onsiteElapsed": "{time} س"
+    "onsiteElapsed": "{time} س",
+    "noVisits": "لا توجد زيارات لعرضها.",
+    "noMatches": "لا توجد زيارات تطابق البحث أو عوامل التصفية."
   },
   "common": {
     "notifications": "الإشعارات",
@@ -288,10 +290,8 @@
     "requestInfoPlaceholder": "ما المعلومات الإضافية المطلوبة؟",
     "flagReasonPlaceholder": "صف المخاوف الأمنية…",
     "createdByYou": "(أنت)",
-    "evacuationAssist": "المساعدة في الإخلاء",
-    "notAsked": "لم يُسأل",
-    "yes": "نعم",
-    "no": "لا",
+    "evacuationAssistYes": "يحتاج إلى المساعدة في الإخلاء",
+    "evacuationAssistNo": "المساعدة في الإخلاء: لا",
     "sources": {
       "deskQr": "رمز QR للاستقبال (تسجيل ذاتي)",
       "selfRegistered": "الزائر، عبر رمز QR للاستقبال"
@@ -848,7 +848,6 @@
   },
   "evacuation": {
     "title": "قائمة الإخلاء",
-    "subtitle": "الزوار الموجودون في المبنى الذين طلبوا المساعدة في الإخلاء.",
     "refresh": "تحديث",
     "countBanner": "في الموقع يحتاجون إلى مساعدة في الإخلاء",
     "floors": "{count, plural, one {طابق واحد} two {طابقان} few {# طوابق} many {# طابقًا} other {# طابق}}",
@@ -878,7 +877,6 @@
   },
   "consent": {
     "title": "الاشتراك في المراسلات",
-    "subtitle": "الزوار الذين وافقوا على تلقي أخبار Afreximbank. العبرة بآخر إجابة.",
     "exportCsv": "تصدير CSV",
     "exportError": "فشل التصدير. يرجى المحاولة مرة أخرى.",
     "optedIn": "مشترك",
@@ -893,7 +891,6 @@
     "empty": "لم يشترك أحد بعد.",
     "noMatches": "لا توجد اشتراكات تطابق بحثك.",
     "loadError": "تعذر تحميل الاشتراكات.",
-    "range": "{from}–{to} من {total}",
     "withdrawTitle": "سحب الموافقة",
     "withdrawHelp": "يوقف المراسلات إلى هذا البريد حتى يوافق صاحبه في زيارة لاحقة.",
     "email": "البريد الإلكتروني",
@@ -972,7 +969,6 @@
   },
   "deskQr": {
     "title": "رمز QR للاستقبال",
-    "subtitle": "يمسحه الزوار عند مكتب الاستقبال لتسجيل أنفسهم كزوار حضور مباشر لليوم.",
     "walkInBadge": "حضور مباشر · دون موافقة",
     "status": {
       "active": "نشط",

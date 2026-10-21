@@ -253,6 +253,9 @@ export const visitsApi = {
       floor?: string;
       purpose?: string;
       scheduledAt?: string;
+      needsEvacuationAssist?: boolean;
+      evacuationAssistTypes?: EvacuationAssistType[];
+      evacuationAssistOther?: string;
     },
   ): Promise<VisitRequestDetail> {
     return api<VisitRequestDetail>(`/visits/${id}`, {

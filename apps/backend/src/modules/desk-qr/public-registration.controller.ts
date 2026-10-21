@@ -77,7 +77,12 @@ export class PublicRegistrationController {
   /** Enter the code reception read out; creates today's walk-in. */
   @Post('registrations/:id/verify')
   @HttpCode(200)
-  @RateLimit({ name: 'verify-ip', limit: 10, windowMs: MINUTE, by: 'ip' })
+  @RateLimit(
+    { name: 'verify-ip', limit: 10, windowMs: MINUTE, by: 'ip' },
+    // Per QR as well: behind a proxy (or with spoofed addresses) the per-IP
+    // rule alone doesn't bound guesses against one desk.
+    { name: 'verify-qr', limit: 60, windowMs: MINUTE, by: { param: 'token' } },
+  )
   verify(
     @Param('token') token: string,
     @Param('id', new ParseUUIDPipe()) id: string,

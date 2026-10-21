@@ -90,14 +90,29 @@ function Dashboard() {
   const [page, setPage] = React.useState(1);
   const [range, setRange] = React.useState<RecordsRange>("all");
   const [dates, setDates] = React.useState<DateRange>({});
-  // The search box is a draft until Search / Enter applies it; the selects
-  // apply at once. Any change goes back to page 1.
+  // Like the staff dashboard: typing searches after a short pause, and
+  // Search / Enter applies it at once. The selects apply at once. Any change
+  // goes back to page 1.
   const [draft, setDraft] = React.useState("");
   const [filters, setFilters] = React.useState<BoardFilters>(NO_BOARD_FILTERS);
   const applyFilters = (patch: Partial<BoardFilters>) => {
     setFilters((f) => ({ ...f, ...patch }));
     setPage(1);
   };
+  React.useEffect(() => {
+    const search = draft.trim();
+    if (search === filters.search) return;
+    const id = setTimeout(() => {
+      setFilters((f) => ({ ...f, search }));
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(id);
+  }, [draft, filters.search]);
+  const filtered =
+    filters.search !== "" ||
+    filters.status !== "all" ||
+    filters.type !== "all" ||
+    filters.purpose !== "all";
   const deskStats = useQuery({
     queryKey: ["visits", "dashboard", "desk-stats"] as const,
     queryFn: () => visitsApi.deskStats(),
@@ -213,7 +228,7 @@ function Dashboard() {
       filterBar={
         <FilterBar
           actions={
-            <Button onClick={() => applyFilters({ search: draft })}>
+            <Button onClick={() => applyFilters({ search: draft.trim() })}>
               {t("filters.search")}
             </Button>
           }
@@ -223,7 +238,7 @@ function Dashboard() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") applyFilters({ search: draft });
+                if (e.key === "Enter") applyFilters({ search: draft.trim() });
               }}
               onClear={() => {
                 setDraft("");
@@ -352,6 +367,15 @@ function Dashboard() {
                     <div className="flex justify-center py-10">
                       <Spinner />
                     </div>
+                  </TableCell>
+                </TableRow>
+              ) : rows.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={7}
+                    className="py-10 text-center text-fg-subtle"
+                  >
+                    {filtered ? t("noMatches") : t("noVisits")}
                   </TableCell>
                 </TableRow>
               ) : (

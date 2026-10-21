@@ -3,12 +3,16 @@
 import { PERMISSIONS, type DeskQrView } from "@vms/contracts";
 import {
   Alert,
+  AlertDescription,
+  AlertTitle,
   Badge,
   Button,
   Card,
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
   DialogTitle,
   EmptyState,
   Input,
@@ -16,14 +20,7 @@ import {
   Spinner,
   cn,
 } from "@vms/ui";
-import {
-  AlertTriangle,
-  Ban,
-  Download,
-  Printer,
-  QrCode,
-  RefreshCw,
-} from "lucide-react";
+import { Ban, Download, Printer, QrCode, RefreshCw } from "lucide-react";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { createPortal } from "react-dom";
@@ -67,13 +64,11 @@ function CodeEmailDialog({
   const invalid = touched && !EMAIL_RE.test(email.trim());
   return (
     <Dialog open={open} onOpenChange={(o) => !pending && onOpenChange(o)}>
-      <DialogContent size="md" className="gap-5">
-        <div className="flex flex-col gap-2">
-          <DialogTitle className="text-xl">{title}</DialogTitle>
-          <DialogDescription className="text-base">
-            {t("codeEmail.help")}
-          </DialogDescription>
-        </div>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{t("codeEmail.help")}</DialogDescription>
+        </DialogHeader>
         <form
           noValidate
           className="flex flex-col gap-4"
@@ -83,33 +78,37 @@ function CodeEmailDialog({
             if (EMAIL_RE.test(email.trim())) onSubmit(email.trim());
           }}
         >
+          {error ? (
+            <Alert intent="danger">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : null}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="desk-qr-code-email">{t("codeEmail.label")}</Label>
             <Input
               id="desk-qr-code-email"
               type="email"
               value={email}
-              placeholder="reception@aatc.org"
-              aria-invalid={invalid || undefined}
+              invalid={invalid}
+              aria-describedby={
+                invalid ? "desk-qr-code-email-error" : undefined
+              }
               onChange={(e) => setEmail(e.target.value)}
             />
             {invalid ? (
-              <span className="text-sm text-danger">
+              <span
+                id="desk-qr-code-email-error"
+                className="text-xs text-danger"
+              >
                 {t("codeEmail.invalid")}
               </span>
             ) : null}
-            {error ? (
-              <span role="alert" className="text-sm text-danger">
-                {error}
-              </span>
-            ) : null}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <DialogFooter>
             <Button
               type="button"
               intent="neutral"
               tone="outline"
-              size="lg"
               onClick={() => onOpenChange(false)}
               disabled={pending}
             >
@@ -117,21 +116,19 @@ function CodeEmailDialog({
             </Button>
             <Button
               type="submit"
-              intent="primary"
-              size="lg"
               disabled={pending}
               aria-busy={pending || undefined}
             >
               {submitLabel}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
   );
 }
 
-/** New QR / Disable confirmation (the opt-ins withdraw dialog pattern). */
+/** New QR / Disable confirmation (the staff/VMC dialog: header, body, footer). */
 function ConfirmDialog({
   kind,
   pending,
@@ -150,26 +147,12 @@ function ConfirmDialog({
       open={kind !== null}
       onOpenChange={(o) => !o && !pending && onClose()}
     >
-      <DialogContent size="md" hideClose className="gap-5">
-        <span
-          className={cn(
-            "flex size-12 items-center justify-center rounded-full",
-            rotate
-              ? "bg-warning-subtle text-warning"
-              : "bg-danger-subtle text-danger",
-          )}
-        >
-          {rotate ? (
-            <RefreshCw className="size-6" aria-hidden="true" />
-          ) : (
-            <AlertTriangle className="size-6" aria-hidden="true" />
-          )}
-        </span>
-        <div className="flex flex-col gap-2">
-          <DialogTitle className="text-xl">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
             {rotate ? t("confirmRotate.title") : t("confirmDisable.title")}
           </DialogTitle>
-          <DialogDescription className="text-base">
+          <DialogDescription>
             {rotate
               ? t.rich("confirmRotate.body", {
                   b: (chunks) => (
@@ -178,12 +161,11 @@ function ConfirmDialog({
                 })
               : t("confirmDisable.body")}
           </DialogDescription>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
+        </DialogHeader>
+        <DialogFooter>
           <Button
             intent="neutral"
             tone="outline"
-            size="lg"
             onClick={onClose}
             disabled={pending}
           >
@@ -191,14 +173,13 @@ function ConfirmDialog({
           </Button>
           <Button
             intent={rotate ? "primary" : "danger"}
-            size="lg"
             onClick={onConfirm}
             disabled={pending}
             aria-busy={pending || undefined}
           >
             {rotate ? t("confirmRotate.confirm") : t("confirmDisable.confirm")}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -306,17 +287,18 @@ export function DeskQrScreen() {
     }
   };
 
-  const header = (
-    <header className="flex flex-col gap-1">
-      <h1 className="text-3xl font-bold text-fg">{t("title")}</h1>
-      <p className="text-fg-muted">{t("subtitle")}</p>
-    </header>
+  // Staff/VMC page header: title with the page's actions on the same row.
+  const header = (actions?: React.ReactNode) => (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <h1 className="text-3xl font-semibold text-primary">{t("title")}</h1>
+      {actions ? <div className="flex flex-wrap gap-3">{actions}</div> : null}
+    </div>
   );
 
   if (qr.isLoading) {
     return (
       <div className="flex flex-col gap-6">
-        {header}
+        {header()}
         <div className="flex justify-center py-16">
           <Spinner />
         </div>
@@ -327,25 +309,22 @@ export function DeskQrScreen() {
   if (qr.isError) {
     return (
       <div className="flex flex-col gap-6">
-        {header}
-        <Card className="flex flex-col gap-4 rounded-2xl p-5">
-          <Alert intent="danger">
-            <span>
-              <b className="font-semibold text-fg">{t("loadError.title")}</b>{" "}
-              {t("loadError.body")}
-            </span>
-          </Alert>
-          <div>
+        {header()}
+        <Alert intent="danger">
+          <AlertTitle>{t("loadError.title")}</AlertTitle>
+          <AlertDescription>{t("loadError.body")}</AlertDescription>
+          <div className="mt-2">
             <Button
               intent="neutral"
               tone="outline"
+              size="sm"
               onClick={() => void qr.refetch()}
             >
               <RefreshCw className="size-4" aria-hidden="true" />
               {t("retry")}
             </Button>
           </div>
-        </Card>
+        </Alert>
       </div>
     );
   }
@@ -353,24 +332,19 @@ export function DeskQrScreen() {
   if (!view) {
     return (
       <div className="flex flex-col gap-6">
-        {header}
-        <Card className="rounded-2xl p-5">
-          <EmptyState
-            icon={QrCode}
-            title={t("empty.title")}
-            description={canManage ? t("empty.body") : t("empty.readOnly")}
-            action={
-              canManage ? (
-                <Button
-                  intent="primary"
-                  onClick={() => setEmailDialog("create")}
-                >
-                  {t("empty.create")}
-                </Button>
-              ) : null
-            }
-          />
-        </Card>
+        {header()}
+        <EmptyState
+          icon={QrCode}
+          title={t("empty.title")}
+          description={canManage ? t("empty.body") : t("empty.readOnly")}
+          action={
+            canManage ? (
+              <Button intent="primary" onClick={() => setEmailDialog("create")}>
+                {t("empty.create")}
+              </Button>
+            ) : null
+          }
+        />
         {emailDialog === "create" ? (
           <CodeEmailDialog
             open
@@ -396,22 +370,36 @@ export function DeskQrScreen() {
   const active = view.isActive;
   return (
     <div className="flex flex-col gap-6">
-      {header}
+      {header(
+        <>
+          <Button
+            intent="neutral"
+            tone="outline"
+            onClick={() => download.mutate()}
+            disabled={download.isPending || !active}
+            aria-busy={download.isPending || undefined}
+          >
+            <Download className="size-4" aria-hidden="true" />
+            {t("downloadPng")}
+          </Button>
+          <Button
+            onClick={() => window.print()}
+            disabled={!image.data || !active}
+          >
+            <Printer className="size-4" aria-hidden="true" />
+            {t("print")}
+          </Button>
+        </>,
+      )}
       <Card
         role="region"
-        aria-labelledby="desk-qr-title"
-        className="flex flex-col overflow-hidden rounded-2xl"
+        aria-label={t("title")}
+        className="flex flex-col overflow-hidden"
       >
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
-          <h2
-            id="desk-qr-title"
-            className="flex items-center gap-3 text-lg font-semibold text-fg"
-          >
-            {t("title")}
-            <Badge intent={active ? "success" : "neutral"} tone="soft" dot>
-              {active ? t("status.active") : t("status.disabled")}
-            </Badge>
-          </h2>
+          <Badge intent={active ? "success" : "neutral"} tone="soft" dot>
+            {active ? t("status.active") : t("status.disabled")}
+          </Badge>
           <Badge intent="neutral" tone="soft">
             {t("walkInBadge")}
           </Badge>
@@ -444,13 +432,15 @@ export function DeskQrScreen() {
               <code className="min-w-0 truncate font-mono" dir="ltr">
                 {view.url}
               </code>
-              <button
-                type="button"
+              <Button
+                size="sm"
+                intent="primary"
+                tone="ghost"
+                className="shrink-0"
                 onClick={() => void copyLink(view.url)}
-                className="shrink-0 rounded px-1 font-semibold text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
               >
                 {copied ? t("copied") : t("copyLink")}
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -492,70 +482,49 @@ export function DeskQrScreen() {
 
             {failed ? (
               <Alert intent="danger">
-                <span>{failed}</span>
+                <AlertDescription>{failed}</AlertDescription>
               </Alert>
             ) : null}
 
-            <div className="flex flex-wrap gap-2.5">
-              <Button
-                intent="primary"
-                onClick={() => window.print()}
-                disabled={!image.data || !active}
-              >
-                <Printer className="size-4" aria-hidden="true" />
-                {t("print")}
-              </Button>
-              <Button
-                intent="neutral"
-                tone="outline"
-                onClick={() => download.mutate()}
-                disabled={download.isPending || !active}
-                aria-busy={download.isPending || undefined}
-              >
-                <Download className="size-4" aria-hidden="true" />
-                {t("downloadPng")}
-              </Button>
-              {canManage ? (
-                <>
-                  <span className="basis-full" aria-hidden="true" />
-                  {active ? null : (
-                    <Button
-                      intent="primary"
-                      onClick={() => enable.mutate(undefined)}
-                      disabled={enable.isPending}
-                      aria-busy={enable.isPending || undefined}
-                    >
-                      {t("enable")}
-                    </Button>
-                  )}
+            {canManage ? (
+              <div className="flex flex-wrap gap-2.5">
+                {active ? null : (
                   <Button
-                    intent="neutral"
-                    tone="outline"
-                    onClick={() => setConfirm("rotate")}
+                    intent="primary"
+                    onClick={() => enable.mutate(undefined)}
+                    disabled={enable.isPending}
+                    aria-busy={enable.isPending || undefined}
                   >
-                    <RefreshCw className="size-4" aria-hidden="true" />
-                    {t("rotate")}
+                    {t("enable")}
                   </Button>
-                  {active ? (
-                    <Button
-                      intent="danger"
-                      tone="outline"
-                      onClick={() => setConfirm("disable")}
-                    >
-                      <Ban className="size-4" aria-hidden="true" />
-                      {t("disable")}
-                    </Button>
-                  ) : null}
-                </>
-              ) : null}
-            </div>
+                )}
+                <Button
+                  intent="neutral"
+                  tone="outline"
+                  onClick={() => setConfirm("rotate")}
+                >
+                  <RefreshCw className="size-4" aria-hidden="true" />
+                  {t("rotate")}
+                </Button>
+                {active ? (
+                  <Button
+                    intent="danger"
+                    tone="outline"
+                    onClick={() => setConfirm("disable")}
+                  >
+                    <Ban className="size-4" aria-hidden="true" />
+                    {t("disable")}
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
             <p className="max-w-prose text-sm text-fg-muted">
               {active ? t("rotateHelp") : t("enableHelp")}
             </p>
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-border bg-warning-subtle/60 px-5 py-4">
+        <div className="flex flex-col gap-2 border-t border-border bg-surface-muted px-5 py-4">
           <h3 className="text-base font-semibold text-fg">
             {t("codes.title")}
           </h3>
