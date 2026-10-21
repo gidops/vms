@@ -1,23 +1,12 @@
 "use client";
 
-import { PERMISSIONS } from "@vms/contracts";
 import { Button } from "@vms/ui";
-import {
-  Download,
-  LifeBuoy,
-  MailCheck,
-  QrCode,
-  SquareActivity,
-} from "lucide-react";
+import { SquareActivity } from "lucide-react";
 import { useTranslations } from "next-intl";
-import * as React from "react";
 import {
   OverviewBar,
   type OverviewStat,
 } from "@/app/[locale]/_components/OverviewBar";
-import { ExportVisitorsDialog } from "@/app/[locale]/_components/ExportVisitorsDialog";
-import { Link } from "@/i18n/navigation";
-import { useAuth } from "@/shared/auth/AuthContext";
 
 export type { OverviewStat };
 
@@ -49,13 +38,6 @@ function QuickActions({
   onNewInvite,
 }: Pick<VmcOverviewProps, "onRegisterWalkIn" | "onNewInvite">) {
   const t = useTranslations("dashboard");
-  const { hasPermission } = useAuth();
-  const canEvacuation = hasPermission(PERMISSIONS.EVACUATION_READ);
-  const canOptIns = hasPermission(PERMISSIONS.CONSENT_READ);
-  const canDeskQr = hasPermission(PERMISSIONS.ISSUER_READ);
-  // V1 parity: reception keeps the visitor export (report:export).
-  const canExport = hasPermission(PERMISSIONS.REPORT_EXPORT);
-  const [exportOpen, setExportOpen] = React.useState(false);
   return (
     <>
       <div className="relative flex flex-col gap-3">
@@ -75,44 +57,7 @@ function QuickActions({
         <Button intent="accent" onClick={onNewInvite}>
           {t("quickActions.newInvite")}
         </Button>
-        {canEvacuation ? (
-          <Button asChild intent="accent" tone="outline">
-            <Link href="/dashboard/evacuation">
-              <LifeBuoy className="size-4" aria-hidden="true" />
-              {t("quickActions.evacuation")}
-            </Link>
-          </Button>
-        ) : null}
-        {canOptIns ? (
-          <Button asChild intent="accent" tone="outline">
-            <Link href="/dashboard/opt-ins">
-              <MailCheck className="size-4" aria-hidden="true" />
-              {t("quickActions.optIns")}
-            </Link>
-          </Button>
-        ) : null}
-        {canDeskQr ? (
-          <Button asChild intent="accent" tone="outline">
-            <Link href="/dashboard/desk-qr">
-              <QrCode className="size-4" aria-hidden="true" />
-              {t("quickActions.deskQr")}
-            </Link>
-          </Button>
-        ) : null}
-        {canExport ? (
-          <Button
-            intent="accent"
-            tone="outline"
-            onClick={() => setExportOpen(true)}
-          >
-            <Download className="size-4" aria-hidden="true" />
-            {t("quickActions.export")}
-          </Button>
-        ) : null}
       </div>
-      {canExport ? (
-        <ExportVisitorsDialog open={exportOpen} onOpenChange={setExportOpen} />
-      ) : null}
     </>
   );
 }

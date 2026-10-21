@@ -1,23 +1,19 @@
-"use client";
+import { redirect } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
 
-import { PERMISSIONS } from "@vms/contracts";
-import { TopNavShell } from "@vms/ui";
-import { useTranslations } from "next-intl";
-import { CommsOptInsScreen } from "@/app/[locale]/_components/CommsOptInsScreen";
-import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
-import { PermissionGate } from "@/shared/auth/PermissionGate";
-import { RouteGuard } from "@/shared/auth/RouteGuard";
+// The VMC admin screens moved to the Help/Support page. Keep existing links
+// and bookmarks working by redirecting to the matching tab.
+export default async function OptInsRedirect({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  redirect({ href: { pathname: "/help", query: { tab: "optIns" } }, locale });
+  // `redirect` throws, but satisfy the return type for the type checker.
+  return null;
+}
 
-/** /dashboard mount of the shared CommsOptInsScreen (RouteGuard keeps this role out of /admin). */
-export default function VmcOptInsPage() {
-  const t = useTranslations("consent");
-  return (
-    <RouteGuard home="/dashboard">
-      <TopNavShell nav={<AppTopNav centerLabel={t("title")} />}>
-        <PermissionGate permission={PERMISSIONS.CONSENT_READ}>
-          <CommsOptInsScreen />
-        </PermissionGate>
-      </TopNavShell>
-    </RouteGuard>
-  );
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
 }
