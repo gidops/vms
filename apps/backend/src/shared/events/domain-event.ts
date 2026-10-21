@@ -37,7 +37,12 @@ export const EVENT_TYPES = {
   AlertUpdated: 'alert.updated',
   NoteAdded: 'note.added',
   VisitorRated: 'visitor.rated',
+  /** Recorded before the first byte of a visitor export is sent. */
+  VisitsExportStarted: 'report.visits_export_started',
+  /** Same export id as the start row, with the final row count. */
   VisitsExported: 'report.visits_exported',
+  /** Same export id; the stream broke (client abort, DB error) part-way. */
+  VisitsExportFailed: 'report.visits_export_failed',
   ConsentWithdrawn: 'consent.withdrawn',
   ConsentExported: 'consent.exported',
   NotificationRetried: 'notification.retried',

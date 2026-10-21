@@ -417,6 +417,34 @@ describe('VisitReadService.getDetail', () => {
     expect(detail.checkedInByName).toBe('Alice');
     expect(detail.checkedOutByName).toBe('Bob');
   });
+
+  it('renders the QR for an invite but not for a walk-in reference', async () => {
+    const base = {
+      id: 'v2',
+      referenceCode: '5A19-795',
+      checkInAt: null,
+      checkOutAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      visitor: { id: 'vis1', fullName: 'Guest', email: 'g@x.io' },
+      host: null,
+      pass: null,
+      notes: [],
+    };
+    const detailOf = (type: string) =>
+      new VisitReadService({
+        visit: {
+          findUnique: jest.fn().mockResolvedValue({ ...base, type }),
+        },
+      } as unknown as PrismaService).getDetail('v2');
+
+    const invite = await detailOf('PRE_INVITED');
+    expect(invite.referenceCode).toBe('5A19-795');
+    expect(invite.qrCode).toMatch(/^data:image\/png;base64,/);
+    const walkIn = await detailOf('WALK_IN');
+    expect(walkIn.referenceCode).toBe('5A19-795');
+    expect(walkIn.qrCode).toBeUndefined();
+  });
 });
 
 describe('VisitReadService.assertCanView', () => {

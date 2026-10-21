@@ -67,7 +67,7 @@ function SourceVisit({
       onClick={() => onOpen(item.sourceVisitId!)}
       className="rounded-sm font-semibold tracking-wide text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
     >
-      {item.sourceReferenceCode ?? t("walkIn")}
+      {item.sourceReferenceCode ?? t("viewVisit")}
     </button>
   );
 }

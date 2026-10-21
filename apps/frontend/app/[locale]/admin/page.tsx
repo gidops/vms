@@ -4,26 +4,25 @@ import { SearchInput } from "@vms/ui";
 import { useTranslations } from "next-intl";
 import * as React from "react";
 import { VisitDetailSheet } from "@/app/[locale]/_components/VisitDetailSheet";
+import { AdminOverviewBar } from "@/app/[locale]/admin/_components/AdminOverviewBar";
 import { AdminShell } from "@/app/[locale]/admin/_components/AdminShell";
-import { OverviewStats } from "@/app/[locale]/admin/_components/OverviewStats";
-import { QuickActionsCard } from "@/app/[locale]/admin/_components/QuickActionsCard";
+import { PendingApprovalsCard } from "@/app/[locale]/admin/_components/PendingApprovalsCard";
 import { RecentActivityCard } from "@/app/[locale]/admin/_components/RecentActivityCard";
-import { StatusBreakdownCard } from "@/app/[locale]/admin/_components/StatusBreakdownCard";
 import { TodaysVisitorsCard } from "@/app/[locale]/admin/_components/TodaysVisitorsCard";
-import { TrafficCard } from "@/app/[locale]/admin/_components/TrafficCard";
-import { UpcomingCard } from "@/app/[locale]/admin/_components/UpcomingCard";
 import { QuickActionSheet } from "@/app/[locale]/dashboard/_components/QuickActionSheet";
-import { useAdminOverviewStats } from "@/data/admin/queries";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
 
 /**
- * Admin console overview (Figma: aatc-vms-admin-overview). Shared by every
- * admin role; each card/action is gated by permission, so the same page serves
- * System Admin, VMC Admin, Security Manager and Read Admin.
+ * Admin console overview. Four blocks, top to bottom: the shared overview bar
+ * (Awaiting approval, Onsite now, Expected today + actions), the pending
+ * approvals preview (approvers only, oldest first), today's visitors and recent
+ * activity. Trends and outcomes live on /admin/analytics. Every block is gated
+ * by permission, so the same page serves System Admin, Security Manager, VMC
+ * Admin and Read Admin; without approve rights the visitors table leads. Each
+ * block has its own loading and error state, and an empty block is left out.
  */
 function Overview() {
   const t = useTranslations("admin.overview");
-  const stats = useAdminOverviewStats();
   // The top-nav search and the table's own field drive the same filter.
   const [search, setSearch] = React.useState("");
   const [detailId, setDetailId] = React.useState<string | null>(null);
@@ -43,46 +42,22 @@ function Overview() {
         />
       }
     >
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start">
-        <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <header className="flex flex-col gap-1">
-            <h1 className="text-3xl font-bold text-fg">{t("title")}</h1>
-            <p className="text-sm text-fg-muted">{t("subtitle")}</p>
-          </header>
+      <div className="flex flex-col gap-6">
+        <AdminOverviewBar onAddVisitor={() => setAddingVisitor(true)} />
 
-          {stats.data ? (
-            <OverviewStats stats={stats.data} loading={false} />
-          ) : (
-            <p
-              role={stats.isError ? "alert" : "status"}
-              className={stats.isError ? "text-danger" : "text-fg-muted"}
-            >
-              {stats.isError ? t("loadError") : t("loading")}
-            </p>
-          )}
+        <PendingApprovalsCard />
 
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,3fr)]">
-            <TrafficCard />
-            {stats.data ? (
-              <StatusBreakdownCard stats={stats.data} loading={false} />
-            ) : null}
-          </div>
-
+        {/* Flex, not grid: an empty block doesn't render, and the other one
+            then takes the full width instead of leaving a hole. */}
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
           <TodaysVisitorsCard
             search={search}
             onSearchChange={setSearch}
             onView={setDetailId}
+            className="min-w-0 xl:flex-[5]"
           />
+          <RecentActivityCard className="min-w-0 xl:flex-[2.4]" />
         </div>
-
-        <aside
-          aria-label={t("sidePanel")}
-          className="flex w-full shrink-0 flex-col gap-4 xl:w-80"
-        >
-          <QuickActionsCard onAddVisitor={() => setAddingVisitor(true)} />
-          <RecentActivityCard />
-          <UpcomingCard onView={setDetailId} />
-        </aside>
       </div>
 
       <QuickActionSheet

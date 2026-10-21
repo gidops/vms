@@ -42,13 +42,18 @@ function describe(item: InboxItem): { tone: Tone; key: string } {
   }
 }
 
-/** Latest request/alert events across the site, newest first. */
-export function RecentActivityCard() {
+/**
+ * Latest request/alert events across the site, newest first. Not rendered when
+ * there is nothing to show.
+ */
+export function RecentActivityCard({ className }: { className?: string }) {
   const t = useTranslations("admin.overview.activity");
   const format = useFormatter();
   const now = useNow({ updateInterval: 60_000 });
   const activity = useRecentActivity();
   const items = activity.data?.items ?? [];
+
+  if (activity.isSuccess && items.length === 0) return null;
 
   const subtitle = (item: InboxItem) => {
     if (item.kind === "alert") return item.visitorName ?? item.reason;
@@ -61,6 +66,7 @@ export function RecentActivityCard() {
     <SectionCard
       titleId="admin-activity"
       title={t("title")}
+      className={className}
       actions={
         <Link
           href="/admin/activity"
@@ -80,8 +86,6 @@ export function RecentActivityCard() {
         <p role="alert" className="text-sm text-danger">
           {t("loadError")}
         </p>
-      ) : items.length === 0 ? (
-        <p className="text-sm text-fg-muted">{t("empty")}</p>
       ) : (
         <ul className="flex flex-col gap-4">
           {items.map((item) => {

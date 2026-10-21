@@ -7,6 +7,7 @@ import {
   Card,
   Pagination,
   SearchInput,
+  SegmentedControl,
   Spinner,
   StatusBadge,
   Table,
@@ -20,12 +21,25 @@ import {
 import { CircleUserRound } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
+import type { VisitStatus } from "@vms/contracts";
 import type { VisitListItem } from "@/data/visits/visits.api";
 import { useTodaysVisitors } from "@/data/admin/queries";
 
 const COLUMNS = 6;
 
-/** Today's scheduled visits; flagged rows are highlighted and lead to review. */
+/** Overview segments → the visit statuses they show ("all" = no filter). */
+export const VISITOR_FILTERS = {
+  all: undefined,
+  onsite: ["CHECKED_IN"],
+  expected: ["APPROVED"],
+  out: ["CHECKED_OUT"],
+} as const satisfies Record<string, readonly VisitStatus[] | undefined>;
+export type VisitorFilter = keyof typeof VISITOR_FILTERS;
+
+/**
+ * Today's scheduled visits; flagged rows are highlighted and lead to review.
+ * The card is left out of the overview when nobody is scheduled today.
+ */
 export function TodaysVisitorsCard({
   search,
   onSearchChange,
@@ -40,13 +54,29 @@ export function TodaysVisitorsCard({
   const t = useTranslations("admin.overview.visitors");
   const format = useFormatter();
   const [page, setPage] = React.useState(1);
+  const [filter, setFilter] = React.useState<VisitorFilter>("all");
   const [previousSearch, setPreviousSearch] = React.useState(search);
   if (search !== previousSearch) {
     setPreviousSearch(search);
     setPage(1);
   }
-  const visitors = useTodaysVisitors(search, page);
+  const statuses = VISITOR_FILTERS[filter];
+  const visitors = useTodaysVisitors(
+    search,
+    page,
+    5,
+    statuses ? [...statuses] : undefined,
+  );
   const rows = visitors.data?.items ?? [];
+
+  if (
+    visitors.isSuccess &&
+    visitors.data.total === 0 &&
+    filter === "all" &&
+    !search
+  ) {
+    return null;
+  }
 
   const displayName = (row: VisitListItem) =>
     row.isGroupVisit && row.groupName ? row.groupName : row.visitor.fullName;
@@ -69,15 +99,28 @@ export function TodaysVisitorsCard({
             </Badge>
           ) : null}
         </h2>
-        <div className="w-full sm:w-64">
-          <SearchInput
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            onClear={() => onSearchChange("")}
-            placeholder={t("searchPlaceholder")}
-            aria-label={t("searchPlaceholder")}
-            className="rounded-full"
+        <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
+          <SegmentedControl
+            aria-label={t("filterLabel")}
+            value={filter}
+            onValueChange={(v) => {
+              setFilter(v as VisitorFilter);
+              setPage(1);
+            }}
+            options={(Object.keys(VISITOR_FILTERS) as VisitorFilter[]).map(
+              (key) => ({ value: key, label: t(`filters.${key}`) }),
+            )}
           />
+          <div className="w-full sm:w-56">
+            <SearchInput
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              onClear={() => onSearchChange("")}
+              placeholder={t("searchPlaceholder")}
+              aria-label={t("searchPlaceholder")}
+              className="rounded-full"
+            />
+          </div>
         </div>
       </div>
 
@@ -118,7 +161,7 @@ export function TodaysVisitorsCard({
                   colSpan={COLUMNS}
                   className="py-10 text-center text-fg-muted"
                 >
-                  {search ? t("noMatches") : t("empty")}
+                  {search ? t("noMatches") : t("emptyFilter")}
                 </TableCell>
               </TableRow>
             ) : (

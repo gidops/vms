@@ -61,6 +61,8 @@ export const PERMISSIONS = {
   CONSENT_READ: "consent:read",
   CONSENT_EXPORT: "consent:export",
   CONSENT_MANAGE: "consent:manage",
+  /** Admin Analytics & Reports page (aggregate visitor trends; no personal data). */
+  REPORT_READ: "report:read",
   /** Bulk visitor export (CSV / Excel) — personal data. */
   REPORT_EXPORT: "report:export",
   /** Per-visit notification delivery status (Guest Details → Notifications). */

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import type { VisitStatus } from "@vms/contracts";
 import { inboxApi } from "@/data/inbox/inbox.api";
 import { visitsApi } from "@/data/visits/visits.api";
 import { adminApi } from "./admin.api";
@@ -35,6 +36,28 @@ export function useAdminOverviewStats() {
   });
 }
 
+/**
+ * The Security Manager's queue: requests to decide plus those sent back to the
+ * host for more information (they return to PENDING when resubmitted).
+ */
+export const APPROVAL_QUEUE_STATUSES = [
+  "PENDING",
+  "REVIEW_REQUESTED",
+] as const satisfies readonly VisitStatus[];
+
+/** Every open request in the approval queue; the overview sorts and slices. */
+export function useApprovalQueue() {
+  return useQuery({
+    queryKey: ["visits", "admin", "approvalQueue"] as const,
+    queryFn: () =>
+      visitsApi.list({
+        statuses: [...APPROVAL_QUEUE_STATUSES],
+        pageSize: 100,
+      }),
+    refetchInterval: 30_000,
+  });
+}
+
 /** All arrivals in the selected local day, including unscheduled walk-ins. */
 export function useTraffic(dayOffset: 0 | -1 = 0) {
   const params = {
@@ -49,7 +72,13 @@ export function useTraffic(dayOffset: 0 | -1 = 0) {
 }
 
 /** Today's visitors table (scheduled today; the API orders earliest first), searchable. */
-export function useTodaysVisitors(search: string, page = 1, pageSize = 5) {
+export function useTodaysVisitors(
+  search: string,
+  page = 1,
+  pageSize = 5,
+  /** Optional status filter (the overview's Onsite / Expected / Out segments). */
+  statuses?: VisitStatus[],
+) {
   const today = dayWindow(0);
   return useQuery({
     queryKey: [
@@ -60,11 +89,13 @@ export function useTodaysVisitors(search: string, page = 1, pageSize = 5) {
       search,
       page,
       pageSize,
+      statuses?.join(",") ?? "all",
     ],
     queryFn: () =>
       visitsApi.list({
         ...today,
         search: search || undefined,
+        statuses,
         page,
         pageSize,
       }),

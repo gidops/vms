@@ -2,16 +2,18 @@
 
 import { PERMISSIONS } from "@vms/contracts";
 import { Button } from "@vms/ui";
-import { ChevronDown, LifeBuoy, MailCheck, SquareActivity } from "lucide-react";
+import { Download, LifeBuoy, MailCheck, SquareActivity } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
+import {
+  OverviewBar,
+  type OverviewStat,
+} from "@/app/[locale]/_components/OverviewBar";
+import { ExportVisitorsDialog } from "@/app/[locale]/_components/ExportVisitorsDialog";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/shared/auth/AuthContext";
 
-export interface OverviewStat {
-  label: string;
-  value: React.ReactNode;
-}
+export type { OverviewStat };
 
 export interface VmcOverviewProps {
   /** Welcome heading, e.g. "Welcome Judith Francis". Rendered inside the bar. */
@@ -35,36 +37,6 @@ function WelcomeHeader({ welcome }: { welcome: string }) {
   );
 }
 
-/**
- * Decorative nested chevrons bleeding off the top-right corner of the green
- * panel — a subtle brand watermark matching the Figma design.
- *
- * The SVG fills the panel and uses a `0 0 449 149` viewBox (the design panel's
- * own coordinate space) with `xMaxYMin slice`, so the chevrons stay pinned to
- * the top-right corner and scale with the panel at any width/height. The paths
- * are drawn at the exact design coordinates and intentionally extend past the
- * viewBox (negative Y / x > 449) so they bleed off the top and right edges,
- * clipped by the panel's `overflow-hidden`.
- */
-function DecorChevrons() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 449 149"
-      preserveAspectRatio="xMaxYMin slice"
-      className="pointer-events-none absolute inset-0 h-full w-full text-emphasis-fg/[0.07] rtl:-scale-x-100"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="17"
-      strokeLinejoin="round"
-    >
-      <path d="M287 -15 L387 65 L487 -15" />
-      <path d="M287 -52 L387 28 L487 -52" />
-      <path d="M287 -89 L387 -9 L487 -89" />
-    </svg>
-  );
-}
-
 /** The brand-green quick-actions content (logo, title, action buttons). */
 function QuickActions({
   onRegisterWalkIn,
@@ -74,9 +46,11 @@ function QuickActions({
   const { hasPermission } = useAuth();
   const canEvacuation = hasPermission(PERMISSIONS.EVACUATION_READ);
   const canOptIns = hasPermission(PERMISSIONS.CONSENT_READ);
+  // V1 parity: reception keeps the visitor export (report:export).
+  const canExport = hasPermission(PERMISSIONS.REPORT_EXPORT);
+  const [exportOpen, setExportOpen] = React.useState(false);
   return (
     <>
-      <DecorChevrons />
       <div className="relative flex flex-col gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -110,26 +84,26 @@ function QuickActions({
             </Link>
           </Button>
         ) : null}
+        {canExport ? (
+          <Button
+            intent="accent"
+            tone="outline"
+            onClick={() => setExportOpen(true)}
+          >
+            <Download className="size-4" aria-hidden="true" />
+            {t("quickActions.export")}
+          </Button>
+        ) : null}
       </div>
+      {canExport ? (
+        <ExportVisitorsDialog open={exportOpen} onOpenChange={setExportOpen} />
+      ) : null}
     </>
   );
 }
 
-function StatCell({ stat }: { stat: OverviewStat }) {
-  return (
-    <div className="flex flex-col gap-4 p-8">
-      <span className="text-xl leading-6 font-semibold text-fg-subtle">
-        {stat.label}
-      </span>
-      <span className="text-5xl font-bold leading-[1.2] text-fg">
-        {stat.value}
-      </span>
-    </div>
-  );
-}
-
 /**
- * VMC dashboard overview, rendered as one unified bar:
+ * VMC dashboard overview on the shared {@link OverviewBar}:
  *   row 1 — "VMC HUB" eyebrow + welcome heading (full width, white)
  *   row 2 — three stat cells | brand-green quick-actions panel
  * Mobile: welcome heading, quick-actions panel, then the stats in a
@@ -142,74 +116,18 @@ export function VmcOverview({
   onNewInvite,
 }: VmcOverviewProps) {
   const t = useTranslations("dashboard");
-  const [open, setOpen] = React.useState(true);
-
   return (
-    <>
-      {/* ── Desktop: welcome + stats/quick-actions in one bar ─────────────── */}
-      <div className="hidden overflow-hidden rounded-t-xl border border-border shadow-xs lg:grid lg:grid-cols-[repeat(3,1fr)_minmax(300px,1.5fr)]">
-        {/* Row 1 */}
-        <div className="col-span-4 bg-surface p-6">
-          <WelcomeHeader welcome={welcome} />
-        </div>
-
-        {/* Row 2 */}
-        {stats.map((stat, i) => (
-          <div
-            key={stat.label}
-            className={
-              "border-t border-border bg-primary-subtle" +
-              (i > 0 ? " border-s" : "")
-            }
-          >
-            <StatCell stat={stat} />
-          </div>
-        ))}
-        <div className="relative flex flex-col justify-between gap-6 overflow-hidden border-s border-t border-border bg-emphasis p-6 text-emphasis-fg">
-          <QuickActions
-            onRegisterWalkIn={onRegisterWalkIn}
-            onNewInvite={onNewInvite}
-          />
-        </div>
-      </div>
-
-      {/* ── Mobile: welcome, quick-actions, collapsible stats below ───────── */}
-      <div className="flex flex-col gap-4 lg:hidden">
-        <WelcomeHeader welcome={welcome} />
-        <div className="relative flex flex-col justify-between gap-6 overflow-hidden rounded-xl bg-emphasis p-6 text-emphasis-fg">
-          <QuickActions
-            onRegisterWalkIn={onRegisterWalkIn}
-            onNewInvite={onNewInvite}
-          />
-        </div>
-
-        <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-xs">
-          <button
-            type="button"
-            onClick={() => setOpen((o) => !o)}
-            aria-expanded={open}
-            className="flex w-full items-center justify-between gap-2 p-4 text-start"
-          >
-            <span className="text-lg font-semibold text-fg-muted">
-              {t("activity.title")}
-            </span>
-            <ChevronDown
-              className={
-                "size-5 shrink-0 text-fg-muted transition-transform" +
-                (open ? " rotate-180" : "")
-              }
-              aria-hidden="true"
-            />
-          </button>
-          {open ? (
-            <div className="divide-y divide-border border-t border-border bg-primary-subtle">
-              {stats.map((stat) => (
-                <StatCell key={stat.label} stat={stat} />
-              ))}
-            </div>
-          ) : null}
-        </div>
-      </div>
-    </>
+    <OverviewBar
+      heading={<WelcomeHeader welcome={welcome} />}
+      stats={stats}
+      mobileStats="collapsible"
+      collapsibleLabel={t("activity.title")}
+      panel={
+        <QuickActions
+          onRegisterWalkIn={onRegisterWalkIn}
+          onNewInvite={onNewInvite}
+        />
+      }
+    />
   );
 }

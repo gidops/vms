@@ -54,7 +54,8 @@
       "formComingSoonTitle": "Bientôt disponible",
       "formComingSoon": "Ce formulaire est en cours de création et sera bientôt disponible.",
       "evacuation": "Liste d'évacuation",
-      "optIns": "Abonnements"
+      "optIns": "Abonnements",
+      "export": "Exporter les données"
     },
     "activity": {
       "title": "Voir votre activité"
@@ -520,8 +521,15 @@
         "guestCount": "{count, plural, one {# invité} other {# invités}}",
         "view": "Voir",
         "viewVisitor": "Voir {name}",
-        "empty": "Aucun visiteur prévu aujourd'hui.",
-        "noMatches": "Aucun visiteur ne correspond à votre recherche."
+        "noMatches": "Aucun visiteur ne correspond à votre recherche.",
+        "filterLabel": "Filtrer les visiteurs",
+        "filters": {
+          "all": "Tous",
+          "onsite": "Sur site",
+          "expected": "Attendus",
+          "out": "Sortis"
+        },
+        "emptyFilter": "Aucun visiteur dans cette vue aujourd'hui."
       },
       "quickActions": {
         "title": "Actions rapides",
@@ -536,7 +544,6 @@
         "loadError": "Impossible de charger les données. Veuillez réessayer.",
         "title": "Activité récente",
         "viewAll": "Tout voir",
-        "empty": "Aucune activité récente.",
         "visitorForHost": "{visitor} pour {host}",
         "events": {
           "alert": "Alerte de sécurité émise",
@@ -558,7 +565,82 @@
         "host": "Hôte : {name}",
         "approved": "Approuvée",
         "pending": "En attente"
+      },
+      "bar": {
+        "eyebrow": "Console d'administration",
+        "greeting": "{part, select, morning {Bonjour} afternoon {Bon après-midi} other {Bonsoir}}",
+        "greetingName": "{part, select, morning {Bonjour} afternoon {Bon après-midi} other {Bonsoir}}, {name}",
+        "awaiting": "En attente d'approbation",
+        "awaitingHint": "Demandes de visite à traiter",
+        "awaitingOverdue": "{count, plural, one {# en attente depuis plus d'1 heure} other {# en attente depuis plus d'1 heure}}",
+        "awaitingMoreInfo": "{count, plural, one {# en attente d'informations} other {# en attente d'informations}}",
+        "onsite": "Sur site",
+        "onsiteHint": "Arrivés, pas encore sortis",
+        "expected": "Attendus aujourd'hui",
+        "expectedHint": "Approuvés, pas encore arrivés",
+        "actionsTitle": "Actions rapides",
+        "reviewApprovals": "Examiner les demandes",
+        "addVisitor": "Ajouter un visiteur",
+        "export": "Exporter",
+        "readOnly": "Accès en lecture seule",
+        "loadError": "Impossible de charger les données du tableau de bord. Veuillez réessayer.",
+        "awaitingNone": "Tout est à jour",
+        "onsiteFloors": "{count, plural, one {sur # étage} other {sur # étages}}",
+        "console": {
+          "SUPER_ADMIN": "Console système",
+          "ADMIN": "Console de sécurité",
+          "VMC_ADMIN": "Console VMC",
+          "READ_ADMIN": "Console en lecture seule",
+          "AUDITOR": "Console d'audit"
+        }
+      },
+      "approvals": {
+        "title": "Approbations en attente",
+        "waitingCount": "{count, plural, one {# en attente} other {# en attente}}",
+        "oldestFirst": "Plus anciennes d'abord",
+        "openQueue": "Ouvrir la file",
+        "columns": {
+          "visitor": "Visiteur",
+          "host": "Hôte · Service",
+          "time": "Heure de visite",
+          "waiting": "Attente",
+          "decision": "Décision"
+        },
+        "groupGuests": "{count, plural, one {Groupe · # invité} other {Groupe · # invités}}",
+        "waitingHours": "{hours} h {minutes} min",
+        "waitingMinutes": "{minutes} min",
+        "approve": "Approuver",
+        "deny": "Refuser",
+        "reviewGroup": "Examiner le groupe",
+        "approveFor": "Approuver {name}",
+        "denyFor": "Refuser {name}",
+        "reviewGroupFor": "Examiner le groupe {name}",
+        "showing": "{shown} sur {total} affichées",
+        "seeAll": "Tout voir ({total})",
+        "loading": "Chargement des approbations…",
+        "loadError": "Impossible de charger les approbations en attente. Veuillez réessayer.",
+        "todayAt": "Aujourd'hui, {time}",
+        "moreInfoAsked": "Infos demandées",
+        "view": "Voir",
+        "viewFor": "Voir {name}",
+        "filterLabel": "Filtrer les demandes par type",
+        "filters": {
+          "all": "Toutes",
+          "walkIn": "Sans rendez-vous",
+          "invite": "Invitation",
+          "group": "Groupe"
+        },
+        "emptyFilter": "Aucune demande de ce type en attente."
       }
+    },
+    "analytics": {
+      "title": "Analyses et rapports",
+      "subtitle": "Tendances et résultats des visites. Tout ce qui a quitté la vue d'ensemble se trouve ici.",
+      "export": "Exporter en CSV",
+      "denied": "Refusées",
+      "deniedHint": "Demandes refusées aujourd'hui",
+      "loading": "Chargement des analyses…",
+      "loadError": "Impossible de charger les analyses. Veuillez réessayer."
     }
   },
   "staff": {
@@ -791,7 +873,7 @@
       "lastAnswered": "Dernière réponse",
       "sourceVisit": "Visite d'origine"
     },
-    "walkIn": "Sans rendez-vous",
+    "viewVisit": "Voir la visite",
     "empty": "Personne ne s'est encore abonné.",
     "noMatches": "Aucun abonnement ne correspond à votre recherche.",
     "loadError": "Impossible de charger les abonnements.",

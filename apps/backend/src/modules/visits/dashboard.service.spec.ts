@@ -52,11 +52,20 @@ describe('VisitDashboardService', () => {
 
   it('counts people directly but collapses pending group requests, including null group IDs', async () => {
     const count = jest.fn().mockResolvedValue(3);
-    const groupBy = jest.fn().mockResolvedValue([
+    const requestGroups = [
       { groupId: 'g1', isGroupVisit: true, _count: { _all: 3 } },
       { groupId: null, isGroupVisit: false, _count: { _all: 2 } },
       { groupId: null, isGroupVisit: true, _count: { _all: 1 } },
-    ]);
+    ];
+    const groupBy = jest
+      .fn()
+      .mockImplementation(({ by }: { by: string[] }) =>
+        Promise.resolve(
+          by.includes('floor')
+            ? [{ floor: 'Floor 6 - Right Wing' }, { floor: 'Mezzanine' }]
+            : requestGroups,
+        ),
+      );
     const prisma = { visit: { count, groupBy } } as unknown as PrismaService;
     const result = await new VisitDashboardService(prisma).stats({
       dateFrom,
@@ -68,6 +77,11 @@ describe('VisitDashboardService', () => {
     expect(result.onsite).toBe(3);
     expect(result.pending).toBe(4);
     expect(result.reviewRequested).toBe(4);
+    expect(result.onsiteFloors).toBe(2);
+    expect(groupBy).toHaveBeenCalledWith({
+      by: ['floor'],
+      where: { status: 'CHECKED_IN', floor: { not: null } },
+    });
     expect(count).toHaveBeenCalledWith({ where: { status: 'CHECKED_IN' } });
     expect(count).toHaveBeenCalledWith({
       where: {

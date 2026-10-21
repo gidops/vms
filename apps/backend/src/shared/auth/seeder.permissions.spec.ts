@@ -12,13 +12,18 @@ describe('Role → permission matrix (V1 gap features)', () => {
     expect(SCOPED_ROLE_DEFS[ROLES.READ_ADMIN]).toBeDefined();
   });
 
-  it('limits bulk personal-data export to the Security Manager (System Admin gets everything)', () => {
+  it('limits bulk personal-data export to the Security Manager and reception (System Admin gets everything)', () => {
+    const exporters = new Set<string>([
+      ROLES.ADMIN,
+      ROLES.VMC,
+      ROLES.VMC_ADMIN,
+    ]);
     for (const role of Object.keys(SCOPED_ROLE_DEFS)) {
       for (const perm of PII_EXPORTS) {
         expect([role, perm, has(role, perm)]).toEqual([
           role,
           perm,
-          role === ROLES.ADMIN,
+          exporters.has(role),
         ]);
       }
     }
@@ -61,11 +66,30 @@ describe('Role → permission matrix (V1 gap features)', () => {
     }
   });
 
-  it('lets reception view opt-ins and withdraw consent, but not export', () => {
+  it('lets reception view, withdraw and export opt-ins (V1 parity)', () => {
     expect(has(ROLES.VMC, PERMISSIONS.CONSENT_READ)).toBe(true);
     expect(has(ROLES.VMC, PERMISSIONS.CONSENT_MANAGE)).toBe(true);
+    expect(has(ROLES.VMC, PERMISSIONS.CONSENT_EXPORT)).toBe(true);
+    expect(has(ROLES.VMC_ADMIN, PERMISSIONS.CONSENT_EXPORT)).toBe(true);
+    expect(has(ROLES.READ_ADMIN, PERMISSIONS.CONSENT_EXPORT)).toBe(false);
+    expect(has(ROLES.AUDITOR, PERMISSIONS.CONSENT_EXPORT)).toBe(false);
     expect(has(ROLES.READ_ADMIN, PERMISSIONS.CONSENT_MANAGE)).toBe(false);
     expect(has(ROLES.AUDITOR, PERMISSIONS.CONSENT_MANAGE)).toBe(false);
+  });
+
+  it('opens Analytics & Reports to every admin console role and auditors only', () => {
+    const readers = new Set<string>([
+      ROLES.ADMIN,
+      ROLES.VMC_ADMIN,
+      ROLES.READ_ADMIN,
+      ROLES.AUDITOR,
+    ]);
+    for (const role of Object.keys(SCOPED_ROLE_DEFS)) {
+      expect([role, has(role, PERMISSIONS.REPORT_READ)]).toEqual([
+        role,
+        readers.has(role),
+      ]);
+    }
   });
 
   it('only uses permission keys from the catalogue', () => {

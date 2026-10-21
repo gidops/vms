@@ -113,7 +113,9 @@ export class VisitAuthoringService {
             isGroupVisit: input.isGroupVisit,
             groupName,
             groupContact,
-            referenceCode: isWalkIn ? null : generateReferenceCode(),
+            // Every visit gets a reference, walk-ins included, so reception can
+            // quote it (opt-ins list, export, search). Only invites send it out.
+            referenceCode: generateReferenceCode(),
             type: input.type,
             status: isWalkIn ? 'APPROVED' : 'PENDING',
             purpose: g.purpose,

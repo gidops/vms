@@ -139,9 +139,39 @@ describe('V1 gap features (e2e)', () => {
         {
           SUPER_ADMIN: 200,
           ADMIN: 200,
-          VMC_ADMIN: 403,
+          VMC_ADMIN: 200,
           READ_ADMIN: 403,
           AUDITOR: 403,
+          VMC: 200,
+          GATE: 403,
+          STAFF: 403,
+        },
+      ],
+      [
+        // Overview + analytics counts: every admin console role, no one else.
+        'GET',
+        '/visits/dashboard/stats?dateFrom=2026-10-18T23:00:00Z&dateTo=2026-10-19T22:59:59Z&yesterdayFrom=2026-10-17T23:00:00Z&yesterdayTo=2026-10-18T22:59:59Z',
+        {
+          SUPER_ADMIN: 200,
+          ADMIN: 200,
+          VMC_ADMIN: 200,
+          READ_ADMIN: 200,
+          AUDITOR: 200,
+          VMC: 403,
+          GATE: 403,
+          STAFF: 403,
+        },
+      ],
+      [
+        // Analytics-only chart, gated by report:read.
+        'GET',
+        '/visits/dashboard/traffic?dateFrom=2026-10-18T23:00:00Z&dateTo=2026-10-19T22:59:59Z&timeZone=Africa/Lagos',
+        {
+          SUPER_ADMIN: 200,
+          ADMIN: 200,
+          VMC_ADMIN: 200,
+          READ_ADMIN: 200,
+          AUDITOR: 200,
           VMC: 403,
           GATE: 403,
           STAFF: 403,
@@ -167,10 +197,10 @@ describe('V1 gap features (e2e)', () => {
         {
           SUPER_ADMIN: 200,
           ADMIN: 200,
-          VMC_ADMIN: 403,
+          VMC_ADMIN: 200,
           READ_ADMIN: 403,
           AUDITOR: 403,
-          VMC: 403,
+          VMC: 200,
           GATE: 403,
           STAFF: 403,
         },
@@ -374,6 +404,23 @@ describe('V1 gap features (e2e)', () => {
       expect(await inList(b)).toBe(true);
     });
 
+    it("shows a walk-in's own visit reference as the source visit", async () => {
+      const d = `consent-d-${run}@x.com`;
+      const v = await walkIn(d, { commsConsent: true });
+      const visit = await prisma.visit.findUnique({ where: { id: v.id } });
+      expect(visit?.referenceCode).toMatch(/\S/);
+      const res = await as(ROLES.READ_ADMIN)
+        .get(`/consent/opt-ins?search=${encodeURIComponent(d)}`)
+        .expect(200);
+      expect(res.body.items).toEqual([
+        expect.objectContaining({
+          email: d,
+          sourceVisitId: v.id,
+          sourceReferenceCode: visit?.referenceCode,
+        }),
+      ]);
+    });
+
     it('withdrawal removes the email immediately and leaves visit records unchanged', async () => {
       const c = `consent-c-${run}@x.com`;
       const v = await walkIn(c, { commsConsent: true });
@@ -481,6 +528,13 @@ describe('V1 gap features (e2e)', () => {
         (m) => m.from === '2001-03-17' && m.format === 'csv',
       );
       expect(audit?.metadata).toMatchObject({ rowCount: 1 });
+      // Recorded before streaming began, under the same export id.
+      const started = await waitForAudit(
+        'report.visits_export_started',
+        (m) => m.from === '2001-03-17' && m.format === 'csv',
+      );
+      expect(started?.metadata).not.toHaveProperty('rowCount');
+      expect(started?.entityId).toBe(audit?.entityId);
     });
 
     it('streams a valid xlsx', async () => {

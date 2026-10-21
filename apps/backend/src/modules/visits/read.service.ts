@@ -56,7 +56,8 @@ export class VisitReadService {
     });
     if (!visit) throw new NotFoundException('errors.visit.notFound');
     const detail = toDetail(visit);
-    if (visit.referenceCode) {
+    // The QR is the invite's entry pass; a walk-in is already at the desk.
+    if (visit.referenceCode && visit.type !== 'WALK_IN') {
       detail.qrCode = await toDataURL(visit.referenceCode, {
         width: 240,
         margin: 1,

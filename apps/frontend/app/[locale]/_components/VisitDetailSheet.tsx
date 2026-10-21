@@ -46,17 +46,19 @@ function VisitDetailBody({
   data,
   onClose,
   notification,
+  initialForm = null,
 }: {
   data: VisitRequestDetail;
   onClose: () => void;
   notification?: NotificationContext;
+  initialForm?: "deny" | null;
 }) {
   const t = useTranslations("requests");
   const { user, hasPermission } = useAuth();
   const m = useVisitDetailModel(data);
   const canSeeDeliveries = hasPermission(PERMISSIONS.NOTIFICATION_READ);
 
-  const [activeForm, setActiveForm] = React.useState<ActiveForm>(null);
+  const [activeForm, setActiveForm] = React.useState<ActiveForm>(initialForm);
   const [editing, setEditing] = React.useState(false);
   const [checkAction, setCheckAction] = React.useState<"in" | "out" | null>(
     null,
@@ -294,11 +296,17 @@ export function VisitDetailSheet({
   id,
   onClose,
   notification,
+  initialForm,
 }: {
   kind: "request" | "alert";
   id: string;
   onClose: () => void;
   notification?: NotificationContext;
+  /**
+   * Open with the deny form already expanded (the overview's inline Deny).
+   * Approve opens the sheet as-is so the decision is made from the details.
+   */
+  initialForm?: "deny" | null;
 }) {
   const isAlert = kind === "alert";
   // An alert id resolves to its visit; a request id is the visit id directly.
@@ -316,6 +324,7 @@ export function VisitDetailSheet({
       data={request.data}
       onClose={onClose}
       notification={notification}
+      initialForm={initialForm}
     />
   );
 }
