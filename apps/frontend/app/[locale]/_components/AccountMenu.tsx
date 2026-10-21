@@ -8,7 +8,7 @@ import { useAuth } from "@/shared/auth/AuthContext";
 import { roleLabel } from "@/shared/auth/roleLabels";
 import { avatarUrl } from "@/shared/avatarUrl";
 
-/** Avatar + chevron → account dropdown (identity, active role, settings, logout). */
+/** Avatar + chevron → account dropdown (identity, active role, settings, help, logout). */
 export function AccountMenu() {
   const t = useTranslations("nav");
   const tRoles = useTranslations("roles");
@@ -49,13 +49,13 @@ export function AccountMenu() {
             <Settings className="size-4 text-fg-muted" aria-hidden="true" />
             {t("accountSettings")}
           </Link>
-          <button
-            type="button"
+          <Link
+            href="/help"
             className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-sm text-fg transition-colors hover:bg-surface-muted"
           >
             <HelpCircle className="size-4 text-fg-muted" aria-hidden="true" />
             {t("help")}
-          </button>
+          </Link>
         </div>
         <div className="border-t border-border p-2">
           <button

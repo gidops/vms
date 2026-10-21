@@ -14,7 +14,10 @@ import { Monitor } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useSessions, useUpdateMe } from "@/data/settings/queries";
 import { useAuth } from "@/shared/auth/AuthContext";
-import { SettingsDivider, SettingsRow } from "./SettingsRow";
+import {
+  SettingsDivider,
+  SettingsRow,
+} from "@/app/[locale]/_components/SettingsRow";
 
 export function MyDeskTab() {
   const t = useTranslations("settings");

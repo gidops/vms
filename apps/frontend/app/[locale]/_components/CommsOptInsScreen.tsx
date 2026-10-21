@@ -222,12 +222,17 @@ export function WithdrawConsentDialog({
 }
 
 /**
- * Comms Opt-ins, shared by the admin console (/admin/opt-ins) and the VMC desk
- * (/dashboard/opt-ins): the current opt-in list (latest answer per email wins),
+ * Comms Opt-ins, shared by the admin console (/admin/opt-ins) and the VMC
+ * Help/Support page (/help?tab=optIns): the current opt-in list (latest answer per email wins),
  * a CSV export for holders of consent:export, and consent withdrawal for
  * holders of consent:manage.
  */
-export function CommsOptInsScreen() {
+export function CommsOptInsScreen({
+  headingLevel = 1,
+}: { headingLevel?: 1 | 2 } = {}) {
+  // Under another page's h1 (Help/Support) the title steps down a level.
+  const Heading = headingLevel === 2 ? "h2" : "h1";
+  const headingSize = headingLevel === 2 ? "text-2xl" : "text-3xl";
   const t = useTranslations("consent");
   const locale = useLocale();
   const { hasPermission } = useAuth();
@@ -252,7 +257,9 @@ export function CommsOptInsScreen() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-semibold text-primary">{t("title")}</h1>
+        <Heading className={`${headingSize} font-semibold text-primary`}>
+          {t("title")}
+        </Heading>
         <div className="flex flex-wrap gap-3">
           {canManage ? (
             <WithdrawConsentDialog onWithdrawn={setWithdrawn} />

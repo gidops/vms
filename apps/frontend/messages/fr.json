@@ -63,11 +63,7 @@
       "registerWalkIn": "Enregistrer une arrivée",
       "newInvite": "Nouvelle invitation",
       "formComingSoonTitle": "Bientôt disponible",
-      "formComingSoon": "Ce formulaire est en cours de création et sera bientôt disponible.",
-      "evacuation": "Liste d'évacuation",
-      "optIns": "Abonnements",
-      "export": "Exporter les données",
-      "deskQr": "QR de l'accueil"
+      "formComingSoon": "Ce formulaire est en cours de création et sera bientôt disponible."
     },
     "activity": {
       "title": "Voir votre activité"
@@ -1174,6 +1170,25 @@
     "problems": {
       "offline": "Pas de connexion. Vos réponses sont conservées. Réessayez une fois reconnecté.",
       "unknown": "Une erreur est survenue. Réessayez, ou enregistrez-vous à l'accueil VMC."
+    }
+  },
+  "help": {
+    "title": "Aide / Support",
+    "tabs": {
+      "evacuation": "Liste d'évacuation",
+      "optIns": "Abonnements",
+      "deskQr": "QR de l'accueil",
+      "export": "Exporter les données",
+      "support": "Aide et support"
+    },
+    "export": {
+      "title": "Exporter les données des visiteurs",
+      "help": "Téléchargez les fiches des visiteurs d'une période sous forme de tableur.",
+      "button": "Exporter les données"
+    },
+    "support": {
+      "title": "Aide et support",
+      "message": "Besoin d'aide avec le VMS ou un problème à signaler ? Contactez l'équipe de développement via le canal de support habituel."
     }
   }
 }

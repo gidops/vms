@@ -322,10 +322,15 @@ function PrintRoll({
 
 /**
  * Live Evacuation Roll, shared by the admin console (/admin/evacuation) and the
- * VMC desk (/dashboard/evacuation). Refreshes every minute; "Print for wardens"
+ * VMC Help/Support page (/help?tab=evacuation). Refreshes every minute; "Print for wardens"
  * prints a chrome-free, floor-grouped A4 list.
  */
-export function EvacuationRollScreen() {
+export function EvacuationRollScreen({
+  headingLevel = 1,
+}: { headingLevel?: 1 | 2 } = {}) {
+  // Under another page's h1 (Help/Support) the title steps down a level.
+  const Heading = headingLevel === 2 ? "h2" : "h1";
+  const headingSize = headingLevel === 2 ? "text-2xl" : "text-3xl";
   const t = useTranslations("evacuation");
   const roll = useEvacuationRoll();
   const data = roll.data;
@@ -338,7 +343,9 @@ export function EvacuationRollScreen() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-semibold text-primary">{t("title")}</h1>
+        <Heading className={`${headingSize} font-semibold text-primary`}>
+          {t("title")}
+        </Heading>
         <div className="flex flex-wrap gap-3">
           <Button
             intent="neutral"

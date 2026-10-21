@@ -11,7 +11,10 @@ import { useAuth } from "@/shared/auth/AuthContext";
 import { roleLabel } from "@/shared/auth/roleLabels";
 import { AvatarUpload } from "./AvatarUpload";
 import { ChangePasswordDialog } from "./ChangePasswordDialog";
-import { SettingsDivider, SettingsRow } from "./SettingsRow";
+import {
+  SettingsDivider,
+  SettingsRow,
+} from "@/app/[locale]/_components/SettingsRow";
 
 function ReadonlyField({
   label,

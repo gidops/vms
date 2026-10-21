@@ -63,11 +63,7 @@
       "registerWalkIn": "Register Walk-In",
       "newInvite": "New Invite Request",
       "formComingSoonTitle": "Coming soon",
-      "formComingSoon": "This form is being built and will be available shortly.",
-      "evacuation": "Evacuation Roll",
-      "optIns": "Comms Opt-ins",
-      "export": "Export Data",
-      "deskQr": "Desk QR"
+      "formComingSoon": "This form is being built and will be available shortly."
     },
     "activity": {
       "title": "View your activity"
@@ -1174,6 +1170,25 @@
     "problems": {
       "offline": "No connection. Your answers are still here. Try again when you're back online.",
       "unknown": "Something went wrong. Try again, or register at the VMC desk."
+    }
+  },
+  "help": {
+    "title": "Help/Support",
+    "tabs": {
+      "evacuation": "Evacuation Roll",
+      "optIns": "Comms Opt-ins",
+      "deskQr": "Desk QR",
+      "export": "Export Data",
+      "support": "Help & Support"
+    },
+    "export": {
+      "title": "Export visitor data",
+      "help": "Download visitor records for a date range as a spreadsheet.",
+      "button": "Export Data"
+    },
+    "support": {
+      "title": "Help & Support",
+      "message": "Need help with the VMS or found a problem? Contact the development team through the established support channel."
     }
   }
 }
