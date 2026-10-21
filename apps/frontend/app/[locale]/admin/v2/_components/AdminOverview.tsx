@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import * as React from "react";
 import {
   StatCell as OverviewStatCell,
+  cellBg,
   type OverviewStat,
 } from "@/app/[locale]/_components/OverviewBar";
 import { Link } from "@/i18n/navigation";
@@ -109,7 +110,8 @@ export function AdminOverview({
           <div
             key={stat.label}
             className={
-              "border-t border-border bg-primary-subtle" +
+              "border-t border-border " +
+              cellBg(stat) +
               (i > 0 ? " border-s" : "")
             }
           >
@@ -150,17 +152,21 @@ export function AdminOverview({
               />
             </button>
             {open ? (
-              <div className="divide-y divide-border border-t border-border bg-primary-subtle">
+              <div className="divide-y divide-border border-t border-border">
                 {stats.map((stat) => (
-                  <OverviewStatCell key={stat.label} stat={stat} />
+                  <div key={stat.label} className={cellBg(stat)}>
+                    <OverviewStatCell stat={stat} />
+                  </div>
                 ))}
               </div>
             ) : null}
           </div>
         ) : (
-          <div className="grid grid-cols-1 divide-y divide-border overflow-hidden rounded-xl border border-border bg-primary-subtle shadow-xs sm:grid-cols-3 sm:divide-x sm:divide-y-0 rtl:sm:divide-x-reverse">
+          <div className="grid grid-cols-1 divide-y divide-border overflow-hidden rounded-xl border border-border shadow-xs sm:grid-cols-3 sm:divide-x sm:divide-y-0 rtl:sm:divide-x-reverse">
             {stats.map((stat) => (
-              <OverviewStatCell key={stat.label} stat={stat} />
+              <div key={stat.label} className={cellBg(stat)}>
+                <OverviewStatCell stat={stat} />
+              </div>
             ))}
           </div>
         )}

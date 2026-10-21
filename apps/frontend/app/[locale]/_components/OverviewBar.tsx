@@ -94,7 +94,8 @@ export function StatCell({ stat }: { stat: OverviewStat }) {
   );
 }
 
-const cellBg = (stat: OverviewStat) =>
+/** Background for a stat cell: the warning hero gets the warm tint. */
+export const cellBg = (stat: OverviewStat) =>
   stat.tone === "warning" ? "bg-warning-subtle" : "bg-primary-subtle";
 
 function Panel({

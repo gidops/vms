@@ -16,7 +16,11 @@
     "notifications": "Notifications",
     "notificationsUnread": "Notifications, {count} non lues",
     "overview": "Vue d'ensemble",
-    "users": "Utilisateurs"
+    "users": "Utilisateurs",
+    "analytics": "Analyses",
+    "evacuation": "Évacuation",
+    "optIns": "Abonnements",
+    "deskQr": "QR accueil"
   },
   "login": {
     "title": "Connexion",

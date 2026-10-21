@@ -13,7 +13,7 @@ import { useVisitOverlays } from "../_components/VisitOverlays";
 /** Variant B: the approval queue as a staff "My Visits"-style table. */
 function PendingApprovalsScreen() {
   const filters = useAdminFilters();
-  const { openRow, overlays } = useVisitOverlays();
+  const { openRow, denyRow, overlays } = useVisitOverlays();
   return (
     <TopNavShell
       nav={<AppTopNav app="admin" active="requests" />}
@@ -26,7 +26,11 @@ function PendingApprovalsScreen() {
         />
       }
     >
-      <PendingApprovalsTable query={filters.query} onOpen={openRow} />
+      <PendingApprovalsTable
+        query={filters.query}
+        onOpen={openRow}
+        onDeny={denyRow}
+      />
       {overlays}
     </TopNavShell>
   );

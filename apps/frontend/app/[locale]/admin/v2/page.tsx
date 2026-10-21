@@ -8,7 +8,6 @@ import { QuickActionSheet } from "@/app/[locale]/dashboard/_components/QuickActi
 import { RouteGuard } from "@/shared/auth/RouteGuard";
 import { AdminActionPanel } from "./_components/AdminActionPanel";
 import { AdminActivityFeed } from "./_components/AdminActivityFeed";
-import { AdminChartsPanel } from "./_components/AdminChartsPanel";
 import { AdminFilters, useAdminFilters } from "./_components/AdminFilters";
 import { AdminOverview } from "./_components/AdminOverview";
 import { AdminUpcomingFeed } from "./_components/AdminUpcomingFeed";
@@ -18,7 +17,8 @@ import { useVisitOverlays } from "./_components/VisitOverlays";
 
 /**
  * Admin console v2 — Overview tab, rebuilt from the VMC and staff dashboards:
- * nav → filter bar → overview band → table area → charts.
+ * nav → filter bar → overview band → table area. Traffic and status charts
+ * live on the Analytics tab (as /admin moved them to /admin/analytics).
  *
  * `?layout=staff` previews the staff-flavoured arrangement (search-only bar,
  * staff band, staff table beside the activity/upcoming feed column); the
@@ -79,8 +79,6 @@ function Overview() {
             onOpen={openRow}
           />
         )}
-
-        <AdminChartsPanel stats={band.query.data} />
       </div>
 
       <QuickActionSheet
