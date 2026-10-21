@@ -7,6 +7,7 @@ import {
   MailCheck,
   MapPin,
   Puzzle,
+  QrCode,
   Settings,
   ShieldAlert,
   Tags,
@@ -37,6 +38,7 @@ export type AdminSection =
   | "watchlist"
   | "evacuation"
   | "optIns"
+  | "deskQr"
   | "users"
   | "floors"
   | "categories"
@@ -74,6 +76,12 @@ export const ADMIN_SECTIONS: AdminSectionDef[] = [
     icon: MailCheck,
     href: "/admin/opt-ins",
     permission: PERMISSIONS.CONSENT_READ,
+  },
+  {
+    key: "deskQr",
+    icon: QrCode,
+    href: "/admin/desk-qr",
+    permission: PERMISSIONS.ISSUER_READ,
   },
   {
     key: "users",

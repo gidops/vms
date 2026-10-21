@@ -1,4 +1,10 @@
-import { type CreateVisitsInput, PHONE_E164_RE, toE164 } from "@vms/contracts";
+import {
+  type CreateVisitsInput,
+  type EvacuationAssistType,
+  PHONE_E164_RE,
+  evacuationAssistIssues,
+  toE164,
+} from "@vms/contracts";
 
 export type VisitFormMode = "walkin" | "invite";
 
@@ -23,6 +29,9 @@ export interface GuestEntry {
    * belong to the person, so "Use same visit details" never copies them.
    */
   needsEvacuationAssist: boolean | null;
+  /** When the answer is Yes: the help needed (at least one), and OTHER's text. */
+  evacuationAssistTypes: EvacuationAssistType[];
+  evacuationAssistOther: string;
   commsConsent: boolean | null;
   /**
    * "Use same visit details" — whether this guest's visit details were sourced
@@ -71,6 +80,8 @@ export function blankGuest(): GuestEntry {
     scheduledTime: "",
     notes: "",
     needsEvacuationAssist: null,
+    evacuationAssistTypes: [],
+    evacuationAssistOther: "",
     commsConsent: null,
     useSame: true,
   };
@@ -114,11 +125,29 @@ export function visitDetailsValid(g: GuestEntry, mode: VisitFormMode): boolean {
   return base && Boolean(g.hostUserId) && Boolean(scheduledAtOf(g));
 }
 
-/** Both "Safety & consent" questions answered (Yes or No — never defaulted). */
+/**
+ * Both "Safety & consent" questions answered (Yes or No — never defaulted), and
+ * a Yes to evacuation help says what help is needed.
+ */
 export function safetyConsentValid(
-  g: Pick<GuestEntry, "needsEvacuationAssist" | "commsConsent">,
+  g: Pick<
+    GuestEntry,
+    | "needsEvacuationAssist"
+    | "evacuationAssistTypes"
+    | "evacuationAssistOther"
+    | "commsConsent"
+  >,
 ): boolean {
-  return g.needsEvacuationAssist !== null && g.commsConsent !== null;
+  if (g.needsEvacuationAssist === null || g.commsConsent === null) return false;
+  // A "No" sends no help types (see buildCreateInput), so only a Yes is checked.
+  return (
+    !g.needsEvacuationAssist ||
+    evacuationAssistIssues({
+      needsEvacuationAssist: true,
+      evacuationAssistTypes: g.evacuationAssistTypes,
+      evacuationAssistOther: g.evacuationAssistOther,
+    }).length === 0
+  );
 }
 
 /** A guest is ready to submit: details, visit details and both answers. */
@@ -179,6 +208,14 @@ export function buildCreateInput(
       scheduledAt: isInvite ? scheduledAtOf(g) : undefined,
       notes: g.notes.trim() || undefined,
       needsEvacuationAssist: requireAnswer(g.needsEvacuationAssist),
+      ...(g.needsEvacuationAssist
+        ? {
+            evacuationAssistTypes: g.evacuationAssistTypes,
+            evacuationAssistOther: g.evacuationAssistTypes.includes("OTHER")
+              ? g.evacuationAssistOther.trim()
+              : undefined,
+          }
+        : {}),
       commsConsent: requireAnswer(g.commsConsent),
     })),
   };

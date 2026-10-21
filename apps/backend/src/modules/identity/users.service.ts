@@ -8,6 +8,7 @@ import {
   ROLES,
   type CreateUserInput,
   type HostOption,
+  type PublicHostOption,
   type LoginActivityItem,
   type Paginated,
   type PaginationQuery,
@@ -138,6 +139,47 @@ export class UsersService {
       department: u.host?.department ?? null,
       office: u.host?.office ?? null,
     }));
+  }
+
+  /**
+   * Hosts matching a name, for the visitor's self-registration form. Only the
+   * name and department leave the building: no email or other contact details.
+   */
+  async searchPublicHosts(
+    query: string,
+    take = 8,
+  ): Promise<PublicHostOption[]> {
+    const users = await this.prisma.user.findMany({
+      where: {
+        isActive: true,
+        userRoles: { some: { role: { name: ROLES.STAFF } } },
+        fullName: { contains: query, mode: 'insensitive' },
+      },
+      orderBy: { fullName: 'asc' },
+      take,
+      select: {
+        id: true,
+        fullName: true,
+        host: { select: { department: true } },
+      },
+    });
+    return users.map((u) => ({
+      userId: u.id,
+      fullName: u.fullName,
+      department: u.host?.department ?? null,
+    }));
+  }
+
+  /** Whether `userId` is an active user with the STAFF role (a valid host). */
+  async isActiveHost(userId: string): Promise<boolean> {
+    const n = await this.prisma.user.count({
+      where: {
+        id: userId,
+        isActive: true,
+        userRoles: { some: { role: { name: ROLES.STAFF } } },
+      },
+    });
+    return n > 0;
   }
 
   /** All role names (for the create/edit role multi-select). */

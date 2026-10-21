@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import type {
+  EvacuationAssistType,
   VisitListItem,
   VisitPass,
   VisitRequestDetail,
@@ -79,6 +80,9 @@ export function toDetail(visit: VisitDetailRow): VisitRequestDetail {
     checkInAt: visit.checkInAt,
     checkOutAt: visit.checkOutAt,
     needsEvacuationAssist: visit.needsEvacuationAssist,
+    evacuationAssistTypes:
+      visit.evacuationAssistTypes as EvacuationAssistType[],
+    evacuationAssistOther: visit.evacuationAssistOther,
     commsConsent: visit.commsConsent,
     createdAt: visit.createdAt,
     updatedAt: visit.updatedAt,
@@ -120,6 +124,7 @@ export function toListItem(
 ): VisitListItem {
   return {
     id: visit.id,
+    source: visit.source,
     visitorId: visit.visitorId,
     hostId: visit.hostId,
     invitationId: visit.invitationId,
@@ -138,6 +143,9 @@ export function toListItem(
     checkInAt: visit.checkInAt,
     checkOutAt: visit.checkOutAt,
     needsEvacuationAssist: visit.needsEvacuationAssist,
+    evacuationAssistTypes:
+      visit.evacuationAssistTypes as EvacuationAssistType[],
+    evacuationAssistOther: visit.evacuationAssistOther,
     commsConsent: visit.commsConsent,
     createdAt: visit.createdAt,
     updatedAt: visit.updatedAt,

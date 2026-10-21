@@ -4,9 +4,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import type { Prisma } from '@prisma/client';
 import {
+  VISIT_SOURCE_DESK_QR,
   normalizeConsentEmail,
   type CreateVisitsInput,
+  type PublicRegistrationInput,
+  type PublicRegistrationResult,
   type ResubmitVisitInput,
   type UpdateVisitRequestInput,
   type VisitRequestDetail,
@@ -16,6 +20,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
 import { EventPublisher } from '../../shared/events/event-publisher';
 import { TransactionManager } from '../../shared/events/transaction.manager';
+import { evacuationAssistData } from './helpers/evacuation-assist';
 import { generateReferenceCode } from './helpers/visit.codes';
 import { VisitReadService } from './read.service';
 
@@ -126,6 +131,7 @@ export class VisitAuthoringService {
             createdByName: actor?.fullName ?? null,
             source: 'VMC_STATION',
             needsEvacuationAssist: g.needsEvacuationAssist,
+            ...evacuationAssistData(g),
             commsConsent: g.commsConsent,
           },
         });
@@ -167,6 +173,91 @@ export class VisitAuthoringService {
     });
 
     return Promise.all(createdIds.map((id) => this.read.getDetail(id)));
+  }
+
+  /**
+   * A visitor registered themselves from the desk QR and reception confirmed
+   * them with the emailed code: create today's walk-in (approved, host
+   * optional, source QR, no operator). Unlike the reception form this never
+   * changes an existing visitor's saved name, phone or organisation, since
+   * anyone can type any email into a public form. `onCreated` runs inside the
+   * same transaction so the caller can tie its own record to the visit.
+   */
+  async createSelfRegisteredWalkIn(
+    input: Omit<PublicRegistrationInput, 'formToken' | 'website'>,
+    onCreated: (tx: Prisma.TransactionClient, visitId: string) => Promise<void>,
+  ): Promise<PublicRegistrationResult> {
+    if (input.hostUserId) {
+      const host = await this.prisma.user.count({
+        where: {
+          id: input.hostUserId,
+          isActive: true,
+          userRoles: { some: { role: { name: 'STAFF' } } },
+        },
+      });
+      if (host === 0) throw new BadRequestException('errors.host.notStaff');
+    }
+
+    return this.txm.run(async (tx) => {
+      const hostId = input.hostUserId
+        ? (
+            await tx.host.upsert({
+              where: { userId: input.hostUserId },
+              create: { userId: input.hostUserId },
+              update: {},
+            })
+          ).id
+        : null;
+      const visitor =
+        (await tx.visitor.findUnique({ where: { email: input.email } })) ??
+        (await tx.visitor.create({
+          data: {
+            fullName: input.fullName,
+            email: input.email,
+            phone: input.phone,
+            organization: input.organization,
+          },
+        }));
+      const visit = await tx.visit.create({
+        data: {
+          visitorId: visitor.id,
+          hostId,
+          referenceCode: generateReferenceCode(),
+          type: 'WALK_IN',
+          status: 'APPROVED',
+          purpose: input.purpose,
+          floor: input.floor,
+          scheduledAt: new Date(),
+          source: VISIT_SOURCE_DESK_QR,
+          needsEvacuationAssist: input.needsEvacuationAssist,
+          ...evacuationAssistData(input),
+          commsConsent: input.commsConsent,
+        },
+        include: { host: { include: { user: true } } },
+      });
+      await tx.commsConsentEvent.create({
+        data: {
+          email: normalizeConsentEmail(input.email),
+          consent: input.commsConsent,
+          source: 'VISIT',
+          visitId: visit.id,
+        },
+      });
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.VisitApproved,
+        aggregateType: 'Visit',
+        aggregateId: visit.id,
+        payload: { visitId: visit.id, source: VISIT_SOURCE_DESK_QR },
+      });
+      await onCreated(tx, visit.id);
+      return {
+        referenceCode: visit.referenceCode!,
+        // What they typed, so the screen reads back their own entry.
+        fullName: input.fullName,
+        hostName: visit.host?.user.fullName ?? null,
+        visitDate: visit.scheduledAt!,
+      };
+    });
   }
 
   /**
@@ -236,6 +327,13 @@ export class VisitAuthoringService {
           purpose: input.purpose,
           scheduledAt: input.scheduledAt,
           needsEvacuationAssist: input.needsEvacuationAssist,
+          ...(input.needsEvacuationAssist === undefined
+            ? {}
+            : evacuationAssistData({
+                needsEvacuationAssist: input.needsEvacuationAssist,
+                evacuationAssistTypes: input.evacuationAssistTypes,
+                evacuationAssistOther: input.evacuationAssistOther,
+              })),
         },
       });
       await this.events.publish(tx, {

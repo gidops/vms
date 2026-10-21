@@ -27,6 +27,18 @@ import {
  * staff "My Visits" screens. Every write service depends on this to build the
  * fresh detail it returns after committing.
  */
+/**
+ * The digits to look for in stored phone numbers (E.164, e.g. +2348035521904)
+ * when someone searches by phone, or null if the search isn't one. A local
+ * leading 0 ("0803 552 1904") is dropped so it matches the +234 form. Phones
+ * are plaintext today; if they are ever encrypted this needs a search column.
+ */
+export function phoneSearchDigits(search: string): string | null {
+  if (!/^[\d\s()+-]+$/.test(search)) return null;
+  const digits = search.replace(/\D/g, '').replace(/^0/, '');
+  return digits.length >= 6 ? digits : null;
+}
+
 @Injectable()
 export class VisitReadService {
   constructor(private readonly prisma: PrismaService) {}
@@ -146,8 +158,10 @@ export class VisitReadService {
       });
     }
     if (query.search) {
-      // Matches the staff search placeholder ("guest, host, floor, pass id").
+      // Matches the staff search placeholder ("guest, host, floor, pass id"),
+      // plus the visitor's phone (V1 parity).
       const contains = { contains: query.search, mode: 'insensitive' } as const;
+      const phone = phoneSearchDigits(query.search);
       and.push({
         OR: [
           { visitor: { fullName: contains } },
@@ -156,6 +170,7 @@ export class VisitReadService {
           { host: { user: { fullName: contains } } },
           { floor: contains },
           { referenceCode: contains },
+          ...(phone ? [{ visitor: { phone: { contains: phone } } }] : []),
         ],
       });
     }

@@ -38,6 +38,13 @@
       "intro": "Cher/Chère {name}, merci de votre visite à l'AATC. Nous espérons que votre expérience a été agréable.",
       "ratingPrompt": "Votre avis nous intéresse. Veuillez prendre un instant pour évaluer votre visite :",
       "ratingButton": "Évaluer votre visite"
+    },
+    "deskQrCode": {
+      "subject": "Code d'accueil pour {visitorName} : {code}",
+      "heading": "Un visiteur s'enregistre à l'accueil",
+      "intro": "{visitorName} ({organization}) a scanné le QR de l'accueil et attend son code.",
+      "readOut": "Lisez-lui ce code pour terminer son enregistrement. Il ne sert qu'une fois et expire à {time}.",
+      "notHere": "Si personne de ce nom n'est à l'accueil VMC, ignorez cet e-mail."
     }
   },
   "sms": {
@@ -87,6 +94,20 @@
     },
     "auth": {
       "invalidCredentials": "E-mail ou mot de passe invalide."
+    },
+    "rateLimited": "Trop de tentatives. Patientez une minute puis réessayez.",
+    "deskQr": {
+      "notFound": "Le QR de l'accueil n'a pas encore été configuré.",
+      "exists": "Le QR de l'accueil existe déjà.",
+      "badV1Token": "Ce n'est pas un lien ou un jeton QR de la V1.",
+      "notActive": "Ce QR code n'est pas actif. Veuillez vous enregistrer à l'accueil VMC.",
+      "formInvalid": "Ce formulaire n'est pas valide. Veuillez scanner à nouveau le QR code.",
+      "formExpired": "Ce formulaire a expiré. Veuillez scanner à nouveau le QR code.",
+      "codeNotSent": "Nous n'avons pas pu envoyer de code à l'accueil. Veuillez vous enregistrer à l'accueil VMC.",
+      "registrationNotFound": "Cet enregistrement est introuvable. Veuillez scanner à nouveau le QR code.",
+      "codeExpired": "Ce code a expiré. Veuillez scanner à nouveau le QR code.",
+      "codeWrong": "Ce code ne correspond pas. Vérifiez-le auprès de l'accueil et réessayez.",
+      "tooManyTries": "Trop de codes erronés. Veuillez scanner à nouveau le QR code."
     }
   },
   "validation": {

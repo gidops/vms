@@ -2,11 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type {
   AdminOverviewStats,
+  DeskStats,
   AdminStatsQuery,
   AdminTrafficPoint,
   AdminTrafficQuery,
 } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
+import { watDayRange, watToday } from '../../shared/common/wat';
 
 /** Individual visits are people; the paginated list collapses groups instead. */
 @Injectable()
@@ -80,6 +82,19 @@ export class VisitDashboardService {
       deniedToday,
       onsiteFloors: onsiteFloorGroups.length,
     };
+  }
+
+  /** Reception's numbers for today's WAT day (the server clock may not be WAT). */
+  async deskStats(now: Date = new Date()): Promise<DeskStats> {
+    const today = watToday(now);
+    const { gte, lt } = watDayRange(today, today);
+    const window = { gte, lt };
+    const [onsite, checkedInToday, checkedOutToday] = await Promise.all([
+      this.prisma.visit.count({ where: { status: 'CHECKED_IN' } }),
+      this.prisma.visit.count({ where: { checkInAt: window } }),
+      this.prisma.visit.count({ where: { checkOutAt: window } }),
+    ]);
+    return { onsite, checkedInToday, checkedOutToday };
   }
 
   async traffic(query: AdminTrafficQuery): Promise<AdminTrafficPoint[]> {

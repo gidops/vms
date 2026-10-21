@@ -40,7 +40,12 @@
       "searchPlaceholder": "Search visitor, host, floor, pass id",
       "allVisitTypes": "All Visit types",
       "allPurpose": "All Purpose",
-      "search": "Search"
+      "search": "Search",
+      "status": {
+        "APPROVED": "Expected",
+        "CHECKED_IN": "Onsite",
+        "CHECKED_OUT": "Checked out"
+      }
     },
     "stats": {
       "onsite": "Onsite Visitors",
@@ -55,7 +60,8 @@
       "formComingSoon": "This form is being built and will be available shortly.",
       "evacuation": "Evacuation Roll",
       "optIns": "Comms Opt-ins",
-      "export": "Export Data"
+      "export": "Export Data",
+      "deskQr": "Desk QR"
     },
     "activity": {
       "title": "View your activity"
@@ -67,7 +73,8 @@
     },
     "channel": {
       "invited": "Invited",
-      "walkIn": "Walk-in"
+      "walkIn": "Walk-in",
+      "qr": "QR"
     },
     "actions": {
       "checkIn": "Check-In",
@@ -85,7 +92,9 @@
       "guestCount": "No of Guest"
     },
     "guestCount": "{count} Guest",
-    "onsiteElapsed": "{time} hr"
+    "onsiteElapsed": "{time} hr",
+    "noVisits": "No visits to show.",
+    "noMatches": "No visits match your search or filters."
   },
   "common": {
     "notifications": "Notifications",
@@ -282,7 +291,11 @@
     "flagReasonPlaceholder": "Describe the security concern…",
     "createdByYou": "(you)",
     "evacuationAssistYes": "Needs evacuation help",
-    "evacuationAssistNo": "Evacuation help: No"
+    "evacuationAssistNo": "Evacuation help: No",
+    "sources": {
+      "deskQr": "Desk QR (self-registered)",
+      "selfRegistered": "Visitor, via the desk QR"
+    }
   },
   "language": {
     "select": "Select language",
@@ -463,7 +476,8 @@
       "collapse": "Collapse sidebar",
       "expand": "Expand sidebar",
       "evacuation": "Evacuation Roll",
-      "optIns": "Comms Opt-ins"
+      "optIns": "Comms Opt-ins",
+      "deskQr": "Desk QR"
     },
     "requests": {
       "title": "Requests & Approvals",
@@ -931,5 +945,185 @@
     "empty": "No messages have been sent for this visit yet.",
     "loadError": "Couldn't load notifications.",
     "retryError": "Retry failed. Please try again."
+  },
+  "evacuationAssist": {
+    "question": "What help would you need?",
+    "types": {
+      "MOBILITY": "Mobility assistance (wheelchair, difficulty walking or using stairs)",
+      "VISUAL": "Visual impairment support",
+      "HEARING": "Hearing impairment support",
+      "MEDICAL": "Medical assistance",
+      "OTHER": "Other (please specify)"
+    },
+    "short": {
+      "MOBILITY": "Mobility",
+      "VISUAL": "Visual",
+      "HEARING": "Hearing",
+      "MEDICAL": "Medical",
+      "OTHER": "Other"
+    },
+    "otherLabel": "Describe the assistance needed",
+    "otherPlaceholder": "For example, needs a ramp",
+    "chooseType": "Choose the type of assistance needed",
+    "describeOther": "Describe the assistance needed"
+  },
+  "deskQr": {
+    "title": "Desk QR",
+    "walkInBadge": "Walk-in · no approval needed",
+    "status": {
+      "active": "Active",
+      "disabled": "Disabled"
+    },
+    "qrAlt": "Desk QR code",
+    "copyLink": "Copy link",
+    "copied": "Copied",
+    "scansToday": "Scans today",
+    "lastScan": "Last scan {time} WAT",
+    "noScans": "No scans yet today",
+    "disabledAt": "Disabled {time} WAT",
+    "created": "Created",
+    "createdBy": "{time} by {name}",
+    "visitsItCreates": "Visits it creates",
+    "visitsItCreatesValue": "Walk-in, today only, tagged QR",
+    "print": "Print poster",
+    "downloadPng": "Download PNG",
+    "rotate": "New QR",
+    "disable": "Disable",
+    "enable": "Enable",
+    "rotateHelp": "New QR replaces the code. The printed poster stops working at once, so print the new one before you press it.",
+    "enableHelp": "Scanning shows \"Please register at the VMC desk\". Enable brings back the same code, so the poster on the desk works again.",
+    "disabledOverlay": "Scanning shows \"Please register at the VMC desk\"",
+    "codes": {
+      "title": "Verification codes",
+      "emailedTo": "Codes are emailed to",
+      "change": "Change",
+      "help": "After a visitor fills in the form, a 6-digit code goes to this inbox. Read it to the visitor at the desk to finish their registration. Codes work once and expire after 10 minutes."
+    },
+    "codeEmail": {
+      "createTitle": "Set up the desk QR",
+      "changeTitle": "Change where codes go",
+      "help": "Verification codes for visitors are emailed here. Use an inbox someone at the VMC desk is reading.",
+      "label": "Email for verification codes",
+      "invalid": "Enter an email address, like reception@aatc.org",
+      "save": "Save"
+    },
+    "empty": {
+      "title": "No desk QR yet",
+      "body": "Create the QR, print the poster and put it on the VMC desk. Visitors who scan it register as today's walk-ins.",
+      "readOnly": "Reception hasn't set up the desk QR yet.",
+      "create": "Create desk QR"
+    },
+    "loadError": {
+      "title": "Couldn't load the desk QR.",
+      "body": "Check your connection, then try again. The poster on the desk keeps working."
+    },
+    "retry": "Try again",
+    "errors": {
+      "create": "The desk QR wasn't created. Try again in a moment.",
+      "update": "The email wasn't changed. Try again in a moment.",
+      "rotate": "New QR wasn't created. The current QR still works. Try again in a moment.",
+      "disable": "The QR wasn't disabled. It still works. Try again in a moment.",
+      "enable": "The QR wasn't enabled. Try again in a moment.",
+      "download": "The PNG didn't download. Try again in a moment.",
+      "image": "Couldn't show the QR."
+    },
+    "confirmRotate": {
+      "title": "Replace the desk QR?",
+      "body": "The QR on the desk poster <b>stops working immediately</b>. Visitors who scan it will be asked to register at the desk. Print and put up the new poster straight after.",
+      "confirm": "Create new QR"
+    },
+    "confirmDisable": {
+      "title": "Disable the desk QR?",
+      "body": "Visitors can't register by scanning until you enable it again. Reception can still register walk-ins as usual.",
+      "confirm": "Disable"
+    },
+    "cancel": "Cancel",
+    "poster": {
+      "brand": "AFREXIMBANK AFRICAN TRADE CENTRE · ABUJA",
+      "title": "Scan to register your visit",
+      "subtitle": "Abuja-AATC Visitor Management",
+      "then": "Then fill in the short form on your phone.",
+      "code": "Reception will read you a code to finish.",
+      "footer": "VMC desk · QR created {date}"
+    }
+  },
+  "selfRegister": {
+    "brand": "AATC · VMC desk",
+    "title": "Register your visit",
+    "today": "Today, {date}",
+    "expiresIn": "Form expires in {countdown}",
+    "optional": "Optional",
+    "yes": "Yes",
+    "no": "No",
+    "sections": {
+      "contact": "Your contact details",
+      "about": "About you",
+      "visiting": "Who are you visiting?",
+      "visit": "Visit details",
+      "safety": "Safety and communication"
+    },
+    "fields": {
+      "email": "Email address",
+      "phone": "Phone number",
+      "fullName": "Full name",
+      "organization": "Organisation",
+      "floor": "Floor of visit",
+      "floorNotSure": "Not sure / not applicable",
+      "purpose": "Purpose of visit",
+      "evacuation": "In the event of an emergency, would you require assistance with evacuation?",
+      "consent": "Would you like to receive updates on Afreximbank's activities and events?"
+    },
+    "host": {
+      "placeholder": "Type a name",
+      "help": "Leave this empty if your visit is a general enquiry.",
+      "results": "Matching staff",
+      "none": "No matching staff. Leave blank for a general enquiry.",
+      "remove": "Remove {name}"
+    },
+    "errors": {
+      "email": "Enter a full email address, like name@company.com",
+      "phone": "Enter a valid phone number, or leave it empty",
+      "required": "Fill this in",
+      "choose": "Choose one",
+      "yesNo": "Choose Yes or No",
+      "chooseType": "Choose the type of assistance you need",
+      "describeOther": "Describe the assistance you need"
+    },
+    "checkAnswers": "{count, plural, one {Check # answer below.} other {Check # answers below.}}",
+    "submit": "Register my visit",
+    "submitHelp": "Reception will read you a code to finish.",
+    "code": {
+      "heading": "Almost done",
+      "title": "Ask reception for your code",
+      "body": "We've sent a 6-digit code to reception. Tell them your name and they'll read it to you.",
+      "label": "6-digit code",
+      "confirm": "Confirm",
+      "expires": "Code expires in {countdown}"
+    },
+    "codeWrong": "{left, plural, =0 {That code doesn't match.} one {That code doesn't match. Check it with reception and try again. # try left.} other {That code doesn't match. Check it with reception and try again. # tries left.}}",
+    "done": {
+      "title": "You're registered",
+      "body": "Show this reference at the VMC desk to get your visitor badge.",
+      "name": "Name",
+      "visiting": "Visiting",
+      "when": "When"
+    },
+    "inactive": {
+      "title": "This QR code isn't active",
+      "body": "Please register at the VMC desk. Reception will sign you in."
+    },
+    "expired": {
+      "title": "This form has expired",
+      "body": "Please scan the QR code again."
+    },
+    "locked": {
+      "title": "Too many wrong codes",
+      "body": "Please scan the QR code again, or register at the VMC desk."
+    },
+    "startAgain": "Start again",
+    "problems": {
+      "offline": "No connection. Your answers are still here. Try again when you're back online.",
+      "unknown": "Something went wrong. Try again, or register at the VMC desk."
+    }
   }
 }

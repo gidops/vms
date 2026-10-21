@@ -54,6 +54,15 @@ export interface AdminOverviewStats {
   deniedToday: number;
 }
 
+/** The VMC overview's three numbers (today = the WAT calendar day). */
+export interface DeskStats {
+  /** Checked in and not yet out, right now. */
+  onsite: number;
+  /** Everyone who arrived today, including those who have since left. */
+  checkedInToday: number;
+  checkedOutToday: number;
+}
+
 export interface AdminTrafficPoint {
   hour: number;
   value: number;

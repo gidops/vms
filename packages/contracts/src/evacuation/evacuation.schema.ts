@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { EvacuationAssistType } from "../visit/visit.schema.js";
 
 /**
  * One row of the live Evacuation Roll: a CHECKED_IN visitor who answered "Yes"
@@ -11,6 +12,9 @@ export const EvacuationRollRow = z.object({
   phone: z.string().nullable(),
   floor: z.string().nullable(),
   hostName: z.string().nullable(),
+  /** The help this visitor asked for at intake (empty on legacy visits). */
+  assistTypes: z.array(EvacuationAssistType),
+  assistOther: z.string().nullable(),
   checkInAt: z.coerce.date().nullable(),
   badge: z
     .object({ cardNumber: z.string(), zone: z.string().nullable() })

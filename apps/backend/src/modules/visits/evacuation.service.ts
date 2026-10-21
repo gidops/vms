@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { FLOORS, type EvacuationRoll } from '@vms/contracts';
+import {
+  FLOORS,
+  type EvacuationAssistType,
+  type EvacuationRoll,
+} from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 
 /**
@@ -42,6 +46,8 @@ export class VisitEvacuationService {
         phone: v.visitor.phone,
         floor: v.floor,
         hostName: v.host?.user.fullName ?? null,
+        assistTypes: v.evacuationAssistTypes as EvacuationAssistType[],
+        assistOther: v.evacuationAssistOther,
         checkInAt: v.checkInAt,
         badge: v.pass?.accessCard
           ? {

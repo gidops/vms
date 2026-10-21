@@ -1,6 +1,6 @@
 import type { VisitListQuery } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
-import { VisitReadService } from './read.service';
+import { VisitReadService, phoneSearchDigits } from './read.service';
 
 describe('VisitReadService.list scoping', () => {
   function setup() {
@@ -119,6 +119,17 @@ describe('VisitReadService.list scoping', () => {
         }),
       }),
     );
+  });
+
+  it('also matches the visitor phone when the search looks like a number', async () => {
+    const { service, findMany } = setup();
+    await service.list(query({ search: '0803 552 1904' }), 'me');
+    const where = findMany.mock.calls[0][0].where as {
+      AND: { OR: unknown[] }[];
+    };
+    expect(where.AND[0].OR).toContainEqual({
+      visitor: { phone: { contains: '8035521904' } },
+    });
   });
 
   it('scope=mine AND search combine as two separate AND groups', async () => {
@@ -477,5 +488,19 @@ describe('VisitReadService.assertCanView', () => {
     await expect(setup(null).assertCanView('v', 'me')).rejects.toThrow(
       'errors.visit.notFound',
     );
+  });
+});
+
+describe('phoneSearchDigits', () => {
+  it('turns a typed phone number into the digits stored in +234 numbers', () => {
+    expect(phoneSearchDigits('0803 552 1904')).toBe('8035521904');
+    expect(phoneSearchDigits('+234 803-552-1904')).toBe('2348035521904');
+    expect(phoneSearchDigits('(0803) 552')).toBe('803552');
+  });
+
+  it('ignores names, codes and short numbers', () => {
+    expect(phoneSearchDigits('jordan')).toBeNull();
+    expect(phoneSearchDigits('5A19-795')).toBeNull();
+    expect(phoneSearchDigits('0803')).toBeNull();
   });
 });

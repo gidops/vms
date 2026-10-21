@@ -4,6 +4,7 @@ import type { HostOption } from "@vms/contracts";
 import { ChevronLeft, ChevronRight, HelpCircle } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
+import { useEvacuationAssistText } from "../../_components/EvacuationAssist";
 import {
   formatPhone,
   scheduledAtOf,
@@ -66,6 +67,7 @@ export function ConfirmStep({
 }) {
   const t = useTranslations("invite");
   const format = useFormatter();
+  const assistText = useEvacuationAssistText();
   const [idx, setIdx] = React.useState(0);
   const guest = guests[idx] ?? guests[0];
   // Each guest carries its own visit details now.
@@ -132,7 +134,14 @@ export function ConfirmStep({
         <CardHeader title={t("sections.safetyConsent")} />
         <Row
           label={t("fields.evacuationAssist")}
-          value={yesNo(guest.needsEvacuationAssist)}
+          value={
+            guest.needsEvacuationAssist
+              ? `${yesNo(true)} · ${assistText(
+                  guest.evacuationAssistTypes,
+                  guest.evacuationAssistOther,
+                )}`
+              : yesNo(guest.needsEvacuationAssist)
+          }
         />
         <Row
           label={t("fields.commsConsent")}

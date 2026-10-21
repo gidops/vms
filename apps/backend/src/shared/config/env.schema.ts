@@ -22,6 +22,11 @@ export const envSchema = z.object({
     .enum(['development', 'test', 'production'])
     .default('development'),
   PORT: z.coerce.number().int().positive().default(4000),
+  // Reverse-proxy hops in front of the app (Express `trust proxy`). 1 behind the
+  // AWS ALB; 0 (default) when clients connect directly. A hop count, never
+  // `true`: trusting every X-Forwarded-For entry lets clients spoof their IP and
+  // dodge the per-IP rate limits on the public desk QR routes.
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
   DATABASE_URL: z.string().url(),
   JWT_SECRET: z.string().min(1),
   JWT_EXPIRES_IN: z.string().min(1).default('1h'),

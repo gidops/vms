@@ -1,5 +1,6 @@
 import { Avatar, Badge } from "@vms/ui";
 import { useTranslations } from "next-intl";
+import { useEvacuationAssistText } from "@/app/[locale]/_components/EvacuationAssist";
 import type { VisitRequestDetail } from "@/data/visits/visits.api";
 import type { VisitStatus } from "../helpers";
 import { SheetSection } from "./SheetSection";
@@ -28,6 +29,7 @@ export function GuestInformationSection({
   hasAlert: boolean;
 }) {
   const t = useTranslations("requests");
+  const assistText = useEvacuationAssistText();
   const { visitor } = data;
   return (
     <SheetSection title={t("sections.visitorInfo")}>
@@ -47,14 +49,19 @@ export function GuestInformationSection({
             </span>
             {/* Old visits predate the question (null) and show nothing. */}
             {data.needsEvacuationAssist ? (
-              <Badge
-                intent="warning"
-                tone="soft"
-                dot
-                className="mt-1 self-start"
-              >
-                {t("evacuationAssistYes")}
-              </Badge>
+              <span className="mt-1 flex flex-wrap items-center gap-2">
+                <Badge intent="warning" tone="soft" dot>
+                  {t("evacuationAssistYes")}
+                </Badge>
+                {data.evacuationAssistTypes?.length ? (
+                  <span className="text-sm text-fg-muted">
+                    {assistText(
+                      data.evacuationAssistTypes,
+                      data.evacuationAssistOther,
+                    )}
+                  </span>
+                ) : null}
+              </span>
             ) : data.needsEvacuationAssist === false ? (
               <span className="text-sm text-fg-muted">
                 {t("evacuationAssistNo")}

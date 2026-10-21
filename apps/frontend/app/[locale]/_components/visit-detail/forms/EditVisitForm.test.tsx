@@ -56,4 +56,45 @@ describe("EditVisitForm — safety answers", () => {
       expect.anything(),
     );
   });
+
+  it("leaves an older Yes alone when only other details change", () => {
+    // Saved before assistance types existed: Yes, but no types.
+    renderWithIntl(<EditVisitForm detail={detail} onDone={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText(/Full name/), {
+      target: { value: "Sophia D. Davis" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    const payload = mutate.mock.calls[0][0];
+    expect(payload.fullName).toBe("Sophia D. Davis");
+    expect(payload).not.toHaveProperty("needsEvacuationAssist");
+    expect(payload).not.toHaveProperty("evacuationAssistTypes");
+  });
+
+  it("requires an assistance type before saving a new Yes", () => {
+    renderWithIntl(
+      <EditVisitForm
+        detail={{ ...detail, needsEvacuationAssist: false }}
+        onDone={vi.fn()}
+      />,
+    );
+    const evac = screen.getByRole("radiogroup", {
+      name: /Need help evacuating/,
+    });
+    fireEvent.click(evac.querySelector('[role="radio"]')!);
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(mutate).not.toHaveBeenCalled();
+    expect(
+      screen.getByText("Choose the type of assistance needed"),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText(/Mobility assistance/));
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        needsEvacuationAssist: true,
+        evacuationAssistTypes: ["MOBILITY"],
+      }),
+      expect.anything(),
+    );
+  });
 });

@@ -2,7 +2,13 @@
 
 import { PERMISSIONS } from "@vms/contracts";
 import { Button } from "@vms/ui";
-import { Download, LifeBuoy, MailCheck, SquareActivity } from "lucide-react";
+import {
+  Download,
+  LifeBuoy,
+  MailCheck,
+  QrCode,
+  SquareActivity,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
 import {
@@ -46,6 +52,7 @@ function QuickActions({
   const { hasPermission } = useAuth();
   const canEvacuation = hasPermission(PERMISSIONS.EVACUATION_READ);
   const canOptIns = hasPermission(PERMISSIONS.CONSENT_READ);
+  const canDeskQr = hasPermission(PERMISSIONS.ISSUER_READ);
   // V1 parity: reception keeps the visitor export (report:export).
   const canExport = hasPermission(PERMISSIONS.REPORT_EXPORT);
   const [exportOpen, setExportOpen] = React.useState(false);
@@ -81,6 +88,14 @@ function QuickActions({
             <Link href="/dashboard/opt-ins">
               <MailCheck className="size-4" aria-hidden="true" />
               {t("quickActions.optIns")}
+            </Link>
+          </Button>
+        ) : null}
+        {canDeskQr ? (
+          <Button asChild intent="accent" tone="outline">
+            <Link href="/dashboard/desk-qr">
+              <QrCode className="size-4" aria-hidden="true" />
+              {t("quickActions.deskQr")}
             </Link>
           </Button>
         ) : null}

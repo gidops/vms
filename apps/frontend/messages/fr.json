@@ -40,7 +40,12 @@
       "searchPlaceholder": "Rechercher visiteur, hôte, étage, ID de pass",
       "allVisitTypes": "Tous les types de visite",
       "allPurpose": "Tous les motifs",
-      "search": "Rechercher"
+      "search": "Rechercher",
+      "status": {
+        "APPROVED": "Attendu",
+        "CHECKED_IN": "Sur site",
+        "CHECKED_OUT": "Parti"
+      }
     },
     "stats": {
       "onsite": "Visiteurs sur site",
@@ -55,7 +60,8 @@
       "formComingSoon": "Ce formulaire est en cours de création et sera bientôt disponible.",
       "evacuation": "Liste d'évacuation",
       "optIns": "Abonnements",
-      "export": "Exporter les données"
+      "export": "Exporter les données",
+      "deskQr": "QR de l'accueil"
     },
     "activity": {
       "title": "Voir votre activité"
@@ -67,7 +73,8 @@
     },
     "channel": {
       "invited": "Invité",
-      "walkIn": "Sans rendez-vous"
+      "walkIn": "Sans rendez-vous",
+      "qr": "QR"
     },
     "actions": {
       "checkIn": "Arrivée",
@@ -85,7 +92,9 @@
       "guestCount": "Nb d'invités"
     },
     "guestCount": "{count} invité(s)",
-    "onsiteElapsed": "{time} h"
+    "onsiteElapsed": "{time} h",
+    "noVisits": "Aucune visite à afficher.",
+    "noMatches": "Aucune visite ne correspond à votre recherche ou à vos filtres."
   },
   "common": {
     "notifications": "Notifications",
@@ -282,7 +291,11 @@
     "flagReasonPlaceholder": "Décrivez le problème de sécurité…",
     "createdByYou": "(vous)",
     "evacuationAssistYes": "A besoin d'aide pour l'évacuation",
-    "evacuationAssistNo": "Aide à l'évacuation : non"
+    "evacuationAssistNo": "Aide à l'évacuation : non",
+    "sources": {
+      "deskQr": "QR de l'accueil (auto-enregistrement)",
+      "selfRegistered": "Le visiteur, via le QR de l'accueil"
+    }
   },
   "language": {
     "select": "Choisir la langue",
@@ -463,7 +476,8 @@
       "collapse": "Réduire la barre latérale",
       "expand": "Développer la barre latérale",
       "evacuation": "Liste d'évacuation",
-      "optIns": "Abonnements aux communications"
+      "optIns": "Abonnements aux communications",
+      "deskQr": "QR de l'accueil"
     },
     "requests": {
       "title": "Demandes et approbations",
@@ -931,5 +945,185 @@
     "empty": "Aucun message n'a encore été envoyé pour cette visite.",
     "loadError": "Impossible de charger les notifications.",
     "retryError": "La nouvelle tentative a échoué. Veuillez réessayer."
+  },
+  "evacuationAssist": {
+    "question": "De quelle aide auriez-vous besoin ?",
+    "types": {
+      "MOBILITY": "Aide à la mobilité (fauteuil roulant, difficulté à marcher ou à prendre les escaliers)",
+      "VISUAL": "Assistance pour déficience visuelle",
+      "HEARING": "Assistance pour déficience auditive",
+      "MEDICAL": "Assistance médicale",
+      "OTHER": "Autre (veuillez préciser)"
+    },
+    "short": {
+      "MOBILITY": "Mobilité",
+      "VISUAL": "Vue",
+      "HEARING": "Audition",
+      "MEDICAL": "Médical",
+      "OTHER": "Autre"
+    },
+    "otherLabel": "Décrivez l'aide nécessaire",
+    "otherPlaceholder": "Par exemple, besoin d'une rampe",
+    "chooseType": "Choisissez le type d'aide nécessaire",
+    "describeOther": "Décrivez l'aide nécessaire"
+  },
+  "deskQr": {
+    "title": "QR de l'accueil",
+    "walkInBadge": "Sans rendez-vous · sans approbation",
+    "status": {
+      "active": "Actif",
+      "disabled": "Désactivé"
+    },
+    "qrAlt": "QR code de l'accueil",
+    "copyLink": "Copier le lien",
+    "copied": "Copié",
+    "scansToday": "Scans aujourd'hui",
+    "lastScan": "Dernier scan à {time} WAT",
+    "noScans": "Aucun scan aujourd'hui",
+    "disabledAt": "Désactivé le {time} WAT",
+    "created": "Créé",
+    "createdBy": "{time} par {name}",
+    "visitsItCreates": "Visites créées",
+    "visitsItCreatesValue": "Sans rendez-vous, aujourd'hui seulement, marquées QR",
+    "print": "Imprimer l'affiche",
+    "downloadPng": "Télécharger le PNG",
+    "rotate": "Nouveau QR",
+    "disable": "Désactiver",
+    "enable": "Activer",
+    "rotateHelp": "Nouveau QR remplace le code. L'affiche imprimée cesse aussitôt de fonctionner : imprimez la nouvelle avant d'appuyer.",
+    "enableHelp": "Le scan affiche « Veuillez vous enregistrer à l'accueil VMC ». Activer rétablit le même code : l'affiche de l'accueil fonctionne de nouveau.",
+    "disabledOverlay": "Le scan affiche « Veuillez vous enregistrer à l'accueil VMC »",
+    "codes": {
+      "title": "Codes de vérification",
+      "emailedTo": "Codes envoyés par e-mail à",
+      "change": "Modifier",
+      "help": "Quand un visiteur remplit le formulaire, un code à 6 chiffres arrive dans cette boîte. Lisez-le au visiteur à l'accueil pour terminer son enregistrement. Un code ne sert qu'une fois et expire au bout de 10 minutes."
+    },
+    "codeEmail": {
+      "createTitle": "Configurer le QR de l'accueil",
+      "changeTitle": "Changer l'adresse des codes",
+      "help": "Les codes de vérification des visiteurs sont envoyés ici. Choisissez une boîte lue par quelqu'un à l'accueil VMC.",
+      "label": "E-mail pour les codes de vérification",
+      "invalid": "Saisissez une adresse e-mail, par exemple reception@aatc.org",
+      "save": "Enregistrer"
+    },
+    "empty": {
+      "title": "Pas encore de QR à l'accueil",
+      "body": "Créez le QR, imprimez l'affiche et placez-la à l'accueil VMC. Les visiteurs qui le scannent s'enregistrent comme visiteurs sans rendez-vous du jour.",
+      "readOnly": "L'accueil n'a pas encore configuré le QR.",
+      "create": "Créer le QR de l'accueil"
+    },
+    "loadError": {
+      "title": "Impossible de charger le QR de l'accueil.",
+      "body": "Vérifiez votre connexion puis réessayez. L'affiche de l'accueil continue de fonctionner."
+    },
+    "retry": "Réessayer",
+    "errors": {
+      "create": "Le QR n'a pas été créé. Réessayez dans un instant.",
+      "update": "L'e-mail n'a pas été modifié. Réessayez dans un instant.",
+      "rotate": "Le nouveau QR n'a pas été créé. Le QR actuel fonctionne toujours. Réessayez dans un instant.",
+      "disable": "Le QR n'a pas été désactivé. Il fonctionne toujours. Réessayez dans un instant.",
+      "enable": "Le QR n'a pas été activé. Réessayez dans un instant.",
+      "download": "Le PNG n'a pas été téléchargé. Réessayez dans un instant.",
+      "image": "Impossible d'afficher le QR."
+    },
+    "confirmRotate": {
+      "title": "Remplacer le QR de l'accueil ?",
+      "body": "Le QR de l'affiche <b>cesse immédiatement de fonctionner</b>. Les visiteurs qui le scannent devront s'enregistrer à l'accueil. Imprimez et affichez la nouvelle affiche juste après.",
+      "confirm": "Créer un nouveau QR"
+    },
+    "confirmDisable": {
+      "title": "Désactiver le QR de l'accueil ?",
+      "body": "Les visiteurs ne peuvent plus s'enregistrer par scan tant que vous ne le réactivez pas. L'accueil peut toujours enregistrer les visiteurs sans rendez-vous.",
+      "confirm": "Désactiver"
+    },
+    "cancel": "Annuler",
+    "poster": {
+      "brand": "AFREXIMBANK AFRICAN TRADE CENTRE · ABUJA",
+      "title": "Scannez pour enregistrer votre visite",
+      "subtitle": "Abuja-AATC Visitor Management",
+      "then": "Remplissez ensuite le court formulaire sur votre téléphone.",
+      "code": "L'accueil vous lira un code pour terminer.",
+      "footer": "Accueil VMC · QR créé le {date}"
+    }
+  },
+  "selfRegister": {
+    "brand": "AATC · Accueil VMC",
+    "title": "Enregistrez votre visite",
+    "today": "Aujourd'hui, {date}",
+    "expiresIn": "Le formulaire expire dans {countdown}",
+    "optional": "Facultatif",
+    "yes": "Oui",
+    "no": "Non",
+    "sections": {
+      "contact": "Vos coordonnées",
+      "about": "À propos de vous",
+      "visiting": "Qui venez-vous voir ?",
+      "visit": "Détails de la visite",
+      "safety": "Sécurité et communication"
+    },
+    "fields": {
+      "email": "Adresse e-mail",
+      "phone": "Numéro de téléphone",
+      "fullName": "Nom complet",
+      "organization": "Organisation",
+      "floor": "Étage visité",
+      "floorNotSure": "Je ne sais pas / sans objet",
+      "purpose": "Motif de la visite",
+      "evacuation": "En cas d'urgence, auriez-vous besoin d'aide pour l'évacuation ?",
+      "consent": "Souhaitez-vous recevoir des informations sur les activités et événements d'Afreximbank ?"
+    },
+    "host": {
+      "placeholder": "Saisissez un nom",
+      "help": "Laissez vide s'il s'agit d'une demande générale.",
+      "results": "Personnel correspondant",
+      "none": "Aucun membre du personnel trouvé. Laissez vide pour une demande générale.",
+      "remove": "Retirer {name}"
+    },
+    "errors": {
+      "email": "Saisissez une adresse e-mail complète, par exemple nom@entreprise.com",
+      "phone": "Saisissez un numéro valide, ou laissez vide",
+      "required": "Champ obligatoire",
+      "choose": "Faites un choix",
+      "yesNo": "Choisissez Oui ou Non",
+      "chooseType": "Choisissez le type d'aide nécessaire",
+      "describeOther": "Décrivez l'aide nécessaire"
+    },
+    "checkAnswers": "{count, plural, one {Vérifiez # réponse ci-dessous.} other {Vérifiez # réponses ci-dessous.}}",
+    "submit": "Enregistrer ma visite",
+    "submitHelp": "L'accueil vous lira un code pour terminer.",
+    "code": {
+      "heading": "Presque terminé",
+      "title": "Demandez votre code à l'accueil",
+      "body": "Nous avons envoyé un code à 6 chiffres à l'accueil. Donnez votre nom et on vous le lira.",
+      "label": "Code à 6 chiffres",
+      "confirm": "Confirmer",
+      "expires": "Le code expire dans {countdown}"
+    },
+    "codeWrong": "{left, plural, =0 {Ce code ne correspond pas.} one {Ce code ne correspond pas. Vérifiez-le auprès de l'accueil et réessayez. Il reste # essai.} other {Ce code ne correspond pas. Vérifiez-le auprès de l'accueil et réessayez. Il reste # essais.}}",
+    "done": {
+      "title": "Vous êtes enregistré",
+      "body": "Présentez cette référence à l'accueil VMC pour obtenir votre badge.",
+      "name": "Nom",
+      "visiting": "Visite à",
+      "when": "Date"
+    },
+    "inactive": {
+      "title": "Ce QR code n'est pas actif",
+      "body": "Veuillez vous enregistrer à l'accueil VMC. On s'occupera de vous."
+    },
+    "expired": {
+      "title": "Ce formulaire a expiré",
+      "body": "Veuillez scanner à nouveau le QR code."
+    },
+    "locked": {
+      "title": "Trop de codes erronés",
+      "body": "Veuillez scanner à nouveau le QR code, ou vous enregistrer à l'accueil VMC."
+    },
+    "startAgain": "Recommencer",
+    "problems": {
+      "offline": "Pas de connexion. Vos réponses sont conservées. Réessayez une fois reconnecté.",
+      "unknown": "Une erreur est survenue. Réessayez, ou enregistrez-vous à l'accueil VMC."
+    }
   }
 }

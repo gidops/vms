@@ -1,5 +1,7 @@
 import type {
   AlertStatus,
+  DeskStats,
+  EvacuationAssistType,
   AlertType,
   CheckInVisitInput,
   CheckOutVisitInput,
@@ -35,6 +37,8 @@ export interface VisitListItem {
   checkOutAt?: string | null;
   createdAt: string;
   createdByName?: string | null;
+  /** Where the visit came from (e.g. "QR_SELF_REGISTER" for the desk QR). */
+  source?: string | null;
   /** True when this row is a group visit's representative (the group signal). */
   isGroupVisit: boolean;
   /** Group display name / contact — email or phone (group visits only). */
@@ -108,6 +112,9 @@ export interface VisitRequestDetail {
   checkOutAt?: string | null;
   /** Intake answer; null = legacy visit, never asked. */
   needsEvacuationAssist?: boolean | null;
+  /** The help asked for when the answer is Yes. */
+  evacuationAssistTypes?: EvacuationAssistType[];
+  evacuationAssistOther?: string | null;
   /** Comms-consent answer given at this visit; null = legacy. */
   commsConsent?: boolean | null;
   createdAt: string;
@@ -187,6 +194,10 @@ export const visitsApi = {
     const qs = q.toString();
     return api<Paginated<VisitListItem>>(`/visits${qs ? `?${qs}` : ""}`);
   },
+  /** Reception's onsite / checked in today / checked out today numbers. */
+  deskStats(): Promise<DeskStats> {
+    return api<DeskStats>(`/visits/dashboard/desk-stats`);
+  },
   cancel(id: string): Promise<VisitRequestDetail> {
     return api<VisitRequestDetail>(`/visits/${id}/cancel`, { method: "POST" });
   },
@@ -243,6 +254,8 @@ export const visitsApi = {
       purpose?: string;
       scheduledAt?: string;
       needsEvacuationAssist?: boolean;
+      evacuationAssistTypes?: EvacuationAssistType[];
+      evacuationAssistOther?: string;
     },
   ): Promise<VisitRequestDetail> {
     return api<VisitRequestDetail>(`/visits/${id}`, {

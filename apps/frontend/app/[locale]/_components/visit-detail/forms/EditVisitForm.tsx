@@ -1,5 +1,5 @@
 import { Button } from "@vms/ui";
-import { parsePhone } from "@vms/contracts";
+import { evacuationAssistIssues, parsePhone } from "@vms/contracts";
 import { useTranslations } from "next-intl";
 import * as React from "react";
 import { DIAL_CODES } from "@/app/[locale]/_components/PhoneInput";
@@ -40,8 +40,37 @@ function guestFromDetail(d: VisitRequestDetail): GuestEntry {
       ? `${pad(sched.getHours())}:${pad(sched.getMinutes())}`
       : "",
     needsEvacuationAssist: d.needsEvacuationAssist ?? null,
+    evacuationAssistTypes: d.evacuationAssistTypes ?? [],
+    evacuationAssistOther: d.evacuationAssistOther ?? "",
     commsConsent: d.commsConsent ?? null,
     useSame: false,
+  };
+}
+
+/**
+ * The evacuation fields to send: only when the answer changed, so editing a
+ * visit's other details never re-validates an older answer (e.g. a "Yes" saved
+ * before assistance types existed). A "Yes" carries its types; "No" clears them
+ * server-side.
+ */
+function evacuationPatch(guest: GuestEntry, detail: VisitRequestDetail) {
+  const answer = guest.needsEvacuationAssist;
+  const types = guest.evacuationAssistTypes;
+  const other = types.includes("OTHER")
+    ? guest.evacuationAssistOther.trim()
+    : "";
+  const before = detail.evacuationAssistTypes ?? [];
+  const changed =
+    answer !== (detail.needsEvacuationAssist ?? null) ||
+    types.length !== before.length ||
+    types.some((t) => !before.includes(t)) ||
+    other !== (detail.evacuationAssistOther ?? "");
+  if (!changed || answer === null) return {};
+  if (!answer) return { needsEvacuationAssist: false };
+  return {
+    needsEvacuationAssist: true,
+    evacuationAssistTypes: types,
+    evacuationAssistOther: other || undefined,
   };
 }
 
@@ -60,7 +89,22 @@ export function EditVisitForm({
     guestFromDetail(detail),
   );
 
+  const [showErrors, setShowErrors] = React.useState(false);
+
   const save = () => {
+    const evacuation = evacuationPatch(guest, detail);
+    if (
+      evacuation.needsEvacuationAssist &&
+      evacuationAssistIssues({
+        needsEvacuationAssist: true,
+        evacuationAssistTypes: evacuation.evacuationAssistTypes,
+        evacuationAssistOther: evacuation.evacuationAssistOther,
+      }).length > 0
+    ) {
+      // A new "Yes" needs its assistance type before it can be saved.
+      setShowErrors(true);
+      return;
+    }
     const scheduledAt = scheduledAtOf(guest);
     update.mutate(
       {
@@ -72,7 +116,7 @@ export function EditVisitForm({
         floor: guest.floor || undefined,
         purpose: guest.purpose || undefined,
         scheduledAt: scheduledAt ? scheduledAt.toISOString() : undefined,
-        needsEvacuationAssist: guest.needsEvacuationAssist ?? undefined,
+        ...evacuation,
       },
       { onSuccess: onDone },
     );
@@ -86,7 +130,7 @@ export function EditVisitForm({
         mode="invite"
         hosts={hosts.data ?? []}
         onUseSameChange={() => {}}
-        showErrors={false}
+        showErrors={showErrors}
         safety="evacuationOnly"
         onChange={(patch) => setGuest((g) => ({ ...g, ...patch }))}
       />

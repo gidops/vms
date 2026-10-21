@@ -77,3 +77,65 @@ body {
     -webkit-print-color-adjust: exact;
   }
 }
+
+/* ── Desk QR: A4 poster ───────────────────────────────────────────────────
+ * Portalled to <body> like the Evacuation Roll print copy; while it exists,
+ * printing shows only the poster. Black on white for any printer. */
+.deskqr-print-root {
+  display: none;
+}
+@media print {
+  body:has(> .deskqr-print-root) > *:not(.deskqr-print-root) {
+    display: none !important;
+  }
+  body:has(> .deskqr-print-root) {
+    background: #fff !important;
+  }
+  .deskqr-print-root {
+    display: block !important;
+    color: #000;
+  }
+  .deskqr-poster {
+    display: flex;
+    min-height: 260mm;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6mm;
+    text-align: center;
+    font-size: 14pt;
+  }
+  .deskqr-poster h1 {
+    font-size: 30pt;
+    font-weight: 700;
+    margin: 0;
+  }
+  .deskqr-poster p {
+    margin: 0;
+  }
+  .deskqr-poster-brand {
+    display: flex;
+    align-items: center;
+    gap: 4mm;
+    font-size: 11pt;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .deskqr-poster-brand img {
+    height: 16mm;
+  }
+  .deskqr-poster-sub {
+    font-size: 13pt;
+  }
+  .deskqr-poster-qr {
+    width: 120mm;
+    height: 120mm;
+  }
+  .deskqr-poster-langs {
+    font-size: 11pt;
+  }
+  .deskqr-poster-foot {
+    font-size: 9pt;
+    margin-top: 6mm !important;
+  }
+}

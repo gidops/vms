@@ -23,7 +23,14 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           ref={ref}
           type="search"
           value={value}
-          className={cn(s.input(), showClear && "pe-9", className)}
+          className={cn(
+            s.input(),
+            // With our own clear button, hide the browser's built-in one on
+            // type="search" (Chrome/Edge/Safari) so there is only one "x".
+            onClear && "[&::-webkit-search-cancel-button]:appearance-none",
+            showClear && "pe-9",
+            className,
+          )}
           {...props}
         />
         {showClear ? (

@@ -1,8 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { VISIT_PURPOSES, VISIT_SOURCE_DESK_QR } from "@vms/contracts";
 import {
   Avatar,
+  Badge,
   Button,
   FilterBar,
   Pagination,
@@ -41,12 +43,16 @@ import {
   type RecordsRange,
 } from "@/app/[locale]/dashboard/_components/RecordsRangeFilter";
 import { VmcOverview } from "@/app/[locale]/dashboard/_components/VmcOverview";
+import {
+  BOARD_STATUSES,
+  BOARD_TYPES,
+  NO_BOARD_FILTERS,
+  boardListParams,
+  type BoardFilters,
+} from "@/app/[locale]/dashboard/_components/board-filters";
 import { visitsApi, type VisitListItem } from "@/data/visits/visits.api";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
-
-/** The VMC board only surfaces visits that a Security Manager has cleared for reception. */
-const BOARD_STATUSES = ["APPROVED", "CHECKED_IN", "CHECKED_OUT"] as const;
 
 /**
  * Live-ticking elapsed time since a visitor checked in, shown under the "Onsite"
@@ -84,6 +90,34 @@ function Dashboard() {
   const [page, setPage] = React.useState(1);
   const [range, setRange] = React.useState<RecordsRange>("all");
   const [dates, setDates] = React.useState<DateRange>({});
+  // Like the staff dashboard: typing searches after a short pause, and
+  // Search / Enter applies it at once. The selects apply at once. Any change
+  // goes back to page 1.
+  const [draft, setDraft] = React.useState("");
+  const [filters, setFilters] = React.useState<BoardFilters>(NO_BOARD_FILTERS);
+  const applyFilters = (patch: Partial<BoardFilters>) => {
+    setFilters((f) => ({ ...f, ...patch }));
+    setPage(1);
+  };
+  React.useEffect(() => {
+    const search = draft.trim();
+    if (search === filters.search) return;
+    const id = setTimeout(() => {
+      setFilters((f) => ({ ...f, search }));
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(id);
+  }, [draft, filters.search]);
+  const filtered =
+    filters.search !== "" ||
+    filters.status !== "all" ||
+    filters.type !== "all" ||
+    filters.purpose !== "all";
+  const deskStats = useQuery({
+    queryKey: ["visits", "dashboard", "desk-stats"] as const,
+    queryFn: () => visitsApi.deskStats(),
+    refetchInterval: 30_000,
+  });
   const visitsQ = useQuery({
     queryKey: [
       "visits",
@@ -91,10 +125,11 @@ function Dashboard() {
       page,
       dates.dateFrom,
       dates.dateTo,
+      filters,
     ] as const,
     queryFn: () =>
       visitsApi.list({
-        statuses: [...BOARD_STATUSES],
+        ...boardListParams(filters),
         // The VMC board is a records log: filter the date window by when the
         // request was created and show the most recently created first.
         dateField: "createdAt",
@@ -191,32 +226,84 @@ function Dashboard() {
     <TopNavShell
       nav={<AppTopNav active="schedule" />}
       filterBar={
-        <FilterBar actions={<Button>{t("filters.search")}</Button>}>
+        <FilterBar
+          actions={
+            <Button onClick={() => applyFilters({ search: draft.trim() })}>
+              {t("filters.search")}
+            </Button>
+          }
+        >
           <div className="min-w-56 flex-1">
-            <SearchInput placeholder={t("filters.searchPlaceholder")} />
+            <SearchInput
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") applyFilters({ search: draft.trim() });
+              }}
+              onClear={() => {
+                setDraft("");
+                applyFilters({ search: "" });
+              }}
+              placeholder={t("filters.searchPlaceholder")}
+              aria-label={t("filters.searchPlaceholder")}
+            />
           </div>
-          <Select defaultValue="all">
-            <SelectTrigger className="w-40">
+          <Select
+            value={filters.status}
+            onValueChange={(v) =>
+              applyFilters({ status: v as BoardFilters["status"] })
+            }
+          >
+            <SelectTrigger className="w-40" aria-label={tCommon("allStatus")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{tCommon("allStatus")}</SelectItem>
+              {BOARD_STATUSES.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {t(`filters.status.${s}`)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          <Select defaultValue="all">
-            <SelectTrigger className="w-44">
+          <Select
+            value={filters.type}
+            onValueChange={(v) =>
+              applyFilters({ type: v as BoardFilters["type"] })
+            }
+          >
+            <SelectTrigger
+              className="w-44"
+              aria-label={t("filters.allVisitTypes")}
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("filters.allVisitTypes")}</SelectItem>
+              {BOARD_TYPES.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {channelLabel(type)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          <Select defaultValue="all">
-            <SelectTrigger className="w-40">
+          <Select
+            value={filters.purpose}
+            onValueChange={(purpose) => applyFilters({ purpose })}
+          >
+            <SelectTrigger
+              className="w-40"
+              aria-label={t("filters.allPurpose")}
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("filters.allPurpose")}</SelectItem>
+              {VISIT_PURPOSES.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {p}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </FilterBar>
@@ -226,9 +313,18 @@ function Dashboard() {
         <VmcOverview
           welcome={t("welcome", { name: user?.fullName ?? "" })}
           stats={[
-            { label: t("stats.onsite"), value: 12 },
-            { label: t("stats.checkedIn"), value: 28 },
-            { label: t("stats.checkedOut"), value: 16 },
+            {
+              label: t("stats.onsite"),
+              value: deskStats.data?.onsite ?? "—",
+            },
+            {
+              label: t("stats.checkedIn"),
+              value: deskStats.data?.checkedInToday ?? "—",
+            },
+            {
+              label: t("stats.checkedOut"),
+              value: deskStats.data?.checkedOutToday ?? "—",
+            },
           ]}
           onRegisterWalkIn={() => setQuickAction("walkin")}
           onNewInvite={() => setQuickAction("invite")}
@@ -273,6 +369,15 @@ function Dashboard() {
                     </div>
                   </TableCell>
                 </TableRow>
+              ) : rows.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={7}
+                    className="py-10 text-center text-fg-subtle"
+                  >
+                    {filtered ? t("noMatches") : t("noVisits")}
+                  </TableCell>
+                </TableRow>
               ) : (
                 rows.map((row) => (
                   <TableRow key={row.id}>
@@ -302,7 +407,14 @@ function Dashboard() {
                       </span>
                     </TableCell>
                     <TableCell className="text-fg-muted">
-                      {channelLabel(row.type)}
+                      <span className="flex items-center gap-1.5">
+                        {channelLabel(row.type)}
+                        {row.source === VISIT_SOURCE_DESK_QR ? (
+                          <Badge intent="primary" tone="soft" size="sm">
+                            {t("channel.qr")}
+                          </Badge>
+                        ) : null}
+                      </span>
                     </TableCell>
                     <TableCell className="text-fg-muted">
                       {hostUnit(row)}

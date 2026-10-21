@@ -24,6 +24,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { useEvacuationRoll } from "@/data/evacuation/queries";
 import { formatWatDateTime, formatWatTime } from "@/shared/wat";
+import { useEvacuationAssistText } from "./EvacuationAssist";
 
 export interface FloorGroup {
   floor: string | null;
@@ -93,6 +94,7 @@ const COLUMN_COUNT = 5;
 
 function RollTable({ groups }: { groups: FloorGroup[] }) {
   const t = useTranslations("evacuation");
+  const assistText = useEvacuationAssistText();
   const locale = useLocale();
   return (
     <>
@@ -133,6 +135,11 @@ function RollTable({ groups }: { groups: FloorGroup[] }) {
                         {r.organization ? (
                           <span className="text-xs text-fg-muted">
                             {r.organization}
+                          </span>
+                        ) : null}
+                        {r.assistTypes.length ? (
+                          <span className="text-xs font-medium text-warning">
+                            {assistText(r.assistTypes, r.assistOther)}
                           </span>
                         ) : null}
                       </span>
@@ -191,6 +198,11 @@ function RollTable({ groups }: { groups: FloorGroup[] }) {
                         {r.organization}
                       </span>
                     ) : null}
+                    {r.assistTypes.length ? (
+                      <span className="text-xs font-medium text-warning">
+                        {assistText(r.assistTypes, r.assistOther)}
+                      </span>
+                    ) : null}
                     <span className="text-sm text-fg">
                       <FloorLabel floor={r.floor} />
                       {r.hostName ? (
@@ -235,6 +247,7 @@ function PrintRoll({
   groups: FloorGroup[];
 }) {
   const t = useTranslations("evacuation");
+  const assistText = useEvacuationAssistText();
   const locale = useLocale();
   // Portals need document.body, which only exists on the client.
   const mounted = React.useSyncExternalStore(
@@ -277,7 +290,15 @@ function PrintRoll({
             </tr>
             {g.rows.map((r) => (
               <tr key={r.visitId}>
-                <td>{r.fullName}</td>
+                <td>
+                  {r.fullName}
+                  {r.assistTypes.length ? (
+                    <>
+                      <br />
+                      {assistText(r.assistTypes, r.assistOther)}
+                    </>
+                  ) : null}
+                </td>
                 <td>{r.organization ?? ""}</td>
                 <td>{r.hostName ?? "—"}</td>
                 <td dir="ltr">{r.phone ?? "—"}</td>
