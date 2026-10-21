@@ -16,7 +16,11 @@
     "notifications": "Notifications",
     "notificationsUnread": "Notifications, {count} unread",
     "overview": "Overview",
-    "users": "Users"
+    "users": "Users",
+    "analytics": "Analytics",
+    "evacuation": "Evacuation",
+    "optIns": "Opt-ins",
+    "deskQr": "Desk QR"
   },
   "login": {
     "title": "Sign in",

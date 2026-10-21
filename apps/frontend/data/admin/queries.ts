@@ -46,15 +46,22 @@ export const APPROVAL_QUEUE_STATUSES = [
 ] as const satisfies readonly VisitStatus[];
 
 /** Every open request in the approval queue; the overview sorts and slices. */
-export function useApprovalQueue() {
+export function useApprovalQueue({
+  enabled = true,
+}: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ["visits", "admin", "approvalQueue"] as const,
     queryFn: () =>
       visitsApi.list({
         statuses: [...APPROVAL_QUEUE_STATUSES],
+        // Oldest raised first, so the first page holds the longest waits.
+        sortBy: "createdAt",
+        sortDir: "asc",
         pageSize: 100,
       }),
     refetchInterval: 30_000,
+    // Roles that can't approve have no use for the queue; skip the polling.
+    enabled,
   });
 }
 

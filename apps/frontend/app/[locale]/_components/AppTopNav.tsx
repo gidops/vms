@@ -19,11 +19,41 @@ function BrandMark() {
   );
 }
 
+/** Admin console tabs after Overview · Requests, in display order. */
+const ADMIN_TABS = [
+  {
+    value: "users",
+    route: "/admin/v2/users",
+    permission: PERMISSIONS.USER_READ,
+  },
+  {
+    value: "analytics",
+    route: "/admin/v2/analytics",
+    permission: PERMISSIONS.REPORT_READ,
+  },
+  {
+    value: "evacuation",
+    route: "/admin/v2/evacuation",
+    permission: PERMISSIONS.EVACUATION_READ,
+  },
+  {
+    value: "optIns",
+    route: "/admin/v2/opt-ins",
+    permission: PERMISSIONS.CONSENT_READ,
+  },
+  {
+    value: "deskQr",
+    route: "/admin/v2/desk-qr",
+    permission: PERMISSIONS.ISSUER_READ,
+  },
+] as const;
+
 export interface AppTopNavProps {
   /**
    * Primary view toggle. The VMC dashboard toggles schedule/requests; the staff
    * dashboard toggles schedule/visits/updates; the admin console toggles
-   * overview/requests/users. Omit on dashboards with no toggle.
+   * overview/requests plus the permission-gated users, analytics, evacuation,
+   * opt-ins and desk QR tabs. Omit on dashboards with no toggle.
    */
   active?:
     | "schedule"
@@ -31,7 +61,11 @@ export interface AppTopNavProps {
     | "requests"
     | "updates"
     | "overview"
-    | "users";
+    | "users"
+    | "analytics"
+    | "evacuation"
+    | "optIns"
+    | "deskQr";
   /** Which app's nav segments + routes to render (default "vmc"). */
   app?: "vmc" | "staff" | "admin";
   /**
@@ -84,15 +118,14 @@ export function AppTopNav({
             route: "/admin/v2/requests",
             count,
           },
-          ...(hasPermission(PERMISSIONS.USER_READ)
-            ? [
-                {
-                  value: "users",
-                  label: tNav("users"),
-                  route: "/admin/v2/users",
-                },
-              ]
-            : []),
+          // Each further tab only for roles that hold its permission.
+          ...ADMIN_TABS.filter((tab) => hasPermission(tab.permission)).map(
+            (tab) => ({
+              value: tab.value,
+              label: tNav(tab.value),
+              route: tab.route,
+            }),
+          ),
         ]
       : app === "staff"
         ? [

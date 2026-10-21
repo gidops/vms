@@ -27,17 +27,22 @@ screens replace the originals.
 ## Navigation
 
 The sidebar is replaced by `AppTopNav app="admin"`, the same bar VMC and staff
-use. It has three tabs:
+use. Overview and Requests are always there; each further tab only shows with
+its permission:
 
-| Tab      | Route                | Notes                                                                                        |
-| -------- | -------------------- | -------------------------------------------------------------------------------------------- |
-| Overview | `/admin/v2`          | Stats, visitor records, charts                                                               |
-| Requests | `/admin/v2/requests` | Approval queue and activity inbox merged. Carries the unread count, which replaces the bell. |
-| Users    | `/admin/v2/users`    | Only shown with `user:read`                                                                  |
+| Tab        | Route                  | Permission        | Notes                                                                                                            |
+| ---------- | ---------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Overview   | `/admin/v2`            | —                 | Role-aware band (console name, "Awaiting approval" hero for approvers, onsite floors) and visitor records        |
+| Requests   | `/admin/v2/requests`   | —                 | Approval queue and activity inbox merged; `?layout=staff` table has waiting time and Approve / Deny per row      |
+| Users      | `/admin/v2/users`      | `user:read`       |                                                                                                                  |
+| Analytics  | `/admin/v2/analytics`  | `report:read`     | KPIs, traffic + status charts (moved off Overview, as /admin did), upcoming arrivals, export for `report:export` |
+| Evacuation | `/admin/v2/evacuation` | `evacuation:read` | Shared `EvacuationRollScreen`                                                                                    |
+| Opt-ins    | `/admin/v2/opt-ins`    | `consent:read`    | Shared `CommsOptInsScreen`                                                                                       |
+| Desk QR    | `/admin/v2/desk-qr`    | `issuer:read`     | Shared `DeskQrScreen`                                                                                            |
 
-Settings stays in the account menu, as on the other dashboards. The disabled
-or hidden sidebar items (Visitors, Watchlist, Floors, Categories, Analytics,
-Integrations) can become tabs once they are built.
+Settings stays in the account menu, as on the other dashboards. The remaining
+hidden sidebar items (Visitors, Watchlist, Floors, Categories, Integrations)
+can become tabs once they are built.
 
 ## Component conversions
 
@@ -85,7 +90,8 @@ keeps it on its own tab. Overview B shows it in the side column, as staff does.
   `user:update` and `user:delete`. On the original page, Auditor could see the
   create/delete buttons.
 - **Data:** `useAdminVisits` in `data/admin/queries.ts` drives the v2 tables.
-- **i18n:** new keys are `adminV2.*`, `nav.overview` and `nav.users`, in
+- **i18n:** new keys are `adminV2.*` and `nav.overview` / `nav.users` /
+  `nav.analytics` / `nav.evacuation` / `nav.optIns` / `nav.deskQr`, in
   en/fr/ar. The catalog page is English-only (internal review tool).
 
 ## Open choices

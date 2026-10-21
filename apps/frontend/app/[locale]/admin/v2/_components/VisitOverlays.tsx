@@ -7,7 +7,12 @@ import { GroupApprovalSheet } from "@/app/[locale]/requests/_components/GroupApp
 import type { VisitListItem } from "@/data/visits/visits.api";
 import { useAuth } from "@/shared/auth/AuthContext";
 
-type Selected = { kind: "request" | "alert"; id: string };
+type Selected = {
+  kind: "request" | "alert";
+  id: string;
+  /** Open the sheet with the Deny reason form already expanded. */
+  form?: "deny" | null;
+};
 
 /**
  * Detail-sheet state shared by the v2 screens. A pending group visit opens the
@@ -30,12 +35,17 @@ export function useVisitOverlays() {
     else setSelected({ kind: "request", id: row.id });
   };
 
+  /** Deny from a row: the visit's sheet with its reason form open. */
+  const denyRow = (row: VisitListItem) =>
+    setSelected({ kind: "request", id: row.id, form: "deny" });
+
   const overlays = (
     <>
       {selected ? (
         <VisitDetailSheet
           kind={selected.kind}
           id={selected.id}
+          initialForm={selected.form ?? null}
           onClose={() => setSelected(null)}
         />
       ) : null}
@@ -48,5 +58,5 @@ export function useVisitOverlays() {
     </>
   );
 
-  return { openRow, open: setSelected, overlays };
+  return { openRow, denyRow, open: setSelected, overlays };
 }

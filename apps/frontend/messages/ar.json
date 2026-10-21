@@ -16,7 +16,11 @@
     "notifications": "الإشعارات",
     "notificationsUnread": "الإشعارات، {count} غير مقروءة",
     "overview": "نظرة عامة",
-    "users": "المستخدمون"
+    "users": "المستخدمون",
+    "analytics": "التحليلات",
+    "evacuation": "الإخلاء",
+    "optIns": "الاشتراكات",
+    "deskQr": "رمز QR للاستقبال"
   },
   "login": {
     "title": "تسجيل الدخول",
