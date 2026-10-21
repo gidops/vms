@@ -14,7 +14,9 @@
     "help": "Help/Support",
     "logout": "Logout",
     "notifications": "Notifications",
-    "notificationsUnread": "Notifications, {count} unread"
+    "notificationsUnread": "Notifications, {count} unread",
+    "overview": "Overview",
+    "users": "Users"
   },
   "login": {
     "title": "Sign in",
@@ -655,6 +657,50 @@
       "deniedHint": "Requests denied today",
       "loading": "Loading analytics…",
       "loadError": "Unable to load analytics. Please try again."
+    }
+  },
+  "adminV2": {
+    "overview": {
+      "eyebrow": "Admin Console · {role}",
+      "welcome": "Welcome {name}",
+      "pendingApprovals": "Pending approvals",
+      "pendingCount": "{count, plural, =0 {None} one {# request} other {# requests}}",
+      "trendUp": "+{count} from yesterday",
+      "trendDown": "−{count} from yesterday"
+    },
+    "panel": {
+      "reviewTitle": "Requests are waiting\nfor your decision",
+      "reviewCta": "Review Requests",
+      "activityTitle": "Today's activity\nat a glance",
+      "activityCta": "View Activity"
+    },
+    "table": {
+      "title": "Visitor Records",
+      "review": "Review",
+      "empty": "No visits in this window."
+    },
+    "feed": {
+      "seeAll": "See all",
+      "viewDetails": "View details"
+    },
+    "charts": {
+      "title": "Traffic & Outcomes"
+    },
+    "approvals": {
+      "title": "Pending Approvals",
+      "review": "Review",
+      "empty": "Nothing is waiting for a decision.",
+      "bucket": {
+        "all": "All",
+        "PENDING": "Awaiting approval",
+        "REVIEW_REQUESTED": "Info requested",
+        "FLAGGED": "Flagged"
+      }
+    },
+    "users": {
+      "searchPlaceholder": "Search users by name or email…",
+      "allRoles": "All Roles",
+      "createSubtitle": "Create an account and assign its roles."
     }
   },
   "staff": {

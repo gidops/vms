@@ -14,7 +14,9 @@
     "help": "Aide / Support",
     "logout": "Déconnexion",
     "notifications": "Notifications",
-    "notificationsUnread": "Notifications, {count} non lues"
+    "notificationsUnread": "Notifications, {count} non lues",
+    "overview": "Vue d'ensemble",
+    "users": "Utilisateurs"
   },
   "login": {
     "title": "Connexion",
@@ -655,6 +657,50 @@
       "deniedHint": "Demandes refusées aujourd'hui",
       "loading": "Chargement des analyses…",
       "loadError": "Impossible de charger les analyses. Veuillez réessayer."
+    }
+  },
+  "adminV2": {
+    "overview": {
+      "eyebrow": "Console d'administration · {role}",
+      "welcome": "Bienvenue {name}",
+      "pendingApprovals": "Approbations en attente",
+      "pendingCount": "{count, plural, =0 {Aucune} one {# demande} other {# demandes}}",
+      "trendUp": "+{count} par rapport à hier",
+      "trendDown": "−{count} par rapport à hier"
+    },
+    "panel": {
+      "reviewTitle": "Des demandes attendent\nvotre décision",
+      "reviewCta": "Examiner les demandes",
+      "activityTitle": "L'activité du jour\nen un coup d'œil",
+      "activityCta": "Voir l'activité"
+    },
+    "table": {
+      "title": "Registre des visiteurs",
+      "review": "Examiner",
+      "empty": "Aucune visite sur cette période."
+    },
+    "feed": {
+      "seeAll": "Tout voir",
+      "viewDetails": "Voir les détails"
+    },
+    "charts": {
+      "title": "Trafic et résultats"
+    },
+    "approvals": {
+      "title": "Approbations en attente",
+      "review": "Examiner",
+      "empty": "Aucune demande en attente de décision.",
+      "bucket": {
+        "all": "Toutes",
+        "PENDING": "En attente d'approbation",
+        "REVIEW_REQUESTED": "Informations demandées",
+        "FLAGGED": "Signalées"
+      }
+    },
+    "users": {
+      "searchPlaceholder": "Rechercher par nom ou e-mail…",
+      "allRoles": "Tous les rôles",
+      "createSubtitle": "Créez un compte et attribuez-lui des rôles."
     }
   },
   "staff": {

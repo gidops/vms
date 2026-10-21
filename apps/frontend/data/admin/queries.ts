@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import type { VisitStatus } from "@vms/contracts";
+import type { VisitStatus, VisitType } from "@vms/contracts";
 import { inboxApi } from "@/data/inbox/inbox.api";
 import { visitsApi } from "@/data/visits/visits.api";
 import { adminApi } from "./admin.api";
@@ -130,5 +130,34 @@ export function useRecentActivity(pageSize = 6) {
     queryKey: ["inbox", "admin", "activity", pageSize] as const,
     refetchInterval: 30_000,
     queryFn: () => inboxApi.list("all", { scope: "all", pageSize }),
+  });
+}
+
+export interface AdminVisitsParams {
+  search?: string;
+  status?: VisitStatus;
+  statuses?: VisitStatus[];
+  type?: VisitType;
+  purpose?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  /** Which date column the window filters on (default `scheduledAt`). */
+  dateField?: "scheduledAt" | "createdAt";
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+  page?: number;
+  pageSize?: number;
+}
+
+/**
+ * Site-wide visits for the admin console v2 table: the filter bar, range pills
+ * and pagination all feed straight into the list query.
+ */
+export function useAdminVisits(params: AdminVisitsParams) {
+  return useQuery({
+    queryKey: ["visits", "admin", "v2", params] as const,
+    queryFn: () => visitsApi.list(params),
+    placeholderData: (prev) => prev,
+    refetchInterval: 30_000,
   });
 }

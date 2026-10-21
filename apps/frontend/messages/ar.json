@@ -14,7 +14,9 @@
     "help": "المساعدة / الدعم",
     "logout": "تسجيل الخروج",
     "notifications": "الإشعارات",
-    "notificationsUnread": "الإشعارات، {count} غير مقروءة"
+    "notificationsUnread": "الإشعارات، {count} غير مقروءة",
+    "overview": "نظرة عامة",
+    "users": "المستخدمون"
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -655,6 +657,50 @@
       "deniedHint": "طلبات رُفضت اليوم",
       "loading": "جارٍ تحميل التحليلات…",
       "loadError": "تعذّر تحميل التحليلات. يُرجى المحاولة مرة أخرى."
+    }
+  },
+  "adminV2": {
+    "overview": {
+      "eyebrow": "لوحة الإدارة · {role}",
+      "welcome": "مرحبًا {name}",
+      "pendingApprovals": "الموافقات المعلقة",
+      "pendingCount": "{count, plural, =0 {لا شيء} one {طلب واحد} two {طلبان} few {# طلبات} many {# طلبًا} other {# طلب}}",
+      "trendUp": "+{count} مقارنة بالأمس",
+      "trendDown": "−{count} مقارنة بالأمس"
+    },
+    "panel": {
+      "reviewTitle": "طلبات بانتظار\nقرارك",
+      "reviewCta": "مراجعة الطلبات",
+      "activityTitle": "نشاط اليوم\nفي لمحة",
+      "activityCta": "عرض النشاط"
+    },
+    "table": {
+      "title": "سجل الزوار",
+      "review": "مراجعة",
+      "empty": "لا توجد زيارات في هذه الفترة."
+    },
+    "feed": {
+      "seeAll": "عرض الكل",
+      "viewDetails": "عرض التفاصيل"
+    },
+    "charts": {
+      "title": "الحركة والنتائج"
+    },
+    "approvals": {
+      "title": "الموافقات المعلقة",
+      "review": "مراجعة",
+      "empty": "لا يوجد ما ينتظر قرارًا.",
+      "bucket": {
+        "all": "الكل",
+        "PENDING": "بانتظار الموافقة",
+        "REVIEW_REQUESTED": "طُلبت معلومات",
+        "FLAGGED": "مُبلَّغ عنها"
+      }
+    },
+    "users": {
+      "searchPlaceholder": "ابحث بالاسم أو البريد الإلكتروني…",
+      "allRoles": "جميع الأدوار",
+      "createSubtitle": "أنشئ حسابًا وعيّن أدواره."
     }
   },
   "staff": {

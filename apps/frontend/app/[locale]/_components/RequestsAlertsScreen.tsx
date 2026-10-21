@@ -100,8 +100,10 @@ export function RequestsAlertsScreen({
   scope = "all",
   admin = false,
 }: {
-  app?: "vmc" | "staff";
+  /** `"admin"` renders the admin console v2 tabs (no sidebar). */
+  app?: "vmc" | "staff" | "admin";
   scope?: "all" | "mine";
+  /** Original admin console: render inside the sidebar `AdminShell`. */
   admin?: boolean;
 }) {
   const Shell = admin ? AdminActivityShell : TopNavShell;
