@@ -161,6 +161,15 @@ bootstrap_phase_a() {
   [ -n "$BACKEND_REPO" ] || die "ecr_backend_repository_url still missing after Phase A."
   [ -n "$FRONTEND_REPO" ] || die "ecr_frontend_repository_url still missing after Phase A."
   [ -n "$ALB_DNS" ] || die "alb_dns_name still missing after Phase A."
+  if [ -z "$API_BASE_URL" ]; then
+    # Targeted applies can skip recording the var-only api_base_url output. A
+    # refresh-only apply is non-destructive (state sync only) and records it.
+    echo "=== api_base_url not recorded by the targeted apply — syncing outputs ==="
+    $TF apply -refresh-only -auto-approve \
+      -var="backend_image_tag=$TAG" -var="frontend_image_tag=$TAG"
+    read_outputs
+  fi
+  [ -n "$API_BASE_URL" ] || die "api_base_url still missing after Phase A — frontend cannot be baked."
   echo "=== Phase A done. ALB DNS = $ALB_DNS ==="
 }
 
@@ -204,6 +213,11 @@ build_push_backend() {
 }
 
 build_push_frontend() {
+  # An empty API_BASE_URL would bake "" into the bundle (browser then calls the
+  # frontend's own origin and every request 404s) — and verify_frontend_bake
+  # passes vacuously on "" (grep -rlF "" matches everything). Happens on fresh
+  # deploys: Phase A's targeted apply doesn't record the api_base_url output.
+  [ -n "$API_BASE_URL" ] || die "API_BASE_URL is empty — refusing to bake a frontend with no API URL. (Set VMS_API_BASE_URL or apply the stack first.)"
   echo "=== Building + pushing FRONTEND @ $TAG ($API_BASE_URL baked in) ==="
   docker build -f apps/frontend/Dockerfile \
     --build-arg NEXT_PUBLIC_API_BASE_URL="$API_BASE_URL" \
