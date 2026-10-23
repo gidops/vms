@@ -14,7 +14,6 @@
   },
   "login": {
     "title": "Connexion",
-    "subtitle": "Accéder au système de gestion des visiteurs",
     "email": "E-mail",
     "emailPlaceholder": "nom@aatc.org",
     "password": "Mot de passe",
@@ -84,7 +83,11 @@
   },
   "requests": {
     "title": "Demandes et alertes",
-    "tabs": { "all": "Tout", "requests": "Demandes", "alerts": "Alertes" },
+    "tabs": {
+      "all": "Tout",
+      "requests": "Demandes",
+      "alerts": "Alertes"
+    },
     "typeRequest": "Demande de visite",
     "typeAlert": "Alertes",
     "createdBy": "Créé par",
@@ -248,7 +251,9 @@
     "hub": "ESPACE PERSONNEL",
     "welcome": "Bienvenue {name}",
     "recentVisitors": "Visiteurs récents",
-    "myVisits": { "title": "Mes visites" },
+    "myVisits": {
+      "title": "Mes visites"
+    },
     "noVisits": "Aucune visite à afficher.",
     "overview": {
       "officeFloor": "Étage du bureau",
@@ -406,5 +411,16 @@
       "csoApproved": "Demande approuvée par le CSO",
       "flaggedVisitor": "Alerte visiteur signalé"
     }
+  },
+  "auth": {
+    "heroTitle": "AATC",
+    "heroSubtitle": "Portail de gestion des visiteurs",
+    "logoAlt": "Afreximbank African Trade Centre",
+    "heroCaption": "Afreximbank African Trade Centre"
+  },
+  "forgotPassword": {
+    "title": "Mot de passe oublié ?",
+    "body": "La réinitialisation des mots de passe est gérée par votre administrateur système. Contactez le support pour réinitialiser le vôtre.",
+    "back": "Retour à la connexion"
   }
 }

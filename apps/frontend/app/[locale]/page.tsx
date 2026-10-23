@@ -3,23 +3,22 @@
 import {
   Alert,
   AlertDescription,
+  AuthLayout,
   Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
   Input,
   Label,
 } from "@vms/ui";
 import { homeFor } from "@vms/contracts";
+import { Lock, Mail } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/shared/auth/AuthContext";
+import { useAuthBrand } from "./_components/AuthBrand";
 
 export default function LoginPage() {
   const t = useTranslations("login");
-  const tApp = useTranslations("app");
+  const brand = useAuthBrand();
   const { login, status, user } = useAuth();
   const router = useRouter();
 
@@ -48,68 +47,16 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-canvas p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="items-center text-center">
-          <span className="text-sm font-semibold text-primary">
-            {tApp("name")}
-          </span>
-          <CardTitle className="text-xl">{t("title")}</CardTitle>
-          <p className="text-sm text-fg-muted">{t("subtitle")}</p>
-        </CardHeader>
-        <CardContent>
-          {error ? (
-            <Alert intent="danger" className="mb-4">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          ) : null}
-
-          <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="email">{t("email")}</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t("emailPlaceholder")}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">{t("password")}</Label>
-                <Link
-                  href="/forgot-password"
-                  className="text-sm text-primary hover:underline"
-                >
-                  {t("forgot")}
-                </Link>
-              </div>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={t("passwordPlaceholder")}
-              />
-            </div>
-
-            <Button type="submit" fullWidth disabled={submitting}>
-              {submitting ? t("signingIn") : t("submit")}
-            </Button>
-          </form>
-
-          <div className="my-4 flex items-center gap-3 text-xs text-fg-subtle">
+    <AuthLayout
+      {...brand}
+      title={t("title")}
+      footer={
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-3 text-xs text-fg-subtle">
             <span className="h-px flex-1 bg-border" />
             {t("or")}
             <span className="h-px flex-1 bg-border" />
           </div>
-
           {/* Placeholder — Okta SSO wiring lands with the OIDC provider. */}
           <Button
             type="button"
@@ -120,8 +67,54 @@ export default function LoginPage() {
           >
             {t("okta")}
           </Button>
-        </CardContent>
-      </Card>
-    </main>
+        </div>
+      }
+    >
+      {error ? (
+        <Alert intent="danger" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="email">{t("email")}</Label>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            required
+            startIcon={<Mail />}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={t("emailPlaceholder")}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="password">{t("password")}</Label>
+          <Input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            required
+            startIcon={<Lock />}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={t("passwordPlaceholder")}
+          />
+          <Link
+            href="/forgot-password"
+            className="self-end text-sm text-fg-muted hover:text-primary hover:underline"
+          >
+            {t("forgot")}
+          </Link>
+        </div>
+
+        <Button type="submit" fullWidth disabled={submitting}>
+          {submitting ? t("signingIn") : t("submit")}
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }

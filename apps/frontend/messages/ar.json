@@ -14,7 +14,6 @@
   },
   "login": {
     "title": "تسجيل الدخول",
-    "subtitle": "الوصول إلى نظام إدارة الزوّار",
     "email": "البريد الإلكتروني",
     "emailPlaceholder": "name@aatc.org",
     "password": "كلمة المرور",
@@ -84,7 +83,11 @@
   },
   "requests": {
     "title": "الطلبات والتنبيهات",
-    "tabs": { "all": "الكل", "requests": "الطلبات", "alerts": "التنبيهات" },
+    "tabs": {
+      "all": "الكل",
+      "requests": "الطلبات",
+      "alerts": "التنبيهات"
+    },
     "typeRequest": "طلب زيارة",
     "typeAlert": "تنبيهات",
     "createdBy": "أنشأه",
@@ -248,7 +251,9 @@
     "hub": "مساحة الموظفين",
     "welcome": "مرحبًا {name}",
     "recentVisitors": "الزوّار الأخيرون",
-    "myVisits": { "title": "زياراتي" },
+    "myVisits": {
+      "title": "زياراتي"
+    },
     "noVisits": "لا توجد زيارات لعرضها.",
     "overview": {
       "officeFloor": "طابق المكتب",
@@ -406,5 +411,16 @@
       "csoApproved": "طلب موافَق عليه من CSO",
       "flaggedVisitor": "تنبيه زائر مُعلَّم"
     }
+  },
+  "auth": {
+    "heroTitle": "AATC",
+    "heroSubtitle": "بوابة إدارة الزوار",
+    "logoAlt": "مركز التجارة الأفريقي - أفريكسيمبنك",
+    "heroCaption": "مركز التجارة الأفريقي - أفريكسيمبنك"
+  },
+  "forgotPassword": {
+    "title": "هل نسيت كلمة المرور؟",
+    "body": "يتولى مسؤول النظام إعادة تعيين كلمات المرور. تواصل مع الدعم لإعادة تعيين كلمتك.",
+    "back": "العودة إلى تسجيل الدخول"
   }
 }

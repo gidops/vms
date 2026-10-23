@@ -14,7 +14,6 @@
   },
   "login": {
     "title": "Sign in",
-    "subtitle": "Access the Visitor Management System",
     "email": "Email",
     "emailPlaceholder": "name@aatc.org",
     "password": "Password",
@@ -84,7 +83,11 @@
   },
   "requests": {
     "title": "Requests & Alerts",
-    "tabs": { "all": "All", "requests": "Requests", "alerts": "Alerts" },
+    "tabs": {
+      "all": "All",
+      "requests": "Requests",
+      "alerts": "Alerts"
+    },
     "typeRequest": "Visit Request",
     "typeAlert": "Alerts",
     "createdBy": "Created by",
@@ -248,7 +251,9 @@
     "hub": "STAFF HUB",
     "welcome": "Welcome {name}",
     "recentVisitors": "Recent Visitors",
-    "myVisits": { "title": "My Visits" },
+    "myVisits": {
+      "title": "My Visits"
+    },
     "noVisits": "No visits to show.",
     "overview": {
       "officeFloor": "Office Floor",
@@ -406,5 +411,16 @@
       "csoApproved": "CSO approved request",
       "flaggedVisitor": "Flagged visitor alert"
     }
+  },
+  "auth": {
+    "heroTitle": "AATC",
+    "heroSubtitle": "Visitor Management Portal",
+    "logoAlt": "Afreximbank African Trade Centre",
+    "heroCaption": "Afreximbank African Trade Centre"
+  },
+  "forgotPassword": {
+    "title": "Forgot password?",
+    "body": "Password resets are handled by your system administrator. Contact support to have yours reset.",
+    "back": "Back to login"
   }
 }
