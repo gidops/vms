@@ -24,7 +24,6 @@
   },
   "login": {
     "title": "Sign in",
-    "subtitle": "Access the Visitor Management System",
     "email": "Email",
     "emailPlaceholder": "name@aatc.org",
     "password": "Password",
@@ -1190,5 +1189,16 @@
       "title": "Help & Support",
       "message": "Need help with the VMS or found a problem? Contact the development team through the established support channel."
     }
+  },
+  "auth": {
+    "heroTitle": "AATC",
+    "heroSubtitle": "Visitor Management Portal",
+    "logoAlt": "Afreximbank African Trade Centre",
+    "heroCaption": "Afreximbank African Trade Centre"
+  },
+  "forgotPassword": {
+    "title": "Forgot password?",
+    "body": "Password resets are handled by your system administrator. Contact support to have yours reset.",
+    "back": "Back to login"
   }
 }

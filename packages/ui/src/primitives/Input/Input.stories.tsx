@@ -36,3 +36,7 @@ export const Invalid: Story = {
     </div>
   ),
 };
+
+export const WithStartIcon: Story = {
+  args: { startIcon: <span>@</span>, placeholder: "name@aatc.org" },
+};

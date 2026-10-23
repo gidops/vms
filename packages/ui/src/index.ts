@@ -46,6 +46,7 @@ export * from "./components/YesNoControl/index";
 // Patterns (tier 3)
 export * from "./patterns/AlertModal/index";
 export * from "./patterns/AppShell/index";
+export * from "./patterns/AuthLayout/index";
 export * from "./patterns/DetailDrawer/index";
 export * from "./patterns/FilterBar/index";
 export * from "./patterns/PageHeader/index";
