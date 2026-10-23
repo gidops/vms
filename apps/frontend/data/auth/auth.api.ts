@@ -25,8 +25,8 @@ export interface SwitchRoleResult {
 
 export interface NotificationPrefs {
   newInviteRequest: boolean;
-  csoDenied: boolean;
-  csoApproved: boolean;
+  smDenied: boolean;
+  smApproved: boolean;
   flaggedVisitor: boolean;
 }
 

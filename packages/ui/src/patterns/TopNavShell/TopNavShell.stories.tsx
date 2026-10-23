@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { LayoutGrid, Settings, Users } from "lucide-react";
+import { SideNav } from "../SideNav/SideNav";
 import { Avatar } from "../../primitives/Avatar/Avatar";
 import { Button } from "../../primitives/Button/Button";
 import {
@@ -60,6 +62,40 @@ export const Default: Story = {
             </SelectContent>
           </Select>
         </FilterBar>
+      }
+    >
+      <div className="text-fg-muted">Main content area</div>
+    </TopNavShell>
+  ),
+};
+
+/** Console layout: section sidebar under the nav, full-width content. */
+export const WithSidebar: Story = {
+  render: () => (
+    <TopNavShell
+      nav={
+        <TopNav
+          brand={
+            <span className="text-lg font-bold tracking-wide">AFREXIMBANK</span>
+          }
+          end={<Avatar name="Admin User" size="sm" />}
+        />
+      }
+      sidebar={
+        <SideNav
+          label="Admin sections"
+          items={[
+            {
+              key: "overview",
+              label: "Overview",
+              icon: LayoutGrid,
+              href: "#",
+              active: true,
+            },
+            { key: "visitors", label: "Visitors", icon: Users, href: "#" },
+            { key: "settings", label: "Settings", icon: Settings, href: "#" },
+          ]}
+        />
       }
     >
       <div className="text-fg-muted">Main content area</div>

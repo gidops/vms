@@ -1,16 +1,20 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { ROLES } from '@vms/contracts';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
+import { UsersService } from './../src/modules/identity/users.service';
 import { PrismaService } from './../src/prisma/prisma.service';
 
 /**
  * End-to-end auth + audit trail. Boots the real app (global JWT/permission
  * guards) against a live database and asserts that security-relevant events
- * land in `AuditLog`. Self-contained: it provisions its own account via the
- * open signup route, so it does not depend on seed/DB state. Requires
- * DATABASE_URL + JWT_SECRET and a migrated database (see CI / runbook).
+ * land in `AuditLog`. Self-contained and seed/DB-state independent: on an
+ * empty database it bootstraps its account through /auth/signup (exercising
+ * the first-run path); on a populated database — where signup is locked — it
+ * provisions the account directly via UsersService. Requires DATABASE_URL +
+ * JWT_SECRET and a migrated database (see CI / runbook).
  */
 describe('Auth + audit trail (e2e)', () => {
   let app: INestApplication<App>;
@@ -29,14 +33,49 @@ describe('Auth + audit trail (e2e)', () => {
     prisma = app.get(PrismaService);
     await app.init();
 
-    await request(app.getHttpServer())
-      .post('/auth/signup')
-      .send({ email, fullName: 'E2E Tester', password })
-      .expect(201);
+    if ((await prisma.user.count()) === 0) {
+      await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ email, fullName: 'E2E Tester', password })
+        .expect(201);
+    } else {
+      await app.get(UsersService).create({
+        email,
+        fullName: 'E2E Tester',
+        password,
+        roles: [ROLES.SUPER_ADMIN],
+      });
+    }
   });
 
   afterAll(async () => {
     await app.close();
+  });
+
+  it('refuses signup once a user exists, and records auth.signup_blocked', async () => {
+    // beforeAll guarantees at least one user, so the bootstrap must be locked.
+    await request(app.getHttpServer())
+      .get('/auth/signup-available')
+      .expect(200)
+      .expect({ available: false });
+
+    await request(app.getHttpServer())
+      .post('/auth/signup')
+      .send({
+        email: 'intruder@test.local',
+        fullName: 'Intruder',
+        password: 'Passw0rd!',
+      })
+      .expect(403);
+
+    const row = await prisma.auditLog.findFirst({
+      where: { action: 'auth.signup_blocked' },
+      orderBy: { createdAt: 'desc' },
+    });
+    expect(row).not.toBeNull();
+    expect((row?.metadata as { email?: string })?.email).toBe(
+      'intruder@test.local',
+    );
   });
 
   it('rejects bad credentials and records auth.login_failed', async () => {

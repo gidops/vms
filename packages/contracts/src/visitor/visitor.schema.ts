@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeE164 } from "../common/phone.js";
 
 /** A person who visits the premises. PII fields are encrypted at rest server-side. */
 export const Visitor = z.object({
@@ -16,7 +17,9 @@ export type Visitor = z.infer<typeof Visitor>;
 export const RegisterVisitorInput = z.object({
   fullName: z.string().min(1),
   email: z.string().email(),
-  phone: z.string().min(3).optional(),
+  // Normalized to E.164 on parse so dirty/legacy shapes (spaces, doubled country
+  // codes) are cleaned server-side too, not just at the form layer.
+  phone: z.string().min(3).transform(normalizeE164).optional(),
   organization: z.string().optional(),
 });
 export type RegisterVisitorInput = z.infer<typeof RegisterVisitorInput>;

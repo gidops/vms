@@ -98,3 +98,70 @@ export async function api<T>(
 
   return json as T;
 }
+
+/** Pull `filename="…"` out of a Content-Disposition header. */
+export function filenameFromDisposition(
+  header: string | null,
+  fallback: string,
+): string {
+  const match = header?.match(/filename="?([^";]+)"?/i);
+  return match?.[1] ?? fallback;
+}
+
+/**
+ * Authenticated binary GET (images, CSV / Excel). Same auth + one-shot refresh
+ * as {@link api}; resolves to the body as a Blob with the response headers.
+ */
+export async function apiBlob(
+  path: string,
+  _retry = false,
+): Promise<{ blob: Blob; headers: Headers }> {
+  const headers: Record<string, string> = {
+    "x-correlation-id": crypto.randomUUID(),
+    "x-locale": currentLocale(),
+  };
+  const token = tokenStore.getAccessToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const response = await fetch(`${BASE_URL}${path}`, { headers });
+  if (response.status === 401 && !_retry && unauthorizedHandler) {
+    const refreshed = await unauthorizedHandler();
+    if (refreshed) return apiBlob(path, true);
+  }
+  if (!response.ok) {
+    let body: unknown;
+    try {
+      body = await response.json();
+    } catch {
+      body = undefined;
+    }
+    const title =
+      (body as { title?: string } | undefined)?.title ?? response.statusText;
+    throw new ApiError(response.status, title, body);
+  }
+  return { blob: await response.blob(), headers: response.headers };
+}
+
+/**
+ * Authenticated file download (CSV / Excel exports): fetches through
+ * {@link apiBlob} and saves it through a temporary object URL.
+ */
+export async function apiDownload(
+  path: string,
+  fallbackName: string,
+): Promise<{ filename: string; size: number }> {
+  const { blob, headers } = await apiBlob(path);
+  const filename = filenameFromDisposition(
+    headers.get("Content-Disposition"),
+    fallbackName,
+  );
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return { filename, size: blob.size };
+}

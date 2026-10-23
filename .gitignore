@@ -35,7 +35,13 @@ npm-debug.log*
 # Terraform state (never commit — may contain secrets)
 *.tfstate
 *.tfstate.*
+*.tfplan
 **/.terraform/
 
 # CLAUDE
 CLAUDE.md
+.claude/
+
+# Local SonarQube state (bootstrapped credentials/token) + scanner work dir
+/.sonar/
+/.scannerwork/

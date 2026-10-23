@@ -12,13 +12,17 @@
     "start": "next start",
     "lint": "eslint",
     "lint:check": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:smoke": "playwright test"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.0",
     "@vms/contracts": "*",
     "@vms/tokens": "*",
     "@vms/ui": "*",
+    "geist": "^1.7.2",
     "next": "16.2.6",
     "next-intl": "^4.3.0",
     "papaparse": "^5.5.3",
@@ -26,14 +30,20 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
     "@types/node": "^20",
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5.2.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "jsdom": "^26.1.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

@@ -10,6 +10,22 @@ import { QrService } from '../qr/qr.service';
 
 const EMAIL_DIR = join(__dirname, 'email');
 
+/** Coerce a payload value to a WhatsApp template variable string safely. */
+function toTemplateVar(value: unknown): string {
+  if (value == null) return '';
+  if (typeof value === 'string') return value;
+  if (
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    typeof value === 'bigint'
+  ) {
+    return String(value);
+  }
+  // Objects/dates/arrays — payloads pre-format these to strings, so this is a
+  // defensive fallback rather than the expected path.
+  return JSON.stringify(value) ?? '';
+}
+
 /**
  * Renders a notification for a channel + locale. Email uses MJML (responsive +
  * automatic CSS inlining) wrapped by a reusable Handlebars layout, with a `{{t}}`
@@ -53,10 +69,21 @@ export class TemplateService {
         return this.renderEmail(meta, locale, data);
       case NotificationChannel.SMS:
         return { text: this.i18n.translate(`sms.${meta.ns}`, locale, data) };
-      case NotificationChannel.WHATSAPP:
+      case NotificationChannel.WHATSAPP: {
+        const text = this.i18n.translate(`whatsapp.${meta.ns}`, locale, data);
+        const tpl = meta.whatsappTemplate;
+        if (!tpl) return { text };
+        // Resolve the approved template's positional variables from the payload.
+        // The transport decides (via WHATSAPP_USE_TEMPLATES) whether to send it.
         return {
-          text: this.i18n.translate(`whatsapp.${meta.ns}`, locale, data),
+          text,
+          template: {
+            name: tpl.name,
+            languageCode: tpl.languageCode ?? locale.toLowerCase(),
+            variables: tpl.vars.map((key) => toTemplateVar(data[key])),
+          },
         };
+      }
       case NotificationChannel.IN_APP:
         return {
           subject: this.i18n.translate(`inapp.${meta.ns}.title`, locale, data),

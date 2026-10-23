@@ -47,18 +47,17 @@ docker compose up -d postgres adminer seq
 # Apply database migrations
 cd apps/backend && npx prisma migrate deploy && cd ../..
 
-# Backend  (terminal 1) → http://localhost:4000   (seeds an admin user on first boot)
+# Backend  (terminal 1) → http://localhost:4000   (seeds roles/permissions on first boot)
 npm run start:dev -w @vms/backend
 
 # Frontend (terminal 2) → http://localhost:3000
 npm run dev -w @vms/frontend
 ```
 
-Open <http://localhost:3000> and sign in:
-
-| Email | Password |
-| --- | --- |
-| `admin@aatc.org` | `Passw0rd!` |
+Open <http://localhost:3000/signup> and create the first admin account — no user
+is seeded. Signup is a first-run bootstrap: it creates a SUPER_ADMIN and locks
+itself the moment any user exists (further attempts get 403 and are recorded in
+the audit log as `auth.signup_blocked`). To re-open it in dev, wipe the database.
 
 > Prefer one command? `docker compose up --build` runs the whole stack in Docker —
 > first set `DATABASE_URL`'s host to `postgres` in `apps/backend/.env`. See the
@@ -66,13 +65,13 @@ Open <http://localhost:3000> and sign in:
 
 ### URLs
 
-| Service | URL |
-| --- | --- |
-| Frontend (login) | <http://localhost:3000/> · `/fr`, `/ar` for French/Arabic (RTL) |
-| Dashboard | <http://localhost:3000/dashboard> |
-| Backend health | <http://localhost:4000/health> |
-| Adminer | <http://localhost:8080> (System **PostgreSQL**, server **postgres**, user/pass/db **vms/vms/vms**) |
-| Storybook | `npm run storybook -w @vms/ui` |
+| Service          | URL                                                                                                |
+| ---------------- | -------------------------------------------------------------------------------------------------- |
+| Frontend (login) | <http://localhost:3000/> · `/fr`, `/ar` for French/Arabic (RTL)                                    |
+| Dashboard        | <http://localhost:3000/dashboard>                                                                  |
+| Backend health   | <http://localhost:4000/health>                                                                     |
+| Adminer          | <http://localhost:8080> (System **PostgreSQL**, server **postgres**, user/pass/db **vms/vms/vms**) |
+| Storybook        | `npm run storybook -w @vms/ui`                                                                     |
 
 ## Documentation
 

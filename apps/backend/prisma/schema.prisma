@@ -35,7 +35,8 @@ enum VisitType {
 
 enum VisitStatus {
   PENDING
-  NEEDS_MORE_INFO
+  REVIEW_REQUESTED
+  FLAGGED
   APPROVED
   DENIED
   CHECKED_IN
@@ -72,6 +73,12 @@ enum AlertStatus {
   ACKNOWLEDGED
   RESOLVED
   DISMISSED
+}
+
+enum AlertType {
+  SECURITY_REVIEW
+  ADDITIONAL_INFO
+  RESTRICTED_MATCH
 }
 
 enum GateEventType {
@@ -122,11 +129,14 @@ model User {
   avatarKey         String?
   timezone          String? // IANA-ish identifier for region/time preference
   assignedDesk      String? // VMC reception desk/location label
-  // Per-channel notification toggles, e.g. { newInviteRequest, csoDenied, ... }.
+  // Per-channel notification toggles, e.g. { newInviteRequest, smDenied, ... }.
   notificationPrefs Json?
   isActive          Boolean      @default(true)
   preferredLocale   Locale       @default(EN)
   mfaEnabled        Boolean      @default(false)
+  // When the user last opened Requests & Alerts. An inbox item is "unread" for
+  // them if its updatedAt is newer than this; opening the page bumps it to now.
+  lastInboxSeenAt   DateTime?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
@@ -137,6 +147,7 @@ model User {
   host          Host?
   createdVisits Visit[]        @relation("VisitCreatedBy")
   authoredNotes Note[]
+  deskQrsCreated DeskQr[]
 
   @@index([tenantId])
 }
@@ -278,8 +289,22 @@ model Host {
 model Visit {
   id           String      @id @default(uuid())
   visitorId    String
-  hostId       String
+  // Optional: walk-ins may not be visiting a named staff host.
+  hostId       String?
   invitationId String?     @unique
+  // Set ONLY for a true group visit — every guest of that group shares one
+  // groupId so the group collapses to one VMC row and checks in together. Bulk
+  // invites/walk-ins and lone guests are independent visits with groupId = null.
+  groupId      String?
+  // True when this visit belongs to a group visit (the group signal). groupName
+  // and groupContact are the shared group display name and optional contact
+  // (a free-text email or phone number).
+  isGroupVisit Boolean    @default(false)
+  groupName    String?
+  groupContact String?
+  // Human-friendly invite code (e.g. "5A19-795") generated for invites at
+  // creation and encoded in the guest's QR. Null for walk-ins.
+  referenceCode String?    @unique
   type         VisitType
   status       VisitStatus @default(PENDING)
   purpose      String
@@ -287,6 +312,8 @@ model Visit {
   floor        String?
   riskLevel    RiskLevel?
   scheduledAt  DateTime?
+  // Set when the visit's QR is validated at the gate (or auto-set at VMC check-in).
+  gateValidatedAt DateTime?
   checkInAt    DateTime?
   checkOutAt   DateTime?
   approvedById String?
@@ -296,11 +323,22 @@ model Visit {
   // Denormalized creator name, preserved if the creator's account is deleted.
   createdByName String?
   source       String?     @default("VMC_STATION")
+  // Intake answers (null = legacy visit created before the questions existed).
+  // needsEvacuationAssist feeds the live Evacuation Roll; commsConsent is the
+  // answer given at THIS visit (current opt-in status lives in CommsConsentEvent).
+  needsEvacuationAssist Boolean?
+  // When the answer is Yes: MOBILITY | VISUAL | HEARING | MEDICAL | OTHER
+  // (contracts EVACUATION_ASSIST_TYPES), plus free text for OTHER.
+  evacuationAssistTypes String[] @default([])
+  evacuationAssistOther String?
+  commsConsent          Boolean?
+  // Set when the visit came from the desk QR self-registration.
+  deskQrRegistration DeskQrRegistration?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
   visitor    Visitor     @relation(fields: [visitorId], references: [id], onDelete: Cascade)
-  host       Host        @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  host       Host?       @relation(fields: [hostId], references: [id], onDelete: Cascade)
   invitation Invitation? @relation(fields: [invitationId], references: [id])
   createdBy  User?       @relation("VisitCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   pass       Pass?
@@ -312,6 +350,8 @@ model Visit {
   @@index([status])
   @@index([visitorId])
   @@index([hostId])
+  @@index([groupId])
+  @@index([scheduledAt])
 }
 
 model Invitation {
@@ -348,12 +388,17 @@ model Pass {
 model AccessCard {
   id         String    @id @default(uuid())
   cardNumber String    @unique
+  // Zone/location the badge belongs to (e.g. "5th Floor - left wing"). Drives the
+  // "Assign pass" dropdown grouping at check-in.
+  zone       String?
   passId     String?   @unique
   assignedAt DateTime?
   returnedAt DateTime?
   isActive   Boolean   @default(true)
 
   pass Pass? @relation(fields: [passId], references: [id], onDelete: SetNull)
+
+  @@index([zone])
 }
 
 model Rating {
@@ -374,6 +419,7 @@ model Alert {
   id           String      @id @default(uuid())
   visitId      String?
   visitorId    String?
+  type         AlertType   @default(SECURITY_REVIEW)
   level        RiskLevel
   status       AlertStatus @default(OPEN)
   reason       String
@@ -466,6 +512,31 @@ model Notification {
 
   @@index([status, availableAt])
   @@index([userId, readAt])
+  @@index([visitId])
+}
+
+// ---------------------------------------------------------------------------
+// Communication consent (NDPR accountability)
+// ---------------------------------------------------------------------------
+enum ConsentSource {
+  VISIT
+  WITHDRAWAL
+}
+
+// Append-only log of every comms-consent answer, keyed on the normalised
+// (trimmed, lower-cased) email. The current status for an email is its latest
+// event; a withdrawal is a new event, so visit history is never rewritten.
+model CommsConsentEvent {
+  id          String        @id @default(uuid())
+  email       String
+  consent     Boolean
+  source      ConsentSource
+  visitId     String?
+  actorUserId String?
+  createdAt   DateTime      @default(now())
+
+  @@index([email, createdAt])
+  @@index([visitId])
 }
 
 // ---------------------------------------------------------------------------
@@ -485,4 +556,50 @@ model OutboxEvent {
   createdAt     DateTime     @default(now())
 
   @@index([status, availableAt])
+}
+
+/// The one QR printed at the VMC desk. Visitors scan it, fill in a short form
+/// and, once reception reads them the code emailed to `codeEmail`, become
+/// today's walk-ins. Only one row ever exists (`key` is always "desk").
+model DeskQr {
+  id             String    @id @default(uuid())
+  key            String    @unique @default("desk")
+  /// In the printed URL. New tokens are random base64url; an imported V1
+  /// token keeps its 32-hex value so the poster already on the desk works.
+  token          String    @unique
+  isActive       Boolean   @default(true)
+  disabledAt     DateTime?
+  /// Verification codes go to this inbox (V1: the issuer's email).
+  codeEmail      String
+  tokenRotatedAt DateTime  @default(now())
+  /// Form opens in the WAT day `scanDay` (YYYY-MM-DD); resets on a new day.
+  scanDay        String?
+  scansToday     Int       @default(0)
+  lastScanAt     DateTime?
+  createdById    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  createdBy     User?                @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  registrations DeskQrRegistration[]
+}
+
+/// A submitted self-registration waiting for its desk code. The form is kept
+/// encrypted (it holds personal data) and the code only as a keyed hash. The
+/// visit is created when the right code is entered.
+model DeskQrRegistration {
+  id        String   @id @default(uuid())
+  deskQrId  String
+  /// EncryptionService ciphertext of the submitted form (JSON).
+  payload   String
+  codeHash  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  visitId   String?  @unique
+  createdAt DateTime @default(now())
+
+  deskQr DeskQr @relation(fields: [deskQrId], references: [id], onDelete: Cascade)
+  visit  Visit?  @relation(fields: [visitId], references: [id], onDelete: SetNull)
+
+  @@index([deskQrId, createdAt])
 }

@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import * as React from "react";
 import {
   Drawer,
@@ -64,20 +65,65 @@ export interface DetailSectionProps extends Omit<
   "title"
 > {
   title: React.ReactNode;
+  /** When true, the section header becomes a toggle that shows/hides the body. */
+  collapsible?: boolean;
+  /** Initial open state for a collapsible section (default open). */
+  defaultOpen?: boolean;
 }
 
+/**
+ * A titled block in a DetailDrawer body. With `collapsible`, the heading becomes
+ * an accessible toggle (aria-expanded + a labelled region) with a rotating
+ * chevron — used by the Visit Details sheet where every section can collapse.
+ */
 export function DetailSection({
   title,
+  collapsible = false,
+  defaultOpen = true,
   className,
   children,
   ...props
 }: DetailSectionProps) {
+  const [open, setOpen] = React.useState(defaultOpen);
+  // Stable, SSR-safe ids linking the toggle to its region (useId avoids hydration
+  // mismatch across server/client renders).
+  const reactId = React.useId();
+  const bodyId = `detail-section-${reactId}`;
+
+  if (!collapsible) {
+    return (
+      <section className={cn("flex flex-col gap-2", className)} {...props}>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-primary">
+          {title}
+        </h3>
+        {children}
+      </section>
+    );
+  }
+
   return (
     <section className={cn("flex flex-col gap-2", className)} {...props}>
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-primary">
-        {title}
+      <h3>
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          aria-controls={bodyId}
+          className="flex w-full items-center justify-between gap-2 text-start text-xs font-semibold uppercase tracking-wide text-primary outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+        >
+          <span>{title}</span>
+          <ChevronDown
+            className={cn(
+              "size-4 shrink-0 text-fg-subtle transition-transform",
+              open && "rotate-180",
+            )}
+            aria-hidden="true"
+          />
+        </button>
       </h3>
-      {children}
+      <div id={bodyId} hidden={!open} className="flex flex-col gap-2">
+        {children}
+      </div>
     </section>
   );
 }

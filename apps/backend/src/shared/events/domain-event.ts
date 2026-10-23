@@ -26,13 +26,36 @@ export const EVENT_TYPES = {
   VisitorCheckedOut: 'visitor.checked_out',
   VisitApproved: 'visit.approved',
   VisitDenied: 'visit.denied',
+  VisitFlagged: 'visit.flagged',
+  VisitReviewRequested: 'visit.review_requested',
   VisitCancelled: 'visit.cancelled',
   VisitUpdated: 'visit.updated',
   InvitationCreated: 'invitation.created',
   VisitRequested: 'visit.requested',
+  VisitInviteResent: 'visit.invite_resent',
+  AlertCreated: 'alert.created',
   AlertUpdated: 'alert.updated',
   NoteAdded: 'note.added',
   VisitorRated: 'visitor.rated',
+  /** Recorded before the first byte of a visitor export is sent. */
+  VisitsExportStarted: 'report.visits_export_started',
+  /** Same export id as the start row, with the final row count. */
+  VisitsExported: 'report.visits_exported',
+  /** Same export id; the stream broke (client abort, DB error) part-way. */
+  VisitsExportFailed: 'report.visits_export_failed',
+  DeskQrCreated: 'desk_qr.created',
+  /** The printed V1 issuer QR was taken over as the desk QR at cutover. */
+  DeskQrImported: 'desk_qr.imported',
+  DeskQrUpdated: 'desk_qr.updated',
+  /** New token: the printed poster stops working. */
+  DeskQrRotated: 'desk_qr.rotated',
+  DeskQrDisabled: 'desk_qr.disabled',
+  DeskQrEnabled: 'desk_qr.enabled',
+  /** A visitor submitted the form; a code went to the desk inbox. */
+  DeskQrCodeSent: 'desk_qr.code_sent',
+  ConsentWithdrawn: 'consent.withdrawn',
+  ConsentExported: 'consent.exported',
+  NotificationRetried: 'notification.retried',
   UserLoggedIn: 'auth.user_logged_in',
   UserCreated: 'user.created',
   UserRolesUpdated: 'user.roles_updated',
@@ -42,6 +65,7 @@ export const EVENT_TYPES = {
   // Security events recorded directly (no successful business transaction to
   // ride the outbox), via SecurityAuditService → AuditLog + Seq.
   LoginFailed: 'auth.login_failed',
+  SignupBlocked: 'auth.signup_blocked',
   Logout: 'auth.logout',
   TokenRefreshed: 'auth.token_refreshed',
   RefreshReuseDetected: 'auth.refresh_reuse_detected',

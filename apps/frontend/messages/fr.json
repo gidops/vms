@@ -3,14 +3,24 @@
     "name": "AATC VMS"
   },
   "nav": {
+    "home": "Accueil",
     "schedule": "Programme du jour",
     "myVisits": "Mes visites",
     "requests": "Demandes et alertes",
+    "updates": "Mises à jour",
     "visitors": "Visiteurs",
     "switchAccount": "Changer de compte",
     "accountSettings": "Paramètres du compte",
     "help": "Aide / Support",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "notifications": "Notifications",
+    "notificationsUnread": "Notifications, {count} non lues",
+    "overview": "Vue d'ensemble",
+    "users": "Utilisateurs",
+    "analytics": "Analyses",
+    "evacuation": "Évacuation",
+    "optIns": "Abonnements",
+    "deskQr": "QR accueil"
   },
   "login": {
     "title": "Connexion",
@@ -35,7 +45,12 @@
       "searchPlaceholder": "Rechercher visiteur, hôte, étage, ID de pass",
       "allVisitTypes": "Tous les types de visite",
       "allPurpose": "Tous les motifs",
-      "search": "Rechercher"
+      "search": "Rechercher",
+      "status": {
+        "APPROVED": "Attendu",
+        "CHECKED_IN": "Sur site",
+        "CHECKED_OUT": "Parti"
+      }
     },
     "stats": {
       "onsite": "Visiteurs sur site",
@@ -59,7 +74,8 @@
     },
     "channel": {
       "invited": "Invité",
-      "walkIn": "Sans rendez-vous"
+      "walkIn": "Sans rendez-vous",
+      "qr": "QR"
     },
     "actions": {
       "checkIn": "Arrivée",
@@ -67,19 +83,25 @@
       "viewDetails": "Voir les détails"
     },
     "columns": {
-      "visitor": "Visiteur",
+      "visitor": "Invité",
       "channel": "Canal",
       "hostUnit": "Hôte / Étage / Unité",
       "purpose": "Motif",
       "timeCreated": "Heure de création",
       "status": "Statut",
-      "action": "Action"
-    }
+      "action": "Action",
+      "guestCount": "Nb d'invités"
+    },
+    "guestCount": "{count} invité(s)",
+    "onsiteElapsed": "{time} h",
+    "noVisits": "Aucune visite à afficher.",
+    "noMatches": "Aucune visite ne correspond à votre recherche ou à vos filtres."
   },
   "common": {
     "notifications": "Notifications",
     "logout": "Se déconnecter",
-    "allStatus": "Tous les statuts"
+    "allStatus": "Tous les statuts",
+    "noAccess": "Vous n'avez pas accès à cette page."
   },
   "requests": {
     "title": "Demandes et alertes",
@@ -93,17 +115,23 @@
     "createdBy": "Créé par",
     "notesCount": "{count} notes",
     "empty": "Aucune demande ni alerte",
-    "detailTitle": "Détails de la demande de visite",
+    "detailTitle": "Détails de la visite",
+    "updateDetailTitle": "Détails de la mise à jour",
+    "inviteRequestDetailTitle": "Détails de la demande d'invitation",
+    "addingNote": "Ajout de la note",
+    "sendCode": "Envoyer le CODE à l'invité",
+    "codeSent": "Code envoyé",
+    "notAssigned": "Non attribué",
     "alertDetailTitle": "Détails de l'alerte",
     "visitorAwaiting": "En attente d'approbation",
     "vmcReception": "Réception VMC",
     "noNotes": "Aucune remarque pour l'instant.",
-    "addNotePlaceholder": "Ajouter une note…",
+    "addNotePlaceholder": "Commencer à écrire",
     "status": {
-      "awaitingApproval": "En attente d'approbation du CSO",
+      "awaitingApproval": "En attente d'approbation du SM",
       "needsMoreInfo": "Informations requises",
-      "approvedByCso": "Approuvé par le CSO",
-      "deniedByCso": "Refusé par le CSO",
+      "approvedBySm": "Approuvé par le SM",
+      "deniedBySm": "Refusé par le SM",
       "cancelled": "Annulé",
       "onsite": "Sur site",
       "checkedOut": "Sorti",
@@ -111,20 +139,37 @@
       "open": "Ouvert",
       "acknowledged": "Pris en compte",
       "resolved": "Résolu",
-      "dismissed": "Rejeté"
+      "dismissed": "Rejeté",
+      "reviewRequested": "Révision demandée",
+      "flagged": "Signalé"
     },
     "timeline": {
       "inviteCreated": "Invitation créée",
-      "awaitingApproval": "En attente d'approbation du CSO",
+      "awaitingApproval": "En attente d'approbation du SM",
+      "awaitingSm": "En attente d'approbation du SM",
       "checkedIn": "Entré",
       "passIssued": "Pass émis",
-      "checkedOut": "Sorti"
+      "issuedPass": "Laissez-passer émis",
+      "checkedOut": "Sorti",
+      "gateValidated": "Validation au portail réussie"
     },
     "sections": {
       "hostDetails": "Détails hôte / unité / étage",
       "floor": "Étage",
-      "visitorInfo": "Informations sur le visiteur",
-      "trackStatus": "Suivi de la demande",
+      "host": "Hôte",
+      "visitorInfo": "Informations sur l'invité",
+      "trackStatus": "Suivre la progression de la visite",
+      "visitSummary": "Résumé de la visite",
+      "visitingFloor": "Étage de visite",
+      "guestPass": "Laissez-passer",
+      "checkInDateTime": "Date/heure d'arrivée",
+      "checkInTime": "Heure d'arrivée",
+      "checkOutDateTime": "Date/heure de départ",
+      "timeSpentOnsite": "Temps passé sur site",
+      "checkedInBy": "Enregistré par",
+      "visitNotes": "Notes de visite",
+      "destination": "Destination",
+      "rateGuest": "Évaluer l'invité",
       "purposeOfVisit": "Objet de la visite",
       "purposeCategory": "Catégorie d'objet",
       "scheduledFor": "Prévu pour",
@@ -134,7 +179,18 @@
       "source": "Source",
       "role": "Rôle",
       "remarks": "Remarques / notes",
-      "reason": "Motif"
+      "reason": "Motif",
+      "requestingHost": "Hôte/Unité/Étage demandeur",
+      "requestedBy": "Demandé par",
+      "staffRole": "Fonction",
+      "scheduled": "Planifié",
+      "alertSummary": "Résumé de l'alerte",
+      "riskLevel": "Niveau de risque",
+      "alertCategory": "Catégorie d'alerte",
+      "flaggedAt": "Signalé le",
+      "alertReason": "Motif de l'alerte",
+      "trackRequestStatus": "Suivi de la demande",
+      "checkedOutBy": "Sorti par"
     },
     "actions": {
       "cancelRequest": "Annuler la demande",
@@ -146,9 +202,101 @@
       "approve": "Approuver",
       "deny": "Refuser",
       "resubmit": "Renvoyer la demande",
-      "confirmDeny": "Confirmer le refus"
+      "confirmDeny": "Confirmer le refus",
+      "checkIn": "Enregistrer",
+      "checkOut": "Sortie",
+      "requestInfo": "Demander des infos",
+      "flag": "Signaler",
+      "confirmFlag": "Confirmer le signalement",
+      "confirmRequestInfo": "Envoyer la demande"
     },
-    "denyReasonPlaceholder": "Motif du refus"
+    "denyReasonPlaceholder": "Motif du refus",
+    "typeFeedback": "Retour du SM",
+    "editTitle": "Modifier la demande de visite",
+    "alertBanner": "N'enregistrez pas ce visiteur et n'émettez pas de badge tant que l'alerte n'a pas été examinée par le SM/la sécurité.",
+    "alertNeedsAttention": "Attention requise",
+    "alertDefaultCategory": "Correspondance de visiteur signalé",
+    "respondPlaceholder": "Répondre à l'alerte…",
+    "pagination": {
+      "prev": "Précédent",
+      "next": "Suivant",
+      "pageOf": "Page {page} sur {total}"
+    },
+    "card": {
+      "flaggedTitle": "Correspondance de visiteur signalé",
+      "title": {
+        "PENDING": "Demande de visite de {host}",
+        "REVIEW_REQUESTED": "Informations supplémentaires demandées",
+        "APPROVED": "Demande approuvée par le SM",
+        "DENIED": "Demande de visite refusée",
+        "CHECKED_IN": "{visitor} enregistré(e)",
+        "CHECKED_OUT": "{visitor} sorti(e)",
+        "CANCELLED": "Demande annulée",
+        "EXPIRED": "Demande expirée",
+        "FLAGGED": "Visite signalée"
+      },
+      "desc": {
+        "PENDING": "Demande de visite pour {visitor} de",
+        "REVIEW_REQUESTED": "Le SM a besoin d'informations supplémentaires pour {visitor} de",
+        "APPROVED": "La visite de {visitor} à {host} a été approuvée.",
+        "DENIED": "La visite de {visitor} à {host} a été refusée par le SM.",
+        "CHECKED_IN": "{visitor} est maintenant sur place.",
+        "CHECKED_OUT": "{visitor} est sorti(e).",
+        "CANCELLED": "La demande de visite pour {visitor} a été annulée.",
+        "EXPIRED": "La demande de visite pour {visitor} a expiré.",
+        "FLAGGED": "La visite de {visitor} a été signalée pour examen de sécurité."
+      }
+    },
+    "pill": {
+      "PENDING": "En attente",
+      "REVIEW_REQUESTED": "Révision demandée",
+      "FLAGGED": "Signalé",
+      "APPROVED": "Attendu",
+      "DENIED": "Refusé",
+      "CHECKED_IN": "Sur place",
+      "CHECKED_OUT": "Sorti",
+      "CANCELLED": "Annulé",
+      "EXPIRED": "Expiré"
+    },
+    "statusOption": {
+      "PENDING": "En attente",
+      "REVIEW_REQUESTED": "Infos requises",
+      "APPROVED": "Approuvé",
+      "DENIED": "Refusé",
+      "CHECKED_IN": "Sur place",
+      "CHECKED_OUT": "Sorti",
+      "CANCELLED": "Annulé",
+      "EXPIRED": "Expiré",
+      "OPEN": "Ouvert",
+      "ACKNOWLEDGED": "Pris en compte",
+      "RESOLVED": "Résolu",
+      "DISMISSED": "Rejeté",
+      "FLAGGED": "Signalé"
+    },
+    "typeOption": {
+      "WALK_IN": "Sans rendez-vous",
+      "PRE_INVITED": "Invité",
+      "APPOINTMENT": "Rendez-vous"
+    },
+    "stripe": {
+      "securityReview": "Examen de sécurité requis",
+      "additionalInfo": "Informations supplémentaires requises"
+    },
+    "riskLevel": {
+      "LOW": "Faible",
+      "MEDIUM": "Moyen",
+      "HIGH": "Élevé",
+      "CRITICAL": "Critique"
+    },
+    "requestInfoPlaceholder": "Quelles informations supplémentaires sont nécessaires ?",
+    "flagReasonPlaceholder": "Décrivez le problème de sécurité…",
+    "createdByYou": "(vous)",
+    "evacuationAssistYes": "A besoin d'aide pour l'évacuation",
+    "evacuationAssistNo": "Aide à l'évacuation : non",
+    "sources": {
+      "deskQr": "QR de l'accueil (auto-enregistrement)",
+      "selfRegistered": "Le visiteur, via le QR de l'accueil"
+    }
   },
   "language": {
     "select": "Choisir la langue",
@@ -157,12 +305,14 @@
     "ar": "Arabe"
   },
   "roles": {
-    "SUPER_ADMIN": "Super administrateur",
-    "ADMIN": "Administrateur",
+    "SUPER_ADMIN": "Administrateur système",
+    "ADMIN": "Responsable de la sécurité",
     "AUDITOR": "Auditeur",
     "STAFF": "Personnel",
     "VMC": "Réception VMC",
-    "GATE": "Portail"
+    "GATE": "Portail",
+    "VMC_ADMIN": "Administrateur VMC",
+    "READ_ADMIN": "Administrateur (lecture seule)"
   },
   "signup": {
     "title": "Créer un compte administrateur",
@@ -181,83 +331,394 @@
     "goToLogin": "Aller à la connexion"
   },
   "invite": {
-    "titleInvite": "Créer une demande d'invitation",
-    "titleWalkin": "Créer une visite sans rendez-vous",
-    "subtitle": "Remplissez le formulaire ci-dessous pour inviter vos invités",
-    "steps": {
-      "visitor": "Détails du visiteur",
-      "host": "Détails de l'hôte",
-      "visit": "Détails de la visite",
-      "summary": "Récapitulatif"
-    },
-    "sections": {
-      "visitorDetails": "Détails du visiteur",
-      "visitPurpose": "Objet de la visite",
-      "hostDetails": "Détails de l'hôte"
-    },
+    "titleInvite": "Créer une invitation de visite",
+    "titleWalkin": "Nouveau visiteur sans rendez-vous",
+    "subtitleInvite": "Remplissez le formulaire ci-dessous pour inviter vos invités",
+    "subtitleWalkin": "Remplissez le formulaire ci-dessous pour enregistrer un visiteur sans rendez-vous",
     "importCsv": "Importer des invités (CSV)",
     "downloadTemplate": "Télécharger le modèle CSV",
-    "addVisitor": "Ajouter un visiteur",
-    "removeVisitor": "Retirer",
+    "addGuest": "Ajouter un invité",
+    "removeGuest": "Retirer l'invité",
+    "useSameVisitDetails": "Mêmes détails de visite",
+    "sections": {
+      "guestDetails": "Détails de l'invité",
+      "visitDetails": "Détails de la visite",
+      "safetyConsent": "Sécurité et consentement"
+    },
+    "guestLabel": "Invité {index}",
     "fields": {
-      "fullName": "Nom complet du visiteur",
+      "fullName": "Nom complet de l'invité",
       "fullNamePlaceholder": "Saisir le nom complet",
-      "email": "E-mail du visiteur",
+      "email": "E-mail de l'invité",
       "emailPlaceholder": "ex. david@gmail.com",
       "organization": "Organisation",
       "organizationPlaceholder": "Saisir l'organisation",
-      "phone": "Téléphone du visiteur",
-      "phonePlaceholder": "+234 000-00-000",
+      "phone": "Téléphone",
+      "phonePlaceholder": "(000) 000-0000",
       "host": "Sélectionner un hôte/employé",
       "hostPlaceholder": "Ajouter un employé / hôte",
       "floor": "Étage/Département",
       "floorPlaceholder": "Sélectionner l'étage",
       "purpose": "Objet de la visite",
       "purposePlaceholder": "Sélectionner une catégorie",
-      "dateTime": "Date et heure de la visite",
+      "visitDate": "Date de la visite",
+      "visitDatePlaceholder": "Choisir une date",
+      "visitTime": "Heure de la visite",
       "notes": "Notes de visite",
-      "notesPlaceholder": "Saisir les notes de visite"
+      "notesPlaceholder": "Saisir les notes de visite",
+      "groupName": "Nom du groupe",
+      "groupNamePlaceholder": "ex. délégation Acme Corp",
+      "groupContact": "Contact du groupe",
+      "groupContactPlaceholder": "E-mail ou téléphone",
+      "optional": "Facultatif",
+      "noHost": "Aucun hôte",
+      "evacuationAssist": "Besoin d'aide pour évacuer en cas d'urgence ?",
+      "commsConsent": "Recevoir des nouvelles des événements d'Afreximbank ?",
+      "yes": "Oui",
+      "no": "Non",
+      "chooseYesNo": "Choisissez Oui ou Non"
     },
-    "summary": {
+    "confirm": {
+      "title": "Confirmer l'invitation",
+      "subtitle": "Veuillez vérifier attentivement tous les détails.",
+      "guestDetails": "Détails de l'invité",
+      "visitDetails": "Détails de la visite",
+      "fullName": "Nom complet",
+      "email": "Adresse e-mail",
+      "phone": "Numéro de téléphone",
+      "organization": "Organisation",
       "host": "Hôte/Employé",
+      "floor": "Étage/Département",
+      "purpose": "Objet de la visite",
       "dateTime": "Date et heure de la visite",
-      "clearance": "Autorisation de visite",
-      "pending": "En attente",
-      "approved": "Approuvée"
+      "notes": "Notes de visite"
     },
-    "showAllVisitors": "Afficher tous les visiteurs ({count})",
-    "showLessVisitors": "Afficher moins de visiteurs",
-    "goToHost": "Détails de l'hôte",
+    "success": {
+      "title": "Invitation créée avec succès",
+      "subtitle": "Cette invitation a été envoyée à tous les invités de cette visite",
+      "guestsName": "Nom de l'invité",
+      "host": "Hôte",
+      "purpose": "Objet de la visite",
+      "schedule": "Horaire de la visite",
+      "floor": "Étage/Département",
+      "checkInVisitor": "Enregistrer le visiteur"
+    },
     "review": "Vérifier les détails",
-    "submitInvite": "Envoyer la demande d'invitation",
-    "submitWalkin": "Créer la visite",
+    "submitInvite": "Créer l'invitation",
+    "submitWalkin": "Continuer",
     "submitting": "Envoi…",
     "back": "Retour",
     "cancel": "Annuler",
-    "submitError": "Une erreur s'est produite. Veuillez réessayer."
+    "guestCount": "Invité {current} sur {total}",
+    "submitError": "Une erreur s'est produite. Veuillez réessayer.",
+    "groupVisit": "Visite de groupe"
+  },
+  "checkin": {
+    "groupTitle": "Enregistrement du groupe",
+    "guestInformation": "Informations sur les invités",
+    "checkedInCount": "{done}/{total} enregistrés",
+    "checkInAll": "Tout enregistrer",
+    "selectAll": "Tout sélectionner",
+    "checkIn": "Enregistrer",
+    "checkOut": "Sortie",
+    "viewDetails": "Voir les détails",
+    "gatePending": "Validation à l'entrée en attente",
+    "gateDone": "Validation à l'entrée effectuée",
+    "confirmTitle": "Confirmer l'enregistrement",
+    "confirmSubtitle": "Vous êtes sur le point d'enregistrer cet invité comme présent",
+    "assignPass": "Attribuer un badge",
+    "checkInHint": "Vérifiez que le code de l'invitation correspond avant l'enregistrement",
+    "guestName": "Nom de l'invité",
+    "host": "Hôte",
+    "purpose": "Objet de la visite",
+    "schedule": "Horaire de la visite",
+    "status": "Statut de la visite",
+    "complete": "Terminer l'enregistrement",
+    "successTitle": "Enregistré",
+    "successSubtitle": "Processus d'enregistrement terminé",
+    "backToDashboard": "Retour au tableau de bord",
+    "noCards": "Aucun badge disponible pour cette zone",
+    "error": "Une erreur s'est produite. Veuillez réessayer."
+  },
+  "checkout": {
+    "gateDone": "Validation à l'entrée effectuée",
+    "confirmTitle": "Confirmer la sortie",
+    "confirmSubtitle": "Vous êtes sur le point d'enregistrer la sortie de cet invité",
+    "changePassId": "Changer le badge",
+    "timeInFacility": "Temps de présence",
+    "onsiteFor": "Invité présent depuis {duration}",
+    "alreadyCheckedIn": "Ce code a été enregistré",
+    "guestName": "Nom de l'invité",
+    "host": "Hôte",
+    "purpose": "Objet de la visite",
+    "schedule": "Horaire de la visite",
+    "status": "Statut de la visite",
+    "complete": "Terminer la sortie",
+    "error": "Une erreur s'est produite. Veuillez réessayer."
   },
   "admin": {
-    "welcome": "Bienvenue {name}",
-    "subtitle": "Console d'administration",
-    "userManagement": "Gestion des utilisateurs",
-    "userManagementBody": "Consultez les utilisateurs, créez des comptes et attribuez des rôles.",
-    "manageUsers": "Gérer les utilisateurs",
     "pendingTitle": "Demandes en attente",
     "pendingBody": "Examinez et décidez des demandes de visite en attente d'approbation.",
     "pendingEmpty": "Aucune demande en attente d'approbation.",
-    "pendingCount": "{count} en attente d'approbation"
+    "groupLabel": "{name} · {count} invités",
+    "nav": {
+      "label": "Sections d'administration",
+      "overview": "Vue d'ensemble",
+      "visitors": "Visiteurs",
+      "requests": "Demandes et approbations",
+      "watchlist": "Liste de surveillance",
+      "users": "Utilisateurs et rôles",
+      "floors": "Étages et emplacements",
+      "categories": "Catégories de visite",
+      "analytics": "Analyses et rapports",
+      "integrations": "Intégrations",
+      "settings": "Paramètres",
+      "comingSoon": "Bientôt disponible",
+      "collapse": "Réduire la barre latérale",
+      "expand": "Développer la barre latérale",
+      "evacuation": "Liste d'évacuation",
+      "optIns": "Abonnements aux communications",
+      "deskQr": "QR de l'accueil"
+    },
+    "requests": {
+      "title": "Demandes et approbations",
+      "subtitle": "Demandes de visite en attente de décision."
+    },
+    "overview": {
+      "loadError": "Impossible de charger les données. Veuillez réessayer.",
+      "loading": "Chargement du tableau de bord…",
+      "title": "Vue d'ensemble",
+      "subtitle": "Les opérations visiteurs de tout le site en un coup d'œil.",
+      "searchPlaceholder": "Rechercher visiteurs, hôtes, étages…",
+      "sidePanel": "Actions et activité",
+      "stats": {
+        "visitorsToday": "Visiteurs du jour",
+        "fromYesterday": "par rapport à hier",
+        "sameAsYesterday": "Comme hier",
+        "expected": "Visiteurs attendus",
+        "expectedHint": "Approuvés pour aujourd'hui",
+        "pending": "Demandes en attente",
+        "pendingHint": "{count, plural, =0 {Aucune en attente d'informations} one {# en attente d'informations} other {# en attente d'informations}}",
+        "openPending": "Ouvrir les demandes en attente",
+        "onsite": "Sur site",
+        "onsiteHint": "Actuellement sur site",
+        "checkedOut": "Sortis",
+        "checkedOutHint": "Sortis aujourd'hui"
+      },
+      "traffic": {
+        "loadError": "Impossible de charger les données. Veuillez réessayer.",
+        "title": "Fréquentation du jour",
+        "range": "Période de fréquentation",
+        "today": "Aujourd'hui",
+        "yesterday": "Hier",
+        "chartLabelToday": "Enregistrements par heure, aujourd'hui",
+        "chartLabelYesterday": "Enregistrements par heure, hier"
+      },
+      "breakdown": {
+        "title": "Répartition des statuts",
+        "chartLabel": "Issues des visites aujourd'hui",
+        "checkedIn": "Enregistrés",
+        "checkedOut": "Sortis",
+        "rejected": "Refusés"
+      },
+      "visitors": {
+        "loadError": "Impossible de charger les données. Veuillez réessayer.",
+        "title": "Visiteurs du jour",
+        "searchPlaceholder": "Rechercher des visiteurs…",
+        "columns": {
+          "visitor": "Visiteur",
+          "status": "Statut",
+          "host": "Hôte",
+          "guests": "Nb d'invités",
+          "time": "Heure",
+          "action": "Action"
+        },
+        "guestCount": "{count, plural, one {# invité} other {# invités}}",
+        "view": "Voir",
+        "viewVisitor": "Voir {name}",
+        "noMatches": "Aucun visiteur ne correspond à votre recherche.",
+        "filterLabel": "Filtrer les visiteurs",
+        "filters": {
+          "all": "Tous",
+          "onsite": "Sur site",
+          "expected": "Attendus",
+          "out": "Sortis"
+        },
+        "emptyFilter": "Aucun visiteur dans cette vue aujourd'hui."
+      },
+      "quickActions": {
+        "title": "Actions rapides",
+        "addVisitor": "Ajouter un visiteur",
+        "exportData": "Exporter les données",
+        "printBadge": "Imprimer un badge",
+        "scanQr": "Scanner un QR",
+        "comingSoon": "Bientôt disponible",
+        "exportFailed": "L'export a échoué. Réessayez."
+      },
+      "activity": {
+        "loadError": "Impossible de charger les données. Veuillez réessayer.",
+        "title": "Activité récente",
+        "viewAll": "Tout voir",
+        "visitorForHost": "{visitor} pour {host}",
+        "events": {
+          "alert": "Alerte de sécurité émise",
+          "requested": "Nouvelle demande de visite",
+          "approved": "Demande de visite approuvée",
+          "denied": "Demande de visite refusée",
+          "reviewRequested": "Informations complémentaires demandées",
+          "flagged": "Visite signalée pour examen de sécurité",
+          "checkedIn": "Visiteur enregistré",
+          "checkedOut": "Visiteur sorti",
+          "cancelled": "Visite annulée",
+          "expired": "Visite expirée"
+        }
+      },
+      "upcoming": {
+        "loadError": "Impossible de charger les données. Veuillez réessayer.",
+        "title": "À venir",
+        "empty": "Plus aucun visiteur attendu aujourd'hui.",
+        "host": "Hôte : {name}",
+        "approved": "Approuvée",
+        "pending": "En attente"
+      },
+      "bar": {
+        "eyebrow": "Console d'administration",
+        "greeting": "{part, select, morning {Bonjour} afternoon {Bon après-midi} other {Bonsoir}}",
+        "greetingName": "{part, select, morning {Bonjour} afternoon {Bon après-midi} other {Bonsoir}}, {name}",
+        "awaiting": "En attente d'approbation",
+        "awaitingHint": "Demandes de visite à traiter",
+        "awaitingOverdue": "{count, plural, one {# en attente depuis plus d'1 heure} other {# en attente depuis plus d'1 heure}}",
+        "awaitingMoreInfo": "{count, plural, one {# en attente d'informations} other {# en attente d'informations}}",
+        "onsite": "Sur site",
+        "onsiteHint": "Arrivés, pas encore sortis",
+        "expected": "Attendus aujourd'hui",
+        "expectedHint": "Approuvés, pas encore arrivés",
+        "actionsTitle": "Actions rapides",
+        "reviewApprovals": "Examiner les demandes",
+        "addVisitor": "Ajouter un visiteur",
+        "export": "Exporter",
+        "readOnly": "Accès en lecture seule",
+        "loadError": "Impossible de charger les données du tableau de bord. Veuillez réessayer.",
+        "awaitingNone": "Tout est à jour",
+        "onsiteFloors": "{count, plural, one {sur # étage} other {sur # étages}}",
+        "console": {
+          "SUPER_ADMIN": "Console système",
+          "ADMIN": "Console de sécurité",
+          "VMC_ADMIN": "Console VMC",
+          "READ_ADMIN": "Console en lecture seule",
+          "AUDITOR": "Console d'audit"
+        }
+      },
+      "approvals": {
+        "title": "Approbations en attente",
+        "waitingCount": "{count, plural, one {# en attente} other {# en attente}}",
+        "oldestFirst": "Plus anciennes d'abord",
+        "openQueue": "Ouvrir la file",
+        "columns": {
+          "visitor": "Visiteur",
+          "host": "Hôte · Service",
+          "time": "Heure de visite",
+          "waiting": "Attente",
+          "decision": "Décision"
+        },
+        "groupGuests": "{count, plural, one {Groupe · # invité} other {Groupe · # invités}}",
+        "waitingHours": "{hours} h {minutes} min",
+        "waitingMinutes": "{minutes} min",
+        "approve": "Approuver",
+        "deny": "Refuser",
+        "reviewGroup": "Examiner le groupe",
+        "approveFor": "Approuver {name}",
+        "denyFor": "Refuser {name}",
+        "reviewGroupFor": "Examiner le groupe {name}",
+        "showing": "{shown} sur {total} affichées",
+        "seeAll": "Tout voir ({total})",
+        "loading": "Chargement des approbations…",
+        "loadError": "Impossible de charger les approbations en attente. Veuillez réessayer.",
+        "todayAt": "Aujourd'hui, {time}",
+        "moreInfoAsked": "Infos demandées",
+        "view": "Voir",
+        "viewFor": "Voir {name}",
+        "filterLabel": "Filtrer les demandes par type",
+        "filters": {
+          "all": "Toutes",
+          "walkIn": "Sans rendez-vous",
+          "invite": "Invitation",
+          "group": "Groupe"
+        },
+        "emptyFilter": "Aucune demande de ce type en attente."
+      }
+    },
+    "analytics": {
+      "title": "Analyses et rapports",
+      "subtitle": "Tendances et résultats des visites. Tout ce qui a quitté la vue d'ensemble se trouve ici.",
+      "export": "Exporter en CSV",
+      "denied": "Refusées",
+      "deniedHint": "Demandes refusées aujourd'hui",
+      "loading": "Chargement des analyses…",
+      "loadError": "Impossible de charger les analyses. Veuillez réessayer."
+    }
+  },
+  "adminV2": {
+    "overview": {
+      "eyebrow": "Console d'administration · {role}",
+      "welcome": "Bienvenue {name}",
+      "pendingApprovals": "Approbations en attente",
+      "pendingCount": "{count, plural, =0 {Aucune} one {# demande} other {# demandes}}",
+      "trendUp": "+{count} par rapport à hier",
+      "trendDown": "−{count} par rapport à hier"
+    },
+    "panel": {
+      "reviewTitle": "Des demandes attendent\nvotre décision",
+      "reviewCta": "Examiner les demandes",
+      "activityTitle": "L'activité du jour\nen un coup d'œil",
+      "activityCta": "Voir l'activité"
+    },
+    "table": {
+      "title": "Registre des visiteurs",
+      "review": "Examiner",
+      "empty": "Aucune visite sur cette période."
+    },
+    "feed": {
+      "seeAll": "Tout voir",
+      "viewDetails": "Voir les détails"
+    },
+    "charts": {
+      "title": "Trafic et résultats"
+    },
+    "approvals": {
+      "title": "Approbations en attente",
+      "review": "Examiner",
+      "empty": "Aucune demande en attente de décision.",
+      "bucket": {
+        "all": "Toutes",
+        "PENDING": "En attente d'approbation",
+        "REVIEW_REQUESTED": "Informations demandées",
+        "FLAGGED": "Signalées"
+      }
+    },
+    "users": {
+      "searchPlaceholder": "Rechercher par nom ou e-mail…",
+      "allRoles": "Tous les rôles",
+      "createSubtitle": "Créez un compte et attribuez-lui des rôles."
+    }
   },
   "staff": {
     "hub": "ESPACE PERSONNEL",
     "welcome": "Bienvenue {name}",
     "recentVisitors": "Visiteurs récents",
+    "expectedGuests": "Invités attendus",
+    "guestCount": "{count} invité(s)",
+    "onsiteFor": "Depuis {time} h",
+    "statusSub": {
+      "fromSm": "Du SM"
+    },
     "myVisits": {
       "title": "Mes visites"
     },
     "noVisits": "Aucune visite à afficher.",
     "overview": {
       "officeFloor": "Étage du bureau",
-      "bookTitle": "Réservez des visiteurs dans les installations AATC d'Abuja",
+      "bookTitle": "Réservez des invités dans les installations\nAATC d'Abuja",
       "newInvite": "Nouvelle demande d'invitation"
     },
     "stats": {
@@ -270,15 +731,17 @@
       "last7": "7 derniers jours",
       "custom": "Personnalisé",
       "upcoming": "À venir",
-      "yesterday": "Hier"
+      "yesterday": "Hier",
+      "pickDate": "Choisir une date"
     },
     "filters": {
       "searchPlaceholder": "Rechercher visiteur, organisation, objet, n° de demande"
     },
     "columns": {
-      "visitor": "Visiteur",
+      "visitor": "Invité",
       "organization": "Organisation",
       "purpose": "Objet",
+      "noOfGuest": "Nb d'invités",
       "timeCreated": "Date de création",
       "status": "Statut",
       "action": "Action"
@@ -289,7 +752,7 @@
     },
     "status": {
       "PENDING": "En attente d'approbation",
-      "NEEDS_MORE_INFO": "Informations requises",
+      "REVIEW_REQUESTED": "Informations requises",
       "APPROVED": "Attendu",
       "DENIED": "Refusé",
       "CHECKED_IN": "Sur site",
@@ -308,9 +771,12 @@
       "empty": "Aucune mise à jour récente.",
       "viewUpdate": "Voir la mise à jour",
       "viewDetails": "Voir les détails",
+      "allTitle": "Toutes les mises à jour",
+      "all": "Tout",
+      "updateRequest": "Mettre à jour la demande",
       "category": {
         "ARRIVAL_UPDATE": "Mise à jour d'arrivée",
-        "CSO_FEEDBACK": "Retour du CSO",
+        "SM_FEEDBACK": "Retour du SM",
         "REQUEST_UPDATE": "Mise à jour de demande",
         "VISIT_STATUS": "Statut de visite",
         "SECURITY_ALERT": "Alertes de sécurité"
@@ -321,7 +787,8 @@
     "welcome": "Bienvenue {name}",
     "subtitle": "Opérations de portail",
     "placeholderTitle": "Tableau de bord du portail",
-    "placeholderBody": "Ce tableau de bord est provisoire et sera développé bientôt."
+    "placeholderBody": "Ce tableau de bord est provisoire et sera développé bientôt.",
+    "evacuationRoll": "Liste d'évacuation"
   },
   "users": {
     "title": "Gestion des utilisateurs",
@@ -407,9 +874,320 @@
       "title": "Notifications",
       "help": "Restez informé de l'activité de votre compte.",
       "newInviteRequest": "Nouvelle demande d'invitation",
-      "csoDenied": "Demande refusée par le CSO",
-      "csoApproved": "Demande approuvée par le CSO",
+      "smDenied": "Demande refusée par le SM",
+      "smApproved": "Demande approuvée par le SM",
       "flaggedVisitor": "Alerte visiteur signalé"
+    }
+  },
+  "approval": {
+    "groupTitle": "Approuver le groupe",
+    "guestInformation": "Informations sur les invités",
+    "approvedCount": "{done}/{total} approuvés",
+    "select": "Sélectionner l'invité",
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "approveSelected": "Approuver la sélection ({count})",
+    "rejectSelected": "Rejeter la sélection ({count})",
+    "approveAll": "Tout approuver",
+    "reasonPlaceholder": "Motif du rejet (obligatoire pour rejeter)"
+  },
+  "evacuation": {
+    "title": "Liste d'évacuation",
+    "refresh": "Actualiser",
+    "countBanner": "sur place ont besoin d'aide pour évacuer",
+    "floors": "{count, plural, one {# étage} other {# étages}}",
+    "generated": "Générée à <b>{time}</b>",
+    "refreshesEvery": "actualisée chaque minute",
+    "noFloor": "Étage non renseigné",
+    "loadError": "Impossible de charger la liste d'évacuation. Réessayez avec Actualiser.",
+    "columns": {
+      "visitor": "Visiteur",
+      "floor": "Étage / Aile",
+      "host": "Hôte",
+      "phone": "Téléphone",
+      "checkedIn": "Arrivée",
+      "organization": "Organisation",
+      "badge": "Badge"
+    },
+    "empty": {
+      "title": "Personne sur place n'a besoin d'aide pour évacuer",
+      "body": "{count, plural, =0 {Aucun visiteur n'est enregistré pour le moment.} one {# visiteur est enregistré. Il n'a pas demandé d'aide.} other {# visiteurs sont enregistrés. Aucun n'a demandé d'aide.}}"
+    },
+    "print": {
+      "button": "Imprimer pour les serre-files",
+      "heading": "AATC Abuja · Liste d'évacuation",
+      "generated": "Générée le {datetime} WAT",
+      "count": "{count, plural, one {# visiteur a besoin d'aide pour évacuer} other {# visiteurs ont besoin d'aide pour évacuer}}"
+    }
+  },
+  "consent": {
+    "title": "Abonnements aux communications",
+    "exportCsv": "Exporter en CSV",
+    "exportError": "L'export a échoué. Veuillez réessayer.",
+    "optedIn": "abonnés",
+    "searchPlaceholder": "Rechercher un e-mail ou un nom",
+    "columns": {
+      "email": "E-mail",
+      "name": "Nom",
+      "lastAnswered": "Dernière réponse",
+      "sourceVisit": "Visite d'origine"
+    },
+    "viewVisit": "Voir la visite",
+    "empty": "Personne ne s'est encore abonné.",
+    "noMatches": "Aucun abonnement ne correspond à votre recherche.",
+    "loadError": "Impossible de charger les abonnements.",
+    "withdrawTitle": "Retirer le consentement",
+    "withdrawHelp": "Arrête les envois à cet e-mail jusqu'à ce que la personne accepte lors d'une prochaine visite.",
+    "email": "E-mail",
+    "emailPlaceholder": "nom@entreprise.com",
+    "withdraw": "Retirer",
+    "invalidEmail": "Saisissez une adresse e-mail valide.",
+    "confirmTitle": "Retirer le consentement ?",
+    "confirmBody": "<b>{email}</b> quitte la liste des abonnés dès maintenant. Les visites passées restent inchangées.",
+    "cancel": "Annuler",
+    "done": "Consentement retiré pour {email}.",
+    "notFound": "Aucun enregistrement pour cet e-mail.",
+    "error": "Une erreur s'est produite. Veuillez réessayer."
+  },
+  "export": {
+    "title": "Exporter les données visiteurs",
+    "subtitle": "Choisissez la période et le format.",
+    "dateRange": "Période",
+    "from": "Du",
+    "to": "Au",
+    "hint": "Par date de visite, heure WAT. 366 jours maximum.",
+    "format": "Format du fichier",
+    "csv": "CSV",
+    "excel": "Excel",
+    "cancel": "Annuler",
+    "submit": "Exporter",
+    "exporting": "Export en cours…",
+    "rangeTooLong": "Choisissez une période de 366 jours maximum.",
+    "rangeInvalid": "La date de fin doit être postérieure ou égale à la date de début.",
+    "error": "L'export a échoué. Veuillez réessayer."
+  },
+  "delivery": {
+    "title": "Notifications",
+    "failedCount": "{count} en échec",
+    "channel": {
+      "EMAIL": "E-mail",
+      "SMS": "SMS",
+      "WHATSAPP": "WhatsApp"
+    },
+    "template": {
+      "inviteCode": "Code d'invitation",
+      "visitorArrived": "Visiteur arrivé",
+      "thankYou": "Remerciement",
+      "other": "Message"
+    },
+    "status": {
+      "SENT": "Envoyé",
+      "PENDING": "En file",
+      "FAILED": "Échec"
+    },
+    "attempts": "{count, plural, one {# tentative} other {# tentatives}}",
+    "retry": "Réessayer",
+    "empty": "Aucun message n'a encore été envoyé pour cette visite.",
+    "loadError": "Impossible de charger les notifications.",
+    "retryError": "La nouvelle tentative a échoué. Veuillez réessayer."
+  },
+  "evacuationAssist": {
+    "question": "De quelle aide auriez-vous besoin ?",
+    "types": {
+      "MOBILITY": "Aide à la mobilité (fauteuil roulant, difficulté à marcher ou à prendre les escaliers)",
+      "VISUAL": "Assistance pour déficience visuelle",
+      "HEARING": "Assistance pour déficience auditive",
+      "MEDICAL": "Assistance médicale",
+      "OTHER": "Autre (veuillez préciser)"
+    },
+    "short": {
+      "MOBILITY": "Mobilité",
+      "VISUAL": "Vue",
+      "HEARING": "Audition",
+      "MEDICAL": "Médical",
+      "OTHER": "Autre"
+    },
+    "otherLabel": "Décrivez l'aide nécessaire",
+    "otherPlaceholder": "Par exemple, besoin d'une rampe",
+    "chooseType": "Choisissez le type d'aide nécessaire",
+    "describeOther": "Décrivez l'aide nécessaire"
+  },
+  "deskQr": {
+    "title": "QR de l'accueil",
+    "walkInBadge": "Sans rendez-vous · sans approbation",
+    "status": {
+      "active": "Actif",
+      "disabled": "Désactivé"
+    },
+    "qrAlt": "QR code de l'accueil",
+    "copyLink": "Copier le lien",
+    "copied": "Copié",
+    "scansToday": "Scans aujourd'hui",
+    "lastScan": "Dernier scan à {time} WAT",
+    "noScans": "Aucun scan aujourd'hui",
+    "disabledAt": "Désactivé le {time} WAT",
+    "created": "Créé",
+    "createdBy": "{time} par {name}",
+    "visitsItCreates": "Visites créées",
+    "visitsItCreatesValue": "Sans rendez-vous, aujourd'hui seulement, marquées QR",
+    "print": "Imprimer l'affiche",
+    "downloadPng": "Télécharger le PNG",
+    "rotate": "Nouveau QR",
+    "disable": "Désactiver",
+    "enable": "Activer",
+    "rotateHelp": "Nouveau QR remplace le code. L'affiche imprimée cesse aussitôt de fonctionner : imprimez la nouvelle avant d'appuyer.",
+    "enableHelp": "Le scan affiche « Veuillez vous enregistrer à l'accueil VMC ». Activer rétablit le même code : l'affiche de l'accueil fonctionne de nouveau.",
+    "disabledOverlay": "Le scan affiche « Veuillez vous enregistrer à l'accueil VMC »",
+    "codes": {
+      "title": "Codes de vérification",
+      "emailedTo": "Codes envoyés par e-mail à",
+      "change": "Modifier",
+      "help": "Quand un visiteur remplit le formulaire, un code à 6 chiffres arrive dans cette boîte. Lisez-le au visiteur à l'accueil pour terminer son enregistrement. Un code ne sert qu'une fois et expire au bout de 10 minutes."
+    },
+    "codeEmail": {
+      "createTitle": "Configurer le QR de l'accueil",
+      "changeTitle": "Changer l'adresse des codes",
+      "help": "Les codes de vérification des visiteurs sont envoyés ici. Choisissez une boîte lue par quelqu'un à l'accueil VMC.",
+      "label": "E-mail pour les codes de vérification",
+      "invalid": "Saisissez une adresse e-mail, par exemple reception@aatc.org",
+      "save": "Enregistrer"
+    },
+    "empty": {
+      "title": "Pas encore de QR à l'accueil",
+      "body": "Créez le QR, imprimez l'affiche et placez-la à l'accueil VMC. Les visiteurs qui le scannent s'enregistrent comme visiteurs sans rendez-vous du jour.",
+      "readOnly": "L'accueil n'a pas encore configuré le QR.",
+      "create": "Créer le QR de l'accueil"
+    },
+    "loadError": {
+      "title": "Impossible de charger le QR de l'accueil.",
+      "body": "Vérifiez votre connexion puis réessayez. L'affiche de l'accueil continue de fonctionner."
+    },
+    "retry": "Réessayer",
+    "errors": {
+      "create": "Le QR n'a pas été créé. Réessayez dans un instant.",
+      "update": "L'e-mail n'a pas été modifié. Réessayez dans un instant.",
+      "rotate": "Le nouveau QR n'a pas été créé. Le QR actuel fonctionne toujours. Réessayez dans un instant.",
+      "disable": "Le QR n'a pas été désactivé. Il fonctionne toujours. Réessayez dans un instant.",
+      "enable": "Le QR n'a pas été activé. Réessayez dans un instant.",
+      "download": "Le PNG n'a pas été téléchargé. Réessayez dans un instant.",
+      "image": "Impossible d'afficher le QR."
+    },
+    "confirmRotate": {
+      "title": "Remplacer le QR de l'accueil ?",
+      "body": "Le QR de l'affiche <b>cesse immédiatement de fonctionner</b>. Les visiteurs qui le scannent devront s'enregistrer à l'accueil. Imprimez et affichez la nouvelle affiche juste après.",
+      "confirm": "Créer un nouveau QR"
+    },
+    "confirmDisable": {
+      "title": "Désactiver le QR de l'accueil ?",
+      "body": "Les visiteurs ne peuvent plus s'enregistrer par scan tant que vous ne le réactivez pas. L'accueil peut toujours enregistrer les visiteurs sans rendez-vous.",
+      "confirm": "Désactiver"
+    },
+    "cancel": "Annuler",
+    "poster": {
+      "brand": "AFREXIMBANK AFRICAN TRADE CENTRE · ABUJA",
+      "title": "Scannez pour enregistrer votre visite",
+      "subtitle": "Abuja-AATC Visitor Management",
+      "then": "Remplissez ensuite le court formulaire sur votre téléphone.",
+      "code": "L'accueil vous lira un code pour terminer.",
+      "footer": "Accueil VMC · QR créé le {date}"
+    }
+  },
+  "selfRegister": {
+    "brand": "AATC · Accueil VMC",
+    "title": "Enregistrez votre visite",
+    "today": "Aujourd'hui, {date}",
+    "expiresIn": "Le formulaire expire dans {countdown}",
+    "optional": "Facultatif",
+    "yes": "Oui",
+    "no": "Non",
+    "sections": {
+      "contact": "Vos coordonnées",
+      "about": "À propos de vous",
+      "visiting": "Qui venez-vous voir ?",
+      "visit": "Détails de la visite",
+      "safety": "Sécurité et communication"
+    },
+    "fields": {
+      "email": "Adresse e-mail",
+      "phone": "Numéro de téléphone",
+      "fullName": "Nom complet",
+      "organization": "Organisation",
+      "floor": "Étage visité",
+      "floorNotSure": "Je ne sais pas / sans objet",
+      "purpose": "Motif de la visite",
+      "evacuation": "En cas d'urgence, auriez-vous besoin d'aide pour l'évacuation ?",
+      "consent": "Souhaitez-vous recevoir des informations sur les activités et événements d'Afreximbank ?"
+    },
+    "host": {
+      "placeholder": "Saisissez un nom",
+      "help": "Laissez vide s'il s'agit d'une demande générale.",
+      "results": "Personnel correspondant",
+      "none": "Aucun membre du personnel trouvé. Laissez vide pour une demande générale.",
+      "remove": "Retirer {name}"
+    },
+    "errors": {
+      "email": "Saisissez une adresse e-mail complète, par exemple nom@entreprise.com",
+      "phone": "Saisissez un numéro valide, ou laissez vide",
+      "required": "Champ obligatoire",
+      "choose": "Faites un choix",
+      "yesNo": "Choisissez Oui ou Non",
+      "chooseType": "Choisissez le type d'aide nécessaire",
+      "describeOther": "Décrivez l'aide nécessaire"
+    },
+    "checkAnswers": "{count, plural, one {Vérifiez # réponse ci-dessous.} other {Vérifiez # réponses ci-dessous.}}",
+    "submit": "Enregistrer ma visite",
+    "submitHelp": "L'accueil vous lira un code pour terminer.",
+    "code": {
+      "heading": "Presque terminé",
+      "title": "Demandez votre code à l'accueil",
+      "body": "Nous avons envoyé un code à 6 chiffres à l'accueil. Donnez votre nom et on vous le lira.",
+      "label": "Code à 6 chiffres",
+      "confirm": "Confirmer",
+      "expires": "Le code expire dans {countdown}"
+    },
+    "codeWrong": "{left, plural, =0 {Ce code ne correspond pas.} one {Ce code ne correspond pas. Vérifiez-le auprès de l'accueil et réessayez. Il reste # essai.} other {Ce code ne correspond pas. Vérifiez-le auprès de l'accueil et réessayez. Il reste # essais.}}",
+    "done": {
+      "title": "Vous êtes enregistré",
+      "body": "Présentez cette référence à l'accueil VMC pour obtenir votre badge.",
+      "name": "Nom",
+      "visiting": "Visite à",
+      "when": "Date"
+    },
+    "inactive": {
+      "title": "Ce QR code n'est pas actif",
+      "body": "Veuillez vous enregistrer à l'accueil VMC. On s'occupera de vous."
+    },
+    "expired": {
+      "title": "Ce formulaire a expiré",
+      "body": "Veuillez scanner à nouveau le QR code."
+    },
+    "locked": {
+      "title": "Trop de codes erronés",
+      "body": "Veuillez scanner à nouveau le QR code, ou vous enregistrer à l'accueil VMC."
+    },
+    "startAgain": "Recommencer",
+    "problems": {
+      "offline": "Pas de connexion. Vos réponses sont conservées. Réessayez une fois reconnecté.",
+      "unknown": "Une erreur est survenue. Réessayez, ou enregistrez-vous à l'accueil VMC."
+    }
+  },
+  "help": {
+    "title": "Aide / Support",
+    "tabs": {
+      "evacuation": "Liste d'évacuation",
+      "optIns": "Abonnements",
+      "deskQr": "QR de l'accueil",
+      "export": "Exporter les données",
+      "support": "Aide et support"
+    },
+    "export": {
+      "title": "Exporter les données des visiteurs",
+      "help": "Téléchargez les fiches des visiteurs d'une période sous forme de tableur.",
+      "button": "Exporter les données"
+    },
+    "support": {
+      "title": "Aide et support",
+      "message": "Besoin d'aide avec le VMS ou un problème à signaler ? Contactez l'équipe de développement via le canal de support habituel."
     }
   },
   "auth": {

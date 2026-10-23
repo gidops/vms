@@ -26,7 +26,7 @@ const STEPS: TimelineStep[] = [
     description: "2 Mar, 9:42 AM",
     state: "complete",
   },
-  { key: "approval", label: "Awaiting CSO Approval", state: "complete" },
+  { key: "approval", label: "Awaiting SM Approval", state: "complete" },
   { key: "checkin", label: "Checked In", state: "current" },
   { key: "pass", label: "Pass Issued", state: "upcoming" },
   { key: "checkout", label: "Checked Out", state: "upcoming" },

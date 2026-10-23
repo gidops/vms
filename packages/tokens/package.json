@@ -10,7 +10,9 @@
     ".": "./src/index.ts",
     "./theme.css": "./src/theme.css"
   },
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "scripts": {
     "typecheck": "tsc --noEmit"
   },

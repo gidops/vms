@@ -67,6 +67,82 @@ services:
     depends_on:
       - postgres
 
+  # ---- SonarQube (local code quality; started only with --profile sonar) ----
+  # Day-to-day entrypoint is `npm run sonar` (scripts/sonar-scan.sh), which
+  # starts the server, bootstraps credentials into .sonar/, and runs the scanner.
+
+  sonar-db-init:
+    # One-shot: creates the `sonar` database on the existing postgres if missing
+    # (the postgres_data volume already exists, so image init scripts won't run).
+    image: postgres:16-alpine
+    profiles: ["sonar"]
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: vms
+    entrypoint: >
+      sh -c "psql -h postgres -U vms -d vms -tAc
+      \"SELECT 1 FROM pg_database WHERE datname='sonar'\" | grep -q 1
+      || psql -h postgres -U vms -d vms -c 'CREATE DATABASE sonar'"
+
+  sonarqube:
+    image: sonarqube:community
+    profiles: ["sonar"]
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      sonar-db-init:
+        condition: service_completed_successfully
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://postgres:5432/sonar
+      SONAR_JDBC_USERNAME: vms
+      SONAR_JDBC_PASSWORD: vms
+      # Local dev only (WSL2): skip Elasticsearch bootstrap checks so the
+      # default vm.max_map_count=65530 doesn't abort startup.
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    ports:
+      - "9000:9000"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/api/system/status | grep -q '\"status\":\"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 90s
+
+  sonar-scanner:
+    # Not long-running — invoked by scripts/sonar-scan.sh via
+    # `docker compose run --rm sonar-scanner`. The repo is mounted read-only;
+    # the scanner writes only to /tmp and its named cache volume, so it can
+    # never litter the worktree regardless of container/host UID mismatch.
+    image: sonarsource/sonar-scanner-cli:11
+    profiles: ["sonar"]
+    depends_on:
+      sonarqube:
+        condition: service_healthy
+    environment:
+      SONAR_HOST_URL: http://sonarqube:9000
+      SONAR_TOKEN: ${SONAR_TOKEN:-} # injected by scripts/sonar-scan.sh
+      SONAR_SCANNER_OPTS: -Xmx2g
+    volumes:
+      - .:/usr/src:ro
+      - sonar_scanner_cache:/opt/sonar-scanner/.sonar/cache
+    command: ["-Dsonar.working.directory=/tmp/scannerwork"]
+
 volumes:
   postgres_data:
   seq_data:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  sonar_scanner_cache:

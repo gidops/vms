@@ -54,7 +54,7 @@ export function Pagination({
   return (
     <nav
       aria-label="Pagination"
-      className={cn("flex items-center gap-1", className)}
+      className={cn("flex items-center gap-2", className)}
     >
       <Button
         intent="neutral"
@@ -63,6 +63,7 @@ export function Pagination({
         aria-label="Previous page"
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
+        className="size-9 rounded-full border border-border p-0"
       >
         <ChevronLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
       </Button>
@@ -71,12 +72,15 @@ export function Pagination({
         typeof item === "number" ? (
           <Button
             key={item}
-            intent={item === page ? "primary" : "neutral"}
+            intent="neutral"
             tone={item === page ? "solid" : "ghost"}
             size="sm"
             aria-current={item === page ? "page" : undefined}
             onClick={() => onPageChange(item)}
-            className="min-w-9"
+            className={cn(
+              "size-9 rounded-full p-0",
+              item !== page && "border border-border",
+            )}
           >
             {item}
           </Button>
@@ -98,6 +102,7 @@ export function Pagination({
         aria-label="Next page"
         disabled={page >= totalPages}
         onClick={() => onPageChange(page + 1)}
+        className="size-9 rounded-full border border-border p-0"
       >
         <ChevronRight className="size-4 rtl:rotate-180" aria-hidden="true" />
       </Button>

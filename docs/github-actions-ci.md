@@ -57,10 +57,12 @@ The final step of the `apps` job runs a SonarCloud scan. It is **advisory**:
 SonarCloud and decorates the PR, but does **not** fail the CI job. This matches
 the branch-protection policy, where the SonarCloud check is not a required gate.
 
-Scan configuration (project key `gidops_vms`, organization `vmsvms`, analysed
-sources, and the coverage report path `apps/backend/coverage/lcov.info`) is read
-from `sonar-project.properties` at the repo root. Coverage is produced by the
-backend coverage step earlier in the job.
+Scan configuration (project key `gidops_vms`, analysed sources, and the
+coverage report path `apps/backend/coverage/lcov.info`) is read from
+`sonar-project.properties` at the repo root. The cloud-only organization
+(`vmsvms`) is passed via the action's `args:` instead, so the same properties
+file also drives the local SonarQube setup ([sonarqube-local.md](./sonarqube-local.md)).
+Coverage is produced by the backend coverage step earlier in the job.
 
 > Action version: the workflow uses `SonarSource/sonarqube-scan-action`. Confirm
 > the current major version at
@@ -71,8 +73,8 @@ backend coverage step earlier in the job.
 
 Set under: repository **Settings → Secrets and variables → Actions → New repository secret**.
 
-| Secret | Used by | Notes |
-|--------|---------|-------|
+| Secret        | Used by              | Notes                                                                                                                                           |
+| ------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `SONAR_TOKEN` | SonarCloud scan step | SonarCloud analysis token for project `gidops_vms` (organization `vmsvms`). Same token value used by the Jenkins `sonarcloud-token` credential. |
 
 No AWS or other secrets are required for CI. (Deployment/CD is a separate

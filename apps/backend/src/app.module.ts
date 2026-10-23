@@ -2,7 +2,10 @@ import { Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AccessCardsModule } from './modules/access-cards/access-cards.module';
 import { AlertsModule } from './modules/alerts/alerts.module';
+import { ConsentModule } from './modules/consent/consent.module';
+import { DeskQrModule } from './modules/desk-qr/desk-qr.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { InboxModule } from './modules/inbox/inbox.module';
 import { NotesModule } from './modules/notes/notes.module';
@@ -34,6 +37,9 @@ import { StorageModule } from './shared/storage/storage.module';
     AuthModule,
     InboxModule,
     VisitsModule,
+    ConsentModule,
+    DeskQrModule,
+    AccessCardsModule,
     AlertsModule,
     NotesModule,
     NotificationsModule,

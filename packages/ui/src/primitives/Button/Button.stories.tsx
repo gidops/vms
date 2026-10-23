@@ -23,6 +23,18 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const INTENTS = [
+  "primary",
+  "accent",
+  "neutral",
+  "success",
+  "warning",
+  "danger",
+] as const;
+const TONES = ["solid", "soft", "outline", "ghost"] as const;
+
+const label = "text-xs font-medium uppercase tracking-wide text-fg-muted";
+
 export const Playground: Story = {};
 
 export const Intents: Story = {
@@ -87,4 +99,41 @@ export const Sizes: Story = {
 
 export const Disabled: Story = {
   args: { disabled: true },
+};
+
+/**
+ * Every intent (rows) at every tone (columns). `neutral` + `outline` is the app's
+ * "secondary" button — a light fill with a soft gray border (see Secondary).
+ */
+export const Matrix: Story = {
+  render: () => (
+    <div className="inline-grid grid-cols-[auto_repeat(4,minmax(0,7rem))] items-center gap-3">
+      <span />
+      {TONES.map((tone) => (
+        <span key={`h-${tone}`} className={label}>
+          {tone}
+        </span>
+      ))}
+      {INTENTS.flatMap((intent) => [
+        <span key={`l-${intent}`} className={label}>
+          {intent}
+        </span>,
+        ...TONES.map((tone) => (
+          <Button
+            key={`${intent}-${tone}`}
+            intent={intent}
+            tone={tone}
+            size="sm"
+          >
+            Button
+          </Button>
+        )),
+      ])}
+    </div>
+  ),
+};
+
+/** The secondary button used across the app (e.g. the VMC table "View Details"). */
+export const Secondary: Story = {
+  args: { intent: "neutral", tone: "outline", children: "View Details" },
 };

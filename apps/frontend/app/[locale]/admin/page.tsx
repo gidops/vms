@@ -1,61 +1,84 @@
 "use client";
 
-import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  TopNavShell,
-} from "@vms/ui";
-import { Users } from "lucide-react";
+import { SearchInput } from "@vms/ui";
 import { useTranslations } from "next-intl";
-import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
-import { PendingRequests } from "@/app/[locale]/admin/_components/PendingRequests";
-import { Link } from "@/i18n/navigation";
-import { useAuth } from "@/shared/auth/AuthContext";
+import * as React from "react";
+import { VisitDetailSheet } from "@/app/[locale]/_components/VisitDetailSheet";
+import { AdminOverviewBar } from "@/app/[locale]/admin/_components/AdminOverviewBar";
+import { AdminShell } from "@/app/[locale]/admin/_components/AdminShell";
+import { PendingApprovalsCard } from "@/app/[locale]/admin/_components/PendingApprovalsCard";
+import { RecentActivityCard } from "@/app/[locale]/admin/_components/RecentActivityCard";
+import { TodaysVisitorsCard } from "@/app/[locale]/admin/_components/TodaysVisitorsCard";
+import { QuickActionSheet } from "@/app/[locale]/dashboard/_components/QuickActionSheet";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
 
-function Admin() {
-  const t = useTranslations("admin");
-  const { user, hasPermission } = useAuth();
+/**
+ * Admin console overview. Four blocks, top to bottom: the shared overview bar
+ * (Awaiting approval, Onsite now, Expected today + actions), the pending
+ * approvals preview (approvers only, oldest first), today's visitors and recent
+ * activity. Trends and outcomes live on /admin/analytics. Every block is gated
+ * by permission, so the same page serves System Admin, Security Manager, VMC
+ * Admin and Read Admin; without approve rights the visitors table leads. Each
+ * block has its own loading and error state, and an empty block is left out.
+ */
+function Overview() {
+  const t = useTranslations("admin.overview");
+  // The top-nav search and the table's own field drive the same filter.
+  const [search, setSearch] = React.useState("");
+  const [detailId, setDetailId] = React.useState<string | null>(null);
+  const [addingVisitor, setAddingVisitor] = React.useState(false);
+
   return (
-    <TopNavShell nav={<AppTopNav />}>
-      <div className="mx-auto flex max-w-3xl flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-semibold text-fg">
-            {t("welcome", { name: user?.fullName ?? "" })}
-          </h1>
-          <p className="text-fg-muted">{t("subtitle")}</p>
+    <AdminShell
+      active="overview"
+      search={
+        <SearchInput
+          variant="onEmphasis"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onClear={() => setSearch("")}
+          placeholder={t("searchPlaceholder")}
+          aria-label={t("searchPlaceholder")}
+        />
+      }
+    >
+      <div className="flex flex-col gap-6">
+        <AdminOverviewBar onAddVisitor={() => setAddingVisitor(true)} />
+
+        <PendingApprovalsCard />
+
+        {/* Flex, not grid: an empty block doesn't render, and the other one
+            then takes the full width instead of leaving a hole. */}
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
+          <TodaysVisitorsCard
+            search={search}
+            onSearchChange={setSearch}
+            onView={setDetailId}
+            className="min-w-0 xl:flex-[5]"
+          />
+          <RecentActivityCard className="min-w-0 xl:flex-[2.4]" />
         </div>
-
-        {hasPermission("visit:approve") ? <PendingRequests /> : null}
-
-        {hasPermission("user:read") ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("userManagement")}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center justify-between gap-4">
-              <p className="text-sm text-fg-muted">{t("userManagementBody")}</p>
-              <Button asChild>
-                <Link href="/admin/users">
-                  <Users className="size-4" aria-hidden="true" />
-                  {t("manageUsers")}
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ) : null}
       </div>
-    </TopNavShell>
+
+      <QuickActionSheet
+        mode={addingVisitor ? "invite" : null}
+        onClose={() => setAddingVisitor(false)}
+      />
+      {detailId ? (
+        <VisitDetailSheet
+          kind="request"
+          id={detailId}
+          onClose={() => setDetailId(null)}
+        />
+      ) : null}
+    </AdminShell>
   );
 }
 
 export default function AdminPage() {
   return (
     <RouteGuard home="/admin">
-      <Admin />
+      <Overview />
     </RouteGuard>
   );
 }

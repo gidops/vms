@@ -13,7 +13,7 @@ type Intent = "info" | "warning" | "success" | "danger" | "neutral";
 
 const CATEGORY_INTENT: Record<StaffActivityCategory, Intent> = {
   ARRIVAL_UPDATE: "info",
-  CSO_FEEDBACK: "warning",
+  SM_FEEDBACK: "warning",
   REQUEST_UPDATE: "success",
   VISIT_STATUS: "info",
   SECURITY_ALERT: "danger",
@@ -26,7 +26,11 @@ export interface RecentUpdatesProps {
   onSelect: (item: StaffActivityItem) => void;
 }
 
-export function RecentUpdates({ items, isLoading, onSelect }: RecentUpdatesProps) {
+export function RecentUpdates({
+  items,
+  isLoading,
+  onSelect,
+}: RecentUpdatesProps) {
   const t = useTranslations("staff");
   const format = useFormatter();
 
@@ -35,7 +39,7 @@ export function RecentUpdates({ items, isLoading, onSelect }: RecentUpdatesProps
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-fg">{t("updates.title")}</h2>
         <Link
-          href="/staff/requests"
+          href="/staff/updates"
           className="text-sm font-medium text-primary underline"
         >
           {t("updates.seeAll")}
@@ -69,7 +73,9 @@ export function RecentUpdates({ items, isLoading, onSelect }: RecentUpdatesProps
                 onClick={() => onSelect(item)}
                 className="flex items-center gap-1 self-start text-sm font-medium text-primary underline"
               >
-                {item.alertId ? t("updates.viewDetails") : t("updates.viewUpdate")}
+                {item.alertId
+                  ? t("updates.viewDetails")
+                  : t("updates.viewUpdate")}
                 <ChevronRight className="size-4" aria-hidden="true" />
               </button>
             </li>

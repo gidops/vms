@@ -22,6 +22,11 @@ export const envSchema = z.object({
     .enum(['development', 'test', 'production'])
     .default('development'),
   PORT: z.coerce.number().int().positive().default(4000),
+  // Reverse-proxy hops in front of the app (Express `trust proxy`). 1 behind the
+  // AWS ALB; 0 (default) when clients connect directly. A hop count, never
+  // `true`: trusting every X-Forwarded-For entry lets clients spoof their IP and
+  // dodge the per-IP rate limits on the public desk QR routes.
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
   DATABASE_URL: z.string().url(),
   JWT_SECRET: z.string().min(1),
   JWT_EXPIRES_IN: z.string().min(1).default('1h'),
@@ -31,6 +36,9 @@ export const envSchema = z.object({
   // base64-encoded 32-byte key for column encryption; derived from JWT_SECRET in dev if absent.
   ENCRYPTION_KEY: z.string().optional(),
   OUTBOX_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(2000),
+  // Seed demo requests/alerts (dev fixtures, incl. the flagged demo visit). Off by
+  // default so production stays clean; enable per-environment to populate demo data.
+  SEED_DEMO_DATA: boolEnv(false),
   // Seq structured-log / audit mirror (optional). When SEQ_URL is set, audit
   // events are mirrored to Seq for searchable trails; PostgreSQL stays the
   // source of truth. Blank values are treated as unset (mirroring disabled).
@@ -69,9 +77,16 @@ export const envSchema = z.object({
   ),
 
   // Email transport. EMAIL_PROVIDER selects the implementation; falls back to a
-  // log transport when the chosen provider isn't configured.
-  EMAIL_PROVIDER: z.enum(['smtp', 'sendgrid']).default('smtp'),
+  // log transport when the chosen provider isn't configured. `gmail`, `mailtrap`
+  // and `smtp` all run through the nodemailer SmtpProvider (which resolves its
+  // connection from the selector); `sendgrid` uses the SendGrid HTTP API. This
+  // lets every transport's credentials coexist in env and be switched by flipping
+  // this one variable.
+  EMAIL_PROVIDER: z
+    .enum(['smtp', 'gmail', 'mailtrap', 'sendgrid'])
+    .default('smtp'),
   EMAIL_FROM: z.preprocess(emptyToUndefined, z.string().optional()),
+  // Generic/custom SMTP server.
   SMTP_HOST: z.preprocess(emptyToUndefined, z.string().optional()),
   SMTP_PORT: z.preprocess(
     emptyToUndefined,
@@ -80,13 +95,52 @@ export const envSchema = z.object({
   SMTP_SECURE: boolEnv(false),
   SMTP_USER: z.preprocess(emptyToUndefined, z.string().optional()),
   SMTP_PASS: z.preprocess(emptyToUndefined, z.string().optional()),
+  // Gmail (host/port/secure are fixed to smtp.gmail.com:465; use an app password).
+  GMAIL_USER: z.preprocess(emptyToUndefined, z.string().optional()),
+  GMAIL_APP_PASSWORD: z.preprocess(emptyToUndefined, z.string().optional()),
+  // Mailtrap (live SMTP sending).
+  MAILTRAP_HOST: z.preprocess(
+    emptyToUndefined,
+    z.string().default('live.smtp.mailtrap.io'),
+  ),
+  MAILTRAP_PORT: z.preprocess(
+    emptyToUndefined,
+    z.coerce.number().int().positive().default(2525),
+  ),
+  MAILTRAP_USER: z.preprocess(emptyToUndefined, z.string().optional()),
+  MAILTRAP_PASS: z.preprocess(emptyToUndefined, z.string().optional()),
+  // SendGrid HTTP API (the SG.* value is the API key).
   SENDGRID_API_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
 
-  // SMS + WhatsApp via Twilio (one account serves both channels).
+  // SMS via Twilio (one Twilio account also serves the WhatsApp `twilio` provider).
   TWILIO_ACCOUNT_SID: z.preprocess(emptyToUndefined, z.string().optional()),
   TWILIO_AUTH_TOKEN: z.preprocess(emptyToUndefined, z.string().optional()),
   TWILIO_SMS_FROM: z.preprocess(emptyToUndefined, z.string().optional()),
   TWILIO_WHATSAPP_FROM: z.preprocess(emptyToUndefined, z.string().optional()),
+
+  // WhatsApp transport. WHATSAPP_PROVIDER selects the backend (mirrors
+  // EMAIL_PROVIDER): `twilio` (BSP, reuses the Twilio account above) or `meta`
+  // (Meta WhatsApp Cloud API, direct Graph API — no middleman). Falls back to a
+  // log provider when the chosen backend isn't configured, so enabling WhatsApp
+  // never breaks boot. WHATSAPP_USE_TEMPLATES=false sends free text (works in the
+  // Twilio sandbox and within 24h sessions); set true once approved templates
+  // (HSM) exist, required for proactive production sends.
+  WHATSAPP_PROVIDER: z.enum(['twilio', 'meta']).default('twilio'),
+  WHATSAPP_USE_TEMPLATES: boolEnv(false),
+  // Meta WhatsApp Cloud API (WHATSAPP_PROVIDER=meta). Token is a permanent
+  // system-user access token; phone-number-id identifies the sending number.
+  META_WHATSAPP_ACCESS_TOKEN: z.preprocess(
+    emptyToUndefined,
+    z.string().optional(),
+  ),
+  META_WABA_PHONE_NUMBER_ID: z.preprocess(
+    emptyToUndefined,
+    z.string().optional(),
+  ),
+  META_GRAPH_API_VERSION: z.preprocess(
+    emptyToUndefined,
+    z.string().default('v21.0'),
+  ),
 });
 
 export type Env = z.infer<typeof envSchema>;

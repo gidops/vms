@@ -3,7 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { StaffService } from './staff.service';
 
 describe('StaffService.stats', () => {
-  it('counts expected-today / awaiting-approval / onsite, host-scoped', async () => {
+  it('counts expected-today / awaiting-approval / onsite, scoped to created-or-hosted', async () => {
     const count = jest
       .fn()
       .mockResolvedValueOnce(4) // expectedToday
@@ -19,13 +19,17 @@ describe('StaffService.stats', () => {
       awaitingApproval: 28,
       onsite: 2,
     });
-    // Every count is scoped to the requesting user as host.
+    // Every count is scoped to visits the user created OR hosts, so a staff's
+    // own requests count even when the guest is hosted by someone else.
     for (const call of count.mock.calls) {
-      expect(call[0].where.host).toEqual({ userId: 'me' });
+      expect(call[0].where.OR).toEqual([
+        { createdById: 'me' },
+        { host: { userId: 'me' } },
+      ]);
     }
-    // Awaiting-approval folds in NEEDS_MORE_INFO alongside PENDING.
+    // Awaiting-approval folds in REVIEW_REQUESTED alongside PENDING.
     expect(count.mock.calls[1][0].where.status).toEqual({
-      in: ['PENDING', 'NEEDS_MORE_INFO'],
+      in: ['PENDING', 'REVIEW_REQUESTED'],
     });
   });
 });
@@ -93,5 +97,37 @@ describe('StaffService.activityFeed', () => {
         alertId: null,
       }),
     );
+  });
+});
+
+describe('StaffService.activityFeed category filter', () => {
+  it('narrows the audit actions to the requested category', async () => {
+    const findMany = jest.fn().mockResolvedValue([]);
+    const prisma = {
+      visit: {
+        findMany: jest
+          .fn()
+          .mockResolvedValue([
+            { id: 'v1', visitorId: 'vis1', visitor: { fullName: 'X' } },
+          ]),
+      },
+      alert: { findMany: jest.fn().mockResolvedValue([]) },
+      auditLog: { findMany, count: jest.fn().mockResolvedValue(0) },
+      $transaction: (ops: unknown[]) => Promise.all(ops as Promise<unknown>[]),
+    } as unknown as PrismaService;
+    const service = new StaffService(prisma);
+
+    await service.activityFeed('me', {
+      page: 1,
+      pageSize: 20,
+      sortDir: 'desc',
+      category: 'VISIT_STATUS',
+    });
+
+    const actions = findMany.mock.calls[0][0].where.action.in as string[];
+    expect(actions).toEqual(
+      expect.arrayContaining(['visitor.checked_in', 'visitor.checked_out']),
+    );
+    expect(actions).not.toContain('visit.approved');
   });
 });

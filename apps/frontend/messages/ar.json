@@ -3,14 +3,24 @@
     "name": "AATC VMS"
   },
   "nav": {
+    "home": "الرئيسية",
     "schedule": "جدول اليوم",
     "myVisits": "زياراتي",
     "requests": "الطلبات والتنبيهات",
+    "updates": "التحديثات",
     "visitors": "الزوّار",
     "switchAccount": "تبديل الحساب",
     "accountSettings": "إعدادات الحساب",
     "help": "المساعدة / الدعم",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "notifications": "الإشعارات",
+    "notificationsUnread": "الإشعارات، {count} غير مقروءة",
+    "overview": "نظرة عامة",
+    "users": "المستخدمون",
+    "analytics": "التحليلات",
+    "evacuation": "الإخلاء",
+    "optIns": "الاشتراكات",
+    "deskQr": "رمز QR للاستقبال"
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -35,7 +45,12 @@
       "searchPlaceholder": "ابحث عن زائر أو مضيف أو طابق أو رقم تصريح",
       "allVisitTypes": "كل أنواع الزيارة",
       "allPurpose": "كل الأغراض",
-      "search": "بحث"
+      "search": "بحث",
+      "status": {
+        "APPROVED": "متوقع",
+        "CHECKED_IN": "في الموقع",
+        "CHECKED_OUT": "غادر"
+      }
     },
     "stats": {
       "onsite": "الزوّار المتواجدون",
@@ -59,7 +74,8 @@
     },
     "channel": {
       "invited": "مدعو",
-      "walkIn": "بدون موعد"
+      "walkIn": "بدون موعد",
+      "qr": "QR"
     },
     "actions": {
       "checkIn": "تسجيل الدخول",
@@ -67,19 +83,25 @@
       "viewDetails": "عرض التفاصيل"
     },
     "columns": {
-      "visitor": "الزائر",
+      "visitor": "ضيف",
       "channel": "القناة",
       "hostUnit": "المضيف / الطابق / الوحدة",
       "purpose": "الغرض",
       "timeCreated": "وقت الإنشاء",
       "status": "الحالة",
-      "action": "إجراء"
-    }
+      "action": "إجراء",
+      "guestCount": "عدد الضيوف"
+    },
+    "guestCount": "{count} ضيف",
+    "onsiteElapsed": "{time} س",
+    "noVisits": "لا توجد زيارات لعرضها.",
+    "noMatches": "لا توجد زيارات تطابق البحث أو عوامل التصفية."
   },
   "common": {
     "notifications": "الإشعارات",
     "logout": "تسجيل الخروج",
-    "allStatus": "كل الحالات"
+    "allStatus": "كل الحالات",
+    "noAccess": "ليس لديك صلاحية الوصول إلى هذه الصفحة."
   },
   "requests": {
     "title": "الطلبات والتنبيهات",
@@ -93,17 +115,23 @@
     "createdBy": "أنشأه",
     "notesCount": "{count} ملاحظات",
     "empty": "لا توجد طلبات أو تنبيهات",
-    "detailTitle": "تفاصيل طلب الزيارة",
+    "detailTitle": "تفاصيل الزيارة",
+    "updateDetailTitle": "تفاصيل التحديث",
+    "inviteRequestDetailTitle": "تفاصيل طلب الدعوة",
+    "addingNote": "جارٍ إضافة الملاحظة",
+    "sendCode": "إرسال الرمز إلى الضيف",
+    "codeSent": "تم إرسال الرمز",
+    "notAssigned": "غير مخصّص",
     "alertDetailTitle": "تفاصيل التنبيه",
     "visitorAwaiting": "في انتظار الموافقة",
     "vmcReception": "استقبال VMC",
     "noNotes": "لا توجد ملاحظات بعد.",
-    "addNotePlaceholder": "أضف ملاحظة…",
+    "addNotePlaceholder": "ابدأ الكتابة",
     "status": {
-      "awaitingApproval": "في انتظار موافقة CSO",
+      "awaitingApproval": "في انتظار موافقة SM",
       "needsMoreInfo": "يلزم مزيد من المعلومات",
-      "approvedByCso": "تمت الموافقة من CSO",
-      "deniedByCso": "رُفض من CSO",
+      "approvedBySm": "تمت الموافقة من SM",
+      "deniedBySm": "رُفض من SM",
       "cancelled": "أُلغي",
       "onsite": "متواجد",
       "checkedOut": "سجّل الخروج",
@@ -111,20 +139,37 @@
       "open": "مفتوح",
       "acknowledged": "تم الاطلاع",
       "resolved": "تم الحل",
-      "dismissed": "مرفوض"
+      "dismissed": "مرفوض",
+      "reviewRequested": "مطلوب مراجعة",
+      "flagged": "معلَّم"
     },
     "timeline": {
       "inviteCreated": "تم إنشاء الدعوة",
-      "awaitingApproval": "في انتظار موافقة CSO",
+      "awaitingApproval": "في انتظار موافقة SM",
+      "awaitingSm": "في انتظار موافقة SM",
       "checkedIn": "تم الدخول",
       "passIssued": "تم إصدار التصريح",
-      "checkedOut": "تم الخروج"
+      "issuedPass": "تم إصدار التصريح",
+      "checkedOut": "تم الخروج",
+      "gateValidated": "تم التحقق عند البوابة"
     },
     "sections": {
       "hostDetails": "تفاصيل المضيف / الوحدة / الطابق",
       "floor": "الطابق",
-      "visitorInfo": "معلومات الزائر",
-      "trackStatus": "تتبّع حالة الطلب",
+      "host": "المضيف",
+      "visitorInfo": "معلومات الضيف",
+      "trackStatus": "تتبّع تقدّم الزيارة",
+      "visitSummary": "ملخّص الزيارة",
+      "visitingFloor": "طابق الزيارة",
+      "guestPass": "تصريح الضيف",
+      "checkInDateTime": "تاريخ/وقت الدخول",
+      "checkInTime": "وقت الدخول",
+      "checkOutDateTime": "تاريخ/وقت الخروج",
+      "timeSpentOnsite": "الوقت المقضي في الموقع",
+      "checkedInBy": "تم تسجيل الدخول بواسطة",
+      "visitNotes": "ملاحظات الزيارة",
+      "destination": "الوجهة",
+      "rateGuest": "قيّم الضيف",
       "purposeOfVisit": "غرض الزيارة",
       "purposeCategory": "فئة الغرض",
       "scheduledFor": "مجدول لـ",
@@ -134,7 +179,18 @@
       "source": "المصدر",
       "role": "الدور",
       "remarks": "ملاحظات",
-      "reason": "السبب"
+      "reason": "السبب",
+      "requestingHost": "المضيف/الوحدة/الطابق الطالب",
+      "requestedBy": "طلب بواسطة",
+      "staffRole": "المنصب",
+      "scheduled": "مجدول",
+      "alertSummary": "ملخص التنبيه",
+      "riskLevel": "مستوى الخطورة",
+      "alertCategory": "فئة التنبيه",
+      "flaggedAt": "تم الإبلاغ في",
+      "alertReason": "سبب التنبيه",
+      "trackRequestStatus": "تتبع حالة الطلب",
+      "checkedOutBy": "تم الخروج بواسطة"
     },
     "actions": {
       "cancelRequest": "إلغاء الطلب",
@@ -146,9 +202,101 @@
       "approve": "الموافقة",
       "deny": "الرفض",
       "resubmit": "إعادة إرسال الطلب",
-      "confirmDeny": "تأكيد الرفض"
+      "confirmDeny": "تأكيد الرفض",
+      "checkIn": "تسجيل الدخول",
+      "checkOut": "تسجيل الخروج",
+      "requestInfo": "طلب معلومات",
+      "flag": "تعليم",
+      "confirmFlag": "تأكيد التعليم",
+      "confirmRequestInfo": "إرسال الطلب"
     },
-    "denyReasonPlaceholder": "سبب الرفض"
+    "denyReasonPlaceholder": "سبب الرفض",
+    "typeFeedback": "ملاحظات SM",
+    "editTitle": "تعديل طلب الزيارة",
+    "alertBanner": "لا تسجّل دخول هذا الضيف أو تُصدر تصريحًا حتى تتم مراجعة التنبيه من قبل SM/الأمن.",
+    "alertNeedsAttention": "يتطلب الانتباه",
+    "alertDefaultCategory": "تطابق ضيف مُعلَّم",
+    "respondPlaceholder": "الرد على التنبيه…",
+    "pagination": {
+      "prev": "السابق",
+      "next": "التالي",
+      "pageOf": "صفحة {page} من {total}"
+    },
+    "card": {
+      "flaggedTitle": "تطابق ضيف مُعلَّم",
+      "title": {
+        "PENDING": "طلب زيارة من {host}",
+        "REVIEW_REQUESTED": "مطلوب مزيد من المعلومات",
+        "APPROVED": "تمت الموافقة على الطلب من SM",
+        "DENIED": "تم رفض طلب الزيارة",
+        "CHECKED_IN": "تم تسجيل دخول {visitor}",
+        "CHECKED_OUT": "تم تسجيل خروج {visitor}",
+        "CANCELLED": "تم إلغاء الطلب",
+        "EXPIRED": "انتهت صلاحية الطلب",
+        "FLAGGED": "تم تعليم الزيارة"
+      },
+      "desc": {
+        "PENDING": "طلب زيارة لـ {visitor} من",
+        "REVIEW_REQUESTED": "يحتاج SM إلى مزيد من المعلومات عن {visitor} من",
+        "APPROVED": "تمت الموافقة على زيارة {visitor} إلى {host}.",
+        "DENIED": "تم رفض زيارة {visitor} إلى {host} من قبل SM.",
+        "CHECKED_IN": "{visitor} الآن في الموقع.",
+        "CHECKED_OUT": "قام {visitor} بتسجيل الخروج.",
+        "CANCELLED": "تم إلغاء طلب الزيارة لـ {visitor}.",
+        "EXPIRED": "انتهت صلاحية طلب الزيارة لـ {visitor}.",
+        "FLAGGED": "تم تعليم زيارة {visitor} للمراجعة الأمنية."
+      }
+    },
+    "pill": {
+      "PENDING": "بانتظار الموافقة",
+      "REVIEW_REQUESTED": "مطلوب مراجعة",
+      "FLAGGED": "معلَّم",
+      "APPROVED": "متوقع",
+      "DENIED": "مرفوض",
+      "CHECKED_IN": "في الموقع",
+      "CHECKED_OUT": "تم الخروج",
+      "CANCELLED": "ملغى",
+      "EXPIRED": "منتهي"
+    },
+    "statusOption": {
+      "PENDING": "بانتظار الموافقة",
+      "REVIEW_REQUESTED": "مطلوب معلومات",
+      "APPROVED": "موافق عليه",
+      "DENIED": "مرفوض",
+      "CHECKED_IN": "في الموقع",
+      "CHECKED_OUT": "تم الخروج",
+      "CANCELLED": "ملغى",
+      "EXPIRED": "منتهي",
+      "OPEN": "مفتوح",
+      "ACKNOWLEDGED": "تم الإقرار",
+      "RESOLVED": "تم الحل",
+      "DISMISSED": "مرفوض",
+      "FLAGGED": "معلَّم"
+    },
+    "typeOption": {
+      "WALK_IN": "بدون موعد",
+      "PRE_INVITED": "مدعو",
+      "APPOINTMENT": "موعد"
+    },
+    "stripe": {
+      "securityReview": "مطلوب مراجعة أمنية",
+      "additionalInfo": "مطلوب معلومات إضافية"
+    },
+    "riskLevel": {
+      "LOW": "منخفض",
+      "MEDIUM": "متوسط",
+      "HIGH": "مرتفع",
+      "CRITICAL": "حرج"
+    },
+    "requestInfoPlaceholder": "ما المعلومات الإضافية المطلوبة؟",
+    "flagReasonPlaceholder": "صف المخاوف الأمنية…",
+    "createdByYou": "(أنت)",
+    "evacuationAssistYes": "يحتاج إلى المساعدة في الإخلاء",
+    "evacuationAssistNo": "المساعدة في الإخلاء: لا",
+    "sources": {
+      "deskQr": "رمز QR للاستقبال (تسجيل ذاتي)",
+      "selfRegistered": "الزائر، عبر رمز QR للاستقبال"
+    }
   },
   "language": {
     "select": "اختر اللغة",
@@ -157,12 +305,14 @@
     "ar": "العربية"
   },
   "roles": {
-    "SUPER_ADMIN": "مدير عام",
-    "ADMIN": "مدير",
+    "SUPER_ADMIN": "مسؤول النظام",
+    "ADMIN": "مدير الأمن",
     "AUDITOR": "مدقق",
     "STAFF": "موظف",
     "VMC": "استقبال VMC",
-    "GATE": "البوابة"
+    "GATE": "البوابة",
+    "VMC_ADMIN": "مسؤول مركز الزوار",
+    "READ_ADMIN": "مسؤول (قراءة فقط)"
   },
   "signup": {
     "title": "إنشاء حساب مسؤول",
@@ -181,83 +331,394 @@
     "goToLogin": "الذهاب لتسجيل الدخول"
   },
   "invite": {
-    "titleInvite": "إنشاء طلب دعوة",
-    "titleWalkin": "إنشاء زيارة بدون موعد",
-    "subtitle": "املأ النموذج أدناه لإرسال الدعوة إلى ضيوفك",
-    "steps": {
-      "visitor": "تفاصيل الزائر",
-      "host": "تفاصيل المضيف",
-      "visit": "تفاصيل الزيارة",
-      "summary": "الملخص"
-    },
-    "sections": {
-      "visitorDetails": "تفاصيل الزائر",
-      "visitPurpose": "غرض الزيارة",
-      "hostDetails": "تفاصيل المضيف"
-    },
+    "titleInvite": "إنشاء دعوة زيارة",
+    "titleWalkin": "ضيف جديد بدون موعد",
+    "subtitleInvite": "املأ النموذج أدناه لإرسال الدعوة إلى ضيوفك",
+    "subtitleWalkin": "املأ النموذج أدناه لتسجيل ضيف بدون موعد",
     "importCsv": "استيراد الضيوف من CSV",
     "downloadTemplate": "تنزيل قالب CSV",
-    "addVisitor": "إضافة زائر",
-    "removeVisitor": "إزالة",
+    "addGuest": "إضافة ضيف",
+    "removeGuest": "إزالة الضيف",
+    "useSameVisitDetails": "استخدام نفس تفاصيل الزيارة",
+    "sections": {
+      "guestDetails": "تفاصيل الضيف",
+      "visitDetails": "تفاصيل الزيارة",
+      "safetyConsent": "السلامة والموافقة"
+    },
+    "guestLabel": "الضيف {index}",
     "fields": {
-      "fullName": "الاسم الكامل للزائر",
+      "fullName": "الاسم الكامل للضيف",
       "fullNamePlaceholder": "أدخل الاسم الكامل",
-      "email": "البريد الإلكتروني للزائر",
+      "email": "البريد الإلكتروني للضيف",
       "emailPlaceholder": "مثال: david@gmail.com",
       "organization": "المؤسسة",
       "organizationPlaceholder": "أدخل اسم المؤسسة",
-      "phone": "هاتف الزائر",
-      "phonePlaceholder": "+234 000-00-000",
+      "phone": "الهاتف",
+      "phonePlaceholder": "(000) 000-0000",
       "host": "اختر المضيف/الموظف",
       "hostPlaceholder": "أضف موظفًا / مضيفًا",
       "floor": "الطابق/القسم",
       "floorPlaceholder": "اختر الطابق",
       "purpose": "غرض الزيارة",
       "purposePlaceholder": "اختر فئة الزيارة",
-      "dateTime": "تاريخ ووقت الزيارة",
+      "visitDate": "تاريخ الزيارة",
+      "visitDatePlaceholder": "اختر التاريخ",
+      "visitTime": "وقت الزيارة",
       "notes": "ملاحظات الزيارة",
-      "notesPlaceholder": "أدخل ملاحظات الزيارة"
+      "notesPlaceholder": "أدخل ملاحظات الزيارة",
+      "groupName": "اسم المجموعة",
+      "groupNamePlaceholder": "مثال: وفد شركة Acme",
+      "groupContact": "جهة اتصال المجموعة",
+      "groupContactPlaceholder": "البريد الإلكتروني أو رقم الهاتف",
+      "optional": "اختياري",
+      "noHost": "بدون مضيف",
+      "evacuationAssist": "هل تحتاج إلى مساعدة في الإخلاء في حالات الطوارئ؟",
+      "commsConsent": "هل ترغب في تلقي أخبار فعاليات Afreximbank؟",
+      "yes": "نعم",
+      "no": "لا",
+      "chooseYesNo": "اختر نعم أو لا"
     },
-    "summary": {
+    "confirm": {
+      "title": "تأكيد دعوة الزيارة",
+      "subtitle": "يرجى مراجعة جميع التفاصيل بعناية للتأكد من صحتها.",
+      "guestDetails": "تفاصيل الضيف",
+      "visitDetails": "تفاصيل الزيارة",
+      "fullName": "الاسم الكامل",
+      "email": "البريد الإلكتروني",
+      "phone": "رقم الهاتف",
+      "organization": "المؤسسة",
       "host": "المضيف/الموظف",
+      "floor": "الطابق/القسم",
+      "purpose": "غرض الزيارة",
       "dateTime": "تاريخ ووقت الزيارة",
-      "clearance": "تصريح الزيارة",
-      "pending": "قيد الانتظار",
-      "approved": "تمت الموافقة"
+      "notes": "ملاحظات الزيارة"
     },
-    "showAllVisitors": "عرض كل الزوار ({count})",
-    "showLessVisitors": "عرض عدد أقل من الزوار",
-    "goToHost": "تفاصيل المضيف",
+    "success": {
+      "title": "تم إنشاء الدعوة بنجاح",
+      "subtitle": "تم إرسال هذه الدعوة إلى جميع الضيوف في هذه الزيارة",
+      "guestsName": "اسم الضيف",
+      "host": "المضيف",
+      "purpose": "غرض الزيارة",
+      "schedule": "موعد الزيارة",
+      "floor": "الطابق/القسم",
+      "checkInVisitor": "تسجيل دخول الزائر"
+    },
     "review": "مراجعة التفاصيل",
-    "submitInvite": "إرسال طلب الدعوة",
-    "submitWalkin": "إنشاء الزيارة",
+    "submitInvite": "إنشاء الدعوة",
+    "submitWalkin": "متابعة",
     "submitting": "جارٍ الإرسال…",
     "back": "رجوع",
     "cancel": "إلغاء",
-    "submitError": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+    "guestCount": "الضيف {current} من {total}",
+    "submitError": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    "groupVisit": "زيارة جماعية"
+  },
+  "checkin": {
+    "groupTitle": "تسجيل دخول المجموعة",
+    "guestInformation": "معلومات الضيوف",
+    "checkedInCount": "{done}/{total} تم تسجيل دخولهم",
+    "checkInAll": "تسجيل دخول الكل",
+    "selectAll": "تحديد الكل",
+    "checkIn": "تسجيل الدخول",
+    "checkOut": "تسجيل الخروج",
+    "viewDetails": "عرض التفاصيل",
+    "gatePending": "التحقق عند البوابة قيد الانتظار",
+    "gateDone": "تم التحقق عند البوابة",
+    "confirmTitle": "تأكيد تسجيل الدخول",
+    "confirmSubtitle": "أنت على وشك تسجيل دخول هذا الضيف واعتباره حاضرًا",
+    "assignPass": "تعيين بطاقة",
+    "checkInHint": "تحقق من تطابق رمز الدعوة قبل تسجيل الدخول",
+    "guestName": "اسم الضيف",
+    "host": "المضيف",
+    "purpose": "غرض الزيارة",
+    "schedule": "موعد الزيارة",
+    "status": "حالة الزيارة",
+    "complete": "إتمام تسجيل الدخول",
+    "successTitle": "تم تسجيل الدخول",
+    "successSubtitle": "اكتملت عملية تسجيل الدخول",
+    "backToDashboard": "العودة إلى لوحة التحكم",
+    "noCards": "لا توجد بطاقات متاحة لهذه المنطقة",
+    "error": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+  },
+  "checkout": {
+    "gateDone": "تم التحقق عند البوابة",
+    "confirmTitle": "تأكيد تسجيل الخروج",
+    "confirmSubtitle": "أنت على وشك تسجيل خروج هذا الضيف من المنشأة",
+    "changePassId": "تغيير رقم البطاقة",
+    "timeInFacility": "مدة التواجد",
+    "onsiteFor": "الضيف حاضر منذ {duration}",
+    "alreadyCheckedIn": "تم تسجيل دخول هذا الرمز",
+    "guestName": "اسم الضيف",
+    "host": "المضيف",
+    "purpose": "غرض الزيارة",
+    "schedule": "موعد الزيارة",
+    "status": "حالة الزيارة",
+    "complete": "إتمام تسجيل الخروج",
+    "error": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
   },
   "admin": {
-    "welcome": "مرحبًا {name}",
-    "subtitle": "وحدة الإدارة",
-    "userManagement": "إدارة المستخدمين",
-    "userManagementBody": "عرض المستخدمين وإنشاء الحسابات وتعيين الأدوار.",
-    "manageUsers": "إدارة المستخدمين",
     "pendingTitle": "الطلبات المعلّقة",
     "pendingBody": "راجع وقرّر طلبات الزيارة التي تنتظر الموافقة.",
     "pendingEmpty": "لا توجد طلبات تنتظر الموافقة.",
-    "pendingCount": "{count} بانتظار الموافقة"
+    "groupLabel": "{name} · {count} ضيوف",
+    "nav": {
+      "label": "أقسام الإدارة",
+      "overview": "نظرة عامة",
+      "visitors": "الزوار",
+      "requests": "الطلبات والموافقات",
+      "watchlist": "قائمة المراقبة",
+      "users": "المستخدمون وأدوار الموظفين",
+      "floors": "الطوابق والمواقع",
+      "categories": "فئات الزيارة",
+      "analytics": "التحليلات والتقارير",
+      "integrations": "التكاملات",
+      "settings": "الإعدادات",
+      "comingSoon": "قريبًا",
+      "collapse": "طي الشريط الجانبي",
+      "expand": "توسيع الشريط الجانبي",
+      "evacuation": "قائمة الإخلاء",
+      "optIns": "الاشتراك في المراسلات",
+      "deskQr": "رمز QR للاستقبال"
+    },
+    "requests": {
+      "title": "الطلبات والموافقات",
+      "subtitle": "طلبات الزيارة التي تنتظر قرارًا."
+    },
+    "overview": {
+      "loadError": "تعذر تحميل البيانات. يرجى المحاولة مرة أخرى.",
+      "loading": "جارٍ تحميل لوحة المعلومات…",
+      "title": "نظرة عامة",
+      "subtitle": "عمليات الزوار على مستوى النظام بلمحة سريعة.",
+      "searchPlaceholder": "ابحث عن الزوار أو المضيفين أو الطوابق…",
+      "sidePanel": "الإجراءات والنشاط",
+      "stats": {
+        "visitorsToday": "زوار اليوم",
+        "fromYesterday": "مقارنة بالأمس",
+        "sameAsYesterday": "مثل الأمس",
+        "expected": "الزوار المتوقعون",
+        "expectedHint": "معتمدون لليوم",
+        "pending": "الطلبات المعلقة",
+        "pendingHint": "{count, plural, =0 {لا شيء بانتظار معلومات إضافية} other {# بانتظار معلومات إضافية}}",
+        "openPending": "فتح الطلبات المعلقة",
+        "onsite": "في الموقع",
+        "onsiteHint": "في الموقع الآن",
+        "checkedOut": "غادروا",
+        "checkedOutHint": "غادروا اليوم"
+      },
+      "traffic": {
+        "loadError": "تعذر تحميل البيانات. يرجى المحاولة مرة أخرى.",
+        "title": "حركة اليوم",
+        "range": "فترة الحركة",
+        "today": "اليوم",
+        "yesterday": "أمس",
+        "chartLabelToday": "تسجيلات الدخول في الساعة، اليوم",
+        "chartLabelYesterday": "تسجيلات الدخول في الساعة، أمس"
+      },
+      "breakdown": {
+        "title": "توزيع الحالات",
+        "chartLabel": "نتائج الزيارات اليوم",
+        "checkedIn": "سُجّل دخولهم",
+        "checkedOut": "غادروا",
+        "rejected": "مرفوضون"
+      },
+      "visitors": {
+        "loadError": "تعذر تحميل البيانات. يرجى المحاولة مرة أخرى.",
+        "title": "زوار اليوم",
+        "searchPlaceholder": "ابحث عن الزوار…",
+        "columns": {
+          "visitor": "الزائر",
+          "status": "الحالة",
+          "host": "المضيف",
+          "guests": "عدد الضيوف",
+          "time": "الوقت",
+          "action": "الإجراء"
+        },
+        "guestCount": "{count, plural, zero {لا ضيوف} one {ضيف واحد} two {ضيفان} few {# ضيوف} many {# ضيفًا} other {# ضيف}}",
+        "view": "عرض",
+        "viewVisitor": "عرض {name}",
+        "noMatches": "لا يوجد زوار مطابقون لبحثك.",
+        "filterLabel": "تصفية الزوار",
+        "filters": {
+          "all": "الكل",
+          "onsite": "في الموقع",
+          "expected": "متوقَّع",
+          "out": "غادر"
+        },
+        "emptyFilter": "لا يوجد زوار في هذا العرض اليوم."
+      },
+      "quickActions": {
+        "title": "إجراءات سريعة",
+        "addVisitor": "إضافة زائر",
+        "exportData": "تصدير البيانات",
+        "printBadge": "طباعة بطاقة",
+        "scanQr": "مسح رمز QR",
+        "comingSoon": "قريبًا",
+        "exportFailed": "فشل التصدير. حاول مرة أخرى."
+      },
+      "activity": {
+        "loadError": "تعذر تحميل البيانات. يرجى المحاولة مرة أخرى.",
+        "title": "النشاط الأخير",
+        "viewAll": "عرض الكل",
+        "visitorForHost": "{visitor} لدى {host}",
+        "events": {
+          "alert": "تم رفع تنبيه أمني",
+          "requested": "طلب زيارة جديد",
+          "approved": "تمت الموافقة على طلب الزيارة",
+          "denied": "تم رفض طلب الزيارة",
+          "reviewRequested": "طُلبت معلومات إضافية",
+          "flagged": "تم وضع علامة على الزيارة للمراجعة الأمنية",
+          "checkedIn": "تم تسجيل دخول الزائر",
+          "checkedOut": "تم تسجيل خروج الزائر",
+          "cancelled": "أُلغيت الزيارة",
+          "expired": "انتهت صلاحية الزيارة"
+        }
+      },
+      "upcoming": {
+        "loadError": "تعذر تحميل البيانات. يرجى المحاولة مرة أخرى.",
+        "title": "القادمون",
+        "empty": "لا يُتوقع مزيد من الزوار اليوم.",
+        "host": "المضيف: {name}",
+        "approved": "معتمد",
+        "pending": "معلق"
+      },
+      "bar": {
+        "eyebrow": "وحدة تحكم الإدارة",
+        "greeting": "{part, select, morning {صباح الخير} afternoon {مساء الخير} other {مساء الخير}}",
+        "greetingName": "{part, select, morning {صباح الخير} afternoon {مساء الخير} other {مساء الخير}}، {name}",
+        "awaiting": "بانتظار الموافقة",
+        "awaitingHint": "طلبات زيارة تنتظر القرار",
+        "awaitingOverdue": "{count, plural, zero {لا طلبات تنتظر أكثر من ساعة} one {طلب واحد ينتظر أكثر من ساعة} two {طلبان ينتظران أكثر من ساعة} few {# طلبات تنتظر أكثر من ساعة} many {# طلبًا ينتظر أكثر من ساعة} other {# طلب ينتظر أكثر من ساعة}}",
+        "awaitingMoreInfo": "{count, plural, zero {لا طلبات بانتظار معلومات} one {طلب واحد بانتظار معلومات} two {طلبان بانتظار معلومات} few {# طلبات بانتظار معلومات} many {# طلبًا بانتظار معلومات} other {# طلب بانتظار معلومات}}",
+        "onsite": "في الموقع الآن",
+        "onsiteHint": "سجّلوا الدخول ولم يغادروا بعد",
+        "expected": "المتوقعون اليوم",
+        "expectedHint": "تمت الموافقة، لم يصلوا بعد",
+        "actionsTitle": "إجراءات سريعة",
+        "reviewApprovals": "مراجعة الطلبات",
+        "addVisitor": "إضافة زائر",
+        "export": "تصدير",
+        "readOnly": "صلاحية قراءة فقط",
+        "loadError": "تعذّر تحميل بيانات لوحة التحكم. يُرجى المحاولة مرة أخرى.",
+        "awaitingNone": "لا شيء معلّق",
+        "onsiteFloors": "{count, plural, zero {في لا طوابق} one {في طابق واحد} two {في طابقين} few {في # طوابق} many {في # طابقًا} other {في # طابق}}",
+        "console": {
+          "SUPER_ADMIN": "وحدة تحكم النظام",
+          "ADMIN": "وحدة تحكم الأمن",
+          "VMC_ADMIN": "وحدة تحكم مركز إدارة الزوار",
+          "READ_ADMIN": "وحدة تحكم للقراءة فقط",
+          "AUDITOR": "وحدة تحكم التدقيق"
+        }
+      },
+      "approvals": {
+        "title": "موافقات معلّقة",
+        "waitingCount": "{count, plural, zero {لا شيء في الانتظار} one {طلب واحد في الانتظار} two {طلبان في الانتظار} few {# طلبات في الانتظار} many {# طلبًا في الانتظار} other {# طلب في الانتظار}}",
+        "oldestFirst": "الأقدم أولًا",
+        "openQueue": "فتح قائمة الانتظار",
+        "columns": {
+          "visitor": "الزائر",
+          "host": "المضيف · الوحدة",
+          "time": "وقت الزيارة",
+          "waiting": "مدة الانتظار",
+          "decision": "القرار"
+        },
+        "groupGuests": "{count, plural, zero {مجموعة · بلا ضيوف} one {مجموعة · ضيف واحد} two {مجموعة · ضيفان} few {مجموعة · # ضيوف} many {مجموعة · # ضيفًا} other {مجموعة · # ضيف}}",
+        "waitingHours": "{hours} س {minutes} د",
+        "waitingMinutes": "{minutes} د",
+        "approve": "موافقة",
+        "deny": "رفض",
+        "reviewGroup": "مراجعة المجموعة",
+        "approveFor": "الموافقة على {name}",
+        "denyFor": "رفض {name}",
+        "reviewGroupFor": "مراجعة المجموعة {name}",
+        "showing": "عرض {shown} من {total}",
+        "seeAll": "عرض الكل ({total})",
+        "loading": "جارٍ تحميل الموافقات…",
+        "loadError": "تعذّر تحميل الموافقات المعلّقة. يُرجى المحاولة مرة أخرى.",
+        "todayAt": "اليوم، {time}",
+        "moreInfoAsked": "طُلبت معلومات إضافية",
+        "view": "عرض",
+        "viewFor": "عرض {name}",
+        "filterLabel": "تصفية الطلبات حسب النوع",
+        "filters": {
+          "all": "الكل",
+          "walkIn": "حضور مباشر",
+          "invite": "دعوة",
+          "group": "مجموعة"
+        },
+        "emptyFilter": "لا توجد طلبات من هذا النوع في الانتظار."
+      }
+    },
+    "analytics": {
+      "title": "التحليلات والتقارير",
+      "subtitle": "اتجاهات الزيارات ونتائجها. كل ما خرج من النظرة العامة موجود هنا.",
+      "export": "تصدير CSV",
+      "denied": "مرفوضة",
+      "deniedHint": "طلبات رُفضت اليوم",
+      "loading": "جارٍ تحميل التحليلات…",
+      "loadError": "تعذّر تحميل التحليلات. يُرجى المحاولة مرة أخرى."
+    }
+  },
+  "adminV2": {
+    "overview": {
+      "eyebrow": "لوحة الإدارة · {role}",
+      "welcome": "مرحبًا {name}",
+      "pendingApprovals": "الموافقات المعلقة",
+      "pendingCount": "{count, plural, =0 {لا شيء} one {طلب واحد} two {طلبان} few {# طلبات} many {# طلبًا} other {# طلب}}",
+      "trendUp": "+{count} مقارنة بالأمس",
+      "trendDown": "−{count} مقارنة بالأمس"
+    },
+    "panel": {
+      "reviewTitle": "طلبات بانتظار\nقرارك",
+      "reviewCta": "مراجعة الطلبات",
+      "activityTitle": "نشاط اليوم\nفي لمحة",
+      "activityCta": "عرض النشاط"
+    },
+    "table": {
+      "title": "سجل الزوار",
+      "review": "مراجعة",
+      "empty": "لا توجد زيارات في هذه الفترة."
+    },
+    "feed": {
+      "seeAll": "عرض الكل",
+      "viewDetails": "عرض التفاصيل"
+    },
+    "charts": {
+      "title": "الحركة والنتائج"
+    },
+    "approvals": {
+      "title": "الموافقات المعلقة",
+      "review": "مراجعة",
+      "empty": "لا يوجد ما ينتظر قرارًا.",
+      "bucket": {
+        "all": "الكل",
+        "PENDING": "بانتظار الموافقة",
+        "REVIEW_REQUESTED": "طُلبت معلومات",
+        "FLAGGED": "مُبلَّغ عنها"
+      }
+    },
+    "users": {
+      "searchPlaceholder": "ابحث بالاسم أو البريد الإلكتروني…",
+      "allRoles": "جميع الأدوار",
+      "createSubtitle": "أنشئ حسابًا وعيّن أدواره."
+    }
   },
   "staff": {
     "hub": "مساحة الموظفين",
     "welcome": "مرحبًا {name}",
     "recentVisitors": "الزوّار الأخيرون",
+    "expectedGuests": "الضيوف المتوقعون",
+    "guestCount": "{count} ضيف",
+    "onsiteFor": "منذ {time}",
+    "statusSub": {
+      "fromSm": "من SM"
+    },
     "myVisits": {
       "title": "زياراتي"
     },
     "noVisits": "لا توجد زيارات لعرضها.",
     "overview": {
       "officeFloor": "طابق المكتب",
-      "bookTitle": "احجز الزوّار في منشآت AATC بأبوجا",
+      "bookTitle": "احجز الضيوف في منشآت\nAATC بأبوجا",
       "newInvite": "طلب دعوة جديد"
     },
     "stats": {
@@ -270,15 +731,17 @@
       "last7": "آخر 7 أيام",
       "custom": "مخصّص",
       "upcoming": "القادمة",
-      "yesterday": "أمس"
+      "yesterday": "أمس",
+      "pickDate": "اختر التاريخ"
     },
     "filters": {
       "searchPlaceholder": "ابحث عن زائر أو منظمة أو غرض أو رقم طلب"
     },
     "columns": {
-      "visitor": "الزائر",
+      "visitor": "ضيف",
       "organization": "المنظمة",
       "purpose": "الغرض",
+      "noOfGuest": "عدد الضيوف",
       "timeCreated": "وقت الإنشاء",
       "status": "الحالة",
       "action": "إجراء"
@@ -289,7 +752,7 @@
     },
     "status": {
       "PENDING": "في انتظار الموافقة",
-      "NEEDS_MORE_INFO": "يلزم مزيد من المعلومات",
+      "REVIEW_REQUESTED": "يلزم مزيد من المعلومات",
       "APPROVED": "متوقع",
       "DENIED": "مرفوض",
       "CHECKED_IN": "متواجد",
@@ -308,9 +771,12 @@
       "empty": "لا توجد تحديثات حديثة.",
       "viewUpdate": "عرض التحديث",
       "viewDetails": "عرض التفاصيل",
+      "allTitle": "كل التحديثات",
+      "all": "الكل",
+      "updateRequest": "تحديث الطلب",
       "category": {
         "ARRIVAL_UPDATE": "تحديث الوصول",
-        "CSO_FEEDBACK": "ملاحظات CSO",
+        "SM_FEEDBACK": "ملاحظات SM",
         "REQUEST_UPDATE": "تحديث الطلب",
         "VISIT_STATUS": "حالة الزيارة",
         "SECURITY_ALERT": "تنبيهات أمنية"
@@ -321,7 +787,8 @@
     "welcome": "مرحبًا {name}",
     "subtitle": "عمليات البوابة",
     "placeholderTitle": "لوحة البوابة",
-    "placeholderBody": "هذه اللوحة مؤقتة وسيتم تطويرها قريبًا."
+    "placeholderBody": "هذه اللوحة مؤقتة وسيتم تطويرها قريبًا.",
+    "evacuationRoll": "قائمة الإخلاء"
   },
   "users": {
     "title": "إدارة المستخدمين",
@@ -407,9 +874,320 @@
       "title": "الإشعارات",
       "help": "ابقَ على اطّلاع بنشاط حسابك.",
       "newInviteRequest": "طلب دعوة جديد",
-      "csoDenied": "طلب مرفوض من CSO",
-      "csoApproved": "طلب موافَق عليه من CSO",
+      "smDenied": "طلب مرفوض من SM",
+      "smApproved": "طلب موافَق عليه من SM",
       "flaggedVisitor": "تنبيه زائر مُعلَّم"
+    }
+  },
+  "approval": {
+    "groupTitle": "الموافقة على المجموعة",
+    "guestInformation": "معلومات الضيوف",
+    "approvedCount": "{done}/{total} تمت الموافقة",
+    "select": "تحديد الضيف",
+    "approve": "موافقة",
+    "reject": "رفض",
+    "approveSelected": "الموافقة على المحدد ({count})",
+    "rejectSelected": "رفض المحدد ({count})",
+    "approveAll": "الموافقة على الكل",
+    "reasonPlaceholder": "سبب الرفض (مطلوب للرفض)"
+  },
+  "evacuation": {
+    "title": "قائمة الإخلاء",
+    "refresh": "تحديث",
+    "countBanner": "في الموقع يحتاجون إلى مساعدة في الإخلاء",
+    "floors": "{count, plural, one {طابق واحد} two {طابقان} few {# طوابق} many {# طابقًا} other {# طابق}}",
+    "generated": "أُنشئت <b>{time}</b>",
+    "refreshesEvery": "تتحدث كل دقيقة",
+    "noFloor": "الطابق غير محدد",
+    "loadError": "تعذر تحميل قائمة الإخلاء. اضغط تحديث.",
+    "columns": {
+      "visitor": "الزائر",
+      "floor": "الطابق / الجناح",
+      "host": "المضيف",
+      "phone": "الهاتف",
+      "checkedIn": "وقت الدخول",
+      "organization": "الجهة",
+      "badge": "البطاقة"
+    },
+    "empty": {
+      "title": "لا أحد في الموقع يحتاج إلى مساعدة في الإخلاء",
+      "body": "{count, plural, =0 {لا يوجد زوار في المبنى حاليًا.} one {زائر واحد في المبنى ولم يطلب المساعدة.} other {# زوار في المبنى ولم يطلب أي منهم المساعدة.}}"
+    },
+    "print": {
+      "button": "طباعة لمسؤولي الإخلاء",
+      "heading": "AATC أبوجا · قائمة الإخلاء",
+      "generated": "أُنشئت {datetime} بتوقيت غرب أفريقيا",
+      "count": "{count, plural, one {زائر واحد يحتاج إلى مساعدة في الإخلاء} other {# زوار يحتاجون إلى مساعدة في الإخلاء}}"
+    }
+  },
+  "consent": {
+    "title": "الاشتراك في المراسلات",
+    "exportCsv": "تصدير CSV",
+    "exportError": "فشل التصدير. يرجى المحاولة مرة أخرى.",
+    "optedIn": "مشترك",
+    "searchPlaceholder": "ابحث بالبريد الإلكتروني أو الاسم",
+    "columns": {
+      "email": "البريد الإلكتروني",
+      "name": "الاسم",
+      "lastAnswered": "آخر إجابة",
+      "sourceVisit": "الزيارة المصدر"
+    },
+    "viewVisit": "عرض الزيارة",
+    "empty": "لم يشترك أحد بعد.",
+    "noMatches": "لا توجد اشتراكات تطابق بحثك.",
+    "loadError": "تعذر تحميل الاشتراكات.",
+    "withdrawTitle": "سحب الموافقة",
+    "withdrawHelp": "يوقف المراسلات إلى هذا البريد حتى يوافق صاحبه في زيارة لاحقة.",
+    "email": "البريد الإلكتروني",
+    "emailPlaceholder": "name@company.com",
+    "withdraw": "سحب",
+    "invalidEmail": "أدخل بريدًا إلكترونيًا صالحًا.",
+    "confirmTitle": "سحب الموافقة؟",
+    "confirmBody": "سيُزال <b>{email}</b> من قائمة المشتركين الآن. تبقى سجلات الزيارات السابقة كما هي.",
+    "cancel": "إلغاء",
+    "done": "تم سحب الموافقة لـ {email}.",
+    "notFound": "لا توجد سجلات لهذا البريد الإلكتروني.",
+    "error": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+  },
+  "export": {
+    "title": "تصدير بيانات الزوار",
+    "subtitle": "اختر الفترة الزمنية والصيغة.",
+    "dateRange": "الفترة",
+    "from": "من",
+    "to": "إلى",
+    "hint": "حسب تاريخ الزيارة بتوقيت غرب أفريقيا. حتى 366 يومًا.",
+    "format": "صيغة الملف",
+    "csv": "CSV",
+    "excel": "Excel",
+    "cancel": "إلغاء",
+    "submit": "تصدير",
+    "exporting": "جارٍ التصدير…",
+    "rangeTooLong": "اختر فترة لا تتجاوز 366 يومًا.",
+    "rangeInvalid": "يجب أن يكون تاريخ الانتهاء في يوم البدء أو بعده.",
+    "error": "فشل التصدير. يرجى المحاولة مرة أخرى."
+  },
+  "delivery": {
+    "title": "الإشعارات",
+    "failedCount": "{count} فشل",
+    "channel": {
+      "EMAIL": "البريد الإلكتروني",
+      "SMS": "رسالة نصية",
+      "WHATSAPP": "واتساب"
+    },
+    "template": {
+      "inviteCode": "رمز الدعوة",
+      "visitorArrived": "وصول الزائر",
+      "thankYou": "شكر",
+      "other": "رسالة"
+    },
+    "status": {
+      "SENT": "أُرسلت",
+      "PENDING": "في الانتظار",
+      "FAILED": "فشلت"
+    },
+    "attempts": "{count, plural, one {محاولة واحدة} two {محاولتان} few {# محاولات} many {# محاولة} other {# محاولة}}",
+    "retry": "إعادة المحاولة",
+    "empty": "لم تُرسل أي رسائل لهذه الزيارة بعد.",
+    "loadError": "تعذر تحميل الإشعارات.",
+    "retryError": "فشلت إعادة المحاولة. يرجى المحاولة مرة أخرى."
+  },
+  "evacuationAssist": {
+    "question": "ما نوع المساعدة التي ستحتاجها؟",
+    "types": {
+      "MOBILITY": "مساعدة في التنقل (كرسي متحرك، صعوبة في المشي أو صعود الدرج)",
+      "VISUAL": "دعم لضعاف البصر",
+      "HEARING": "دعم لضعاف السمع",
+      "MEDICAL": "مساعدة طبية",
+      "OTHER": "أخرى (يرجى التحديد)"
+    },
+    "short": {
+      "MOBILITY": "التنقل",
+      "VISUAL": "البصر",
+      "HEARING": "السمع",
+      "MEDICAL": "طبية",
+      "OTHER": "أخرى"
+    },
+    "otherLabel": "صف المساعدة المطلوبة",
+    "otherPlaceholder": "مثلًا: يحتاج إلى منحدر",
+    "chooseType": "اختر نوع المساعدة المطلوبة",
+    "describeOther": "صف المساعدة المطلوبة"
+  },
+  "deskQr": {
+    "title": "رمز QR للاستقبال",
+    "walkInBadge": "حضور مباشر · دون موافقة",
+    "status": {
+      "active": "نشط",
+      "disabled": "معطّل"
+    },
+    "qrAlt": "رمز QR للاستقبال",
+    "copyLink": "نسخ الرابط",
+    "copied": "تم النسخ",
+    "scansToday": "عمليات المسح اليوم",
+    "lastScan": "آخر مسح {time} بتوقيت غرب أفريقيا",
+    "noScans": "لا عمليات مسح اليوم بعد",
+    "disabledAt": "عُطّل {time} بتوقيت غرب أفريقيا",
+    "created": "أُنشئ",
+    "createdBy": "{time} بواسطة {name}",
+    "visitsItCreates": "الزيارات التي ينشئها",
+    "visitsItCreatesValue": "حضور مباشر، لليوم فقط، بوسم QR",
+    "print": "طباعة الملصق",
+    "downloadPng": "تنزيل PNG",
+    "rotate": "رمز QR جديد",
+    "disable": "تعطيل",
+    "enable": "تفعيل",
+    "rotateHelp": "رمز QR الجديد يستبدل الرمز الحالي. يتوقف الملصق المطبوع عن العمل فورًا، لذا اطبع الجديد قبل الضغط.",
+    "enableHelp": "يعرض المسح «يرجى التسجيل عند مكتب الاستقبال». التفعيل يعيد الرمز نفسه، فيعمل الملصق الموجود من جديد.",
+    "disabledOverlay": "يعرض المسح «يرجى التسجيل عند مكتب الاستقبال»",
+    "codes": {
+      "title": "رموز التحقق",
+      "emailedTo": "تُرسل الرموز بالبريد إلى",
+      "change": "تغيير",
+      "help": "بعد أن يملأ الزائر النموذج، يصل رمز من 6 أرقام إلى هذا البريد. اقرأه للزائر عند المكتب لإكمال تسجيله. يُستخدم الرمز مرة واحدة وتنتهي صلاحيته بعد 10 دقائق."
+    },
+    "codeEmail": {
+      "createTitle": "إعداد رمز QR للاستقبال",
+      "changeTitle": "تغيير وجهة الرموز",
+      "help": "تُرسل رموز التحقق للزوار إلى هنا. استخدم بريدًا يتابعه أحد في مكتب الاستقبال.",
+      "label": "البريد الإلكتروني لرموز التحقق",
+      "invalid": "أدخل عنوان بريد إلكتروني، مثل reception@aatc.org",
+      "save": "حفظ"
+    },
+    "empty": {
+      "title": "لا يوجد رمز QR للاستقبال بعد",
+      "body": "أنشئ الرمز واطبع الملصق وضعه على مكتب الاستقبال. من يمسحه يُسجَّل كزائر حضور مباشر لليوم.",
+      "readOnly": "لم يُعدّ الاستقبال رمز QR بعد.",
+      "create": "إنشاء رمز QR للاستقبال"
+    },
+    "loadError": {
+      "title": "تعذّر تحميل رمز QR للاستقبال.",
+      "body": "تحقق من الاتصال ثم حاول مرة أخرى. الملصق الموجود على المكتب ما زال يعمل."
+    },
+    "retry": "إعادة المحاولة",
+    "errors": {
+      "create": "لم يُنشأ رمز QR. حاول مرة أخرى بعد قليل.",
+      "update": "لم يُغيَّر البريد. حاول مرة أخرى بعد قليل.",
+      "rotate": "لم يُنشأ رمز QR جديد. الرمز الحالي ما زال يعمل. حاول مرة أخرى بعد قليل.",
+      "disable": "لم يُعطَّل رمز QR. ما زال يعمل. حاول مرة أخرى بعد قليل.",
+      "enable": "لم يُفعَّل رمز QR. حاول مرة أخرى بعد قليل.",
+      "download": "لم يُنزَّل ملف PNG. حاول مرة أخرى بعد قليل.",
+      "image": "تعذّر عرض رمز QR."
+    },
+    "confirmRotate": {
+      "title": "استبدال رمز QR للاستقبال؟",
+      "body": "يتوقف رمز QR على الملصق <b>عن العمل فورًا</b>. سيُطلب ممن يمسحه التسجيل عند المكتب. اطبع الملصق الجديد وضعه مباشرة بعد ذلك.",
+      "confirm": "إنشاء رمز جديد"
+    },
+    "confirmDisable": {
+      "title": "تعطيل رمز QR للاستقبال؟",
+      "body": "لن يتمكن الزوار من التسجيل بالمسح حتى تعيد تفعيله. يمكن للاستقبال تسجيل زوار الحضور المباشر كالمعتاد.",
+      "confirm": "تعطيل"
+    },
+    "cancel": "إلغاء",
+    "poster": {
+      "brand": "AFREXIMBANK AFRICAN TRADE CENTRE · ABUJA",
+      "title": "امسح لتسجيل زيارتك",
+      "subtitle": "Abuja-AATC Visitor Management",
+      "then": "ثم املأ النموذج القصير على هاتفك.",
+      "code": "سيقرأ لك الاستقبال رمزًا لإكمال التسجيل.",
+      "footer": "مكتب الاستقبال · أُنشئ الرمز {date}"
+    }
+  },
+  "selfRegister": {
+    "brand": "AATC · مكتب الاستقبال",
+    "title": "سجّل زيارتك",
+    "today": "اليوم، {date}",
+    "expiresIn": "تنتهي صلاحية النموذج خلال {countdown}",
+    "optional": "اختياري",
+    "yes": "نعم",
+    "no": "لا",
+    "sections": {
+      "contact": "بيانات الاتصال",
+      "about": "معلومات عنك",
+      "visiting": "من تزور؟",
+      "visit": "تفاصيل الزيارة",
+      "safety": "السلامة والتواصل"
+    },
+    "fields": {
+      "email": "البريد الإلكتروني",
+      "phone": "رقم الهاتف",
+      "fullName": "الاسم الكامل",
+      "organization": "الجهة",
+      "floor": "الطابق المقصود",
+      "floorNotSure": "غير متأكد / لا ينطبق",
+      "purpose": "سبب الزيارة",
+      "evacuation": "في حالة الطوارئ، هل ستحتاج إلى مساعدة في الإخلاء؟",
+      "consent": "هل ترغب في تلقي أخبار عن أنشطة وفعاليات أفريكسيم بنك؟"
+    },
+    "host": {
+      "placeholder": "اكتب اسمًا",
+      "help": "اترك هذا الحقل فارغًا إذا كانت زيارتك استفسارًا عامًا.",
+      "results": "الموظفون المطابقون",
+      "none": "لا يوجد موظف مطابق. اتركه فارغًا لاستفسار عام.",
+      "remove": "إزالة {name}"
+    },
+    "errors": {
+      "email": "أدخل بريدًا إلكترونيًا كاملًا، مثل name@company.com",
+      "phone": "أدخل رقم هاتف صحيحًا، أو اتركه فارغًا",
+      "required": "هذا الحقل مطلوب",
+      "choose": "اختر خيارًا",
+      "yesNo": "اختر نعم أو لا",
+      "chooseType": "اختر نوع المساعدة التي تحتاجها",
+      "describeOther": "صف المساعدة التي تحتاجها"
+    },
+    "checkAnswers": "{count, plural, one {تحقق من إجابة واحدة أدناه.} two {تحقق من إجابتين أدناه.} few {تحقق من # إجابات أدناه.} other {تحقق من # إجابة أدناه.}}",
+    "submit": "تسجيل زيارتي",
+    "submitHelp": "سيقرأ لك الاستقبال رمزًا لإكمال التسجيل.",
+    "code": {
+      "heading": "اقتربت من الانتهاء",
+      "title": "اطلب رمزك من الاستقبال",
+      "body": "أرسلنا رمزًا من 6 أرقام إلى الاستقبال. أخبرهم باسمك وسيقرؤونه لك.",
+      "label": "رمز من 6 أرقام",
+      "confirm": "تأكيد",
+      "expires": "تنتهي صلاحية الرمز خلال {countdown}"
+    },
+    "codeWrong": "{left, plural, =0 {الرمز غير مطابق.} one {الرمز غير مطابق. تحقق منه مع الاستقبال وحاول مرة أخرى. بقيت محاولة واحدة.} two {الرمز غير مطابق. تحقق منه مع الاستقبال وحاول مرة أخرى. بقيت محاولتان.} other {الرمز غير مطابق. تحقق منه مع الاستقبال وحاول مرة أخرى. بقيت # محاولات.}}",
+    "done": {
+      "title": "تم تسجيلك",
+      "body": "اعرض هذا المرجع عند مكتب الاستقبال للحصول على بطاقة الزائر.",
+      "name": "الاسم",
+      "visiting": "تزور",
+      "when": "التاريخ"
+    },
+    "inactive": {
+      "title": "رمز QR هذا غير نشط",
+      "body": "يرجى التسجيل عند مكتب الاستقبال. سيتولى الاستقبال تسجيل دخولك."
+    },
+    "expired": {
+      "title": "انتهت صلاحية هذا النموذج",
+      "body": "يرجى مسح رمز QR مرة أخرى."
+    },
+    "locked": {
+      "title": "رموز خاطئة كثيرة جدًا",
+      "body": "يرجى مسح رمز QR مرة أخرى، أو التسجيل عند مكتب الاستقبال."
+    },
+    "startAgain": "البدء من جديد",
+    "problems": {
+      "offline": "لا يوجد اتصال. إجاباتك محفوظة. حاول مرة أخرى عند عودة الاتصال.",
+      "unknown": "حدث خطأ. حاول مرة أخرى، أو سجّل عند مكتب الاستقبال."
+    }
+  },
+  "help": {
+    "title": "المساعدة / الدعم",
+    "tabs": {
+      "evacuation": "قائمة الإخلاء",
+      "optIns": "الاشتراكات",
+      "deskQr": "رمز QR للاستقبال",
+      "export": "تصدير البيانات",
+      "support": "المساعدة والدعم"
+    },
+    "export": {
+      "title": "تصدير بيانات الزوار",
+      "help": "نزّل سجلات الزوار لفترة زمنية محددة كجدول بيانات.",
+      "button": "تصدير البيانات"
+    },
+    "support": {
+      "title": "المساعدة والدعم",
+      "message": "هل تحتاج إلى مساعدة في نظام إدارة الزوار أو وجدت مشكلة؟ تواصل مع فريق التطوير عبر قناة الدعم المعتمدة."
     }
   },
   "auth": {

@@ -24,24 +24,24 @@ npm run dev       -w @vms/frontend           # terminal 2 → http://localhost:3
 
 Sign in at <http://localhost:3000> with the dev seed account:
 
-| Email | Password |
-| --- | --- |
+| Email            | Password    |
+| ---------------- | ----------- |
 | `admin@aatc.org` | `Passw0rd!` |
 
-The backend seeds the permission catalogue, the `ADMIN` / `CSO` / `RECEPTION`
+The backend seeds the permission catalogue, the `ADMIN` / `SM` / `RECEPTION`
 roles, this user, and a set of demo visit requests + an alert on startup in
 non‑production (idempotent) — so the Requests & Alerts inbox renders with data.
 
 ### URLs
 
-| Service | URL |
-| --- | --- |
-| Frontend (login) | <http://localhost:3000/> (`/fr`, `/ar` for FR/AR) |
-| Dashboard | <http://localhost:3000/dashboard> |
-| Backend health | <http://localhost:4000/health> |
-| Adminer | <http://localhost:8080> — System **PostgreSQL**, server **postgres**, user/pass/db **vms/vms/vms** |
-| Seq (audit/log search) | <http://localhost:8081> — ingestion on `:5341` (CLEF) |
-| Storybook | `npm run storybook -w @vms/ui` |
+| Service                | URL                                                                                                |
+| ---------------------- | -------------------------------------------------------------------------------------------------- |
+| Frontend (login)       | <http://localhost:3000/> (`/fr`, `/ar` for FR/AR)                                                  |
+| Dashboard              | <http://localhost:3000/dashboard>                                                                  |
+| Backend health         | <http://localhost:4000/health>                                                                     |
+| Adminer                | <http://localhost:8080> — System **PostgreSQL**, server **postgres**, user/pass/db **vms/vms/vms** |
+| Seq (audit/log search) | <http://localhost:8081> — ingestion on `:5341` (CLEF)                                              |
+| Storybook              | `npm run storybook -w @vms/ui`                                                                     |
 
 ### Seq (structured-log + audit mirror)
 
@@ -91,16 +91,16 @@ fast** on a missing/invalid variable.
 
 **Backend** (`apps/backend/.env`):
 
-| Var | Notes |
-| --- | --- |
-| `DATABASE_URL` | Postgres URL (`localhost` host for dev, `postgres` in compose) |
-| `JWT_SECRET` | signing secret for access tokens |
-| `JWT_EXPIRES_IN` | e.g. `1h`, `15m` |
-| `PORT` | `4000` |
-| `NODE_ENV` | `development` / `production` |
-| `LOG_LEVEL` | optional (`info` default) |
-| `ENCRYPTION_KEY` | optional base64 32‑byte key; derived from `JWT_SECRET` in dev |
-| `OUTBOX_POLL_INTERVAL_MS` | optional (`2000` default) |
+| Var                       | Notes                                                          |
+| ------------------------- | -------------------------------------------------------------- |
+| `DATABASE_URL`            | Postgres URL (`localhost` host for dev, `postgres` in compose) |
+| `JWT_SECRET`              | signing secret for access tokens                               |
+| `JWT_EXPIRES_IN`          | e.g. `1h`, `15m`                                               |
+| `PORT`                    | `4000`                                                         |
+| `NODE_ENV`                | `development` / `production`                                   |
+| `LOG_LEVEL`               | optional (`info` default)                                      |
+| `ENCRYPTION_KEY`          | optional base64 32‑byte key; derived from `JWT_SECRET` in dev  |
+| `OUTBOX_POLL_INTERVAL_MS` | optional (`2000` default)                                      |
 
 **Frontend** (`apps/frontend/.env`): `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_API_BASE_URL`.
 
@@ -140,6 +140,19 @@ docker compose up --build              # full stack
 docker compose down                    # stop (add -v to wipe the DB volume)
 ```
 
+## Code quality (local SonarQube)
+
+Scan the repo against a local SonarQube dashboard before pushing:
+
+```bash
+npm run sonar             # start SonarQube (Docker, :9000) if needed + scan
+npm run sonar:coverage    # include backend jest coverage in the analysis
+```
+
+Results: <http://localhost:9000/dashboard?id=gidops_vms>. First boot takes
+1–3 min; credentials are auto-bootstrapped into the gitignored `.sonar/` dir.
+Full details: [sonarqube-local.md](./sonarqube-local.md).
+
 ## Verification
 
 ```bash
@@ -152,12 +165,46 @@ npx turbo run lint:check typecheck build build-storybook test
 ## Deployment (Terraform / AWS)
 
 `terraform/` provisions a VPC (+2 subnets), two EC2 instances (frontend :80,
-backend :4000), and an RDS Postgres 16 instance. `user_data` clones `develop`,
-installs deps, and builds from the monorepo root via `turbo --filter`.
+backend :4000), and an RDS Postgres 16 instance. Deploys use **prebuilt ECR
+images**: `user_data` logs in to ECR and pulls/runs the image for the given
+`*_image_tag` at boot (no on-instance builds — `t2.micro` OOMs on them).
 
-Prerequisites: AWS credentials, an existing EC2 key pair (`vms-key`), and a
-reachable repo. State is local — move to an encrypted remote backend before team
-use (it holds the generated DB password).
+Runtime config for the backend container (image tags, email transport) comes
+from Terraform variables: copy `terraform/terraform.tfvars.example` to
+`terraform.tfvars` (gitignored) and fill in the email credentials before
+`terraform apply` — otherwise the backend silently falls back to its log email
+provider and no mail is sent. Changing these vars rewrites `user_data`, which
+**replaces the backend EC2 instance** on apply (the Elastic IP re-associates and
+migrations re-run at boot, so this is the normal redeploy path).
+
+Prerequisites: AWS credentials, an existing EC2 key pair (`vms-key`), and images
+pushed to ECR. State is local — move to an encrypted remote backend before team
+use (it holds the generated DB password and JWT/encryption secrets).
+
+## Desk QR (visitor self-registration)
+
+One QR printed at the VMC desk. Visitors scan it, fill in the form on their
+phone, and reception reads them a 6-digit code that is **emailed** to the desk
+inbox set on the Desk QR page (`/dashboard/desk-qr`, `/admin/desk-qr`). The
+code step needs email delivery: with `EMAIL_ENABLED=false` the visitor is told
+to register at the desk instead.
+
+**Cutover from V1** — keep the QR already printed at the desk working:
+
+```bash
+npm run desk-qr:import-v1 -w @vms/backend -- "https://aatcabuja.com.ng/qr.php?i=<32 hex>" desk-inbox@example.org
+```
+
+In a built image: `node dist/scripts/import-v1-desk-qr.js <link> <email>`. Once
+the domain serves v2, `/qr.php?i=<hex>` redirects to the v2 form. Re-running is
+safe; "New QR" on the page later replaces the imported token.
+
+**Rate limits** are counted in memory per backend process (per phone IP and per
+QR). Behind a proxy, set `TRUST_PROXY_HOPS` to the number of proxies in front of
+the backend (`1` behind the AWS ALB); otherwise every phone shares the proxy's IP.
+Never set Express `trust proxy` to `true`: clients could then spoof
+`X-Forwarded-For` and bypass the per-IP limits. With more than one backend
+instance, move the counts to a shared store.
 
 ## Troubleshooting
 

@@ -2,9 +2,10 @@ import { z } from "zod";
 import { PaginationQuery } from "../common/pagination.js";
 
 /**
- * Staff "Today's Schedule" headline counts, all scoped to the signed-in host.
+ * Staff "Today's Schedule" headline counts, all scoped to the signed-in staff
+ * (visits they created or host).
  * - expectedToday: APPROVED visits scheduled for today (awaiting arrival)
- * - awaitingApproval: PENDING + NEEDS_MORE_INFO (needs the CSO / the host)
+ * - awaitingApproval: PENDING + REVIEW_REQUESTED (needs the Security Manager / the host)
  * - onsite: currently CHECKED_IN
  */
 export const StaffDashboardStats = z.object({
@@ -20,7 +21,7 @@ export type StaffDashboardStats = z.infer<typeof StaffDashboardStats>;
  */
 export const StaffActivityCategory = z.enum([
   "ARRIVAL_UPDATE",
-  "CSO_FEEDBACK",
+  "SM_FEEDBACK",
   "REQUEST_UPDATE",
   "VISIT_STATUS",
   "SECURITY_ALERT",
@@ -42,9 +43,11 @@ export const StaffActivityItem = z.object({
 });
 export type StaffActivityItem = z.infer<typeof StaffActivityItem>;
 
-/** Activity-feed query: paginated, optionally narrowed to a single calendar day. */
+/** Activity-feed query: paginated, optionally narrowed to a day and/or category. */
 export const StaffActivityQuery = PaginationQuery.extend({
   /** ISO date (YYYY-MM-DD); when set, only that day's updates are returned. */
   date: z.coerce.date().optional(),
+  /** When set, only updates in this category are returned. */
+  category: StaffActivityCategory.optional(),
 });
 export type StaffActivityQuery = z.infer<typeof StaffActivityQuery>;

@@ -19,9 +19,9 @@ export function LanguageSwitcher() {
       <PopoverTrigger
         aria-label={t("select")}
         className={cn(
-          "inline-flex size-9 items-center justify-center rounded-full border border-emphasis-border text-emphasis-fg transition-colors outline-none",
+          "inline-flex size-9 items-center justify-center rounded-full text-accent transition-colors outline-none",
           "hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]",
-          "data-[state=open]:bg-accent data-[state=open]:text-accent-fg data-[state=open]:border-accent",
+          "data-[state=open]:bg-white/10",
         )}
       >
         <Globe className="size-5" aria-hidden="true" />

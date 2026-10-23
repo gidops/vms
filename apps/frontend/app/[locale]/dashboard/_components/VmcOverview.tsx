@@ -1,36 +1,34 @@
 "use client";
 
 import { Button } from "@vms/ui";
-import { ChevronDown } from "lucide-react";
+import { SquareActivity } from "lucide-react";
 import { useTranslations } from "next-intl";
-import * as React from "react";
+import {
+  OverviewBar,
+  type OverviewStat,
+} from "@/app/[locale]/_components/OverviewBar";
 
-export interface OverviewStat {
-  label: string;
-  value: React.ReactNode;
-}
+export type { OverviewStat };
 
 export interface VmcOverviewProps {
+  /** Welcome heading, e.g. "Welcome Judith Francis". Rendered inside the bar. */
+  welcome: string;
   stats: OverviewStat[];
   onRegisterWalkIn: () => void;
   onNewInvite: () => void;
 }
 
-/** Decorative stacked chevrons in the trailing-top corner of the green panel. */
-function DecorChevrons() {
+/** "VMC HUB" eyebrow + welcome heading — the bar's white top row. */
+function WelcomeHeader({ welcome }: { welcome: string }) {
+  const t = useTranslations("dashboard");
   return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 120 120"
-      className="pointer-events-none absolute -top-2 end-0 h-32 w-32 text-emphasis-fg/10 rtl:-scale-x-100"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="10"
-    >
-      <path d="M20 20 L60 50 L100 20" />
-      <path d="M20 50 L60 80 L100 50" />
-      <path d="M20 80 L60 110 L100 80" />
-    </svg>
+    <div className="flex flex-col gap-1">
+      <span className="flex items-center gap-1.5 text-base font-semibold uppercase tracking-tight text-success">
+        <SquareActivity className="size-4" aria-hidden="true" />
+        {t("hub")}
+      </span>
+      <h1 className="text-4xl font-semibold text-fg">{welcome}</h1>
+    </div>
   );
 }
 
@@ -42,7 +40,6 @@ function QuickActions({
   const t = useTranslations("dashboard");
   return (
     <>
-      <DecorChevrons />
       <div className="relative flex flex-col gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -65,86 +62,32 @@ function QuickActions({
   );
 }
 
-function StatCell({ stat }: { stat: OverviewStat }) {
-  return (
-    <div className="flex flex-col gap-2 p-5">
-      <span className="text-sm text-fg-muted">{stat.label}</span>
-      <span className="text-3xl font-semibold text-fg">{stat.value}</span>
-    </div>
-  );
-}
-
 /**
- * VMC dashboard overview. Desktop: a single bar of stat cells with a flush
- * brand-green quick-actions panel at the end. Mobile: the quick-actions panel on
- * top, with the stats moved into a collapsible "View your activity" section.
+ * VMC dashboard overview on the shared {@link OverviewBar}:
+ *   row 1 — "VMC HUB" eyebrow + welcome heading (full width, white)
+ *   row 2 — three stat cells | brand-green quick-actions panel
+ * Mobile: welcome heading, quick-actions panel, then the stats in a
+ * collapsible "View your activity" section.
  */
 export function VmcOverview({
+  welcome,
   stats,
   onRegisterWalkIn,
   onNewInvite,
 }: VmcOverviewProps) {
   const t = useTranslations("dashboard");
-  const [open, setOpen] = React.useState(true);
-
   return (
-    <>
-      {/* ── Desktop: stats + flush quick-actions in one bar ───────────────── */}
-      <div className="hidden overflow-hidden rounded-xl border border-border shadow-xs lg:grid lg:grid-cols-[repeat(3,1fr)_minmax(300px,1.15fr)]">
-        {stats.map((stat, i) => (
-          <div
-            key={stat.label}
-            className={
-              "bg-surface" + (i > 0 ? " border-s border-border" : "")
-            }
-          >
-            <StatCell stat={stat} />
-          </div>
-        ))}
-        <div className="relative flex flex-col justify-between gap-6 overflow-hidden border-s border-border bg-emphasis p-5 text-emphasis-fg">
-          <QuickActions
-            onRegisterWalkIn={onRegisterWalkIn}
-            onNewInvite={onNewInvite}
-          />
-        </div>
-      </div>
-
-      {/* ── Mobile: quick-actions on top, collapsible stats below ─────────── */}
-      <div className="flex flex-col gap-4 lg:hidden">
-        <div className="relative flex flex-col justify-between gap-6 overflow-hidden rounded-xl bg-emphasis p-5 text-emphasis-fg">
-          <QuickActions
-            onRegisterWalkIn={onRegisterWalkIn}
-            onNewInvite={onNewInvite}
-          />
-        </div>
-
-        <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-xs">
-          <button
-            type="button"
-            onClick={() => setOpen((o) => !o)}
-            aria-expanded={open}
-            className="flex w-full items-center justify-between gap-2 p-4 text-start"
-          >
-            <span className="text-lg font-semibold text-fg-muted">
-              {t("activity.title")}
-            </span>
-            <ChevronDown
-              className={
-                "size-5 shrink-0 text-fg-muted transition-transform" +
-                (open ? " rotate-180" : "")
-              }
-              aria-hidden="true"
-            />
-          </button>
-          {open ? (
-            <div className="divide-y divide-border border-t border-border">
-              {stats.map((stat) => (
-                <StatCell key={stat.label} stat={stat} />
-              ))}
-            </div>
-          ) : null}
-        </div>
-      </div>
-    </>
+    <OverviewBar
+      heading={<WelcomeHeader welcome={welcome} />}
+      stats={stats}
+      mobileStats="collapsible"
+      collapsibleLabel={t("activity.title")}
+      panel={
+        <QuickActions
+          onRegisterWalkIn={onRegisterWalkIn}
+          onNewInvite={onNewInvite}
+        />
+      }
+    />
   );
 }

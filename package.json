@@ -21,6 +21,8 @@
     "test": "turbo run test",
     "storybook": "turbo run storybook",
     "build-storybook": "turbo run build-storybook",
+    "sonar": "bash scripts/sonar-scan.sh",
+    "sonar:coverage": "npm run test:cov -w @vms/backend && bash scripts/sonar-scan.sh",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\" --ignore-path .gitignore"
   },
   "devDependencies": {

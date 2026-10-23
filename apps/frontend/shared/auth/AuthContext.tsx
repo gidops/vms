@@ -164,7 +164,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       hasPermission,
     }),
-    [user, status, login, signup, switchRole, refreshUser, logout, hasPermission],
+    [
+      user,
+      status,
+      login,
+      signup,
+      switchRole,
+      refreshUser,
+      logout,
+      hasPermission,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

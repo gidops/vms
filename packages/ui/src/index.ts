@@ -22,13 +22,17 @@ export * from "./primitives/Tabs/index";
 export * from "./primitives/Tooltip/index";
 
 // Components (tier 2)
+export * from "./components/ActionTile/index";
 export * from "./components/Alert/index";
+export * from "./components/AreaChart/index";
 export * from "./components/Breadcrumbs/index";
 export * from "./components/Card/index";
+export * from "./components/DonutChart/index";
 export * from "./components/Drawer/index";
 export * from "./components/EmptyState/index";
 export * from "./components/InboxCard/index";
 export * from "./components/Pagination/index";
+export * from "./components/RangeCalendar/index";
 export * from "./components/SearchInput/index";
 export * from "./components/SegmentedControl/index";
 export * from "./components/StatCard/index";
@@ -37,6 +41,7 @@ export * from "./components/StatusBadge/index";
 export * from "./components/Table/index";
 export * from "./components/Timeline/index";
 export * from "./components/Toast/index";
+export * from "./components/YesNoControl/index";
 
 // Patterns (tier 3)
 export * from "./patterns/AlertModal/index";
@@ -47,5 +52,6 @@ export * from "./patterns/FilterBar/index";
 export * from "./patterns/PageHeader/index";
 export * from "./patterns/QuickActionsPanel/index";
 export * from "./patterns/RecordTable/index";
+export * from "./patterns/SideNav/index";
 export * from "./patterns/TopNav/index";
 export * from "./patterns/TopNavShell/index";

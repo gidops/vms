@@ -187,9 +187,18 @@
   --color-surface: var(--vms-surface);
   --color-surface-muted: var(--vms-surface-muted);
   --color-surface-inset: var(--vms-surface-inset);
+  --color-surface-stripe: var(--vms-surface-stripe);
 
   --color-border: var(--vms-border);
   --color-border-strong: var(--vms-border-strong);
+  --color-border-subtle: var(--vms-border-subtle);
+
+  --color-btn-secondary-bg: var(--vms-btn-secondary-bg);
+  --color-btn-secondary-border: var(--vms-btn-secondary-border);
+
+  --color-avatar-single-bg: var(--vms-avatar-single-bg);
+  --color-avatar-group-bg: var(--vms-avatar-group-bg);
+  --color-avatar-group-border: var(--vms-avatar-group-border);
 
   --color-fg: var(--vms-fg);
   --color-fg-muted: var(--vms-fg-muted);
@@ -236,20 +245,25 @@
 /* ---- Light theme (default) -------------------------------------------- */
 :root,
 [data-theme="light"] {
-  --vms-canvas: var(--color-neutral-50);
+  --vms-canvas: var(--color-white);
   --vms-surface: var(--color-white);
   --vms-surface-muted: var(--color-neutral-100);
   --vms-surface-inset: var(--color-neutral-100);
+  /* Warm off-white used for zebra-striped table rows. */
+  --vms-surface-stripe: #faf9f9;
 
   --vms-border: var(--color-neutral-200);
   --vms-border-strong: var(--color-neutral-300);
+  /* Faint divider for table header/rows. */
+  --vms-border-subtle: #f1f2f5;
 
   --vms-fg: var(--color-neutral-900);
   --vms-fg-muted: var(--color-neutral-600);
   --vms-fg-subtle: var(--color-neutral-400);
   --vms-fg-on-emphasis: var(--color-white);
 
-  --vms-primary: var(--color-teal-700);
+  /* Brand teal — the canonical primary/confirm action color (e.g. Check-In). */
+  --vms-primary: #00736e;
   --vms-primary-hover: var(--color-teal-800);
   --vms-primary-subtle: var(--color-teal-50);
   --vms-primary-fg: var(--color-white);
@@ -284,10 +298,20 @@
   --vms-warning-subtle: var(--color-orange-50);
   --vms-warning-fg: var(--color-white);
 
-  --vms-danger: var(--color-red-600);
+  --vms-danger: #d95858;
   --vms-danger-hover: var(--color-red-700);
   --vms-danger-subtle: var(--color-red-50);
   --vms-danger-fg: var(--color-white);
+
+  /* Secondary button (neutral + outline): light fill + soft gray border. */
+  --vms-btn-secondary-bg: #faf9f9;
+  --vms-btn-secondary-border: #abb8c3;
+
+  /* Guest avatar (VMC table): teal for single visits, gold for group visits.
+     The single border matches its fill so it reads as borderless. */
+  --vms-avatar-single-bg: #00aa8c;
+  --vms-avatar-group-bg: #e6b900;
+  --vms-avatar-group-border: #ffd21a;
 
   --vms-info: var(--color-blue-600);
   --vms-info-subtle: var(--color-blue-50);
@@ -302,9 +326,11 @@
   --vms-surface: var(--color-neutral-900);
   --vms-surface-muted: var(--color-neutral-800);
   --vms-surface-inset: var(--color-neutral-800);
+  --vms-surface-stripe: var(--color-neutral-900);
 
   --vms-border: var(--color-neutral-800);
   --vms-border-strong: var(--color-neutral-700);
+  --vms-border-subtle: var(--color-neutral-800);
 
   --vms-fg: var(--color-neutral-100);
   --vms-fg-muted: var(--color-neutral-400);
@@ -368,6 +394,14 @@
     transparent
   );
   --vms-danger-fg: var(--color-neutral-950);
+
+  --vms-btn-secondary-bg: var(--color-neutral-800);
+  --vms-btn-secondary-border: var(--color-neutral-700);
+
+  /* Avatar identity colors are intrinsic — same in dark mode. */
+  --vms-avatar-single-bg: #00aa8c;
+  --vms-avatar-group-bg: #e6b900;
+  --vms-avatar-group-border: #ffd21a;
 
   --vms-info: var(--color-blue-500);
   --vms-info-subtle: color-mix(

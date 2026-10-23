@@ -32,6 +32,20 @@ function accentFor(seed: string): string {
   return ACCENTS[hash % ACCENTS.length] ?? ACCENTS[0];
 }
 
+/**
+ * Fixed semantic accents that override the name-hash — single vs group visit.
+ * Both carry a 2px border so they share the same footprint; the single border
+ * matches its fill (reads as borderless), the group gets a brighter gold ring.
+ */
+const NAMED_ACCENTS = {
+  single:
+    "border-2 border-[var(--color-avatar-single-bg)] bg-[var(--color-avatar-single-bg)] text-white",
+  group:
+    "border-2 border-[var(--color-avatar-group-border)] bg-[var(--color-avatar-group-bg)] text-white",
+} as const;
+
+export type AvatarAccent = keyof typeof NAMED_ACCENTS;
+
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
@@ -43,13 +57,19 @@ export interface AvatarProps extends VariantProps<typeof avatarVariants> {
   /** Used for the initials fallback and the deterministic accent color. */
   name: string;
   src?: string;
+  /** Override the name-hash color with a fixed semantic accent (single/group). */
+  accent?: AvatarAccent;
   className?: string;
 }
 
-export function Avatar({ name, src, size, className }: AvatarProps) {
+export function Avatar({ name, src, size, accent, className }: AvatarProps) {
   return (
     <AvatarPrimitive.Root
-      className={cn(avatarVariants({ size }), accentFor(name), className)}
+      className={cn(
+        avatarVariants({ size }),
+        accent ? NAMED_ACCENTS[accent] : accentFor(name),
+        className,
+      )}
     >
       {src ? (
         <AvatarPrimitive.Image
