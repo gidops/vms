@@ -25,6 +25,7 @@ export * from "./primitives/Tooltip/index";
 export * from "./components/ActionTile/index";
 export * from "./components/Alert/index";
 export * from "./components/AreaChart/index";
+export * from "./components/BarChart/index";
 export * from "./components/Breadcrumbs/index";
 export * from "./components/Card/index";
 export * from "./components/DonutChart/index";

@@ -1,6 +1,6 @@
 "use client";
 
-import { homeFor } from "@vms/contracts";
+import { homeFor, switchableRoles } from "@vms/contracts";
 import { cn, Popover, PopoverContent, PopoverTrigger } from "@vms/ui";
 import { Check, RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -8,14 +8,18 @@ import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { roleLabel } from "@/shared/auth/roleLabels";
 
-/** "Switch Account" pill → list of the user's roles. Hidden for single-role users. */
+/**
+ * "Switch Account" pill → list of the user's switchable roles (add-ons like
+ * Read Admin only extend a role, so they're never listed). Hidden when there
+ * is nothing to switch to.
+ */
 export function RoleSwitcher() {
   const t = useTranslations("nav");
   const tRoles = useTranslations("roles");
   const { user, activeRole, switchRole } = useAuth();
   const router = useRouter();
 
-  const roles = user?.roles ?? [];
+  const roles = switchableRoles(user?.roles ?? []);
   if (roles.length < 2) return null;
 
   async function select(role: string) {

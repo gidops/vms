@@ -36,21 +36,12 @@ import {
   useWithdrawConsent,
 } from "@/data/consent/queries";
 import { useAuth } from "@/shared/auth/AuthContext";
+import { useDebounced } from "@/shared/useDebounced";
 import { formatWatDateTime } from "@/shared/wat";
 import { VisitDetailSheet } from "./VisitDetailSheet";
 
 const PAGE_SIZE = 8;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/** Debounce a fast-changing value (the search box). */
-function useDebounced<T>(value: T, ms = 300): T {
-  const [v, setV] = React.useState(value);
-  React.useEffect(() => {
-    const id = setTimeout(() => setV(value), ms);
-    return () => clearTimeout(id);
-  }, [value, ms]);
-  return v;
-}
 
 function SourceVisit({
   item,
@@ -222,15 +213,15 @@ export function WithdrawConsentDialog({
 }
 
 /**
- * Comms Opt-ins, shared by the admin console (/admin/opt-ins) and the VMC
- * Help/Support page (/help?tab=optIns): the current opt-in list (latest answer per email wins),
+ * Comms Opt-ins, on the Insights page (Visitors → Comms opt-in): the current
+ * opt-in list (latest answer per email wins),
  * a CSV export for holders of consent:export, and consent withdrawal for
  * holders of consent:manage.
  */
 export function CommsOptInsScreen({
   headingLevel = 1,
 }: { headingLevel?: 1 | 2 } = {}) {
-  // Under another page's h1 (Help/Support) the title steps down a level.
+  // Under another page's h1 (Insights) the title steps down a level.
   const Heading = headingLevel === 2 ? "h2" : "h1";
   const headingSize = headingLevel === 2 ? "text-2xl" : "text-3xl";
   const t = useTranslations("consent");

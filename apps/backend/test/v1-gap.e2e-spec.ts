@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ROLES } from '@vms/contracts';
+import { ADDON_ROLES, ROLES } from '@vms/contracts';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
@@ -27,7 +27,6 @@ describe('V1 gap features (e2e)', () => {
     ROLES.ADMIN,
     ROLES.VMC_ADMIN,
     ROLES.READ_ADMIN,
-    ROLES.AUDITOR,
     ROLES.VMC,
     ROLES.STAFF,
     ROLES.GATE,
@@ -101,7 +100,8 @@ describe('V1 gap features (e2e)', () => {
         email,
         fullName: `Gap ${role}`,
         password,
-        roles: [role],
+        // Add-ons only extend their base role, so hold both.
+        roles: ADDON_ROLES[role] ? [ADDON_ROLES[role], role] : [role],
       });
       userIds[role] = u.id;
       const login = await request(app.getHttpServer())
@@ -126,8 +126,7 @@ describe('V1 gap features (e2e)', () => {
           SUPER_ADMIN: 200,
           ADMIN: 200,
           VMC_ADMIN: 200,
-          READ_ADMIN: 200,
-          AUDITOR: 200,
+          READ_ADMIN: 403,
           VMC: 200,
           GATE: 200,
           STAFF: 403,
@@ -141,22 +140,20 @@ describe('V1 gap features (e2e)', () => {
           ADMIN: 200,
           VMC_ADMIN: 200,
           READ_ADMIN: 403,
-          AUDITOR: 403,
           VMC: 200,
           GATE: 403,
           STAFF: 403,
         },
       ],
       [
-        // Overview + analytics counts: every admin console role, no one else.
+        // Admin console overview counts: only roles that reach the console.
         'GET',
         '/visits/dashboard/stats?dateFrom=2026-10-18T23:00:00Z&dateTo=2026-10-19T22:59:59Z&yesterdayFrom=2026-10-17T23:00:00Z&yesterdayTo=2026-10-18T22:59:59Z',
         {
           SUPER_ADMIN: 200,
           ADMIN: 200,
-          VMC_ADMIN: 200,
-          READ_ADMIN: 200,
-          AUDITOR: 200,
+          VMC_ADMIN: 403,
+          READ_ADMIN: 403,
           VMC: 403,
           GATE: 403,
           STAFF: 403,
@@ -171,7 +168,6 @@ describe('V1 gap features (e2e)', () => {
           ADMIN: 403,
           VMC_ADMIN: 200,
           READ_ADMIN: 403,
-          AUDITOR: 403,
           VMC: 200,
           GATE: 200,
           STAFF: 403,
@@ -186,7 +182,6 @@ describe('V1 gap features (e2e)', () => {
           ADMIN: 200,
           VMC_ADMIN: 200,
           READ_ADMIN: 200,
-          AUDITOR: 200,
           VMC: 403,
           GATE: 403,
           STAFF: 403,
@@ -200,7 +195,6 @@ describe('V1 gap features (e2e)', () => {
           ADMIN: 200,
           VMC_ADMIN: 200,
           READ_ADMIN: 200,
-          AUDITOR: 200,
           VMC: 200,
           GATE: 403,
           STAFF: 403,
@@ -214,7 +208,6 @@ describe('V1 gap features (e2e)', () => {
           ADMIN: 200,
           VMC_ADMIN: 200,
           READ_ADMIN: 403,
-          AUDITOR: 403,
           VMC: 200,
           GATE: 403,
           STAFF: 403,
@@ -230,12 +223,7 @@ describe('V1 gap features (e2e)', () => {
     }
 
     it('POST /consent/withdraw is limited to consent:manage holders', async () => {
-      for (const role of [
-        ROLES.READ_ADMIN,
-        ROLES.AUDITOR,
-        ROLES.STAFF,
-        ROLES.GATE,
-      ]) {
+      for (const role of [ROLES.READ_ADMIN, ROLES.STAFF, ROLES.GATE]) {
         await as(role)
           .post('/consent/withdraw')
           .send({ email: 'x@y.com' })
@@ -343,7 +331,7 @@ describe('V1 gap features (e2e)', () => {
         .expect(201);
       await as(ROLES.STAFF).get(`/visits/${hosted.body[0].id}`).expect(200);
 
-      // Roles with visit:read keep full access.
+      // Roles with visit:read keep full access (Read Admin via history:read).
       await as(ROLES.READ_ADMIN).get(`/visits/${other.id}`).expect(200);
       const all = await as(ROLES.VMC).get('/visits?pageSize=100');
       expect(all.body.total as number).toBeGreaterThan(

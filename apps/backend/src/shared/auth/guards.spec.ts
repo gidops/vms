@@ -1,6 +1,7 @@
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { SecurityAuditService } from '../audit/security-audit.service';
+import { ANY_PERMISSIONS_KEY } from './auth.decorators';
 import { JwtAuthGuard, PermissionsGuard } from './guards';
 
 function context(user: unknown): ExecutionContext {
@@ -33,7 +34,9 @@ describe('PermissionsGuard', () => {
   });
 
   it('allows when the user holds all required permissions', async () => {
-    reflector.getAllAndOverride.mockReturnValue(['visit:approve']);
+    reflector.getAllAndOverride.mockImplementation((key: string) =>
+      key === ANY_PERMISSIONS_KEY ? undefined : ['visit:approve'],
+    );
     await expect(
       guard.canActivate(
         context({ userId: 'u', permissions: ['visit:approve'] }),
@@ -42,8 +45,41 @@ describe('PermissionsGuard', () => {
     expect(security.record).not.toHaveBeenCalled();
   });
 
+  it('allows any-of routes when the user holds one of the permissions', async () => {
+    reflector.getAllAndOverride.mockImplementation((key: string) =>
+      key === ANY_PERMISSIONS_KEY
+        ? ['history:read', 'insights:self']
+        : undefined,
+    );
+    await expect(
+      guard.canActivate(
+        context({ userId: 'u', permissions: ['insights:self'] }),
+      ),
+    ).resolves.toBe(true);
+  });
+
+  it('denies and audits any-of routes when the user holds none', async () => {
+    reflector.getAllAndOverride.mockImplementation((key: string) =>
+      key === ANY_PERMISSIONS_KEY
+        ? ['history:read', 'insights:self']
+        : undefined,
+    );
+    await expect(
+      guard.canActivate(context({ userId: 'u', permissions: ['visit:read'] })),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(security.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          anyOf: ['history:read', 'insights:self'],
+        }),
+      }),
+    );
+  });
+
   it('denies and audits when a required permission is missing', async () => {
-    reflector.getAllAndOverride.mockReturnValue(['visit:approve']);
+    reflector.getAllAndOverride.mockImplementation((key: string) =>
+      key === ANY_PERMISSIONS_KEY ? undefined : ['visit:approve'],
+    );
     await expect(
       guard.canActivate(context({ userId: 'u', permissions: [] })),
     ).rejects.toBeInstanceOf(ForbiddenException);

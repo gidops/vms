@@ -1,21 +1,21 @@
-"use client";
+import { redirect } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
 
-import { PERMISSIONS } from "@vms/contracts";
-import { TopNavShell } from "@vms/ui";
-import { CommsOptInsScreen } from "@/app/[locale]/_components/CommsOptInsScreen";
-import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
-import { PermissionGate } from "@/shared/auth/PermissionGate";
-import { RouteGuard } from "@/shared/auth/RouteGuard";
+// This screen moved to the Insights page. Keep existing links and bookmarks working by redirecting there.
+export default async function AdminV2OptInsRedirect({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  redirect({
+    href: { pathname: "/insights", query: { tab: "visitors" } },
+    locale,
+  });
+  // `redirect` throws, but satisfy the return type for the type checker.
+  return null;
+}
 
-/** Admin console v2 — Comms Opt-ins tab: the shared staff/VMC screen. */
-export default function AdminV2OptInsPage() {
-  return (
-    <RouteGuard home="/admin">
-      <TopNavShell nav={<AppTopNav app="admin" active="optIns" />}>
-        <PermissionGate permission={PERMISSIONS.CONSENT_READ}>
-          <CommsOptInsScreen />
-        </PermissionGate>
-      </TopNavShell>
-    </RouteGuard>
-  );
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
 }

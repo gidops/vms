@@ -20,9 +20,9 @@ describe("exportRangeError", () => {
 });
 
 describe("ExportVisitorsDialog", () => {
-  it("exports the default range (yesterday → today, WAT) as Excel", async () => {
+  it("exports the default range (the last week, WAT) as Excel", async () => {
     const to = watTodayIso();
-    const from = addDaysIso(to, -1);
+    const from = addDaysIso(to, -6);
     const onOpenChange = vi.fn();
     renderWithIntl(<ExportVisitorsDialog open onOpenChange={onOpenChange} />);
     expect(screen.getByText("Export Visitor Data")).toBeInTheDocument();
@@ -39,6 +39,21 @@ describe("ExportVisitorsDialog", () => {
       }),
     );
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+  });
+
+  it("exports the last 3 months as a PDF", async () => {
+    const to = watTodayIso();
+    renderWithIntl(<ExportVisitorsDialog open onOpenChange={vi.fn()} />);
+    fireEvent.click(screen.getByRole("radio", { name: "Last 3 months" }));
+    fireEvent.click(screen.getByRole("radio", { name: "PDF" }));
+    fireEvent.click(screen.getByRole("button", { name: "Export" }));
+    await waitFor(() =>
+      expect(exportVisits).toHaveBeenCalledWith({
+        from: addDaysIso(to, -89),
+        to,
+        format: "pdf",
+      }),
+    );
   });
 
   it("labels the range trigger with the chosen days", () => {

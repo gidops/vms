@@ -233,15 +233,15 @@ function errorText(err: unknown, fallback: string): string {
 }
 
 /**
- * The VMC desk QR, shared by reception (/help?tab=deskQr) and the admin
- * console (/admin/desk-qr). One card: the QR and its link, scans today, where
+ * The VMC desk QR, managed by the System Admin from the admin console
+ * (/admin/v2/desk-qr). One card: the QR and its link, scans today, where
  * verification codes are emailed, Print / Download, New QR and Disable/Enable.
  * Holders of issuer:read see it; only issuer:manage holders get the buttons.
  */
 export function DeskQrScreen({
   headingLevel = 1,
 }: { headingLevel?: 1 | 2 } = {}) {
-  // Under another page's h1 (Help/Support) the title steps down a level.
+  // Under another page's h1 (another page) the title steps down a level.
   const Heading = headingLevel === 2 ? "h2" : "h1";
   const headingSize = headingLevel === 2 ? "text-2xl" : "text-3xl";
   const t = useTranslations("deskQr");

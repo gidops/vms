@@ -11,7 +11,6 @@
     "visitors": "Visiteurs",
     "switchAccount": "Changer de compte",
     "accountSettings": "Paramètres du compte",
-    "help": "Aide / Support",
     "logout": "Déconnexion",
     "notifications": "Notifications",
     "notificationsUnread": "Notifications, {count} non lues",
@@ -20,7 +19,8 @@
     "analytics": "Analyses",
     "evacuation": "Évacuation",
     "optIns": "Abonnements",
-    "deskQr": "QR accueil"
+    "deskQr": "QR accueil",
+    "insights": "Aperçus"
   },
   "login": {
     "title": "Connexion",
@@ -307,7 +307,6 @@
   "roles": {
     "SUPER_ADMIN": "Administrateur système",
     "ADMIN": "Responsable de la sécurité",
-    "AUDITOR": "Auditeur",
     "STAFF": "Personnel",
     "VMC": "Réception VMC",
     "GATE": "Portail",
@@ -603,10 +602,7 @@
         "onsiteFloors": "{count, plural, one {sur # étage} other {sur # étages}}",
         "console": {
           "SUPER_ADMIN": "Console système",
-          "ADMIN": "Console de sécurité",
-          "VMC_ADMIN": "Console VMC",
-          "READ_ADMIN": "Console en lecture seule",
-          "AUDITOR": "Console d'audit"
+          "ADMIN": "Console de sécurité"
         }
       },
       "approvals": {
@@ -816,7 +812,8 @@
       "roles": "Rôles",
       "create": "Créer l'utilisateur",
       "save": "Enregistrer",
-      "cancel": "Annuler"
+      "cancel": "Annuler",
+      "addonHint": "Complément du rôle {base}"
     }
   },
   "settings": {
@@ -964,7 +961,15 @@
     "exporting": "Export en cours…",
     "rangeTooLong": "Choisissez une période de 366 jours maximum.",
     "rangeInvalid": "La date de fin doit être postérieure ou égale à la date de début.",
-    "error": "L'export a échoué. Veuillez réessayer."
+    "error": "L'export a échoué. Veuillez réessayer.",
+    "quickRange": "Période rapide",
+    "presets": {
+      "week": "Semaine dernière",
+      "month": "Mois dernier",
+      "quarter": "3 derniers mois",
+      "custom": "Personnalisée"
+    },
+    "pdf": "PDF"
   },
   "delivery": {
     "title": "Notifications",
@@ -1171,25 +1176,6 @@
       "unknown": "Une erreur est survenue. Réessayez, ou enregistrez-vous à l'accueil VMC."
     }
   },
-  "help": {
-    "title": "Aide / Support",
-    "tabs": {
-      "evacuation": "Liste d'évacuation",
-      "optIns": "Abonnements",
-      "deskQr": "QR de l'accueil",
-      "export": "Exporter les données",
-      "support": "Aide et support"
-    },
-    "export": {
-      "title": "Exporter les données des visiteurs",
-      "help": "Téléchargez les fiches des visiteurs d'une période sous forme de tableur.",
-      "button": "Exporter les données"
-    },
-    "support": {
-      "title": "Aide et support",
-      "message": "Besoin d'aide avec le VMS ou un problème à signaler ? Contactez l'équipe de développement via le canal de support habituel."
-    }
-  },
   "auth": {
     "heroTitle": "AATC",
     "heroSubtitle": "Portail de gestion des visiteurs",
@@ -1200,5 +1186,144 @@
     "title": "Mot de passe oublié ?",
     "body": "La réinitialisation des mots de passe est gérée par votre administrateur système. Contactez le support pour réinitialiser le vôtre.",
     "back": "Retour à la connexion"
+  },
+  "insights": {
+    "title": "Aperçus",
+    "nothingHere": "Rien à afficher pour votre rôle pour le moment.",
+    "tabs": {
+      "overview": "Vue d'ensemble",
+      "evacuation": "Liste d'évacuation",
+      "history": "Historique",
+      "visitors": "Visiteurs",
+      "analytics": "Analyses"
+    },
+    "overview": {
+      "title": "Aujourd'hui en un coup d'œil",
+      "error": "Impossible de charger les chiffres du jour. Veuillez réessayer.",
+      "onsite": "Sur site",
+      "onsiteFloors": "{count, plural, =0 {Aucun étage occupé} one {Sur # étage} other {Sur # étages}}",
+      "visitorsToday": "Visiteurs aujourd'hui",
+      "yesterday": "{count, plural, one {# hier} other {# hier}}",
+      "expected": "Encore attendus",
+      "expectedHint": "Approuvés, pas encore arrivés",
+      "checkedOut": "Sortis",
+      "checkedInHint": "{count, plural, one {# entrée aujourd'hui} other {# entrées aujourd'hui}}"
+    },
+    "history": {
+      "titleFacility": "Historique des visites",
+      "titleMine": "Mon historique de visites",
+      "range": "Période de l'historique",
+      "ranges": {
+        "7d": "7 derniers jours",
+        "30d": "30 derniers jours",
+        "90d": "3 derniers mois",
+        "all": "Tout"
+      },
+      "export": "Exporter",
+      "visits": "visites",
+      "searchPlaceholder": "Rechercher visiteur, hôte, étage ou code…",
+      "empty": "Aucune visite sur cette période",
+      "noMatches": "Aucune visite ne correspond à votre recherche",
+      "error": "Impossible de charger l'historique. Veuillez réessayer.",
+      "noHost": "Aucun hôte",
+      "viewDetails": "Voir les détails",
+      "columns": {
+        "visitor": "Visiteur",
+        "host": "Hôte",
+        "date": "Date de visite",
+        "purpose": "Objet",
+        "status": "Statut",
+        "action": "Action"
+      }
+    },
+    "visitors": {
+      "title": "Visiteurs",
+      "views": {
+        "directory": "Annuaire",
+        "optIns": "Consentements"
+      },
+      "countFacility": "visiteurs",
+      "countMine": "personnes vous ont rendu visite",
+      "searchPlaceholder": "Rechercher nom, e-mail, organisation ou téléphone…",
+      "empty": "Aucun visiteur pour le moment",
+      "noMatches": "Aucun visiteur ne correspond à votre recherche",
+      "error": "Impossible de charger les visiteurs. Veuillez réessayer.",
+      "viewHistory": "Voir l'historique",
+      "optedIn": "Inscrit",
+      "optedOut": "Désinscrit",
+      "sheetTitle": "Visiteur",
+      "summary": "Résumé",
+      "firstVisit": "Première visite",
+      "avgStay": "Durée moyenne",
+      "minutes": "{count, plural, one {# min} other {# min}}",
+      "visitHistory": "Historique des visites",
+      "columns": {
+        "visitor": "Visiteur",
+        "organization": "Organisation",
+        "visits": "Visites",
+        "lastVisit": "Dernière visite",
+        "comms": "Communications",
+        "action": "Action"
+      }
+    },
+    "analytics": {
+      "title": "Analyses du site",
+      "titleMine": "Mes analyses",
+      "range": "Période d'analyse",
+      "ranges": {
+        "7d": "7 derniers jours",
+        "30d": "30 derniers jours",
+        "90d": "3 derniers mois"
+      },
+      "error": "Impossible de charger les analyses. Veuillez réessayer.",
+      "minutes": "{count, plural, one {# min} other {# min}}",
+      "kpi": {
+        "hosted": "Visiteurs reçus",
+        "allTime": "Visites au total",
+        "upcoming": "Visites à venir",
+        "avgStay": "Durée moyenne",
+        "visits": "Visites",
+        "uniqueVisitors": "Visiteurs uniques",
+        "arrived": "Arrivés",
+        "noShows": "{count, plural, one {# absent} other {# absents}}"
+      },
+      "daily": "Visiteurs par jour",
+      "weekly": "Visiteurs par semaine (12 semaines)",
+      "hourly": "Heures d'arrivée de pointe",
+      "outcomes": "Issues des visites",
+      "statusMix": "Répartition par statut",
+      "visitMix": "Sans rendez-vous vs invités",
+      "repeatVisitors": "Visiteurs réguliers",
+      "noRepeat": "Aucun visiteur régulier sur cette période",
+      "onsiteByFloor": "Sur site, par étage",
+      "nobodyOnsite": "Personne n'est sur site pour le moment",
+      "topHosts": "Hôtes les plus sollicités",
+      "topOrganizations": "Principales organisations",
+      "noData": "Aucune visite sur cette période",
+      "security": {
+        "title": "Sécurité",
+        "flagged": "Signalées pour examen",
+        "alertsRaised": "Alertes émises",
+        "alertsOpen": "Alertes encore ouvertes",
+        "denied": "Demandes refusées",
+        "deniedDaily": "Demandes refusées par jour"
+      }
+    },
+    "status": {
+      "PENDING": "En attente d'approbation",
+      "REVIEW_REQUESTED": "Révision demandée",
+      "FLAGGED": "Signalée",
+      "APPROVED": "Attendu",
+      "DENIED": "Refusée",
+      "CHECKED_IN": "Sur site",
+      "CHECKED_OUT": "Sorti",
+      "CANCELLED": "Annulée",
+      "EXPIRED": "Expirée"
+    },
+    "visitType": {
+      "WALK_IN": "Sans rendez-vous",
+      "PRE_INVITED": "Invité",
+      "APPOINTMENT": "Rendez-vous"
+    }
   }
 }

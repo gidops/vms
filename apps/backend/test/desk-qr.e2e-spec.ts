@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ROLES } from '@vms/contracts';
+import { ADDON_ROLES, ROLES } from '@vms/contracts';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
@@ -29,7 +29,6 @@ describe('Desk QR (e2e)', () => {
     ROLES.ADMIN,
     ROLES.VMC_ADMIN,
     ROLES.READ_ADMIN,
-    ROLES.AUDITOR,
     ROLES.VMC,
     ROLES.STAFF,
     ROLES.GATE,
@@ -114,7 +113,8 @@ describe('Desk QR (e2e)', () => {
         email,
         fullName: `Desk ${role} ${run}`,
         password,
-        roles: [role],
+        // Add-ons only extend their base role, so hold both.
+        roles: ADDON_ROLES[role] ? [ADDON_ROLES[role], role] : [role],
       });
       userIds[role] = u.id;
       const login = await http()
@@ -129,35 +129,32 @@ describe('Desk QR (e2e)', () => {
     await app.close();
   });
 
-  it('lets reception and managers set it up, and others only look', async () => {
-    const none = await as(ROLES.VMC).get('/desk-qr').expect(200);
+  it('is managed and viewed by the System Admin only', async () => {
+    const none = await as(ROLES.SUPER_ADMIN).get('/desk-qr').expect(200);
     expect(none.body === null || none.text === '' || none.text === 'null').toBe(
       true,
     );
-    await as(ROLES.READ_ADMIN).post('/desk-qr').send({ codeEmail }).expect(403);
-    const created = await as(ROLES.VMC)
+    for (const role of roles.filter((r) => r !== ROLES.SUPER_ADMIN)) {
+      await as(role).post('/desk-qr').send({ codeEmail }).expect(403);
+      await as(role).get('/desk-qr').expect(403);
+      await as(role).get('/desk-qr/qr.png').expect(403);
+    }
+    const created = await as(ROLES.SUPER_ADMIN)
       .post('/desk-qr')
       .send({ codeEmail })
       .expect(201);
     expect(created.body).toMatchObject({ isActive: true, codeEmail });
     expect(tokenOf(created.body.url as string)).toMatch(/^[\w-]{22}$/);
-    await as(ROLES.ADMIN).post('/desk-qr').send({ codeEmail }).expect(409);
-
-    for (const role of [ROLES.READ_ADMIN, ROLES.AUDITOR, ROLES.VMC_ADMIN]) {
-      await as(role).get('/desk-qr').expect(200);
-    }
-    for (const role of [ROLES.STAFF, ROLES.GATE]) {
-      await as(role).get('/desk-qr').expect(403);
-    }
-    for (const role of [ROLES.READ_ADMIN, ROLES.AUDITOR, ROLES.STAFF]) {
-      await as(role).post('/desk-qr/rotate').expect(403);
-    }
-    const png = await as(ROLES.AUDITOR).get('/desk-qr/qr.png').expect(200);
+    await as(ROLES.SUPER_ADMIN)
+      .post('/desk-qr')
+      .send({ codeEmail })
+      .expect(409);
+    const png = await as(ROLES.SUPER_ADMIN).get('/desk-qr/qr.png').expect(200);
     expect(png.headers['content-type']).toBe('image/png');
   });
 
   it('registers a visitor once reception reads them the emailed code', async () => {
-    const qr = await as(ROLES.VMC).get('/desk-qr').expect(200);
+    const qr = await as(ROLES.SUPER_ADMIN).get('/desk-qr').expect(200);
     const token = tokenOf(qr.body.url as string);
 
     const hosts = await http()
@@ -209,12 +206,12 @@ describe('Desk QR (e2e)', () => {
       .send({ code })
       .expect(404);
 
-    const after = await as(ROLES.VMC).get('/desk-qr').expect(200);
+    const after = await as(ROLES.SUPER_ADMIN).get('/desk-qr').expect(200);
     expect(after.body.scansToday).toBeGreaterThanOrEqual(1);
   });
 
   it("never changes a known visitor's saved details", async () => {
-    const qr = await as(ROLES.VMC).get('/desk-qr');
+    const qr = await as(ROLES.SUPER_ADMIN).get('/desk-qr');
     const token = tokenOf(qr.body.url as string);
     const email = `known-${run}@x.com`;
     await prisma.visitor.create({
@@ -240,7 +237,7 @@ describe('Desk QR (e2e)', () => {
   });
 
   it('locks a registration after three wrong codes', async () => {
-    const qr = await as(ROLES.VMC).get('/desk-qr');
+    const qr = await as(ROLES.SUPER_ADMIN).get('/desk-qr');
     const token = tokenOf(qr.body.url as string);
     const id = await register(token, { fullName: 'Three Strikes' });
     const code = await emailedCode('Three Strikes');
@@ -256,7 +253,7 @@ describe('Desk QR (e2e)', () => {
   });
 
   it('drops a filled-in honeypot without sending a code', async () => {
-    const qr = await as(ROLES.VMC).get('/desk-qr');
+    const qr = await as(ROLES.SUPER_ADMIN).get('/desk-qr');
     const token = tokenOf(qr.body.url as string);
     const open = await http().get(`/public/desk-qr/${token}`).expect(200);
     const before = await prisma.deskQrRegistration.count();
@@ -268,7 +265,7 @@ describe('Desk QR (e2e)', () => {
   });
 
   it('rejects a forged form and an unanswered help type', async () => {
-    const qr = await as(ROLES.VMC).get('/desk-qr');
+    const qr = await as(ROLES.SUPER_ADMIN).get('/desk-qr');
     const token = tokenOf(qr.body.url as string);
     const open = await http().get(`/public/desk-qr/${token}`).expect(200);
     await http()
@@ -282,27 +279,32 @@ describe('Desk QR (e2e)', () => {
   });
 
   it('stops the old poster on New QR, and pauses on Disable', async () => {
-    const before = await as(ROLES.VMC).get('/desk-qr');
+    const before = await as(ROLES.SUPER_ADMIN).get('/desk-qr');
     const oldToken = tokenOf(before.body.url as string);
-    const rotated = await as(ROLES.ADMIN).post('/desk-qr/rotate').expect(200);
+    const rotated = await as(ROLES.SUPER_ADMIN)
+      .post('/desk-qr/rotate')
+      .expect(200);
     const newToken = tokenOf(rotated.body.url as string);
     expect(newToken).not.toBe(oldToken);
     await http().get(`/public/desk-qr/${oldToken}`).expect(404);
     await http().get(`/public/desk-qr/${newToken}`).expect(200);
 
-    await as(ROLES.VMC).post('/desk-qr/disable').expect(200);
+    await as(ROLES.SUPER_ADMIN).post('/desk-qr/disable').expect(200);
     await http().get(`/public/desk-qr/${newToken}`).expect(404);
-    await as(ROLES.VMC).post('/desk-qr/enable').expect(200);
+    await as(ROLES.SUPER_ADMIN).post('/desk-qr/enable').expect(200);
     await http().get(`/public/desk-qr/${newToken}`).expect(200);
     // Unknown codes get the same answer as replaced ones.
     await http().get('/public/desk-qr/AAAAAAAAAAAAAAAAAAAAAA').expect(404);
 
-    await as(ROLES.VMC)
+    await as(ROLES.SUPER_ADMIN)
       .patch('/desk-qr')
       .send({ codeEmail: `new-${codeEmail}` })
       .expect(200)
       .expect((res) => expect(res.body.codeEmail).toBe(`new-${codeEmail}`));
-    await as(ROLES.VMC).patch('/desk-qr').send({ codeEmail }).expect(200);
+    await as(ROLES.SUPER_ADMIN)
+      .patch('/desk-qr')
+      .send({ codeEmail })
+      .expect(200);
   });
 
   it('audits every change without the printed token', async () => {
@@ -328,7 +330,7 @@ describe('Desk QR (e2e)', () => {
   });
 
   it('rate-limits submissions from one phone', async () => {
-    const qr = await as(ROLES.VMC).get('/desk-qr');
+    const qr = await as(ROLES.SUPER_ADMIN).get('/desk-qr');
     const token = tokenOf(qr.body.url as string);
     const statuses: number[] = [];
     for (let i = 0; i < 12; i++) {

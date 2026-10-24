@@ -30,7 +30,7 @@ const PngQuery = z.object({
 
 /**
  * The VMC desk QR, for reception (VMC, VMC Admin) and admins. Viewing needs
- * issuer:read (Read Admin and Auditor too); changing it needs issuer:manage.
+ * issuer:read; changing it needs issuer:manage. Both are System Admin only.
  */
 @Controller('desk-qr')
 export class DeskQrController {

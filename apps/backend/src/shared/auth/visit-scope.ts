@@ -10,7 +10,6 @@ import type { AuthUser } from './auth.decorators';
 const LEGACY_READ_ALL_ROLES: readonly string[] = [
   ROLES.SUPER_ADMIN,
   ROLES.ADMIN,
-  ROLES.AUDITOR,
   ROLES.VMC,
 ];
 

@@ -165,5 +165,9 @@ exist in `@vms/contracts` (`PERMISSIONS`), signalling intended endpoints.
 > `alert:escalate` are **defined but not yet consumed by any endpoint** — they map to the
 > planned endpoints above.
 
-Canonical roles (`ROLES`): `SUPER_ADMIN`, `ADMIN`, `AUDITOR`, `STAFF`, `VMC`, `GATE`.
+Canonical roles (`ROLES`): `SUPER_ADMIN`, `ADMIN`, `STAFF`, `VMC`, `GATE`, plus the
+add-ons `READ_ADMIN` (extends `STAFF`) and `VMC_ADMIN` (extends `VMC`) from
+`ADDON_ROLES`. An add-on is never the active role: its permissions are merged in
+while the user acts as its base role. Only `SUPER_ADMIN` and `ADMIN` reach the
+admin console.
 </content>

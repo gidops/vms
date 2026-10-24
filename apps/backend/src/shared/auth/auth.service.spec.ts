@@ -1,4 +1,8 @@
-import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { EVENT_TYPES } from '../events/domain-event';
 import { AuthService } from './auth.service';
 
@@ -199,5 +203,32 @@ describe('AuthService', () => {
         metadata: { role: 'ADMIN', sessionId: 's1' },
       }),
     );
+  });
+
+  it('switchRole refuses an add-on role even when the user holds it', async () => {
+    users.findByIdWithAccess.mockResolvedValue({
+      ...user,
+      roles: ['STAFF', 'READ_ADMIN'],
+    });
+    await expect(
+      svc.switchRole('u1', 's1', 'READ_ADMIN'),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(refreshTokens.setSessionActiveRole).not.toHaveBeenCalled();
+  });
+
+  it('refresh drops a legacy add-on active role for the default role', async () => {
+    refreshTokens.rotate.mockResolvedValue({
+      userId: 'u1',
+      token: 'refresh2',
+      sessionId: 's1',
+      activeRole: 'READ_ADMIN',
+    });
+    users.defaultRole = () => 'STAFF';
+    users.findByIdWithAccess.mockResolvedValue({
+      ...user,
+      roles: ['STAFF', 'READ_ADMIN'],
+    });
+    const result = await svc.refresh('refresh');
+    expect(result.user.activeRole).toBe('STAFF');
   });
 });

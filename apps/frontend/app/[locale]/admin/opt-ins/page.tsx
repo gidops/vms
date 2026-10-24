@@ -1,20 +1,21 @@
-"use client";
+import { redirect } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
 
-import { PERMISSIONS } from "@vms/contracts";
-import { CommsOptInsScreen } from "@/app/[locale]/_components/CommsOptInsScreen";
-import { AdminShell } from "@/app/[locale]/admin/_components/AdminShell";
-import { PermissionGate } from "@/shared/auth/PermissionGate";
-import { RouteGuard } from "@/shared/auth/RouteGuard";
+// This screen moved to the Insights page. Keep existing links and bookmarks working by redirecting there.
+export default async function AdminOptInsRedirect({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  redirect({
+    href: { pathname: "/insights", query: { tab: "visitors" } },
+    locale,
+  });
+  // `redirect` throws, but satisfy the return type for the type checker.
+  return null;
+}
 
-/** Admin console mount of the shared CommsOptInsScreen. */
-export default function AdminOptInsPage() {
-  return (
-    <RouteGuard home="/admin">
-      <AdminShell active="optIns">
-        <PermissionGate permission={PERMISSIONS.CONSENT_READ}>
-          <CommsOptInsScreen />
-        </PermissionGate>
-      </AdminShell>
-    </RouteGuard>
-  );
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
 }

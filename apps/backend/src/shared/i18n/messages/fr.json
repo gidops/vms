@@ -108,6 +108,9 @@
       "codeExpired": "Ce code a expiré. Veuillez scanner à nouveau le QR code.",
       "codeWrong": "Ce code ne correspond pas. Vérifiez-le auprès de l'accueil et réessayez.",
       "tooManyTries": "Trop de codes erronés. Veuillez scanner à nouveau le QR code."
+    },
+    "visitor": {
+      "notFound": "Visiteur introuvable"
     }
   },
   "validation": {

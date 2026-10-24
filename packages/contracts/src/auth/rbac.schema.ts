@@ -65,6 +65,14 @@ export const PERMISSIONS = {
   REPORT_READ: "report:read",
   /** Bulk visitor export (CSV / Excel) — personal data. */
   REPORT_EXPORT: "report:export",
+  /** Insights → Overview: today's facility-wide stats + who is on site. */
+  OVERVIEW_READ: "overview:read",
+  /** Insights → History across the whole facility (not just the caller's visits). */
+  HISTORY_READ: "history:read",
+  /** Insights → Visitors directory across the whole facility. */
+  VISITOR_READ: "visitor:read",
+  /** Insights History / Visitors / Analytics limited to the caller's own visits. */
+  INSIGHTS_SELF: "insights:self",
   /** Per-visit notification delivery status (Guest Details → Notifications). */
   NOTIFICATION_READ: "notification:read",
   /** Re-queue a failed email / SMS / WhatsApp notification. */
@@ -81,11 +89,10 @@ export const ROLES = {
   SUPER_ADMIN: "SUPER_ADMIN",
   /** Displayed as "Security Manager". */
   ADMIN: "ADMIN",
-  /** Supervises reception (VMC) from the admin console. */
+  /** Add-on for VMC: visitor directory + analytics on the Insights page. */
   VMC_ADMIN: "VMC_ADMIN",
-  /** Read-only admin console access; no bulk personal-data exports. */
+  /** Add-on for STAFF: facility-wide Insights (read only; no bulk exports). */
   READ_ADMIN: "READ_ADMIN",
-  AUDITOR: "AUDITOR",
   STAFF: "STAFF",
   VMC: "VMC",
   GATE: "GATE",
@@ -96,9 +103,6 @@ export type RoleName = (typeof ROLES)[keyof typeof ROLES];
 export const ROLE_HOME: Record<string, string> = {
   [ROLES.SUPER_ADMIN]: "/admin",
   [ROLES.ADMIN]: "/admin",
-  [ROLES.VMC_ADMIN]: "/admin",
-  [ROLES.READ_ADMIN]: "/admin",
-  [ROLES.AUDITOR]: "/admin",
   [ROLES.VMC]: "/dashboard",
   [ROLES.STAFF]: "/staff",
   [ROLES.GATE]: "/gate",
@@ -107,4 +111,23 @@ export const ROLE_HOME: Record<string, string> = {
 /** Resolve the home route for a role, falling back to the dashboard. */
 export function homeFor(role: string | null | undefined): string {
   return (role && ROLE_HOME[role]) || "/dashboard";
+}
+
+/**
+ * Add-on roles → the base role they extend. An add-on is never "active" (it is
+ * not offered in the role switcher and has no home); its permissions are merged
+ * into the session while the user is acting as its base role.
+ */
+export const ADDON_ROLES: Record<string, string> = {
+  [ROLES.READ_ADMIN]: ROLES.STAFF,
+  [ROLES.VMC_ADMIN]: ROLES.VMC,
+};
+
+export function isAddonRole(role: string): boolean {
+  return role in ADDON_ROLES;
+}
+
+/** The roles a user can switch between (add-ons excluded). */
+export function switchableRoles(roles: readonly string[]): string[] {
+  return roles.filter((r) => !isAddonRole(r));
 }

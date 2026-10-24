@@ -33,72 +33,37 @@ const ROLE_DEFS: Record<
       PERMISSIONS.ALERT_RESOLVE,
       PERMISSIONS.ALERT_ESCALATE,
       PERMISSIONS.NOTE_ADD,
-      PERMISSIONS.ISSUER_READ,
-      PERMISSIONS.ISSUER_MANAGE,
       PERMISSIONS.EVACUATION_READ,
+      PERMISSIONS.HISTORY_READ,
+      PERMISSIONS.VISITOR_READ,
       PERMISSIONS.REPORT_READ,
       PERMISSIONS.CONSENT_READ,
       PERMISSIONS.CONSENT_MANAGE,
       // Bulk personal-data exports: Security Manager, System Admin and reception
-      // (VMC + VMC Admin, V1 parity). Read Admin, Auditor, Staff and Gate never.
+      // (VMC, V1 parity). Read Admin, Staff and Gate never.
       PERMISSIONS.CONSENT_EXPORT,
       PERMISSIONS.REPORT_EXPORT,
       PERMISSIONS.NOTIFICATION_READ,
       PERMISSIONS.NOTIFICATION_RETRY,
     ],
   },
+  // Add-on roles (contracts ADDON_ROLES): never active on their own — their
+  // permissions are merged in while the user acts as the base role, so they
+  // only list what the base role lacks.
   [ROLES.VMC_ADMIN]: {
     description:
-      'VMC Admin — supervises reception from the admin console (no approvals; keeps visitor and opt-in export)',
-    permissions: [
-      PERMISSIONS.USER_READ,
-      PERMISSIONS.ROLE_READ,
-      PERMISSIONS.VISIT_READ,
-      PERMISSIONS.VISITOR_REGISTER,
-      PERMISSIONS.INVITATION_CREATE,
-      PERMISSIONS.VISIT_CANCEL,
-      PERMISSIONS.VISIT_EDIT,
-      PERMISSIONS.VISIT_CHECK_IN,
-      PERMISSIONS.VISIT_CHECK_OUT,
-      PERMISSIONS.NOTE_ADD,
-      PERMISSIONS.ISSUER_READ,
-      PERMISSIONS.ISSUER_MANAGE,
-      PERMISSIONS.EVACUATION_READ,
-      PERMISSIONS.REPORT_READ,
-      PERMISSIONS.CONSENT_READ,
-      PERMISSIONS.CONSENT_MANAGE,
-      // V1 parity: reception keeps visitor and opt-in export.
-      PERMISSIONS.CONSENT_EXPORT,
-      PERMISSIONS.REPORT_EXPORT,
-      PERMISSIONS.NOTIFICATION_READ,
-      PERMISSIONS.NOTIFICATION_RETRY,
-    ],
+      'VMC Admin — add-on for VMC: visitor directory and analytics on Insights',
+    permissions: [PERMISSIONS.VISITOR_READ, PERMISSIONS.REPORT_READ],
   },
   [ROLES.READ_ADMIN]: {
     description:
-      'Read Admin — read-only admin console; no writes and no personal-data exports',
+      'Read Admin — add-on for Staff: facility-wide Insights, read only; no personal-data exports',
     permissions: [
-      PERMISSIONS.USER_READ,
-      PERMISSIONS.ROLE_READ,
-      PERMISSIONS.VISIT_READ,
-      PERMISSIONS.ISSUER_READ,
-      PERMISSIONS.EVACUATION_READ,
+      PERMISSIONS.OVERVIEW_READ,
+      PERMISSIONS.HISTORY_READ,
+      PERMISSIONS.VISITOR_READ,
       PERMISSIONS.REPORT_READ,
       PERMISSIONS.CONSENT_READ,
-      PERMISSIONS.NOTIFICATION_READ,
-    ],
-  },
-  [ROLES.AUDITOR]: {
-    description: 'Auditor — read-only access to users and records',
-    permissions: [
-      PERMISSIONS.USER_READ,
-      PERMISSIONS.ROLE_READ,
-      PERMISSIONS.VISIT_READ,
-      PERMISSIONS.ISSUER_READ,
-      PERMISSIONS.EVACUATION_READ,
-      PERMISSIONS.REPORT_READ,
-      PERMISSIONS.CONSENT_READ,
-      PERMISSIONS.NOTIFICATION_READ,
     ],
   },
   [ROLES.STAFF]: {
@@ -111,6 +76,8 @@ const ROLE_DEFS: Record<
       PERMISSIONS.INVITATION_CREATE,
       PERMISSIONS.NOTE_ADD,
       PERMISSIONS.VISIT_CANCEL,
+      // Personal Insights (History / Visitors / Analytics of their own visits).
+      PERMISSIONS.INSIGHTS_SELF,
     ],
   },
   [ROLES.VMC]: {
@@ -128,9 +95,9 @@ const ROLE_DEFS: Record<
       // VMC responds to security alerts via notes only — it cannot resolve them
       // (that is the Security Manager/admin's call, and it unblocks check-in).
       PERMISSIONS.NOTE_ADD,
-      PERMISSIONS.ISSUER_READ,
-      PERMISSIONS.ISSUER_MANAGE,
       PERMISSIONS.EVACUATION_READ,
+      // Facility-wide visit history on Insights (with export below).
+      PERMISSIONS.HISTORY_READ,
       // Reception views opt-ins, records withdrawals and (V1 parity) keeps
       // visitor and opt-in export.
       PERMISSIONS.CONSENT_READ,
@@ -170,7 +137,8 @@ const ID = {
 
 /**
  * Idempotent dev seeder: ensures the permission catalogue, the SUPER_ADMIN /
- * ADMIN / AUDITOR / STAFF / VMC / GATE roles (in every environment). No admin
+ * ADMIN / STAFF / VMC / GATE roles and the READ_ADMIN / VMC_ADMIN add-ons (in
+ * every environment). No admin
  * user is seeded — the first SUPER_ADMIN is created via first-run /signup. Demo
  * requests/alerts are seeded outside production so the screens render with data.
  */
@@ -227,7 +195,7 @@ export class SeederService implements OnApplicationBootstrap {
       });
     }
 
-    // Scoped roles (Admin, Auditor, Staff, VMC, Gate).
+    // Scoped roles (Admin, Staff, VMC, Gate) and add-ons.
     const permByKey = new Map(permissions.map((p) => [p.key, p.id]));
     for (const [name, def] of Object.entries(ROLE_DEFS)) {
       const role = await this.prisma.role.upsert({

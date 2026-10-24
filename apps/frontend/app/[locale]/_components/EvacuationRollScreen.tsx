@@ -321,14 +321,14 @@ function PrintRoll({
 }
 
 /**
- * Live Evacuation Roll, shared by the admin console (/admin/evacuation) and the
- * VMC Help/Support page (/help?tab=evacuation). Refreshes every minute; "Print for wardens"
- * prints a chrome-free, floor-grouped A4 list.
+ * Live Evacuation Roll, shared by the Insights page (/insights?tab=evacuation)
+ * and the gate. Refreshes every minute; "Print for wardens" prints a
+ * chrome-free, floor-grouped A4 list.
  */
 export function EvacuationRollScreen({
   headingLevel = 1,
 }: { headingLevel?: 1 | 2 } = {}) {
-  // Under another page's h1 (Help/Support) the title steps down a level.
+  // Under another page's h1 (Insights) the title steps down a level.
   const Heading = headingLevel === 2 ? "h2" : "h1";
   const headingSize = headingLevel === 2 ? "text-2xl" : "text-3xl";
   const t = useTranslations("evacuation");

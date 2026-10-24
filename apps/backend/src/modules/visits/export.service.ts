@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { ExportVisitsQuery } from '@vms/contracts';
 import ExcelJS from 'exceljs';
+import PDFDocument from 'pdfkit';
 import { randomUUID } from 'node:crypto';
 import type { Writable } from 'node:stream';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -37,6 +38,25 @@ export const EXPORT_COLUMNS = [
   'Email status',
   'Created by',
 ] as const;
+
+/**
+ * The PDF is a printable summary, so it keeps the columns that fit a landscape
+ * A4 page (indexes into EXPORT_COLUMNS; widths in points, summing to 770).
+ */
+const PDF_COLUMNS: { col: number; width: number }[] = [
+  { col: 0, width: 62 }, // Reference code
+  { col: 1, width: 100 }, // Visitor
+  { col: 4, width: 100 }, // Organization
+  { col: 5, width: 90 }, // Host
+  { col: 6, width: 58 }, // Visit type
+  { col: 8, width: 66 }, // Status
+  { col: 9, width: 74 }, // Visit date
+  { col: 10, width: 74 }, // Check-in time
+  { col: 11, width: 74 }, // Check-out time
+  { col: 12, width: 72 }, // Floor
+];
+const PDF_MARGIN = 36;
+const PDF_ROW_HEIGHT = 16;
 
 const TYPE_LABEL: Record<string, string> = {
   WALK_IN: 'Walk-in',
@@ -82,7 +102,7 @@ type ExportVisit = Awaited<
 >[number];
 
 /**
- * Visitor export (CSV / Excel) by visit date. The window is the WAT calendar
+ * Visitor export (CSV / Excel / PDF) by visit date. The window is the WAT calendar
  * days `from`..`to` inclusive over `scheduledAt` (walk-ins get `now()` at
  * creation). Rows are streamed in batches. Every export is audit-logged before
  * the first byte goes out, then again (same export id) when it completes or
@@ -101,9 +121,14 @@ export class VisitExportService {
   }
 
   contentType(q: ExportVisitsQuery): string {
-    return q.format === 'xlsx'
-      ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      : 'text/csv; charset=utf-8';
+    switch (q.format) {
+      case 'xlsx':
+        return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      case 'pdf':
+        return 'application/pdf';
+      default:
+        return 'text/csv; charset=utf-8';
+    }
   }
 
   fetchBatch(range: { gte: Date; lt: Date }, cursor?: string) {
@@ -240,7 +265,9 @@ export class VisitExportService {
     out: Writable,
     add: (rows: number) => void,
   ): Promise<void> {
-    if (q.format === 'xlsx') {
+    if (q.format === 'pdf') {
+      await this.streamPdf(q, out, add);
+    } else if (q.format === 'xlsx') {
       const wb = new ExcelJS.stream.xlsx.WorkbookWriter({
         stream: out,
         useStyles: true,
@@ -280,5 +307,89 @@ export class VisitExportService {
       }
       out.end();
     }
+  }
+
+  /** Landscape A4 table: a title, a repeated header row, then one row per visit. */
+  private async streamPdf(
+    q: ExportVisitsQuery,
+    out: Writable,
+    add: (rows: number) => void,
+  ): Promise<void> {
+    const doc = new PDFDocument({
+      size: 'A4',
+      layout: 'landscape',
+      margin: PDF_MARGIN,
+      info: { Title: `AATC visitors ${q.from} to ${q.to}` },
+    });
+    const done = new Promise<void>((resolve, reject) => {
+      out.on('finish', resolve);
+      out.on('error', reject);
+    });
+    doc.pipe(out);
+    const bottom = doc.page.height - PDF_MARGIN;
+
+    const drawRow = (cells: string[], bold: boolean) => {
+      if (doc.y + PDF_ROW_HEIGHT > bottom) {
+        doc.addPage();
+        drawHeader();
+      }
+      const y = doc.y;
+      let x = PDF_MARGIN;
+      doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(7);
+      PDF_COLUMNS.forEach(({ width }, i) => {
+        doc.text(cells[i] ?? '', x + 2, y + 4, {
+          width: width - 4,
+          height: PDF_ROW_HEIGHT - 4,
+          ellipsis: true,
+          lineBreak: false,
+        });
+        x += width;
+      });
+      doc
+        .moveTo(PDF_MARGIN, y + PDF_ROW_HEIGHT)
+        .lineTo(x, y + PDF_ROW_HEIGHT)
+        .lineWidth(0.3)
+        .strokeColor('#cccccc')
+        .stroke();
+      doc.x = PDF_MARGIN;
+      doc.y = y + PDF_ROW_HEIGHT;
+    };
+    const drawHeader = () =>
+      drawRow(
+        PDF_COLUMNS.map(({ col }) => EXPORT_COLUMNS[col]),
+        true,
+      );
+
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(13)
+      .text(`AATC visitors — ${q.from} to ${q.to} (WAT)`);
+    doc.moveDown(0.5);
+    drawHeader();
+    let total = 0;
+    for await (const rows of this.batches(q)) {
+      for (const r of rows) {
+        drawRow(
+          PDF_COLUMNS.map(({ col }) => {
+            const c = r[col];
+            return c instanceof Date
+              ? formatWat(new Date(c.getTime() - WAT_OFFSET_MS))
+              : (c ?? '');
+          }),
+          false,
+        );
+      }
+      total += rows.length;
+      add(rows.length);
+    }
+    if (total === 0) {
+      doc
+        .moveDown()
+        .font('Helvetica')
+        .fontSize(9)
+        .text('No visits in this range.');
+    }
+    doc.end();
+    await done;
   }
 }

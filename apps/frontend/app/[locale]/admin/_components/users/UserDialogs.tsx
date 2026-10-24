@@ -1,8 +1,10 @@
 "use client";
 
+import { ADDON_ROLES, isAddonRole } from "@vms/contracts";
 import {
   Button,
   Checkbox,
+  cn,
   Dialog,
   DialogContent,
   DialogFooter,
@@ -32,18 +34,44 @@ export function RoleChecklist({
   selected: Set<string>;
   onToggle: (role: string) => void;
 }) {
+  const t = useTranslations("users");
   const tRoles = useTranslations("roles");
+  // Main roles first; each add-on sits under them and needs its base role.
+  const ordered = [
+    ...roles.filter((r) => !isAddonRole(r)),
+    ...roles.filter(isAddonRole),
+  ];
   return (
     <div className="flex flex-col gap-2">
-      {roles.map((role) => (
-        <label key={role} className="flex items-center gap-2 text-sm text-fg">
-          <Checkbox
-            checked={selected.has(role)}
-            onCheckedChange={() => onToggle(role)}
-          />
-          {roleLabel(tRoles, role)}
-        </label>
-      ))}
+      {ordered.map((role) => {
+        const base = ADDON_ROLES[role];
+        const disabled = !!base && !selected.has(base);
+        return (
+          <label
+            key={role}
+            className={cn(
+              "flex items-start gap-2 text-sm text-fg",
+              base && "ps-6",
+              disabled && "opacity-50",
+            )}
+          >
+            <Checkbox
+              className="mt-0.5"
+              checked={selected.has(role)}
+              disabled={disabled}
+              onCheckedChange={() => onToggle(role)}
+            />
+            <span className="flex flex-col">
+              {roleLabel(tRoles, role)}
+              {base ? (
+                <span className="text-xs text-fg-subtle">
+                  {t("form.addonHint", { base: roleLabel(tRoles, base) })}
+                </span>
+              ) : null}
+            </span>
+          </label>
+        );
+      })}
     </div>
   );
 }
@@ -56,8 +84,13 @@ export function useRoleSelection(initial: string[]) {
   const toggle = (role: string) =>
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(role)) next.delete(role);
-      else next.add(role);
+      if (next.has(role)) {
+        next.delete(role);
+        // Dropping a base role drops the add-ons that extend it.
+        for (const [addon, base] of Object.entries(ADDON_ROLES)) {
+          if (base === role) next.delete(addon);
+        }
+      } else next.add(role);
       return next;
     });
   return { selected, toggle };
