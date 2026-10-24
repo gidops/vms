@@ -23,4 +23,6 @@ export * from "./evacuation/evacuation.schema.js";
 export * from "./consent/consent.schema.js";
 export * from "./report/report.schema.js";
 export * from "./insights/insights.schema.js";
+export * from "./rfid-card/rfid-card.schema.js";
+export * from "./audit/audit.schema.js";
 export * from "./desk-qr/desk-qr.schema.js";

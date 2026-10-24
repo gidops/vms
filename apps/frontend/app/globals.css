@@ -139,3 +139,39 @@ body {
     margin-top: 6mm !important;
   }
 }
+
+/* ── RFID access card: CR80 for the DTC card printer ───────────────────────
+ * Portalled to <body> like the other print copies; while it exists, printing
+ * shows only the card. Front and back are two portrait CR80 pages on a named
+ * page, so the A4 @page used elsewhere doesn't apply. */
+.rfidcard-print-root {
+  display: none;
+}
+@media print {
+  @page rfidcard {
+    size: 54mm 85.6mm;
+    margin: 0;
+  }
+  body:has(> .rfidcard-print-root) > *:not(.rfidcard-print-root) {
+    display: none !important;
+  }
+  body:has(> .rfidcard-print-root) {
+    background: #fff !important;
+  }
+  .rfidcard-print-root {
+    display: block !important;
+  }
+  .rfidcard-page {
+    page: rfidcard;
+    break-after: page;
+  }
+  .rfidcard-page:last-child {
+    break-after: auto;
+  }
+  .rfidcard-face {
+    border: 0 !important;
+    border-radius: 0 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

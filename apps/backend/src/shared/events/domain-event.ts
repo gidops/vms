@@ -56,6 +56,20 @@ export const EVENT_TYPES = {
   ConsentWithdrawn: 'consent.withdrawn',
   ConsentExported: 'consent.exported',
   NotificationRetried: 'notification.retried',
+  /** An RFID access card was issued to a visitor (Operations → Access cards). */
+  RfidCardAssigned: 'rfid_card.assigned',
+  /** Validity, photo or notes changed on an active RFID card. */
+  RfidCardUpdated: 'rfid_card.updated',
+  /** The card was sent to the card printer (each reprint is its own row). */
+  RfidCardPrinted: 'rfid_card.printed',
+  RfidCardReturned: 'rfid_card.returned',
+  RfidCardLost: 'rfid_card.lost',
+  /** A card was marked found again (available) or retired. */
+  RfidCardStatusChanged: 'rfid_card.status_changed',
+  /** Recorded before the first byte of an audit-trail export is sent. */
+  AuditExportStarted: 'audit.export_started',
+  /** Same export id as the start row, with the final row count. */
+  AuditExported: 'audit.exported',
   UserLoggedIn: 'auth.user_logged_in',
   UserCreated: 'user.created',
   UserRolesUpdated: 'user.roles_updated',

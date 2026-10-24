@@ -73,6 +73,15 @@ export const PERMISSIONS = {
   VISITOR_READ: "visitor:read",
   /** Insights History / Visitors / Analytics limited to the caller's own visits. */
   INSIGHTS_SELF: "insights:self",
+  /**
+   * Operations → Access cards: assign, print and close personalised RFID
+   * access cards. System Admin only (no scoped role is given it).
+   */
+  RFID_MANAGE: "rfid:manage",
+  /** Operations → Audit trail: read every audit row. System Admin only. */
+  AUDIT_READ: "audit:read",
+  /** Export the audit trail as CSV. System Admin only. */
+  AUDIT_EXPORT: "audit:export",
   /** Per-visit notification delivery status (Guest Details → Notifications). */
   NOTIFICATION_READ: "notification:read",
   /** Re-queue a failed email / SMS / WhatsApp notification. */

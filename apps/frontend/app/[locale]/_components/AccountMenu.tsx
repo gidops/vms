@@ -1,18 +1,32 @@
 "use client";
 
 import { Avatar, Popover, PopoverContent, PopoverTrigger } from "@vms/ui";
-import { ChartColumn, ChevronDown, LogOut, Settings } from "lucide-react";
+import {
+  ChartColumn,
+  ChevronDown,
+  LogOut,
+  Settings,
+  Wrench,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
+import { OPERATIONS_TABS } from "@/app/[locale]/operations/_components/tabs";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { roleLabel } from "@/shared/auth/roleLabels";
 import { avatarUrl } from "@/shared/avatarUrl";
 
-/** Avatar + chevron → account dropdown (identity, active role, settings, help, logout). */
+/**
+ * Avatar + chevron → account dropdown (identity, active role, settings,
+ * Insights, Operations for the System Admin, logout).
+ */
 export function AccountMenu() {
   const t = useTranslations("nav");
   const tRoles = useTranslations("roles");
-  const { user, activeRole, logout } = useAuth();
+  const { user, activeRole, logout, hasPermission } = useAuth();
+  // Operations only shows when one of its tabs is open to this user.
+  const canOperate = OPERATIONS_TABS.some((tab) =>
+    hasPermission(tab.permission),
+  );
   const router = useRouter();
 
   async function onLogout() {
@@ -56,6 +70,15 @@ export function AccountMenu() {
             <ChartColumn className="size-4 text-fg-muted" aria-hidden="true" />
             {t("insights")}
           </Link>
+          {canOperate ? (
+            <Link
+              href="/operations"
+              className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-sm text-fg transition-colors hover:bg-surface-muted"
+            >
+              <Wrench className="size-4 text-fg-muted" aria-hidden="true" />
+              {t("operations")}
+            </Link>
+          ) : null}
         </div>
         <div className="border-t border-border p-2">
           <button

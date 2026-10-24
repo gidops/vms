@@ -111,6 +111,18 @@
     },
     "visitor": {
       "notFound": "Visiteur introuvable"
+    },
+    "rfid": {
+      "notFound": "Attribution de carte d'accès introuvable",
+      "cardNotFound": "Carte d'accès introuvable",
+      "visitorHasCard": "Ce visiteur détient déjà une carte d'accès. Clôturez-la avant d'en attribuer une autre.",
+      "cardInUse": "Cette carte est déjà attribuée.",
+      "cardLost": "Cette carte est déclarée perdue. Marquez-la retrouvée avant de l'attribuer.",
+      "cardRetired": "Cette carte est retirée et ne peut pas être attribuée.",
+      "visitMismatch": "Cette visite n'appartient pas à ce visiteur.",
+      "notActive": "Cette carte a déjà été rendue ou déclarée perdue.",
+      "invalidValidity": "La date de fin doit être postérieure à la date de début.",
+      "invalidPhoto": "Téléversez la photo via le formulaire de carte d'accès."
     }
   },
   "validation": {

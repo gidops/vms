@@ -111,6 +111,18 @@
     },
     "visitor": {
       "notFound": "Visitor not found"
+    },
+    "rfid": {
+      "notFound": "Access card assignment not found",
+      "cardNotFound": "Access card not found",
+      "visitorHasCard": "This visitor already holds an access card. Close it before issuing another.",
+      "cardInUse": "This card is already assigned to someone.",
+      "cardLost": "This card is marked lost. Mark it found before assigning it.",
+      "cardRetired": "This card is retired and cannot be assigned.",
+      "visitMismatch": "That visit does not belong to this visitor.",
+      "notActive": "This card has already been returned or marked lost.",
+      "invalidValidity": "Valid until must be after valid from.",
+      "invalidPhoto": "Upload the photo through the access card form."
     }
   },
   "validation": {

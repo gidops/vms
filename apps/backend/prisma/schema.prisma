@@ -148,6 +148,8 @@ model User {
   createdVisits Visit[]        @relation("VisitCreatedBy")
   authoredNotes Note[]
   deskQrsCreated DeskQr[]
+  rfidCardsIssued   RfidCardAssignment[] @relation("RfidIssuedBy")
+  rfidCardsReturned RfidCardAssignment[] @relation("RfidReturnedBy")
 
   @@index([tenantId])
 }
@@ -268,9 +270,10 @@ model Visitor {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  visits  Visit[]
-  ratings Rating[]
-  alerts  Alert[]
+  visits    Visit[]
+  ratings   Rating[]
+  alerts    Alert[]
+  rfidCards RfidCardAssignment[]
 }
 
 model Host {
@@ -346,6 +349,7 @@ model Visit {
   alerts     Alert[]
   notes      Note[]
   gateEvents GateEvent[]
+  rfidCards  RfidCardAssignment[]
 
   @@index([status])
   @@index([visitorId])
@@ -602,4 +606,71 @@ model DeskQrRegistration {
   visit  Visit?  @relation(fields: [visitId], references: [id], onDelete: SetNull)
 
   @@index([deskQrId, createdAt])
+}
+
+enum RfidCardStatus {
+  AVAILABLE
+  ASSIGNED
+  LOST
+  RETIRED
+}
+
+enum RfidAssignmentStatus {
+  ACTIVE
+  RETURNED
+  LOST
+}
+
+// A personalised RFID access card (Operations → Access cards). Another
+// department configures its doors/floors; the System Admin team prints the
+// visitor's photo and validity on it and assigns it here. NOT the visitor-pass
+// badge pool (`AccessCard`) that reception hands out at check-in. A card is
+// registered the first time its number is assigned and reused after return.
+model RfidCard {
+  id         String         @id @default(uuid())
+  cardNumber String         @unique
+  status     RfidCardStatus @default(AVAILABLE)
+  notes      String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  assignments RfidCardAssignment[]
+
+  @@index([status])
+}
+
+// One issue of an RFID card to a visitor for a validity window (may span many
+// days). At most one ACTIVE assignment per card and per visitor (enforced in
+// the service). Reception retrieves the card at check-out (VMC follow-up).
+model RfidCardAssignment {
+  id            String               @id @default(uuid())
+  cardId        String
+  visitorId     String
+  // Optional visit the card was issued for (e.g. the current one).
+  visitId       String?
+  validFrom     DateTime
+  validUntil    DateTime
+  // S3 key of the visitor photo printed on the card (served via signed URL).
+  photoKey      String?
+  status        RfidAssignmentStatus @default(ACTIVE)
+  issuedById    String?
+  issuedAt      DateTime             @default(now())
+  printCount    Int                  @default(0)
+  lastPrintedAt DateTime?
+  returnedAt    DateTime?
+  returnedById  String?
+  closeNote     String?
+  notes         String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  card       RfidCard @relation(fields: [cardId], references: [id], onDelete: Restrict)
+  visitor    Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  visit      Visit?   @relation(fields: [visitId], references: [id], onDelete: SetNull)
+  issuedBy   User?    @relation("RfidIssuedBy", fields: [issuedById], references: [id], onDelete: SetNull)
+  returnedBy User?    @relation("RfidReturnedBy", fields: [returnedById], references: [id], onDelete: SetNull)
+
+  @@index([cardId])
+  @@index([visitorId])
+  @@index([status])
 }
