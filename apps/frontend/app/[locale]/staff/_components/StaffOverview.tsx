@@ -42,7 +42,7 @@ function BookPanel({ onNewInvite }: Pick<StaffOverviewProps, "onNewInvite">) {
   const t = useTranslations("staff");
   return (
     <>
-      <div className="relative flex flex-col gap-3">
+      <div className="relative flex flex-col gap-2">
         <h3 className="whitespace-pre-line text-lg font-semibold">
           {t("overview.bookTitle")}
         </h3>
@@ -72,7 +72,9 @@ export function StaffOverview({
 }: StaffOverviewProps) {
   return (
     <OverviewBar
-      heading={<h1 className="text-4xl font-semibold text-fg">{welcome}</h1>}
+      heading={
+        <h1 className="text-[2rem] font-medium text-[#344054]">{welcome}</h1>
+      }
       aside={<OfficeFloor office={office} />}
       stats={stats}
       panel={<BookPanel onNewInvite={onNewInvite} />}

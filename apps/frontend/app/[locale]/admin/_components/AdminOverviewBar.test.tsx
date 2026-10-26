@@ -32,11 +32,19 @@ vi.mock("@/data/admin/queries", () => ({
   useApprovalQueue: () => ({ data: { items: queueItems } }),
 }));
 
+let evacuationCount = 0;
+vi.mock("@/data/evacuation/queries", () => ({
+  useEvacuationRoll: ({ enabled = true }: { enabled?: boolean } = {}) => ({
+    data: enabled ? { count: evacuationCount } : undefined,
+  }),
+}));
+
 const desktop = () => within(screen.getByTestId("overview-bar-desktop"));
 
 describe("AdminOverviewBar", () => {
   beforeEach(() => {
     perms.clear();
+    evacuationCount = 0;
     statsQuery = {
       isLoading: false,
       isError: false,
@@ -127,6 +135,24 @@ describe("AdminOverviewBar", () => {
     statsQuery = { isLoading: false, isError: true };
     renderWithIntl(<AdminOverviewBar onAddVisitor={vi.fn()} />);
     expect(screen.getByRole("alert")).toHaveTextContent("Unable to load");
+  });
+
+  it("hides the evacuation line from roles without evacuation:read", () => {
+    evacuationCount = 2;
+    renderWithIntl(<AdminOverviewBar onAddVisitor={vi.fn()} />);
+    // Without evacuation:read the roll isn't fetched and nothing shows.
+    expect(desktop().queryByText(/need evacuation help/)).toBeNull();
+  });
+
+  it("links to the roll when someone needs evacuation help", () => {
+    perms.add(PERMISSIONS.EVACUATION_READ);
+    evacuationCount = 2;
+    renderWithIntl(<AdminOverviewBar onAddVisitor={vi.fn()} />);
+    expect(
+      desktop().getByRole("link", {
+        name: /2 need evacuation help · View roll/,
+      }),
+    ).toBeInTheDocument();
   });
 
   it("picks the greeting by hour", () => {

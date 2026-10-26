@@ -890,6 +890,10 @@
     "reasonPlaceholder": "Rejection reason (required to reject)"
   },
   "evacuation": {
+    "indicator": {
+      "count": "{count, plural, one {# needs evacuation help} other {# need evacuation help}}",
+      "viewRoll": "View roll"
+    },
     "title": "Evacuation Roll",
     "refresh": "Refresh",
     "countBanner": "on site need evacuation help",
@@ -900,6 +904,7 @@
     "loadError": "Couldn't load the evacuation roll. Try Refresh.",
     "columns": {
       "visitor": "Visitor",
+      "assistance": "Assistance needed",
       "floor": "Floor / Wing",
       "host": "Host",
       "phone": "Phone",
@@ -912,7 +917,7 @@
       "body": "{count, plural, =0 {No visitors are checked in right now.} one {# visitor is checked in. They did not ask for assistance.} other {# visitors are checked in. None asked for assistance.}}"
     },
     "print": {
-      "button": "Print for wardens",
+      "button": "Print",
       "heading": "AATC Abuja · Evacuation Roll",
       "generated": "Generated {datetime} WAT",
       "count": "{count, plural, one {# visitor needs evacuation assistance} other {# visitors need evacuation assistance}}"
@@ -1252,7 +1257,9 @@
       "viewHistory": "View history",
       "optedIn": "Opted in",
       "optedOut": "Opted out",
-      "sheetTitle": "Visitor",
+      "sheetTitle": "Visitor details",
+      "visitorInfo": "Visitor information",
+      "noVisits": "No visits yet",
       "summary": "Summary",
       "firstVisit": "First visit",
       "avgStay": "Average stay",

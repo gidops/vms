@@ -29,6 +29,11 @@ export interface OverviewBarProps {
   /** Brand-green action panel content (title + buttons). */
   panel: React.ReactNode;
   /**
+   * `alert` gives the action panel a muted red tint (brand green blended with
+   * danger) as a quiet signal, e.g. people on the Evacuation Roll.
+   */
+  panelTone?: "default" | "alert";
+  /**
    * How the stats render below `lg`: `collapsible` (VMC "View your activity")
    * or a plain `grid` (staff, admin).
    */
@@ -70,19 +75,19 @@ export function DecorChevrons() {
 export function StatCell({ stat }: { stat: OverviewStat }) {
   const warning = stat.tone === "warning";
   return (
-    <div className="flex flex-col gap-4 p-8" data-tone={stat.tone ?? "default"}>
+    <div className="flex flex-col gap-3 px-8 py-6" data-tone={stat.tone ?? "default"}>
       <span
         className={cn(
-          "text-xl leading-6 font-semibold",
-          warning ? "text-warning" : "text-fg-subtle",
+          "text-xl leading-6 font-normal",
+          warning ? "text-warning" : "text-[#526070]",
         )}
       >
         {stat.label}
       </span>
       <span
         className={cn(
-          "text-5xl font-bold leading-[1.2]",
-          warning ? "text-warning" : "text-fg",
+          "text-[2.5rem] font-[550] leading-[1.2]",
+          warning ? "text-warning" : "text-[#344054]",
         )}
       >
         {stat.value}
@@ -98,17 +103,40 @@ export function StatCell({ stat }: { stat: OverviewStat }) {
 export const cellBg = (stat: OverviewStat) =>
   stat.tone === "warning" ? "bg-warning-subtle" : "bg-primary-subtle";
 
+/** Colour of the vertical lines between stat cells (on every stats bar; 2px wide). */
+export const STAT_SEPARATOR = "border-s-[#A9B5C0]";
+
+/**
+ * Borders for cell `i` of a wrapping 2-up (sm) / 4-up (xl) stat grid, as on
+ * Insights: a horizontal rule between rows, and the separator line only where a
+ * cell has a neighbour to its end side (never doubled against the outer border).
+ */
+export const statGridCellClass = (i: number) =>
+  cn(
+    "border-b border-border last:border-b-0 xl:border-b-0",
+    "border-e-[#A9B5C0]",
+    i % 2 === 0 ? "sm:border-e-[2px]" : "sm:border-e-0",
+    i % 4 === 3 ? "xl:border-e-0" : "xl:border-e-[2px]",
+  );
+
+/** Muted red tint for an action panel: brand green blended with danger. */
+export const PANEL_ALERT_CLASS =
+  "bg-[color-mix(in_oklab,var(--color-danger)_40%,var(--color-emphasis))]";
+
 function Panel({
   children,
+  tone = "default",
   className,
 }: {
   children: React.ReactNode;
+  tone?: "default" | "alert";
   className?: string;
 }) {
   return (
     <div
       className={cn(
-        "relative flex flex-col justify-between gap-6 overflow-hidden bg-emphasis p-6 text-emphasis-fg",
+        "relative flex flex-col justify-between gap-4 overflow-hidden bg-emphasis px-6 py-4 text-emphasis-fg transition-colors duration-500",
+        tone === "alert" && PANEL_ALERT_CLASS,
         className,
       )}
     >
@@ -130,6 +158,7 @@ export function OverviewBar({
   aside,
   stats,
   panel,
+  panelTone,
   mobileStats = "grid",
   collapsibleLabel,
 }: OverviewBarProps) {
@@ -164,13 +193,15 @@ export function OverviewBar({
             className={cn(
               "border-t border-border",
               cellBg(stat),
-              i > 0 && "border-s",
+              i > 0 && ["border-s-[2px]", STAT_SEPARATOR],
             )}
           >
             <StatCell stat={stat} />
           </div>
         ))}
-        <Panel className="border-s border-t border-border">{panel}</Panel>
+        <Panel tone={panelTone} className="border-s border-t border-border">
+          {panel}
+        </Panel>
       </div>
 
       {/* ── Mobile: heading, panel, then stats ────────────────────────────── */}
@@ -179,7 +210,9 @@ export function OverviewBar({
           {heading}
           {aside}
         </div>
-        <Panel className="rounded-xl">{panel}</Panel>
+        <Panel tone={panelTone} className="rounded-xl">
+          {panel}
+        </Panel>
 
         {mobileStats === "collapsible" ? (
           <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-xs">
@@ -211,7 +244,7 @@ export function OverviewBar({
             ) : null}
           </div>
         ) : (
-          <div className="grid grid-cols-1 divide-y divide-border overflow-hidden rounded-xl border border-border shadow-xs sm:grid-cols-3 sm:divide-x sm:divide-y-0 rtl:sm:divide-x-reverse">
+          <div className="grid grid-cols-1 divide-y divide-border overflow-hidden rounded-xl border border-border shadow-xs sm:grid-cols-3 sm:divide-x-[2px] sm:divide-y-0 sm:divide-[#A9B5C0] rtl:sm:divide-x-reverse">
             {stats.map((stat) => (
               <div key={stat.label} className={cellBg(stat)}>
                 <StatCell stat={stat} />

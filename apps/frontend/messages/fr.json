@@ -890,6 +890,10 @@
     "reasonPlaceholder": "Motif du rejet (obligatoire pour rejeter)"
   },
   "evacuation": {
+    "indicator": {
+      "count": "{count, plural, one {# personne a besoin d'aide à l'évacuation} other {# personnes ont besoin d'aide à l'évacuation}}",
+      "viewRoll": "Voir la liste"
+    },
     "title": "Liste d'évacuation",
     "refresh": "Actualiser",
     "countBanner": "sur place ont besoin d'aide pour évacuer",
@@ -900,6 +904,7 @@
     "loadError": "Impossible de charger la liste d'évacuation. Réessayez avec Actualiser.",
     "columns": {
       "visitor": "Visiteur",
+      "assistance": "Assistance requise",
       "floor": "Étage / Aile",
       "host": "Hôte",
       "phone": "Téléphone",
@@ -912,7 +917,7 @@
       "body": "{count, plural, =0 {Aucun visiteur n'est enregistré pour le moment.} one {# visiteur est enregistré. Il n'a pas demandé d'aide.} other {# visiteurs sont enregistrés. Aucun n'a demandé d'aide.}}"
     },
     "print": {
-      "button": "Imprimer pour les serre-files",
+      "button": "Imprimer",
       "heading": "AATC Abuja · Liste d'évacuation",
       "generated": "Générée le {datetime} WAT",
       "count": "{count, plural, one {# visiteur a besoin d'aide pour évacuer} other {# visiteurs ont besoin d'aide pour évacuer}}"
@@ -1252,7 +1257,9 @@
       "viewHistory": "Voir l'historique",
       "optedIn": "Inscrit",
       "optedOut": "Désinscrit",
-      "sheetTitle": "Visiteur",
+      "sheetTitle": "Détails du visiteur",
+      "visitorInfo": "Informations sur le visiteur",
+      "noVisits": "Aucune visite pour le moment",
       "summary": "Résumé",
       "firstVisit": "Première visite",
       "avgStay": "Durée moyenne",

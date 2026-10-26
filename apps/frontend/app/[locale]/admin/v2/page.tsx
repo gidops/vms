@@ -4,6 +4,7 @@ import { TopNavShell } from "@vms/ui";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
+import { useEvacuationAlertCount } from "@/app/[locale]/_components/EvacuationIndicator";
 import { QuickActionSheet } from "@/app/[locale]/dashboard/_components/QuickActionSheet";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
 import { AdminActionPanel } from "./_components/AdminActionPanel";
@@ -31,6 +32,8 @@ function Overview() {
   const filters = useAdminFilters();
   const { openRow, open, overlays } = useVisitOverlays();
   const [addingVisitor, setAddingVisitor] = React.useState(false);
+  // Tints the quick-actions panel while anyone is on the Evacuation Roll.
+  const evacuationCount = useEvacuationAlertCount();
 
   return (
     <TopNavShell
@@ -51,6 +54,7 @@ function Overview() {
           welcome={band.welcome}
           stats={band.stats}
           pendingCount={band.pendingCount}
+          panelTone={evacuationCount > 0 ? "alert" : "default"}
           panel={
             <AdminActionPanel onAddVisitor={() => setAddingVisitor(true)} />
           }

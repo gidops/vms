@@ -8,6 +8,7 @@ import {
   Avatar,
   Button,
   EmptyState,
+  Pagination,
   RecordTable,
   Spinner,
   Table,
@@ -53,7 +54,6 @@ function CountBanner({
   floors: number;
 }) {
   const t = useTranslations("evacuation");
-  const locale = useLocale();
   const empty = roll.count === 0;
   return (
     // A polite live region: the roll refreshes every minute and shouldn't
@@ -62,6 +62,7 @@ function CountBanner({
       role="status"
       intent={empty ? "success" : "warning"}
       icon={empty ? CheckCircle2 : LifeBuoy}
+      className="border-0"
     >
       <AlertTitle className="text-base">
         <span className="me-2">{roll.count}</span>
@@ -73,14 +74,6 @@ function CountBanner({
           </span>
         ) : null}
       </AlertTitle>
-      <AlertDescription>
-        {t.rich("generated", {
-          time: formatWatTime(roll.generatedAt, locale),
-          b: (chunks) => <b className="font-semibold text-fg">{chunks}</b>,
-        })}
-        {" · "}
-        {t("refreshesEvery")}
-      </AlertDescription>
     </Alert>
   );
 }
@@ -90,9 +83,18 @@ function FloorLabel({ floor }: { floor: string | null }) {
   return <>{floor ?? t("noFloor")}</>;
 }
 
-const COLUMN_COUNT = 5;
+const COLUMN_COUNT = 6;
+/** Rows per page, matching the VMC records table. */
+const PAGE_SIZE = 10;
 
-function RollTable({ groups }: { groups: FloorGroup[] }) {
+function RollTable({
+  groups,
+  floorTotals,
+}: {
+  groups: FloorGroup[];
+  /** Whole-roll count per floor, so a floor split across pages shows its full size. */
+  floorTotals: Map<string | null, number>;
+}) {
   const t = useTranslations("evacuation");
   const assistText = useEvacuationAssistText();
   const locale = useLocale();
@@ -104,6 +106,7 @@ function RollTable({ groups }: { groups: FloorGroup[] }) {
           <TableHeader>
             <TableRow>
               <TableHead>{t("columns.visitor")}</TableHead>
+              <TableHead>{t("columns.assistance")}</TableHead>
               <TableHead>{t("columns.floor")}</TableHead>
               <TableHead>{t("columns.host")}</TableHead>
               <TableHead>{t("columns.phone")}</TableHead>
@@ -111,20 +114,25 @@ function RollTable({ groups }: { groups: FloorGroup[] }) {
             </TableRow>
           </TableHeader>
           {groups.map((g) => (
-            <TableBody striped key={g.floor ?? "none"}>
-              <TableRow className="bg-primary-subtle hover:bg-primary-subtle">
+            <TableBody key={g.floor ?? "none"}>
+              {/* Floor label row in the records table's own colours. */}
+              <TableRow className="border-t hover:bg-transparent">
                 <TableCell
                   colSpan={COLUMN_COUNT}
-                  className="py-2.5 font-semibold text-primary"
+                  className="py-2.5 font-semibold text-fg"
                 >
                   <FloorLabel floor={g.floor} />
                   <span className="ms-2 font-normal text-fg-muted">
-                    · {g.rows.length}
+                    · {floorTotals.get(g.floor) ?? g.rows.length}
                   </span>
                 </TableCell>
               </TableRow>
-              {g.rows.map((r) => (
-                <TableRow key={r.visitId}>
+              {g.rows.map((r, i) => (
+                // Striped like the VMC records table: every second row, per floor.
+                <TableRow
+                  key={r.visitId}
+                  className={i % 2 === 1 ? "bg-surface-stripe" : undefined}
+                >
                   <TableCell>
                     <span className="flex items-center gap-3">
                       <Avatar name={r.fullName} size="md" accent="single" />
@@ -137,13 +145,13 @@ function RollTable({ groups }: { groups: FloorGroup[] }) {
                             {r.organization}
                           </span>
                         ) : null}
-                        {r.assistTypes.length ? (
-                          <span className="text-xs font-medium text-warning">
-                            {assistText(r.assistTypes, r.assistOther)}
-                          </span>
-                        ) : null}
                       </span>
                     </span>
+                  </TableCell>
+                  <TableCell className="text-fg-muted">
+                    {r.assistTypes.length
+                      ? assistText(r.assistTypes, r.assistOther)
+                      : "—"}
                   </TableCell>
                   <TableCell className="text-fg-muted">
                     <FloorLabel floor={r.floor} />
@@ -171,10 +179,10 @@ function RollTable({ groups }: { groups: FloorGroup[] }) {
       >
         {groups.map((g) => (
           <li key={g.floor ?? "none"}>
-            <p className="border-b border-border-subtle bg-primary-subtle px-4 py-2 text-sm font-semibold text-primary">
+            <p className="border-b border-border-subtle px-4 py-2 text-sm font-semibold text-fg">
               <FloorLabel floor={g.floor} />
               <span className="ms-2 font-normal text-fg-muted">
-                · {g.rows.length}
+                · {floorTotals.get(g.floor) ?? g.rows.length}
               </span>
             </p>
             <ul>
@@ -199,7 +207,7 @@ function RollTable({ groups }: { groups: FloorGroup[] }) {
                       </span>
                     ) : null}
                     {r.assistTypes.length ? (
-                      <span className="text-xs font-medium text-warning">
+                      <span className="text-xs text-fg-muted">
                         {assistText(r.assistTypes, r.assistOther)}
                       </span>
                     ) : null}
@@ -322,12 +330,17 @@ function PrintRoll({
 
 /**
  * Live Evacuation Roll, shared by the Insights page (/insights?tab=evacuation)
- * and the gate. Refreshes every minute; "Print for wardens" prints a
+ * and the gate. Refreshes every minute; "Print" prints a
  * chrome-free, floor-grouped A4 list.
  */
 export function EvacuationRollScreen({
   headingLevel = 1,
-}: { headingLevel?: 1 | 2 } = {}) {
+  showHeading = true,
+}: {
+  headingLevel?: 1 | 2;
+  /** Off where the host already names the screen (the Insights tab). */
+  showHeading?: boolean;
+} = {}) {
   // Under another page's h1 (Insights) the title steps down a level.
   const Heading = headingLevel === 2 ? "h2" : "h1";
   const headingSize = headingLevel === 2 ? "text-2xl" : "text-3xl";
@@ -338,18 +351,45 @@ export function EvacuationRollScreen({
     () => (data ? groupByFloor(data.rows) : []),
     [data],
   );
+  const floorTotals = React.useMemo(
+    () => new Map(groups.map((g) => [g.floor, g.rows.length])),
+    [groups],
+  );
   const empty = !!data && data.count === 0;
+
+  // Client-side pages over the live roll; clamp when a refresh shrinks it.
+  const [page, setPage] = React.useState(1);
+  const totalPages = Math.max(
+    1,
+    Math.ceil((data?.rows.length ?? 0) / PAGE_SIZE),
+  );
+  const currentPage = Math.min(page, totalPages);
+  const pageGroups = React.useMemo(
+    () =>
+      groupByFloor(
+        (data?.rows ?? []).slice(
+          (currentPage - 1) * PAGE_SIZE,
+          currentPage * PAGE_SIZE,
+        ),
+      ),
+    [data, currentPage],
+  );
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Laid out like the History tab: refresh with the filters on the start
+          side, the print action where History's Export sits on the end. */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Heading className={`${headingSize} font-semibold text-primary`}>
-          {t("title")}
-        </Heading>
-        <div className="flex flex-wrap gap-3">
-          <Button
-            intent="neutral"
-            tone="outline"
+        <div className="flex flex-wrap items-center gap-3">
+          {showHeading ? (
+            <Heading className={`${headingSize} font-semibold text-primary`}>
+              {t("title")}
+            </Heading>
+          ) : null}
+          {/* Same pill as the navbar Switch Account button, in light-surface colours. */}
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium text-fg transition-colors outline-none hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] disabled:pointer-events-none disabled:opacity-60"
             onClick={() => void roll.refetch()}
             disabled={roll.isFetching}
             aria-busy={roll.isFetching || undefined}
@@ -359,12 +399,12 @@ export function EvacuationRollScreen({
               aria-hidden="true"
             />
             {t("refresh")}
-          </Button>
-          <Button onClick={() => window.print()} disabled={!data || empty}>
-            <Printer className="size-4" aria-hidden="true" />
-            {t("print.button")}
-          </Button>
+          </button>
         </div>
+        <Button onClick={() => window.print()} disabled={!data || empty}>
+          <Printer className="size-4" aria-hidden="true" />
+          {t("print.button")}
+        </Button>
       </div>
 
       {data ? <CountBanner roll={data} floors={groups.length} /> : null}
@@ -381,6 +421,13 @@ export function EvacuationRollScreen({
         <RecordTable
           frameless
           isEmpty={empty}
+          pagination={
+            <Pagination
+              page={currentPage}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+          }
           emptyState={
             <EmptyState
               icon={CheckCircle2}
@@ -391,7 +438,7 @@ export function EvacuationRollScreen({
             />
           }
         >
-          <RollTable groups={groups} />
+          <RollTable groups={pageGroups} floorTotals={floorTotals} />
         </RecordTable>
       )}
 

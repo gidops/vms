@@ -17,10 +17,10 @@ test.describe("V1 gap smoke (Security Manager)", () => {
   test("opens the Evacuation Roll", async ({ page }) => {
     await page.goto("/admin/evacuation");
     await expect(
-      page.getByRole("heading", { name: "Evacuation Roll" }),
-    ).toBeVisible();
+      page.getByRole("radio", { name: "Evacuation Roll" }),
+    ).toBeChecked();
     await expect(
-      page.getByRole("button", { name: "Print for wardens" }),
+      page.getByRole("button", { name: "Print", exact: true }),
     ).toBeVisible();
   });
 
@@ -44,9 +44,7 @@ test.describe("V1 gap smoke (Security Manager)", () => {
     ).toBeVisible();
     await expect(page.getByText("Status Breakdown")).toHaveCount(0);
     await page.goto("/admin/analytics");
-    await expect(
-      page.getByRole("heading", { name: "Analytics & Reports" }),
-    ).toBeVisible();
+    await expect(page.getByRole("radio", { name: "Analytics" })).toBeChecked();
     await expect(page.getByText("Status Breakdown")).toBeVisible();
   });
 

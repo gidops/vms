@@ -29,6 +29,7 @@ import { CircleUser } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
+import { useEvacuationAlertCount } from "@/app/[locale]/_components/EvacuationIndicator";
 import { VisitDetailSheet } from "@/app/[locale]/_components/VisitDetailSheet";
 import { CheckInModal } from "@/app/[locale]/dashboard/_components/checkin/CheckInModal";
 import { CheckOutModal } from "@/app/[locale]/dashboard/_components/checkin/CheckOutModal";
@@ -86,6 +87,8 @@ function Dashboard() {
   const tCommon = useTranslations("common");
   const format = useFormatter();
   const { user } = useAuth();
+  // Drives the quick-actions evacuation tint; same live query as the roll.
+  const evacuationCount = useEvacuationAlertCount();
 
   const [page, setPage] = React.useState(1);
   const [range, setRange] = React.useState<RecordsRange>("all");
@@ -312,6 +315,7 @@ function Dashboard() {
       <div className="flex flex-col gap-6">
         <VmcOverview
           welcome={t("welcome", { name: user?.fullName ?? "" })}
+          evacuationCount={evacuationCount}
           stats={[
             {
               label: t("stats.onsite"),

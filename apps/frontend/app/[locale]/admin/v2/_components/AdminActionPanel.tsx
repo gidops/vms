@@ -4,6 +4,10 @@ import { PERMISSIONS } from "@vms/contracts";
 import { Button } from "@vms/ui";
 import { useTranslations } from "next-intl";
 import * as React from "react";
+import {
+  EvacuationRollLink,
+  useEvacuationAlertCount,
+} from "@/app/[locale]/_components/EvacuationIndicator";
 import { ExportVisitorsDialog } from "@/app/[locale]/_components/ExportVisitorsDialog";
 import { DecorChevrons } from "@/app/[locale]/_components/OverviewBar";
 import { ADMIN_PERMISSIONS } from "@/app/[locale]/admin/_components/adminAccess";
@@ -27,6 +31,7 @@ export function AdminActionPanel({
   const router = useRouter();
   const { hasPermission } = useAuth();
   const [exportOpen, setExportOpen] = React.useState(false);
+  const evacuationCount = useEvacuationAlertCount();
 
   const canAdd = hasPermission(PERMISSIONS.INVITATION_CREATE);
   const canExport = hasPermission(ADMIN_PERMISSIONS.REPORT_EXPORT);
@@ -42,7 +47,7 @@ export function AdminActionPanel({
   return (
     <>
       <DecorChevrons />
-      <div className="relative flex flex-col gap-3">
+      <div className="relative flex flex-col gap-2">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/brand/afreximbank.svg"
@@ -51,6 +56,7 @@ export function AdminActionPanel({
           aria-hidden="true"
         />
         <h3 className="whitespace-pre-line text-lg font-semibold">{title}</h3>
+        <EvacuationRollLink count={evacuationCount} />
       </div>
       <div className="relative flex flex-wrap items-center gap-3">
         {canAdd ? (

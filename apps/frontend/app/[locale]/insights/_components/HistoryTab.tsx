@@ -8,7 +8,6 @@ import {
   Pagination,
   RecordTable,
   SearchInput,
-  SegmentedControl,
   Spinner,
   Table,
   TableBody,
@@ -21,6 +20,7 @@ import { Download, History } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { ExportVisitorsDialog } from "@/app/[locale]/_components/ExportVisitorsDialog";
+import { FilterPills } from "@/app/[locale]/_components/FilterPills";
 import { StatusCell } from "@/app/[locale]/_components/StatusCell";
 import {
   RequestDrawer,
@@ -104,29 +104,24 @@ export function HistoryTab() {
   return (
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold text-primary">
-          {facility ? t("titleFacility") : t("titleMine")}
-        </h2>
-        <div className="flex flex-wrap items-center gap-3">
-          <SegmentedControl
-            aria-label={t("range")}
-            value={range}
-            onValueChange={(v) => {
-              setRange(v as HistoryRange);
-              setPage(1);
-            }}
-            options={(Object.keys(RANGES) as HistoryRange[]).map((value) => ({
-              value,
-              label: t(`ranges.${value}`),
-            }))}
-          />
-          {canExport ? (
-            <Button onClick={() => setExportOpen(true)}>
-              <Download className="size-4" aria-hidden="true" />
-              {t("export")}
-            </Button>
-          ) : null}
-        </div>
+        <FilterPills
+          aria-label={t("range")}
+          value={range}
+          onValueChange={(v) => {
+            setRange(v);
+            setPage(1);
+          }}
+          options={(Object.keys(RANGES) as HistoryRange[]).map((value) => ({
+            value,
+            label: t(`ranges.${value}`),
+          }))}
+        />
+        {canExport ? (
+          <Button onClick={() => setExportOpen(true)}>
+            <Download className="size-4" aria-hidden="true" />
+            {t("export")}
+          </Button>
+        ) : null}
       </div>
 
       <RecordTable

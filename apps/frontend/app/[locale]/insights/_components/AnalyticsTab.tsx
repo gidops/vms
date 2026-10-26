@@ -11,7 +11,6 @@ import {
   BarChart,
   cn,
   DonutChart,
-  SegmentedControl,
   Spinner,
   type DonutTone,
 } from "@vms/ui";
@@ -20,8 +19,10 @@ import * as React from "react";
 import {
   cellBg,
   StatCell,
+  statGridCellClass,
   type OverviewStat,
 } from "@/app/[locale]/_components/OverviewBar";
+import { FilterPills } from "@/app/[locale]/_components/FilterPills";
 import { useInsightsAnalytics } from "@/data/insights/queries";
 import { watDateLocale } from "@/shared/wat";
 
@@ -69,13 +70,10 @@ function Panel({
 function StatGrid({ stats }: { stats: OverviewStat[] }) {
   return (
     <div className="grid overflow-hidden rounded-xl border border-border sm:grid-cols-2 xl:grid-cols-4">
-      {stats.map((stat) => (
+      {stats.map((stat, i) => (
         <div
           key={stat.label}
-          className={cn(
-            "border-b border-border last:border-b-0 sm:border-e xl:border-b-0",
-            cellBg(stat),
-          )}
+          className={cn(statGridCellClass(i), cellBg(stat))}
         >
           <StatCell stat={stat} />
         </div>
@@ -305,14 +303,11 @@ export function AnalyticsTab() {
 
   return (
     <section className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold text-primary">
-          {data?.scope === "self" ? t("titleMine") : t("title")}
-        </h2>
-        <SegmentedControl
+      <div className="flex flex-wrap items-center gap-3">
+        <FilterPills
           aria-label={t("range")}
           value={range}
-          onValueChange={(v) => setRange(v as InsightsRange)}
+          onValueChange={setRange}
           options={RANGES.map((value) => ({
             value,
             label: t(`ranges.${value}`),
