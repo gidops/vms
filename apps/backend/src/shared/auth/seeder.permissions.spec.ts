@@ -108,9 +108,17 @@ describe('Role → permission matrix', () => {
     ]);
   });
 
-  it('keeps the desk QR to the System Admin (no scoped role holds issuer:*)', () => {
+  it('keeps the Operations tools to the System Admin (no scoped role holds them)', () => {
+    // Desk QR, RFID access cards and the audit trail.
+    const SYSTEM_ADMIN_ONLY = [
+      PERMISSIONS.ISSUER_READ,
+      PERMISSIONS.ISSUER_MANAGE,
+      PERMISSIONS.RFID_MANAGE,
+      PERMISSIONS.AUDIT_READ,
+      PERMISSIONS.AUDIT_EXPORT,
+    ];
     for (const role of Object.keys(SCOPED_ROLE_DEFS)) {
-      for (const perm of [PERMISSIONS.ISSUER_READ, PERMISSIONS.ISSUER_MANAGE]) {
+      for (const perm of SYSTEM_ADMIN_ONLY) {
         expect([role, perm, has(role, perm)]).toEqual([role, perm, false]);
       }
     }

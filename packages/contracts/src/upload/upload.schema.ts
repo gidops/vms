@@ -14,6 +14,12 @@ export const PresignAvatarInput = z.object({
 });
 export type PresignAvatarInput = z.infer<typeof PresignAvatarInput>;
 
+/** Request a presigned S3 PUT URL for a visitor photo (access cards). */
+export const PresignImageInput = z.object({
+  contentType: AvatarContentType,
+});
+export type PresignImageInput = z.infer<typeof PresignImageInput>;
+
 /** The presigned upload target — browser PUTs the file to `uploadUrl`, then the
  *  app persists `key` (the DB stores the key, not the full URL). */
 export const PresignResult = z.object({

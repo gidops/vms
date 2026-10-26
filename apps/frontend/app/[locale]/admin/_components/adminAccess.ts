@@ -1,13 +1,9 @@
 import { PERMISSIONS } from "@vms/contracts";
 import {
-  ChartColumn,
   ClipboardCheck,
   LayoutGrid,
-  LifeBuoy,
-  MailCheck,
   MapPin,
   Puzzle,
-  QrCode,
   Settings,
   ShieldAlert,
   Tags,
@@ -64,12 +60,6 @@ export const ADMIN_SECTIONS: AdminSectionDef[] = [
     key: "watchlist",
     icon: ShieldAlert,
     permission: ADMIN_PERMISSIONS.WATCHLIST_READ,
-  },
-  {
-    key: "deskQr",
-    icon: QrCode,
-    href: "/admin/desk-qr",
-    permission: PERMISSIONS.ISSUER_READ,
   },
   {
     key: "users",

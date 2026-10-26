@@ -1,20 +1,22 @@
-"use client";
+import { redirect } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
 
-import { PERMISSIONS } from "@vms/contracts";
-import { DeskQrScreen } from "@/app/[locale]/_components/DeskQrScreen";
-import { AdminShell } from "@/app/[locale]/admin/_components/AdminShell";
-import { PermissionGate } from "@/shared/auth/PermissionGate";
-import { RouteGuard } from "@/shared/auth/RouteGuard";
+// The desk QR is managed by the System Admin on the Operations page. Keep
+// existing links and bookmarks working by redirecting there.
+export default async function AdminDeskQrRedirect({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  redirect({
+    href: { pathname: "/operations", query: { tab: "deskQr" } },
+    locale,
+  });
+  // `redirect` throws, but satisfy the return type for the type checker.
+  return null;
+}
 
-/** Admin console mount of the shared DeskQrScreen. */
-export default function AdminDeskQrPage() {
-  return (
-    <RouteGuard home="/admin">
-      <AdminShell active="deskQr">
-        <PermissionGate permission={PERMISSIONS.ISSUER_READ}>
-          <DeskQrScreen />
-        </PermissionGate>
-      </AdminShell>
-    </RouteGuard>
-  );
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
 }

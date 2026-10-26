@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AccessCardsModule } from './modules/access-cards/access-cards.module';
 import { AlertsModule } from './modules/alerts/alerts.module';
+import { AuditTrailModule } from './modules/audit-trail/audit-trail.module';
 import { ConsentModule } from './modules/consent/consent.module';
 import { DeskQrModule } from './modules/desk-qr/desk-qr.module';
 import { IdentityModule } from './modules/identity/identity.module';
@@ -11,6 +12,7 @@ import { InboxModule } from './modules/inbox/inbox.module';
 import { InsightsModule } from './modules/insights/insights.module';
 import { NotesModule } from './modules/notes/notes.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { RfidCardsModule } from './modules/rfid-cards/rfid-cards.module';
 import { StaffModule } from './modules/staff/staff.module';
 import { VisitsModule } from './modules/visits/visits.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -42,6 +44,8 @@ import { StorageModule } from './shared/storage/storage.module';
     ConsentModule,
     DeskQrModule,
     AccessCardsModule,
+    RfidCardsModule,
+    AuditTrailModule,
     AlertsModule,
     NotesModule,
     NotificationsModule,
