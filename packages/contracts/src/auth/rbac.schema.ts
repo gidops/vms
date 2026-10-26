@@ -57,10 +57,12 @@ export const PERMISSIONS = {
   ISSUER_MANAGE: "issuer:manage",
   /** Live Evacuation Roll (checked-in visitors who need evacuation help). */
   EVACUATION_READ: "evacuation:read",
-  /** Comms opt-ins: view the list, bulk-export it (personal data), withdraw consent. */
+  /** Email consent: view the list, bulk-export it (personal data), withdraw consent. */
   CONSENT_READ: "consent:read",
   CONSENT_EXPORT: "consent:export",
   CONSENT_MANAGE: "consent:manage",
+  /** Record consent on a visitor's behalf (opt them back in). System Admin only. */
+  CONSENT_GRANT: "consent:grant",
   /** Admin Analytics & Reports page (aggregate visitor trends; no personal data). */
   REPORT_READ: "report:read",
   /** Bulk visitor export (CSV / Excel) — personal data. */

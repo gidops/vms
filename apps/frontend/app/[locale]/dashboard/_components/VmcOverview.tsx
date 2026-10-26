@@ -55,7 +55,7 @@ function QuickActions({
         <img
           src="/brand/afreximbank.svg"
           alt=""
-          className="size-8"
+          className="size-12"
           aria-hidden="true"
         />
         <h3 className="text-lg font-semibold">{t("quickActions.title")}</h3>

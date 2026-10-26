@@ -924,21 +924,34 @@
     }
   },
   "consent": {
-    "title": "Comms Opt-ins",
+    "title": "Email consent",
+    "filterLabel": "Show",
+    "filters": {
+      "in": "Consented",
+      "out": "Not consented",
+      "all": "All"
+    },
+    "count": {
+      "in": "consented",
+      "out": "not consented",
+      "all": "people"
+    },
     "exportCsv": "Export CSV",
     "exportError": "The export failed. Please try again.",
-    "optedIn": "opted in",
     "searchPlaceholder": "Search email or name",
     "columns": {
       "email": "Email",
       "name": "Name",
-      "lastAnswered": "Last answered",
-      "sourceVisit": "Source visit"
+      "lastAnswered": "Last updated",
+      "status": "Email consent"
     },
-    "viewVisit": "View visit",
-    "empty": "No one has opted in yet.",
-    "noMatches": "No opt-ins match your search.",
-    "loadError": "Couldn't load the opt-ins.",
+    "empty": {
+      "in": "No one has agreed to email updates yet.",
+      "out": "No one has opted out.",
+      "all": "No one has answered yet."
+    },
+    "noMatches": "No one matches your search.",
+    "loadError": "Couldn't load the email consent list.",
     "withdrawTitle": "Withdraw consent",
     "withdrawHelp": "Stops updates to this email until they say yes at a later visit.",
     "email": "Email",
@@ -946,11 +959,21 @@
     "withdraw": "Withdraw",
     "invalidEmail": "Enter a valid email address.",
     "confirmTitle": "Withdraw consent?",
-    "confirmBody": "<b>{email}</b> leaves the opt-in list now. Past visit records stay as they are.",
+    "confirmBody": "<b>{email}</b> will stop getting Afreximbank event updates.",
     "cancel": "Cancel",
     "done": "Consent withdrawn for {email}.",
     "notFound": "No records for this email.",
-    "error": "Something went wrong. Please try again."
+    "error": "Something went wrong. Please try again.",
+    "toggleLabel": "Email consent for {email}",
+    "removeNotAllowed": "You can't change email consent.",
+    "addNotAllowed": "Only a System Admin can add someone back.",
+    "removeTitle": "Remove email consent?",
+    "removeBody": "<b>{email}</b> will stop getting Afreximbank event updates.",
+    "confirmRemove": "Remove consent",
+    "addTitle": "Add email consent?",
+    "addBody": "Only do this if <b>{email}</b> has agreed to get Afreximbank event updates.",
+    "confirmAdd": "Add consent",
+    "granted": "{email} will get event updates again."
   },
   "export": {
     "title": "Export Visitor Data",
@@ -958,7 +981,6 @@
     "dateRange": "Date range",
     "from": "From",
     "to": "To",
-    "hint": "By visit date, WAT. Up to 366 days.",
     "format": "File format",
     "csv": "CSV",
     "excel": "Excel",
@@ -1246,7 +1268,7 @@
       "title": "Visitors",
       "views": {
         "directory": "Directory",
-        "optIns": "Comms opt-in"
+        "optIns": "Email consent"
       },
       "countFacility": "visitors",
       "countMine": "people have visited you",
@@ -1255,8 +1277,8 @@
       "noMatches": "No visitors match your search",
       "error": "Unable to load visitors. Please try again.",
       "viewHistory": "View history",
-      "optedIn": "Opted in",
-      "optedOut": "Opted out",
+      "optedIn": "Consented",
+      "optedOut": "Not consented",
       "sheetTitle": "Visitor details",
       "visitorInfo": "Visitor information",
       "noVisits": "No visits yet",
@@ -1270,7 +1292,7 @@
         "organization": "Organisation",
         "visits": "Visits",
         "lastVisit": "Last visit",
-        "comms": "Comms",
+        "comms": "Email consent",
         "action": "Action"
       }
     },

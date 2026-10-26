@@ -330,7 +330,7 @@ export function VisitorsTab() {
         />
       ) : null}
       {view === "optIns" && showOptIns ? (
-        <CommsOptInsScreen headingLevel={2} />
+        <CommsOptInsScreen />
       ) : (
         <Directory />
       )}

@@ -54,6 +54,8 @@ export const EVENT_TYPES = {
   /** A visitor submitted the form; a code went to the desk inbox. */
   DeskQrCodeSent: 'desk_qr.code_sent',
   ConsentWithdrawn: 'consent.withdrawn',
+  /** A System Admin recorded consent on a visitor's behalf (opted them back in). */
+  ConsentGranted: 'consent.granted',
   ConsentExported: 'consent.exported',
   NotificationRetried: 'notification.retried',
   /** An RFID access card was issued to a visitor (Operations → Access cards). */

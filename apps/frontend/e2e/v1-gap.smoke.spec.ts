@@ -24,11 +24,13 @@ test.describe("V1 gap smoke (Security Manager)", () => {
     ).toBeVisible();
   });
 
-  test("opens Comms Opt-ins with export and withdraw", async ({ page }) => {
+  test("opens Email consent with export and withdraw", async ({ page }) => {
+    // Redirects to Insights → Visitors; Email consent is a view there (no heading).
     await page.goto("/admin/opt-ins");
+    await page.getByRole("radio", { name: "Email consent" }).click();
     await expect(
-      page.getByRole("heading", { name: "Comms Opt-ins" }),
-    ).toBeVisible();
+      page.getByRole("radio", { name: "Email consent" }),
+    ).toBeChecked();
     await expect(
       page.getByRole("button", { name: /Export CSV/ }),
     ).toBeVisible();

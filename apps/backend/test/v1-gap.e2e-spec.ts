@@ -238,6 +238,27 @@ describe('V1 gap features (e2e)', () => {
       }
     });
 
+    it('POST /consent/grant is limited to the System Admin', async () => {
+      for (const role of [
+        ROLES.VMC,
+        ROLES.ADMIN,
+        ROLES.VMC_ADMIN,
+        ROLES.READ_ADMIN,
+        ROLES.STAFF,
+        ROLES.GATE,
+      ]) {
+        await as(role)
+          .post('/consent/grant')
+          .send({ email: 'x@y.com' })
+          .expect(403);
+      }
+      await as(ROLES.SUPER_ADMIN)
+        .post('/consent/grant')
+        .send({ email: `nobody-${run}@y.com` })
+        .expect(200)
+        .expect({ affected: false });
+    });
+
     it('rejects an export range over 366 days or reversed', async () => {
       await as(ROLES.ADMIN)
         .get('/visits/export?from=2025-01-01&to=2026-01-02&format=csv')
@@ -473,11 +494,37 @@ describe('V1 gap features (e2e)', () => {
       expect(audit).not.toBeNull();
     });
 
+    it('lists withdrawn people under "out" and a System Admin can opt them back in', async () => {
+      const e = `consent-e-${run}@x.com`;
+      await walkIn(e, { commsConsent: true });
+      await as(ROLES.VMC)
+        .post('/consent/withdraw')
+        .send({ email: e })
+        .expect(200);
+      const out = await as(ROLES.READ_ADMIN)
+        .get(`/consent/opt-ins?status=out&search=${encodeURIComponent(e)}`)
+        .expect(200);
+      expect(out.body.items).toEqual([
+        expect.objectContaining({ email: e, consent: false }),
+      ]);
+      // The name still shows although the latest event has no visit.
+      expect(out.body.items[0].fullName).toEqual(expect.any(String));
+
+      await as(ROLES.SUPER_ADMIN)
+        .post('/consent/grant')
+        .send({ email: e })
+        .expect(200)
+        .expect({ affected: true });
+      expect(await inList(e)).toBe(true);
+      const audit = await waitForAudit('consent.granted', (m) => m.email === e);
+      expect(audit).not.toBeNull();
+    });
+
     it('exports a BOM-prefixed CSV for the Security Manager', async () => {
       const res = await as(ROLES.ADMIN).get('/consent/opt-ins.csv').expect(200);
       expect(res.headers['content-type']).toContain('text/csv');
       expect(res.headers['content-disposition']).toContain(
-        'aatc-comms-opt-ins_',
+        'aatc-email-consent_',
       );
       expect(res.text.charCodeAt(0)).toBe(0xfeff);
     });

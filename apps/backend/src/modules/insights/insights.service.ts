@@ -15,6 +15,7 @@ import {
 } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 import { formatWat, watDayRange, watToday } from '../../shared/common/wat';
+import { latestConsent } from '../consent/latest-consent';
 import { VisitDashboardService } from '../visits/dashboard.service';
 import { phoneSearchDigits } from '../visits/read.service';
 
@@ -142,7 +143,10 @@ export class InsightsService {
       select: { id: true, fullName: true, email: true, organization: true },
     });
     const byId = new Map(people.map((p) => [p.id, p]));
-    const consent = await this.latestConsent(people.map((p) => p.email));
+    const consent = await latestConsent(
+      this.prisma,
+      people.map((p) => p.email),
+    );
     const items = groups.flatMap((g) => {
       const p = byId.get(g.visitorId);
       if (!p) return [];
@@ -211,7 +215,7 @@ export class InsightsService {
     if (!person || agg._count._all === 0) {
       throw new NotFoundException('errors.visitor.notFound');
     }
-    const consent = await this.latestConsent([person.email]);
+    const consent = await latestConsent(this.prisma, [person.email]);
     return {
       ...person,
       visitCount: agg._count._all,
@@ -224,20 +228,6 @@ export class InsightsService {
         hostName: host?.user.fullName ?? null,
       })),
     };
-  }
-
-  /** Latest consent answer per normalised email ("latest answer wins"). */
-  private async latestConsent(emails: string[]): Promise<Map<string, boolean>> {
-    const keys = [...new Set(emails.map(normalizeConsentEmail))];
-    if (keys.length === 0) return new Map();
-    const rows = await this.prisma.commsConsentEvent.findMany({
-      where: { email: { in: keys } },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-      select: { email: true, consent: true },
-    });
-    const out = new Map<string, boolean>();
-    for (const r of rows) if (!out.has(r.email)) out.set(r.email, r.consent);
-    return out;
   }
 
   async analytics(

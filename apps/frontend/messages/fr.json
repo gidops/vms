@@ -924,21 +924,34 @@
     }
   },
   "consent": {
-    "title": "Abonnements aux communications",
+    "title": "Consentement e-mail",
+    "filterLabel": "Afficher",
+    "filters": {
+      "in": "Consentants",
+      "out": "Non consentants",
+      "all": "Tous"
+    },
+    "count": {
+      "in": "consentants",
+      "out": "non consentants",
+      "all": "personnes"
+    },
     "exportCsv": "Exporter en CSV",
     "exportError": "L'export a échoué. Veuillez réessayer.",
-    "optedIn": "abonnés",
     "searchPlaceholder": "Rechercher un e-mail ou un nom",
     "columns": {
       "email": "E-mail",
       "name": "Nom",
-      "lastAnswered": "Dernière réponse",
-      "sourceVisit": "Visite d'origine"
+      "lastAnswered": "Dernière mise à jour",
+      "status": "Consentement e-mail"
     },
-    "viewVisit": "Voir la visite",
-    "empty": "Personne ne s'est encore abonné.",
-    "noMatches": "Aucun abonnement ne correspond à votre recherche.",
-    "loadError": "Impossible de charger les abonnements.",
+    "empty": {
+      "in": "Personne n'a encore accepté les e-mails.",
+      "out": "Personne ne s'est désinscrit.",
+      "all": "Personne n'a encore répondu."
+    },
+    "noMatches": "Personne ne correspond à votre recherche.",
+    "loadError": "Impossible de charger la liste des consentements e-mail.",
     "withdrawTitle": "Retirer le consentement",
     "withdrawHelp": "Arrête les envois à cet e-mail jusqu'à ce que la personne accepte lors d'une prochaine visite.",
     "email": "E-mail",
@@ -946,11 +959,21 @@
     "withdraw": "Retirer",
     "invalidEmail": "Saisissez une adresse e-mail valide.",
     "confirmTitle": "Retirer le consentement ?",
-    "confirmBody": "<b>{email}</b> quitte la liste des abonnés dès maintenant. Les visites passées restent inchangées.",
+    "confirmBody": "<b>{email}</b> ne recevra plus les actualités des événements Afreximbank.",
     "cancel": "Annuler",
     "done": "Consentement retiré pour {email}.",
     "notFound": "Aucun enregistrement pour cet e-mail.",
-    "error": "Une erreur s'est produite. Veuillez réessayer."
+    "error": "Une erreur s'est produite. Veuillez réessayer.",
+    "toggleLabel": "Consentement e-mail pour {email}",
+    "removeNotAllowed": "Vous ne pouvez pas modifier le consentement e-mail.",
+    "addNotAllowed": "Seul un administrateur système peut réinscrire une personne.",
+    "removeTitle": "Retirer le consentement e-mail ?",
+    "removeBody": "<b>{email}</b> ne recevra plus les actualités des événements Afreximbank.",
+    "confirmRemove": "Retirer le consentement",
+    "addTitle": "Ajouter le consentement e-mail ?",
+    "addBody": "Ne le faites que si <b>{email}</b> a accepté de recevoir les actualités des événements Afreximbank.",
+    "confirmAdd": "Ajouter le consentement",
+    "granted": "{email} recevra à nouveau les actualités des événements."
   },
   "export": {
     "title": "Exporter les données visiteurs",
@@ -958,7 +981,6 @@
     "dateRange": "Période",
     "from": "Du",
     "to": "Au",
-    "hint": "Par date de visite, heure WAT. 366 jours maximum.",
     "format": "Format du fichier",
     "csv": "CSV",
     "excel": "Excel",
@@ -1246,7 +1268,7 @@
       "title": "Visiteurs",
       "views": {
         "directory": "Annuaire",
-        "optIns": "Consentements"
+        "optIns": "Consentement e-mail"
       },
       "countFacility": "visiteurs",
       "countMine": "personnes vous ont rendu visite",
@@ -1255,8 +1277,8 @@
       "noMatches": "Aucun visiteur ne correspond à votre recherche",
       "error": "Impossible de charger les visiteurs. Veuillez réessayer.",
       "viewHistory": "Voir l'historique",
-      "optedIn": "Inscrit",
-      "optedOut": "Désinscrit",
+      "optedIn": "Consentant",
+      "optedOut": "Non consentant",
       "sheetTitle": "Détails du visiteur",
       "visitorInfo": "Informations sur le visiteur",
       "noVisits": "Aucune visite pour le moment",
@@ -1270,7 +1292,7 @@
         "organization": "Organisation",
         "visits": "Visites",
         "lastVisit": "Dernière visite",
-        "comms": "Communications",
+        "comms": "Consentement e-mail",
         "action": "Action"
       }
     },

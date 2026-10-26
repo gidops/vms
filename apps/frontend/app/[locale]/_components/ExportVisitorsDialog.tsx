@@ -22,6 +22,7 @@ import { CalendarDays, Download } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
 import type { DateValue, RangeValue } from "react-aria-components";
+import { FilterPills } from "@/app/[locale]/_components/FilterPills";
 import { reportsApi } from "@/data/reports/reports.api";
 import { addDaysIso, watTodayIso } from "@/shared/wat";
 
@@ -134,7 +135,12 @@ export function ExportVisitorsDialog({
           <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>{t("subtitle")}</DialogDescription>
         </DialogHeader>
-        <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
+        {/* min-w-0: a grid item, so long rows must not stretch the dialog. */}
+        <form
+          onSubmit={submit}
+          className="flex min-w-0 flex-col gap-4"
+          noValidate
+        >
           {failed ? (
             <Alert intent="danger">
               <AlertDescription>{t("error")}</AlertDescription>
@@ -142,18 +148,17 @@ export function ExportVisitorsDialog({
           ) : null}
 
           <div className="flex flex-col gap-1.5">
-            <Label>{t("quickRange")}</Label>
-            <SegmentedControl
+            {/* Same pills as the History tab's range filter. */}
+            <FilterPills<ExportPreset>
               aria-label={t("quickRange")}
               value={preset}
-              onValueChange={(v) => pickPreset(v as ExportPreset)}
+              onValueChange={pickPreset}
               options={[
                 { value: "week", label: t("presets.week") },
                 { value: "month", label: t("presets.month") },
                 { value: "quarter", label: t("presets.quarter") },
                 { value: "custom", label: t("presets.custom") },
               ]}
-              className="max-w-full self-start overflow-x-auto"
             />
           </div>
 
@@ -168,7 +173,9 @@ export function ExportVisitorsDialog({
                   fullWidth
                   className="justify-start"
                   aria-labelledby="export-range-label export-range-value"
-                  aria-describedby="export-range-hint"
+                  aria-describedby={
+                    errorText ? "export-range-error" : undefined
+                  }
                 >
                   <CalendarDays className="size-4" aria-hidden="true" />
                   <span id="export-range-value">
@@ -183,15 +190,15 @@ export function ExportVisitorsDialog({
                 />
               </PopoverContent>
             </Popover>
-            <span
-              id="export-range-hint"
-              className={
-                errorText ? "text-xs text-danger" : "text-xs text-fg-muted"
-              }
-              role={errorText ? "alert" : undefined}
-            >
-              {errorText ?? t("hint")}
-            </span>
+            {errorText ? (
+              <span
+                id="export-range-error"
+                className="text-xs text-danger"
+                role="alert"
+              >
+                {errorText}
+              </span>
+            ) : null}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -205,7 +212,8 @@ export function ExportVisitorsDialog({
                 { value: "xlsx", label: t("excel") },
                 { value: "pdf", label: t("pdf") },
               ]}
-              className="self-start"
+              // Full width, like the Insights / Settings page tabs.
+              className="w-full"
             />
           </div>
 

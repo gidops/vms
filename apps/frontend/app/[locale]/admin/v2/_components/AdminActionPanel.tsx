@@ -52,7 +52,7 @@ export function AdminActionPanel({
         <img
           src="/brand/afreximbank.svg"
           alt=""
-          className="size-8"
+          className="size-12"
           aria-hidden="true"
         />
         <h3 className="whitespace-pre-line text-lg font-semibold">{title}</h3>

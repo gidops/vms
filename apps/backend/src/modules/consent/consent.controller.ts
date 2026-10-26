@@ -8,6 +8,7 @@ import {
   Res,
 } from '@nestjs/common';
 import {
+  GrantConsentInput,
   OptInListQuery,
   PERMISSIONS,
   WithdrawConsentInput,
@@ -22,7 +23,10 @@ import { ZodValidationPipe } from '../../shared/common/pipes/zod-validation.pipe
 import { watToday } from '../../shared/common/wat';
 import { ConsentService } from './consent.service';
 
-/** Comms Opt-ins: the list, its CSV export, and consent withdrawal. */
+/**
+ * Email consent: the list (by current status), its CSV export of consented
+ * people, withdrawal (VMC / Security Manager) and opting back in (System Admin).
+ */
 @Controller('consent')
 export class ConsentController {
   constructor(private readonly consent: ConsentService) {}
@@ -43,7 +47,7 @@ export class ConsentController {
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="aatc-comms-opt-ins_${watToday()}.csv"`,
+      `attachment; filename="aatc-email-consent_${watToday()}.csv"`,
     );
     res.setHeader('Cache-Control', 'no-store');
     res.send(csv);
@@ -58,5 +62,16 @@ export class ConsentController {
     @CurrentUser() principal: AuthUser,
   ) {
     return this.consent.withdraw(input.email, principal.userId);
+  }
+
+  @Post('grant')
+  @HttpCode(200)
+  @RequirePermissions(PERMISSIONS.CONSENT_GRANT)
+  grant(
+    @Body(new ZodValidationPipe(GrantConsentInput))
+    input: GrantConsentInput,
+    @CurrentUser() principal: AuthUser,
+  ) {
+    return this.consent.grant(input.email, principal.userId);
   }
 }

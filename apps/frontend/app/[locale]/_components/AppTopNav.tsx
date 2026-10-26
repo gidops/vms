@@ -15,7 +15,7 @@ import { RoleSwitcher } from "./RoleSwitcher";
 function BrandMark() {
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src="/brand/afreximbank.svg" alt="AATC VMS" className="size-9" />
+    <img src="/brand/afreximbank.svg" alt="AATC VMS" className="size-12" />
   );
 }
 

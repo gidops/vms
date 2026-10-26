@@ -26,9 +26,7 @@ describe("ExportVisitorsDialog", () => {
     const onOpenChange = vi.fn();
     renderWithIntl(<ExportVisitorsDialog open onOpenChange={onOpenChange} />);
     expect(screen.getByText("Export Visitor Data")).toBeInTheDocument();
-    expect(
-      screen.getByText("By visit date, WAT. Up to 366 days."),
-    ).toBeInTheDocument();
+    expect(screen.queryByText(/Up to 366 days/)).toBeNull();
     fireEvent.click(screen.getByRole("radio", { name: "Excel" }));
     fireEvent.click(screen.getByRole("button", { name: "Export" }));
     await waitFor(() =>

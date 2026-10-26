@@ -72,6 +72,15 @@ describe('Role → permission matrix', () => {
     expect(holds(ROLES.READ_ADMIN, PERMISSIONS.CONSENT_MANAGE)).toBe(false);
   });
 
+  it('keeps opting a visitor back in (consent:grant) System Admin only', () => {
+    for (const role of Object.keys(SCOPED_ROLE_DEFS)) {
+      expect([role, has(role, PERMISSIONS.CONSENT_GRANT)]).toEqual([
+        role,
+        false,
+      ]);
+    }
+  });
+
   it('matches the Insights tab matrix', () => {
     const tab = {
       overview: [PERMISSIONS.OVERVIEW_READ],
