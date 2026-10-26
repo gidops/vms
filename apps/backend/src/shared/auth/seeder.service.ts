@@ -16,13 +16,10 @@ const ROLE_DEFS: Record<
 > = {
   [ROLES.ADMIN]: {
     description:
-      'Security Manager — manage users and roles, decide/flag visit requests, bulk exports',
+      'Security Manager — decide/flag visit requests, analytics, bulk exports',
     permissions: [
-      PERMISSIONS.USER_READ,
-      PERMISSIONS.USER_CREATE,
-      PERMISSIONS.USER_UPDATE,
-      PERMISSIONS.USER_DELETE,
-      PERMISSIONS.ROLE_READ,
+      // No user:* / role:read: users and roles are the System Admin's
+      // (the SM's console shows Analytics in place of Users).
       PERMISSIONS.VISIT_READ,
       PERMISSIONS.VISIT_APPROVE,
       PERMISSIONS.VISIT_DENY,
@@ -37,8 +34,9 @@ const ROLE_DEFS: Record<
       PERMISSIONS.HISTORY_READ,
       PERMISSIONS.VISITOR_READ,
       PERMISSIONS.REPORT_READ,
+      // Email consent is read-only for the Security Manager: reception
+      // (consent:manage) removes it and the System Admin adds it back.
       PERMISSIONS.CONSENT_READ,
-      PERMISSIONS.CONSENT_MANAGE,
       // Bulk personal-data exports: Security Manager, System Admin and reception
       // (VMC, V1 parity). Read Admin, Staff and Gate never.
       PERMISSIONS.CONSENT_EXPORT,

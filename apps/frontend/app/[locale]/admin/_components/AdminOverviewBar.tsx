@@ -1,10 +1,14 @@
 "use client";
 
-import { PERMISSIONS } from "@vms/contracts";
+import { PERMISSIONS, ROLES } from "@vms/contracts";
 import { Button } from "@vms/ui";
-import { Download, ShieldCheck, UserPlus } from "lucide-react";
+import { Download, ServerCog, ShieldCheck, UserPlus } from "lucide-react";
 import { useNow, useTranslations } from "next-intl";
 import * as React from "react";
+import {
+  EvacuationRollLink,
+  useEvacuationAlertCount,
+} from "@/app/[locale]/_components/EvacuationIndicator";
 import { ExportVisitorsDialog } from "@/app/[locale]/_components/ExportVisitorsDialog";
 import {
   OverviewBar,
@@ -30,14 +34,16 @@ function Heading() {
   // Security Manager); anything else falls back to "Admin console".
   const consoleKey = `console.${activeRole ?? ""}` as "console.ADMIN";
   const eyebrow = t.has(consoleKey) ? t(consoleKey) : t("eyebrow");
+  // Same icons as the v2 console: system gear for the System Admin.
+  const Icon = activeRole === ROLES.SUPER_ADMIN ? ServerCog : ShieldCheck;
   const first = user?.fullName?.split(" ")[0];
   return (
     <div className="flex flex-col gap-1">
       <span className="flex items-center gap-1.5 text-base font-semibold uppercase tracking-tight text-success">
-        <ShieldCheck className="size-4" aria-hidden="true" />
+        <Icon className="size-4" aria-hidden="true" />
         {eyebrow}
       </span>
-      <h1 className="text-4xl font-semibold text-fg">
+      <h1 className="text-[2rem] font-medium leading-tight text-[#344054]">
         {first
           ? t("greetingName", { part: dayPart(now), name: first })
           : t("greeting", { part: dayPart(now) })}
@@ -46,7 +52,13 @@ function Heading() {
   );
 }
 
-function ActionsPanel({ onAddVisitor }: { onAddVisitor: () => void }) {
+function ActionsPanel({
+  onAddVisitor,
+  evacuationCount,
+}: {
+  onAddVisitor: () => void;
+  evacuationCount: number;
+}) {
   const t = useTranslations("admin.overview.bar");
   const { hasPermission } = useAuth();
   const [exportOpen, setExportOpen] = React.useState(false);
@@ -56,7 +68,10 @@ function ActionsPanel({ onAddVisitor }: { onAddVisitor: () => void }) {
   const none = !canReview && !canAdd && !canExport;
   return (
     <>
-      <h3 className="relative text-lg font-semibold">{t("actionsTitle")}</h3>
+      <div className="relative flex flex-col gap-2">
+        <h3 className="text-lg font-semibold">{t("actionsTitle")}</h3>
+        <EvacuationRollLink count={evacuationCount} />
+      </div>
       <div className="relative flex flex-wrap items-center gap-3">
         {canReview ? (
           <Button asChild intent="accent">
@@ -103,6 +118,7 @@ export function AdminOverviewBar({
   const t = useTranslations("admin.overview.bar");
   const stats = useAdminOverviewStats();
   const queue = useApprovalQueue();
+  const evacuationCount = useEvacuationAlertCount();
   const now = useNow({ updateInterval: 60_000 });
   const value = (n: number | undefined) => n ?? "—";
   const overdue = queue.data ? countOverdue(queue.data.items, now) : 0;
@@ -147,7 +163,13 @@ export function AdminOverviewBar({
       <OverviewBar
         heading={<Heading />}
         stats={cells}
-        panel={<ActionsPanel onAddVisitor={onAddVisitor} />}
+        panelTone={evacuationCount > 0 ? "alert" : "default"}
+        panel={
+          <ActionsPanel
+            onAddVisitor={onAddVisitor}
+            evacuationCount={evacuationCount}
+          />
+        }
       />
       {stats.isError ? (
         <p role="alert" className="text-sm text-danger">

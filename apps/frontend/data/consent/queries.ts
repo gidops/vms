@@ -14,11 +14,29 @@ export function useOptIns(params: OptInListParams) {
   });
 }
 
-export function useWithdrawConsent() {
+/** Refresh the consent list and the Visitors badges after a status change. */
+function useInvalidateConsent() {
   const qc = useQueryClient();
+  return () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: ["consent"] }),
+      qc.invalidateQueries({ queryKey: ["insights"] }),
+    ]);
+}
+
+export function useWithdrawConsent() {
+  const invalidate = useInvalidateConsent();
   return useMutation({
     mutationFn: (email: string) => consentApi.withdraw(email),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["consent"] }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useGrantConsent() {
+  const invalidate = useInvalidateConsent();
+  return useMutation({
+    mutationFn: (email: string) => consentApi.grant(email),
+    onSuccess: invalidate,
   });
 }
 

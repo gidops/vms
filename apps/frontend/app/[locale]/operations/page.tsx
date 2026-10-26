@@ -32,31 +32,33 @@ function Operations() {
 
   return (
     <TopNavShell nav={<AppTopNav centerLabel={t("title")} />}>
-      <div className="mx-auto flex max-w-6xl flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-3xl font-semibold text-primary">{t("title")}</h1>
-          {tabs.length > 1 && tab ? (
-            <div className="max-w-full overflow-x-auto">
-              <SegmentedControl
-                aria-label={t("title")}
-                value={tab}
-                onValueChange={(v) =>
-                  router.replace({ pathname, query: { tab: v } })
-                }
-                options={tabs.map((item) => ({
-                  value: item.value,
-                  label: t(`tabs.${item.value}`),
-                }))}
-              />
-            </div>
-          ) : null}
-        </div>
+      <div className="flex flex-col gap-6">
+        <h1 className="text-3xl font-semibold text-fg">{t("title")}</h1>
+
+        {tabs.length > 1 && tab ? (
+          <div className="max-w-full overflow-x-auto">
+            <SegmentedControl
+              className="min-w-full"
+              aria-label={t("title")}
+              value={tab}
+              onValueChange={(v) =>
+                router.replace({ pathname, query: { tab: v } })
+              }
+              options={tabs.map((item) => ({
+                value: item.value,
+                label: t(`tabs.${item.value}`),
+              }))}
+            />
+          </div>
+        ) : null}
 
         {tab === undefined ? (
           <EmptyState icon={Wrench} title={t("noAccess")} />
         ) : null}
         {tab === "accessCards" ? <AccessCardsTab /> : null}
-        {tab === "deskQr" ? <DeskQrScreen headingLevel={2} /> : null}
+        {tab === "deskQr" ? (
+          <DeskQrScreen headingLevel={2} showHeading={false} />
+        ) : null}
         {tab === "audit" ? <AuditTrailTab /> : null}
       </div>
     </TopNavShell>

@@ -50,7 +50,7 @@ describe("Operations page", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: "Operations" }),
     ).toBeInTheDocument();
-    expect(tabNames()).toEqual(["Access cards", "Desk QR", "Audit trail"]);
+    expect(tabNames()).toEqual(["Access cards", "Walk-in QR", "Audit trail"]);
     expect(screen.getByText("access cards tab")).toBeInTheDocument();
   });
 

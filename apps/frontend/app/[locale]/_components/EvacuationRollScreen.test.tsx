@@ -1,6 +1,6 @@
 import type { EvacuationRollRow } from "@vms/contracts";
 import type { EvacuationRoll } from "@vms/contracts";
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render";
 import { EvacuationRollScreen, groupByFloor } from "./EvacuationRollScreen";
@@ -84,15 +84,39 @@ describe("EvacuationRollScreen", () => {
     expect(
       screen.getAllByText("Hearing, Other: Needs a ramp").length,
     ).toBeGreaterThan(0);
-    // 22:52 UTC is 23:52 in Lagos.
-    expect(banner).toHaveTextContent("Generated 23:52");
+    expect(banner).not.toHaveTextContent("Generated");
     expect(screen.getAllByText("Chukwuma Eze").length).toBeGreaterThan(0);
     expect(screen.getAllByText("23:05").length).toBeGreaterThan(0);
-    expect(
-      screen.getByRole("button", { name: /Print for wardens/ }),
-    ).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^Print$/ })).toBeEnabled();
     // The print copy exists for window.print().
     expect(screen.getByTestId("evacuation-print")).toBeInTheDocument();
+  });
+
+  it("pages the table ten rows at a time and keeps the floor's full count", () => {
+    const rows = Array.from({ length: 12 }, (_, i) =>
+      row(`v${i + 1}`, "5th Floor", `Visitor ${i + 1}`),
+    );
+    rollState.data = {
+      generatedAt: new Date("2026-10-18T22:52:00Z"),
+      count: rows.length,
+      checkedInTotal: 20,
+      rows,
+    };
+    renderWithIntl(<EvacuationRollScreen />);
+    const table = () => screen.getByRole("table", { name: "Evacuation Roll" });
+    expect(within(table()).getByText("Visitor 10")).toBeInTheDocument();
+    expect(within(table()).queryByText("Visitor 11")).not.toBeInTheDocument();
+    expect(within(table()).getByText(/· 12/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    expect(within(table()).getByText("Visitor 11")).toBeInTheDocument();
+    expect(within(table()).queryByText("Visitor 1")).not.toBeInTheDocument();
+    expect(within(table()).getByText(/· 12/)).toBeInTheDocument();
+    // Printing still covers the whole roll.
+    // (The print cell holds the name plus the assistance line.)
+    const printed = screen.getByTestId("evacuation-print").textContent ?? "";
+    expect(printed).toContain("Visitor 1Mobility");
+    expect(printed).toContain("Visitor 12");
   });
 
   it("shows the green empty state and disables printing", () => {
@@ -111,9 +135,7 @@ describe("EvacuationRollScreen", () => {
         "16 visitors are checked in. None asked for assistance.",
       ),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Print for wardens/ }),
-    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Print$/ })).toBeDisabled();
     expect(screen.queryByTestId("evacuation-print")).not.toBeInTheDocument();
   });
 });

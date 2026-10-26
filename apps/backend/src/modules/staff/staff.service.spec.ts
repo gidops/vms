@@ -131,3 +131,36 @@ describe('StaffService.activityFeed category filter', () => {
     expect(actions).not.toContain('visit.approved');
   });
 });
+
+describe('StaffService.activityFeed search', () => {
+  it("narrows the host's visits to visitors matching the name or email", async () => {
+    const visitFind = jest.fn().mockResolvedValue([]);
+    const prisma = {
+      visit: { findMany: visitFind },
+      alert: { findMany: jest.fn().mockResolvedValue([]) },
+    } as unknown as PrismaService;
+    const service = new StaffService(prisma);
+
+    const page = await service.activityFeed('me', {
+      page: 1,
+      pageSize: 12,
+      sortDir: 'desc',
+      search: 'ngozi',
+    });
+
+    const where = visitFind.mock.calls[0][0].where;
+    // Still scoped to the caller's own visits…
+    expect(where.OR).toEqual([
+      { createdById: 'me' },
+      { host: { userId: 'me' } },
+    ]);
+    // …and only those whose visitor matches.
+    expect(where.visitor).toEqual({
+      OR: [
+        { fullName: { contains: 'ngozi', mode: 'insensitive' } },
+        { email: { contains: 'ngozi', mode: 'insensitive' } },
+      ],
+    });
+    expect(page.items).toEqual([]);
+  });
+});

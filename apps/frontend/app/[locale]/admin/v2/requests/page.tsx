@@ -2,6 +2,7 @@
 
 import { TopNavShell } from "@vms/ui";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
 import { RequestsAlertsScreen } from "@/app/[locale]/_components/RequestsAlertsScreen";
@@ -37,17 +38,22 @@ function PendingApprovalsScreen() {
 }
 
 /**
- * Admin console v2 — Requests tab. Merges the old approval queue
+ * Admin console v2 — Recent Activity tab (formerly Requests & Alerts). Merges the old approval queue
  * (`/admin/requests`) and activity inbox (`/admin/activity`): by default the
  * VMC Requests & Alerts screen (approve/deny happen in the detail sheet);
  * `?layout=staff` previews the staff-style pending-approvals table.
  */
 function Requests() {
+  const tNav = useTranslations("nav");
   const layout = useSearchParams().get("layout");
   return layout === "staff" ? (
     <PendingApprovalsScreen />
   ) : (
-    <RequestsAlertsScreen app="admin" scope="all" />
+    <RequestsAlertsScreen
+      app="admin"
+      scope="all"
+      title={tNav("recentActivity")}
+    />
   );
 }
 

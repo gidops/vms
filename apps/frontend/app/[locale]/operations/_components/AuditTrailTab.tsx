@@ -10,13 +10,11 @@ import {
   AlertDescription,
   Button,
   DetailDrawer,
-  DetailSection,
   EmptyState,
   Input,
   Pagination,
   RecordTable,
   SearchInput,
-  SegmentedControl,
   Select,
   SelectContent,
   SelectItem,
@@ -33,6 +31,9 @@ import {
 import { Download, ScrollText } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
+import { FilterPills } from "@/app/[locale]/_components/FilterPills";
+import { Field } from "@/app/[locale]/_components/visit-detail/helpers";
+import { SheetSection } from "@/app/[locale]/_components/visit-detail/sections/SheetSection";
 import type { AuditParams, AuditRow } from "@/data/audit/audit.api";
 import { useAuditTrail, useExportAudit } from "@/data/audit/queries";
 import { useAuth } from "@/shared/auth/AuthContext";
@@ -77,58 +78,62 @@ function AuditRowSheet({
   const tCat = useTranslations("operations.audit.categories");
   const locale = useLocale();
   const label = useActionLabel();
-  const fields: [string, React.ReactNode][] = row
+  // [label, value, spans both columns] — long values get the full width.
+  const fields: [string, React.ReactNode, boolean?][] = row
     ? [
         [t("columns.time"), formatWatDateTime(row.createdAt, locale)],
-        [t("columns.action"), `${label(row.action)} (${row.action})`],
         [
           t("columns.category"),
           tCat.has(row.category) ? tCat(row.category) : row.category,
         ],
+        [t("columns.action"), `${label(row.action)} (${row.action})`, true],
         [
           t("columns.user"),
           row.actor
             ? `${row.actor.fullName} · ${row.actor.email}`
             : t("system"),
+          true,
         ],
         [
           t("columns.entity"),
           `${row.entityType}${row.entityId ? ` · ${row.entityId}` : ""}`,
+          true,
         ],
         [t("columns.ip"), row.ip ?? "—"],
-        [t("userAgent"), row.userAgent ?? "—"],
         [t("correlationId"), row.correlationId ?? "—"],
+        [t("userAgent"), row.userAgent ?? "—", true],
       ]
     : [];
   return (
     <DetailDrawer
       open={!!row}
+      side="start"
       onOpenChange={(open) => !open && onClose()}
-      title={row ? label(row.action) : t("title")}
-      description={row ? formatWatDateTime(row.createdAt, locale) : undefined}
+      title={t("sheetTitle")}
     >
       {row ? (
         <>
-          <DetailSection title={t("details")}>
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-              {fields.map(([k, v]) => (
-                <React.Fragment key={k}>
-                  <dt className="text-fg-muted">{k}</dt>
-                  <dd className="break-all text-fg">{v}</dd>
-                </React.Fragment>
+          <SheetSection title={t("details")}>
+            <div className="grid grid-cols-2 gap-4">
+              {fields.map(([k, v, wide]) => (
+                <div key={k} className={wide ? "col-span-2" : undefined}>
+                  <Field label={k}>
+                    <span className="break-all">{v}</span>
+                  </Field>
+                </div>
               ))}
-            </dl>
-          </DetailSection>
-          <DetailSection title={t("metadata")}>
+            </div>
+          </SheetSection>
+          <SheetSection title={t("metadata")}>
             <pre
               dir="ltr"
-              className="max-h-96 overflow-auto rounded-md bg-surface-muted p-3 text-xs text-fg"
+              className="max-h-96 overflow-auto rounded-lg bg-surface-muted p-3 text-xs text-fg"
             >
               {row.metadata == null
                 ? "—"
                 : JSON.stringify(row.metadata, null, 2)}
             </pre>
-          </DetailSection>
+          </SheetSection>
         </>
       ) : null}
     </DetailDrawer>
@@ -175,31 +180,30 @@ export function AuditTrailTab() {
 
   return (
     <section className="flex flex-col gap-6">
+      {/* Laid out like Insights → History: range pills, then Export. */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold text-primary">{t("title")}</h2>
-        <div className="flex flex-wrap items-center gap-3">
-          <SegmentedControl
-            aria-label={t("range")}
-            value={range}
-            onValueChange={(v) => {
-              setRange(v as Range);
-              reset();
-            }}
-            options={(["today", "7d", "30d", "custom"] as const).map(
-              (value) => ({ value, label: t(`ranges.${value}`) }),
-            )}
-          />
-          {canExport ? (
-            <Button
-              onClick={() => exporter.mutate(params)}
-              disabled={exporter.isPending || customInvalid}
-              aria-busy={exporter.isPending || undefined}
-            >
-              <Download className="size-4" aria-hidden="true" />
-              {t("export")}
-            </Button>
-          ) : null}
-        </div>
+        <FilterPills<Range>
+          aria-label={t("range")}
+          value={range}
+          onValueChange={(v) => {
+            setRange(v);
+            reset();
+          }}
+          options={(["today", "7d", "30d", "custom"] as const).map((value) => ({
+            value,
+            label: t(`ranges.${value}`),
+          }))}
+        />
+        {canExport ? (
+          <Button
+            onClick={() => exporter.mutate(params)}
+            disabled={exporter.isPending || customInvalid}
+            aria-busy={exporter.isPending || undefined}
+          >
+            <Download className="size-4" aria-hidden="true" />
+            {t("export")}
+          </Button>
+        ) : null}
       </div>
 
       {range === "custom" ? (

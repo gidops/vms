@@ -240,7 +240,12 @@ function errorText(err: unknown, fallback: string): string {
  */
 export function DeskQrScreen({
   headingLevel = 1,
-}: { headingLevel?: 1 | 2 } = {}) {
+  showHeading = true,
+}: {
+  headingLevel?: 1 | 2;
+  /** Off where the host already names the screen (the Operations tab). */
+  showHeading?: boolean;
+} = {}) {
   // Under another page's h1 (another page) the title steps down a level.
   const Heading = headingLevel === 2 ? "h2" : "h1";
   const headingSize = headingLevel === 2 ? "text-2xl" : "text-3xl";
@@ -293,14 +298,23 @@ export function DeskQrScreen({
   };
 
   // Staff/VMC page header: title with the page's actions on the same row.
-  const header = (actions?: React.ReactNode) => (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <Heading className={`${headingSize} font-semibold text-primary`}>
-        {t("title")}
-      </Heading>
-      {actions ? <div className="flex flex-wrap gap-3">{actions}</div> : null}
-    </div>
-  );
+  // Without the title (Operations tab) the actions sit on the end side alone.
+  const header = (actions?: React.ReactNode) =>
+    showHeading || actions ? (
+      <div
+        className={cn(
+          "flex flex-wrap items-center gap-3",
+          showHeading ? "justify-between" : "justify-end",
+        )}
+      >
+        {showHeading ? (
+          <Heading className={`${headingSize} font-semibold text-primary`}>
+            {t("title")}
+          </Heading>
+        ) : null}
+        {actions ? <div className="flex flex-wrap gap-3">{actions}</div> : null}
+      </div>
+    ) : null;
 
   if (qr.isLoading) {
     return (

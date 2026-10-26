@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { ExportVisitsQuery } from '@vms/contracts';
+import { normalizeConsentEmail, type ExportVisitsQuery } from '@vms/contracts';
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import { randomUUID } from 'node:crypto';
@@ -10,6 +10,7 @@ import { WAT_OFFSET_MS, formatWat, watDayRange } from '../../shared/common/wat';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
 import { EventPublisher } from '../../shared/events/event-publisher';
 import { TransactionManager } from '../../shared/events/transaction.manager';
+import { latestConsent } from '../consent/latest-consent';
 import { evacuationAssistLabel } from './helpers/evacuation-assist';
 
 /** Rows fetched per round-trip while streaming an export. */
@@ -34,7 +35,9 @@ export const EXPORT_COLUMNS = [
   'Badge',
   'Evacuation assist',
   'Evacuation assistance',
-  'Comms consent',
+  // The person's current status (latest answer wins), not the answer given
+  // at this visit, so a later opt-out is never mailed from an old export.
+  'Email consent',
   'Email status',
   'Created by',
 ] as const;
@@ -160,8 +163,15 @@ export class VisitExportService {
     return out;
   }
 
-  /** One export row in EXPORT_COLUMNS order. Dates are WAT Date objects. */
-  toRow(v: ExportVisit, emailStatus?: string): (string | Date | null)[] {
+  /**
+   * One export row in EXPORT_COLUMNS order. Dates are WAT Date objects.
+   * `consent` is the visitor's current email-consent status (null = never asked).
+   */
+  toRow(
+    v: ExportVisit,
+    emailStatus?: string,
+    consent: boolean | null = null,
+  ): (string | Date | null)[] {
     const card = v.pass?.accessCard;
     return [
       v.referenceCode ?? '',
@@ -182,7 +192,7 @@ export class VisitExportService {
       card ? [card.zone, card.cardNumber].filter(Boolean).join(' · ') : '',
       yesNo(v.needsEvacuationAssist),
       evacuationAssistLabel(v.evacuationAssistTypes, v.evacuationAssistOther),
-      yesNo(v.commsConsent),
+      yesNo(consent),
       emailStatusLabel(emailStatus),
       v.createdByName ?? '',
     ];
@@ -194,8 +204,20 @@ export class VisitExportService {
     for (;;) {
       const batch = await this.fetchBatch(range, cursor);
       if (batch.length === 0) return;
-      const statuses = await this.emailStatuses(batch.map((v) => v.id));
-      yield batch.map((v) => this.toRow(v, statuses.get(v.id)));
+      const [statuses, consent] = await Promise.all([
+        this.emailStatuses(batch.map((v) => v.id)),
+        latestConsent(
+          this.prisma,
+          batch.map((v) => v.visitor.email),
+        ),
+      ]);
+      yield batch.map((v) =>
+        this.toRow(
+          v,
+          statuses.get(v.id),
+          consent.get(normalizeConsentEmail(v.visitor.email)) ?? null,
+        ),
+      );
       if (batch.length < BATCH) return;
       cursor = batch[batch.length - 1].id;
     }

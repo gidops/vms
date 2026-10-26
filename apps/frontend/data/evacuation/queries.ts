@@ -7,8 +7,11 @@ import { evacuationApi } from "./evacuation.api";
  */
 export const EVACUATION_REFRESH_MS = 60_000;
 
-export function useEvacuationRoll() {
+export function useEvacuationRoll({
+  enabled = true,
+}: { enabled?: boolean } = {}) {
   return useQuery({
+    enabled,
     queryKey: ["visits", "evacuation-roll"] as const,
     queryFn: () => evacuationApi.roll(),
     refetchInterval: EVACUATION_REFRESH_MS,

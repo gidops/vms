@@ -10,20 +10,16 @@ import {
 import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
 import type { DateValue, RangeValue } from "react-aria-components";
+import {
+  filterPill as pill,
+  filterPillState as pillState,
+} from "@/app/[locale]/_components/FilterPills";
 
 export type RecordsRange = "all" | "7d" | "custom";
 export interface DateRange {
   dateFrom?: string;
   dateTo?: string;
 }
-
-const pill =
-  "rounded-full border bg-surface px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]";
-
-const pillState = (active: boolean) =>
-  active
-    ? "border-primary text-primary"
-    : "border-border text-fg-muted hover:text-fg";
 
 /**
  * The first pill shows a live clock and just *labels* the default "All" view; it

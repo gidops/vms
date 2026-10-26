@@ -80,9 +80,9 @@ describe("DeskQrScreen", () => {
 
   it("shows the QR, its link, today's scans and where codes go", () => {
     renderWithIntl(<DeskQrScreen />);
-    const card = screen.getByRole("region", { name: /Desk QR/ });
+    const card = screen.getByRole("region", { name: /Walk-in QR/ });
     expect(within(card).getByText("Active")).toBeInTheDocument();
-    expect(within(card).getByAltText("Desk QR code")).toHaveAttribute(
+    expect(within(card).getByAltText("Walk-in QR code")).toHaveAttribute(
       "src",
       "blob:qr",
     );
@@ -103,11 +103,20 @@ describe("DeskQrScreen", () => {
       ).toBeInTheDocument();
   });
 
+  it("drops its title under the Operations tab but keeps the header actions", () => {
+    renderWithIntl(<DeskQrScreen headingLevel={2} showHeading={false} />);
+    expect(screen.queryByRole("heading", { level: 2 })).toBeNull();
+    for (const name of ["Print poster", "Download PNG"])
+      expect(
+        screen.getByRole("button", { name: new RegExp(name) }),
+      ).toBeInTheDocument();
+  });
+
   it("asks before New QR and only rotates on confirm", async () => {
     renderWithIntl(<DeskQrScreen />);
     fireEvent.click(screen.getByRole("button", { name: /New QR/ }));
     const dialog = await screen.findByRole("dialog");
-    expect(dialog).toHaveTextContent("Replace the desk QR?");
+    expect(dialog).toHaveTextContent("Replace the walk-in QR?");
     expect(dialog).toHaveTextContent("stops working immediately");
     expect(actions.rotate).not.toHaveBeenCalled();
     fireEvent.click(
@@ -170,15 +179,15 @@ describe("DeskQrScreen", () => {
   it("creates the desk QR from the empty state", async () => {
     deskQr.data = null;
     renderWithIntl(<DeskQrScreen />);
-    expect(screen.getByText("No desk QR yet")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Create desk QR" }));
+    expect(screen.getByText("No walk-in QR yet")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Create walk-in QR" }));
     const dialog = await screen.findByRole("dialog");
     fireEvent.change(
       within(dialog).getByLabelText("Email for verification codes"),
       { target: { value: "reception@aatc.org" } },
     );
     fireEvent.click(
-      within(dialog).getByRole("button", { name: "Create desk QR" }),
+      within(dialog).getByRole("button", { name: "Create walk-in QR" }),
     );
     expect(actions.create).toHaveBeenCalledWith({
       codeEmail: "reception@aatc.org",
@@ -190,9 +199,11 @@ describe("DeskQrScreen", () => {
     deskQr.data = null;
     renderWithIntl(<DeskQrScreen />);
     expect(
-      screen.getByText("Reception hasn't set up the desk QR yet."),
+      screen.getByText("Reception hasn't set up the walk-in QR yet."),
     ).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Create desk QR" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Create walk-in QR" }),
+    ).toBeNull();
   });
 
   it("shows a spinner while loading and a retry on error", () => {
@@ -203,7 +214,9 @@ describe("DeskQrScreen", () => {
     const refetch = vi.fn();
     deskQr = { isLoading: false, isError: true, refetch };
     renderWithIntl(<DeskQrScreen />);
-    expect(screen.getByText("Couldn't load the desk QR.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Couldn't load the walk-in QR."),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Try again/ }));
     expect(refetch).toHaveBeenCalled();
   });

@@ -8,6 +8,7 @@ import type * as React from "react";
 import { useInboxUnread } from "@/data/requests/queries";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/shared/auth/AuthContext";
+import { adminConsoleRole } from "@/shared/auth/adminConsoleRole";
 import { AccountMenu } from "./AccountMenu";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { RoleSwitcher } from "./RoleSwitcher";
@@ -15,30 +16,24 @@ import { RoleSwitcher } from "./RoleSwitcher";
 function BrandMark() {
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src="/brand/afreximbank.svg" alt="AATC VMS" className="size-9" />
+    <img src="/brand/afreximbank.svg" alt="AATC VMS" className="size-12" />
   );
 }
-
-/** Admin console tabs after Overview · Requests, in display order. */
-const ADMIN_TABS = [
-  {
-    value: "users",
-    route: "/admin/v2/users",
-    permission: PERMISSIONS.USER_READ,
-  },
-] as const;
 
 export interface AppTopNavProps {
   /**
    * Primary view toggle. The VMC dashboard toggles schedule/requests; the staff
    * dashboard toggles schedule/visits/updates; the admin console toggles
-   * overview/requests plus the permission-gated users tab (analytics,
-   * evacuation and opt-ins live on Insights; the desk QR on Operations). Omit on dashboards with no toggle.
+   * Overview · Recent Activity · Users (System Admin) or Overview · Pending
+   * Approvals · Recent Activity (Security Manager). Analytics, evacuation and
+   * opt-ins live on Insights; the desk QR on Operations. Omit on dashboards
+   * with no toggle.
    */
   active?:
     | "schedule"
     | "visits"
     | "requests"
+    | "approvals"
     | "updates"
     | "overview"
     | "users";
@@ -78,30 +73,47 @@ export function AppTopNav({
   const tNav = useTranslations("nav");
   const router = useRouter();
   const { activeRole, hasPermission } = useAuth();
+  const securityManager = adminConsoleRole(hasPermission) === "securityManager";
 
   // The nav bubble shows the current user's unread count; staff see their own
   // scope, the VMC sees all. An explicit `requestsCount` overrides it.
   const unreadQ = useInboxUnread("all", app === "staff" ? "mine" : "all");
   const count = requestsCount ?? unreadQ.data?.unread ?? undefined;
 
-  const options =
+  const options: {
+    value: string;
+    label: string;
+    route: string;
+    count?: number;
+  }[] =
     app === "admin"
       ? [
           { value: "overview", label: tNav("overview"), route: "/admin/v2" },
+          // The Security Manager's work queue comes before the activity feed.
+          ...(securityManager
+            ? [
+                {
+                  value: "approvals",
+                  label: tNav("pendingApprovals"),
+                  route: "/admin/v2/approvals",
+                },
+              ]
+            : []),
           {
             value: "requests",
-            label: tNav("requests"),
+            label: tNav("recentActivity"),
             route: "/admin/v2/requests",
             count,
           },
-          // Each further tab only for roles that hold its permission.
-          ...ADMIN_TABS.filter((tab) => hasPermission(tab.permission)).map(
-            (tab) => ({
-              value: tab.value,
-              label: tNav(tab.value),
-              route: tab.route,
-            }),
-          ),
+          ...(hasPermission(PERMISSIONS.USER_READ)
+            ? [
+                {
+                  value: "users",
+                  label: tNav("users"),
+                  route: "/admin/v2/users",
+                },
+              ]
+            : []),
         ]
       : app === "staff"
         ? [

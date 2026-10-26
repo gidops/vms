@@ -8,12 +8,10 @@ import {
   Badge,
   Button,
   DetailDrawer,
-  DetailSection,
   EmptyState,
   Pagination,
   RecordTable,
   SearchInput,
-  SegmentedControl,
   Spinner,
   StatusBadge,
   Table,
@@ -23,11 +21,14 @@ import {
   TableHeader,
   TableRow,
 } from "@vms/ui";
-import { Users } from "lucide-react";
+import { CalendarDays, Users } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { CommsOptInsScreen } from "@/app/[locale]/_components/CommsOptInsScreen";
-import type { VisitorItem } from "@/data/insights/insights.api";
+import { FilterPills } from "@/app/[locale]/_components/FilterPills";
+import { Field } from "@/app/[locale]/_components/visit-detail/helpers";
+import { SheetSection } from "@/app/[locale]/_components/visit-detail/sections/SheetSection";
+import type { VisitorDetail, VisitorItem } from "@/data/insights/insights.api";
 import {
   useInsightsVisitor,
   useInsightsVisitors,
@@ -49,7 +50,34 @@ function OptInBadge({ value }: { value: boolean | null }) {
   );
 }
 
-/** One visitor's summary and visit history, in a side sheet. */
+/** One past visit, styled like the visit sheet's notification rows. */
+function HistoryRow({ visit }: { visit: VisitorDetail["visits"][number] }) {
+  const locale = useLocale();
+  const when = visit.checkInAt ?? visit.scheduledAt;
+  return (
+    <li className="flex items-start gap-3 border-t border-border py-3 first:border-t-0">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-fg-muted">
+        <CalendarDays className="size-5" aria-hidden="true" />
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="text-sm font-semibold text-fg">
+          {when ? formatWatDateTime(when, locale) : "—"}
+        </span>
+        <span className="text-sm text-fg-muted">
+          {[visit.purpose, visit.hostName, visit.floor]
+            .filter(Boolean)
+            .join(" · ")}
+        </span>
+      </div>
+      <StatusBadge status={visit.status} />
+    </li>
+  );
+}
+
+/**
+ * One visitor's profile and visit history, built from the Visit Details sheet's
+ * parts (left-side drawer, collapsible card sections, identity card, field grid).
+ */
 function VisitorSheet({
   id,
   onClose,
@@ -59,18 +87,19 @@ function VisitorSheet({
 }) {
   const t = useTranslations("insights.visitors");
   const locale = useLocale();
+  const nf = new Intl.NumberFormat(locale);
   const { data, isLoading, isError } = useInsightsVisitor(id);
   const date = (d: string | null) => (d ? formatWatDateTime(d, locale) : "—");
 
   return (
     <DetailDrawer
       open={!!id}
+      side="start"
       onOpenChange={(open) => !open && onClose()}
-      title={data?.fullName ?? t("sheetTitle")}
-      description={data ? data.email : undefined}
+      title={t("sheetTitle")}
     >
       {isLoading ? (
-        <div className="flex justify-center py-12">
+        <div className="flex justify-center py-10">
           <Spinner />
         </div>
       ) : isError || !data ? (
@@ -79,47 +108,64 @@ function VisitorSheet({
         </Alert>
       ) : (
         <>
-          <DetailSection title={t("summary")}>
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-              <dt className="text-fg-muted">{t("columns.organization")}</dt>
-              <dd className="text-fg">{data.organization ?? "—"}</dd>
-              <dt className="text-fg-muted">{t("columns.visits")}</dt>
-              <dd className="text-fg">{data.visitCount}</dd>
-              <dt className="text-fg-muted">{t("firstVisit")}</dt>
-              <dd className="text-fg">{date(data.firstVisitAt)}</dd>
-              <dt className="text-fg-muted">{t("columns.lastVisit")}</dt>
-              <dd className="text-fg">{date(data.lastVisitAt)}</dd>
-              <dt className="text-fg-muted">{t("avgStay")}</dt>
-              <dd className="text-fg">
+          <SheetSection title={t("visitorInfo")}>
+            <div className="flex items-start justify-between gap-3 rounded-lg bg-surface-muted p-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <Avatar name={data.fullName} size="md" />
+                <div className="flex min-w-0 flex-col">
+                  <span className="font-medium text-fg">{data.fullName}</span>
+                  {data.organization ? (
+                    <span className="text-sm text-fg-muted">
+                      {data.organization}
+                    </span>
+                  ) : null}
+                  <span className="text-sm text-fg-muted">
+                    {data.email}
+                    {data.phone ? ` · ${data.phone}` : ""}
+                  </span>
+                </div>
+              </div>
+              <OptInBadge value={data.commsOptIn} />
+            </div>
+          </SheetSection>
+
+          <SheetSection title={t("summary")}>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label={t("columns.visits")}>
+                {nf.format(data.visitCount)}
+              </Field>
+              <Field label={t("avgStay")}>
                 {data.avgDurationMinutes === null
                   ? "—"
                   : t("minutes", { count: data.avgDurationMinutes })}
-              </dd>
-              <dt className="text-fg-muted">{t("columns.comms")}</dt>
-              <dd>
-                <OptInBadge value={data.commsOptIn} />
-              </dd>
-            </dl>
-          </DetailSection>
-          <DetailSection title={t("visitHistory")}>
-            <ol className="flex flex-col divide-y divide-border">
-              {data.visits.map((v) => (
-                <li key={v.id} className="flex flex-col gap-1 py-3">
-                  <span className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-medium text-fg">
-                      {date(v.scheduledAt)}
-                    </span>
-                    <StatusBadge status={v.status} />
-                  </span>
-                  <span className="text-sm text-fg-muted">
-                    {[v.purpose, v.hostName, v.floor]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </DetailSection>
+              </Field>
+              <Field label={t("firstVisit")}>{date(data.firstVisitAt)}</Field>
+              <Field label={t("columns.lastVisit")}>
+                {date(data.lastVisitAt)}
+              </Field>
+            </div>
+          </SheetSection>
+
+          <SheetSection
+            title={
+              <span className="inline-flex items-center gap-2">
+                {t("visitHistory")}
+                <Badge intent="neutral" tone="outline" size="sm">
+                  {nf.format(data.visits.length)}
+                </Badge>
+              </span>
+            }
+          >
+            {data.visits.length ? (
+              <ul>
+                {data.visits.map((v) => (
+                  <HistoryRow key={v.id} visit={v} />
+                ))}
+              </ul>
+            ) : (
+              <p className="py-3 text-sm text-fg-subtle">{t("noVisits")}</p>
+            )}
+          </SheetSection>
         </>
       )}
     </DetailDrawer>
@@ -272,22 +318,19 @@ export function VisitorsTab() {
 
   return (
     <section className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold text-primary">{t("title")}</h2>
-        {showOptIns ? (
-          <SegmentedControl
-            aria-label={t("title")}
-            value={view}
-            onValueChange={(v) => setView(v as View)}
-            options={[
-              { value: "directory", label: t("views.directory") },
-              { value: "optIns", label: t("views.optIns") },
-            ]}
-          />
-        ) : null}
-      </div>
+      {showOptIns ? (
+        <FilterPills<View>
+          aria-label={t("title")}
+          value={view}
+          onValueChange={setView}
+          options={[
+            { value: "directory", label: t("views.directory") },
+            { value: "optIns", label: t("views.optIns") },
+          ]}
+        />
+      ) : null}
       {view === "optIns" && showOptIns ? (
-        <CommsOptInsScreen headingLevel={2} />
+        <CommsOptInsScreen />
       ) : (
         <Directory />
       )}

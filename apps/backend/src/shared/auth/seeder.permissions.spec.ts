@@ -70,6 +70,34 @@ describe('Role → permission matrix', () => {
     expect(holds(ROLES.VMC_ADMIN, PERMISSIONS.CONSENT_MANAGE)).toBe(true);
     expect(holds(ROLES.READ_ADMIN, PERMISSIONS.CONSENT_EXPORT)).toBe(false);
     expect(holds(ROLES.READ_ADMIN, PERMISSIONS.CONSENT_MANAGE)).toBe(false);
+    // Security Manager and Read Admin see consent but never change it.
+    expect(has(ROLES.ADMIN, PERMISSIONS.CONSENT_READ)).toBe(true);
+    expect(has(ROLES.ADMIN, PERMISSIONS.CONSENT_MANAGE)).toBe(false);
+    expect(has(ROLES.ADMIN, PERMISSIONS.CONSENT_GRANT)).toBe(false);
+  });
+
+  it('keeps users and roles System Admin only (the Security Manager included)', () => {
+    const userAdmin = [
+      PERMISSIONS.USER_READ,
+      PERMISSIONS.USER_CREATE,
+      PERMISSIONS.USER_UPDATE,
+      PERMISSIONS.USER_DELETE,
+      PERMISSIONS.ROLE_READ,
+    ];
+    for (const role of Object.keys(SCOPED_ROLE_DEFS)) {
+      for (const perm of userAdmin) {
+        expect([role, perm, has(role, perm)]).toEqual([role, perm, false]);
+      }
+    }
+  });
+
+  it('keeps opting a visitor back in (consent:grant) System Admin only', () => {
+    for (const role of Object.keys(SCOPED_ROLE_DEFS)) {
+      expect([role, has(role, PERMISSIONS.CONSENT_GRANT)]).toEqual([
+        role,
+        false,
+      ]);
+    }
   });
 
   it('matches the Insights tab matrix', () => {

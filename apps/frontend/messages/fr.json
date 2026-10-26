@@ -15,15 +15,19 @@
     "notifications": "Notifications",
     "notificationsUnread": "Notifications, {count} non lues",
     "overview": "Vue d'ensemble",
+    "pendingApprovals": "Approbations en attente",
+    "recentActivity": "Activité récente",
     "users": "Utilisateurs",
     "analytics": "Analyses",
     "evacuation": "Évacuation",
     "optIns": "Abonnements",
-    "deskQr": "QR accueil",
+    "deskQr": "QR sans rendez-vous",
     "insights": "Aperçus",
     "operations": "Opérations"
   },
   "login": {
+    "showPassword": "Afficher le mot de passe",
+    "hidePassword": "Masquer le mot de passe",
     "title": "Connexion",
     "email": "E-mail",
     "emailPlaceholder": "nom@aatc.org",
@@ -93,7 +97,7 @@
       "action": "Action",
       "guestCount": "Nb d'invités"
     },
-    "guestCount": "{count} invité(s)",
+    "guestCount": "{count, plural, one {# invité} other {# invités}}",
     "onsiteElapsed": "{time} h",
     "noVisits": "Aucune visite à afficher.",
     "noMatches": "Aucune visite ne correspond à votre recherche ou à vos filtres."
@@ -295,8 +299,8 @@
     "evacuationAssistYes": "A besoin d'aide pour l'évacuation",
     "evacuationAssistNo": "Aide à l'évacuation : non",
     "sources": {
-      "deskQr": "QR de l'accueil (auto-enregistrement)",
-      "selfRegistered": "Le visiteur, via le QR de l'accueil"
+      "deskQr": "QR sans rendez-vous (auto-enregistrement)",
+      "selfRegistered": "Le visiteur, via le QR sans rendez-vous"
     }
   },
   "language": {
@@ -315,6 +319,8 @@
     "READ_ADMIN": "Administrateur (lecture seule)"
   },
   "signup": {
+    "showPassword": "Afficher le mot de passe",
+    "hidePassword": "Masquer le mot de passe",
     "title": "Créer un compte administrateur",
     "subtitle": "Configurez le premier administrateur du VMS",
     "fullName": "Nom complet",
@@ -478,7 +484,7 @@
       "expand": "Développer la barre latérale",
       "evacuation": "Liste d'évacuation",
       "optIns": "Abonnements aux communications",
-      "deskQr": "QR de l'accueil"
+      "deskQr": "QR sans rendez-vous"
     },
     "requests": {
       "title": "Demandes et approbations",
@@ -549,13 +555,13 @@
       "quickActions": {
         "title": "Actions rapides",
         "addVisitor": "Ajouter un visiteur",
-        "exportData": "Exporter les données",
         "printBadge": "Imprimer un badge",
         "scanQr": "Scanner un QR",
         "comingSoon": "Bientôt disponible",
         "exportFailed": "L'export a échoué. Réessayez."
       },
       "activity": {
+        "empty": "Aucune activité récente pour l'instant.",
         "loadError": "Impossible de charger les données. Veuillez réessayer.",
         "title": "Activité récente",
         "viewAll": "Tout voir",
@@ -658,6 +664,7 @@
   "adminV2": {
     "overview": {
       "eyebrow": "Console d'administration · {role}",
+      "openApprovals": "Ouvrir les approbations en attente",
       "welcome": "Bienvenue {name}",
       "pendingApprovals": "Approbations en attente",
       "pendingCount": "{count, plural, =0 {Aucune} one {# demande} other {# demandes}}",
@@ -665,8 +672,8 @@
       "trendDown": "−{count} par rapport à hier"
     },
     "panel": {
-      "reviewTitle": "Des demandes attendent\nvotre décision",
       "reviewCta": "Examiner les demandes",
+      "historyCta": "Historique des visites",
       "activityTitle": "L'activité du jour\nen un coup d'œil",
       "activityCta": "Voir l'activité"
     },
@@ -684,7 +691,13 @@
     },
     "approvals": {
       "title": "Approbations en attente",
+      "columns": {
+        "hostFloor": "Hôte / Étage"
+      },
       "review": "Examiner",
+      "view": "Voir",
+      "reviewFor": "Examiner {name}",
+      "viewFor": "Voir {name}",
       "empty": "Aucune demande en attente de décision.",
       "bucket": {
         "all": "Toutes",
@@ -694,6 +707,7 @@
       }
     },
     "users": {
+      "noAccess": "Seul un administrateur système peut gérer les utilisateurs.",
       "searchPlaceholder": "Rechercher par nom ou e-mail…",
       "allRoles": "Tous les rôles",
       "createSubtitle": "Créez un compte et attribuez-lui des rôles."
@@ -704,7 +718,7 @@
     "welcome": "Bienvenue {name}",
     "recentVisitors": "Visiteurs récents",
     "expectedGuests": "Invités attendus",
-    "guestCount": "{count} invité(s)",
+    "guestCount": "{count, plural, one {# invité} other {# invités}}",
     "onsiteFor": "Depuis {time} h",
     "statusSub": {
       "fromSm": "Du SM"
@@ -715,6 +729,7 @@
     "noVisits": "Aucune visite à afficher.",
     "overview": {
       "officeFloor": "Étage du bureau",
+      "officeFloorUnset": "Non défini",
       "bookTitle": "Réservez des invités dans les installations\nAATC d'Abuja",
       "newInvite": "Nouvelle demande d'invitation"
     },
@@ -769,8 +784,10 @@
       "viewUpdate": "Voir la mise à jour",
       "viewDetails": "Voir les détails",
       "allTitle": "Toutes les mises à jour",
-      "all": "Tout",
-      "updateRequest": "Mettre à jour la demande",
+      "searchPlaceholder": "Rechercher un visiteur (nom ou e-mail)",
+      "categoryLabel": "Type de mise à jour",
+      "allCategories": "Toutes les mises à jour",
+      "dateLabel": "Filtrer par jour",
       "category": {
         "ARRIVAL_UPDATE": "Mise à jour d'arrivée",
         "SM_FEEDBACK": "Retour du SM",
@@ -890,6 +907,10 @@
     "reasonPlaceholder": "Motif du rejet (obligatoire pour rejeter)"
   },
   "evacuation": {
+    "indicator": {
+      "count": "{count, plural, one {# personne a besoin d'aide à l'évacuation} other {# personnes ont besoin d'aide à l'évacuation}}",
+      "viewRoll": "Voir la liste"
+    },
     "title": "Liste d'évacuation",
     "refresh": "Actualiser",
     "countBanner": "sur place ont besoin d'aide pour évacuer",
@@ -900,6 +921,7 @@
     "loadError": "Impossible de charger la liste d'évacuation. Réessayez avec Actualiser.",
     "columns": {
       "visitor": "Visiteur",
+      "assistance": "Assistance requise",
       "floor": "Étage / Aile",
       "host": "Hôte",
       "phone": "Téléphone",
@@ -912,28 +934,41 @@
       "body": "{count, plural, =0 {Aucun visiteur n'est enregistré pour le moment.} one {# visiteur est enregistré. Il n'a pas demandé d'aide.} other {# visiteurs sont enregistrés. Aucun n'a demandé d'aide.}}"
     },
     "print": {
-      "button": "Imprimer pour les serre-files",
+      "button": "Imprimer",
       "heading": "AATC Abuja · Liste d'évacuation",
       "generated": "Générée le {datetime} WAT",
       "count": "{count, plural, one {# visiteur a besoin d'aide pour évacuer} other {# visiteurs ont besoin d'aide pour évacuer}}"
     }
   },
   "consent": {
-    "title": "Abonnements aux communications",
+    "title": "Consentement e-mail",
+    "filterLabel": "Afficher",
+    "filters": {
+      "in": "Consentants",
+      "out": "Non consentants",
+      "all": "Tous"
+    },
+    "count": {
+      "in": "consentants",
+      "out": "non consentants",
+      "all": "personnes"
+    },
     "exportCsv": "Exporter en CSV",
     "exportError": "L'export a échoué. Veuillez réessayer.",
-    "optedIn": "abonnés",
     "searchPlaceholder": "Rechercher un e-mail ou un nom",
     "columns": {
       "email": "E-mail",
       "name": "Nom",
-      "lastAnswered": "Dernière réponse",
-      "sourceVisit": "Visite d'origine"
+      "lastAnswered": "Dernière mise à jour",
+      "status": "Consentement e-mail"
     },
-    "viewVisit": "Voir la visite",
-    "empty": "Personne ne s'est encore abonné.",
-    "noMatches": "Aucun abonnement ne correspond à votre recherche.",
-    "loadError": "Impossible de charger les abonnements.",
+    "empty": {
+      "in": "Personne n'a encore accepté les e-mails.",
+      "out": "Personne ne s'est désinscrit.",
+      "all": "Personne n'a encore répondu."
+    },
+    "noMatches": "Personne ne correspond à votre recherche.",
+    "loadError": "Impossible de charger la liste des consentements e-mail.",
     "withdrawTitle": "Retirer le consentement",
     "withdrawHelp": "Arrête les envois à cet e-mail jusqu'à ce que la personne accepte lors d'une prochaine visite.",
     "email": "E-mail",
@@ -941,11 +976,21 @@
     "withdraw": "Retirer",
     "invalidEmail": "Saisissez une adresse e-mail valide.",
     "confirmTitle": "Retirer le consentement ?",
-    "confirmBody": "<b>{email}</b> quitte la liste des abonnés dès maintenant. Les visites passées restent inchangées.",
+    "confirmBody": "<b>{email}</b> ne recevra plus les actualités des événements Afreximbank.",
     "cancel": "Annuler",
     "done": "Consentement retiré pour {email}.",
     "notFound": "Aucun enregistrement pour cet e-mail.",
-    "error": "Une erreur s'est produite. Veuillez réessayer."
+    "error": "Une erreur s'est produite. Veuillez réessayer.",
+    "toggleLabel": "Consentement e-mail pour {email}",
+    "removeNotAllowed": "Vous ne pouvez pas modifier le consentement e-mail.",
+    "addNotAllowed": "Seul un administrateur système peut réinscrire une personne.",
+    "removeTitle": "Retirer le consentement e-mail ?",
+    "removeBody": "<b>{email}</b> ne recevra plus les actualités des événements Afreximbank.",
+    "confirmRemove": "Retirer le consentement",
+    "addTitle": "Ajouter le consentement e-mail ?",
+    "addBody": "Ne le faites que si <b>{email}</b> a accepté de recevoir les actualités des événements Afreximbank.",
+    "confirmAdd": "Ajouter le consentement",
+    "granted": "{email} recevra à nouveau les actualités des événements."
   },
   "export": {
     "title": "Exporter les données visiteurs",
@@ -953,7 +998,6 @@
     "dateRange": "Période",
     "from": "Du",
     "to": "Au",
-    "hint": "Par date de visite, heure WAT. 366 jours maximum.",
     "format": "Format du fichier",
     "csv": "CSV",
     "excel": "Excel",
@@ -1019,13 +1063,13 @@
     "describeOther": "Décrivez l'aide nécessaire"
   },
   "deskQr": {
-    "title": "QR de l'accueil",
+    "title": "QR sans rendez-vous",
     "walkInBadge": "Sans rendez-vous · sans approbation",
     "status": {
       "active": "Actif",
       "disabled": "Désactivé"
     },
-    "qrAlt": "QR code de l'accueil",
+    "qrAlt": "QR code sans rendez-vous",
     "copyLink": "Copier le lien",
     "copied": "Copié",
     "scansToday": "Scans aujourd'hui",
@@ -1051,7 +1095,7 @@
       "help": "Quand un visiteur remplit le formulaire, un code à 6 chiffres arrive dans cette boîte. Lisez-le au visiteur à l'accueil pour terminer son enregistrement. Un code ne sert qu'une fois et expire au bout de 10 minutes."
     },
     "codeEmail": {
-      "createTitle": "Configurer le QR de l'accueil",
+      "createTitle": "Configurer le QR sans rendez-vous",
       "changeTitle": "Changer l'adresse des codes",
       "help": "Les codes de vérification des visiteurs sont envoyés ici. Choisissez une boîte lue par quelqu'un à l'accueil VMC.",
       "label": "E-mail pour les codes de vérification",
@@ -1059,18 +1103,18 @@
       "save": "Enregistrer"
     },
     "empty": {
-      "title": "Pas encore de QR à l'accueil",
-      "body": "Créez le QR, imprimez l'affiche et placez-la à l'accueil VMC. Les visiteurs qui le scannent s'enregistrent comme visiteurs sans rendez-vous du jour.",
-      "readOnly": "L'accueil n'a pas encore configuré le QR.",
-      "create": "Créer le QR de l'accueil"
+      "title": "Pas encore de QR sans rendez-vous",
+      "body": "Créez le QR, imprimez l'affiche et placez-la à l'accueil VMC.",
+      "readOnly": "L'accueil n'a pas encore configuré le QR sans rendez-vous.",
+      "create": "Créer le QR sans rendez-vous"
     },
     "loadError": {
-      "title": "Impossible de charger le QR de l'accueil.",
+      "title": "Impossible de charger le QR sans rendez-vous.",
       "body": "Vérifiez votre connexion puis réessayez. L'affiche de l'accueil continue de fonctionner."
     },
     "retry": "Réessayer",
     "errors": {
-      "create": "Le QR n'a pas été créé. Réessayez dans un instant.",
+      "create": "Le QR sans rendez-vous n'a pas été créé. Réessayez dans un instant.",
       "update": "L'e-mail n'a pas été modifié. Réessayez dans un instant.",
       "rotate": "Le nouveau QR n'a pas été créé. Le QR actuel fonctionne toujours. Réessayez dans un instant.",
       "disable": "Le QR n'a pas été désactivé. Il fonctionne toujours. Réessayez dans un instant.",
@@ -1079,12 +1123,12 @@
       "image": "Impossible d'afficher le QR."
     },
     "confirmRotate": {
-      "title": "Remplacer le QR de l'accueil ?",
+      "title": "Remplacer le QR sans rendez-vous ?",
       "body": "Le QR de l'affiche <b>cesse immédiatement de fonctionner</b>. Les visiteurs qui le scannent devront s'enregistrer à l'accueil. Imprimez et affichez la nouvelle affiche juste après.",
       "confirm": "Créer un nouveau QR"
     },
     "confirmDisable": {
-      "title": "Désactiver le QR de l'accueil ?",
+      "title": "Désactiver le QR sans rendez-vous ?",
       "body": "Les visiteurs ne peuvent plus s'enregistrer par scan tant que vous ne le réactivez pas. L'accueil peut toujours enregistrer les visiteurs sans rendez-vous.",
       "confirm": "Désactiver"
     },
@@ -1241,7 +1285,7 @@
       "title": "Visiteurs",
       "views": {
         "directory": "Annuaire",
-        "optIns": "Consentements"
+        "optIns": "Consentement e-mail"
       },
       "countFacility": "visiteurs",
       "countMine": "personnes vous ont rendu visite",
@@ -1250,9 +1294,11 @@
       "noMatches": "Aucun visiteur ne correspond à votre recherche",
       "error": "Impossible de charger les visiteurs. Veuillez réessayer.",
       "viewHistory": "Voir l'historique",
-      "optedIn": "Inscrit",
-      "optedOut": "Désinscrit",
-      "sheetTitle": "Visiteur",
+      "optedIn": "Consentant",
+      "optedOut": "Non consentant",
+      "sheetTitle": "Détails du visiteur",
+      "visitorInfo": "Informations sur le visiteur",
+      "noVisits": "Aucune visite pour le moment",
       "summary": "Résumé",
       "firstVisit": "Première visite",
       "avgStay": "Durée moyenne",
@@ -1263,7 +1309,7 @@
         "organization": "Organisation",
         "visits": "Visites",
         "lastVisit": "Dernière visite",
-        "comms": "Communications",
+        "comms": "Consentement e-mail",
         "action": "Action"
       }
     },
@@ -1332,7 +1378,7 @@
     "noAccess": "Les opérations sont réservées aux administrateurs système.",
     "tabs": {
       "accessCards": "Cartes d'accès",
-      "deskQr": "QR d'accueil",
+      "deskQr": "QR sans rendez-vous",
       "audit": "Journal d'audit"
     },
     "accessCards": {
@@ -1395,13 +1441,13 @@
       },
       "sheet": {
         "title": "Carte d'accès",
+        "visitorInfo": "Informations sur le visiteur",
         "cardNo": "Carte {number}",
         "loadError": "Impossible de charger cette carte. Veuillez réessayer.",
         "preview": "Aperçu de la carte",
         "noPhoto": "Aucune photo : la carte s'imprime avec un cadre photo vide.",
         "printerHint": "Imprimante DTC : choisissez CR80, portrait, recto verso.",
         "details": "Détails",
-        "status": "Statut",
         "validFrom": "Valable du",
         "validUntil": "Valable jusqu'au",
         "validUntilTime": "Valable jusqu'à (heure)",
@@ -1462,7 +1508,6 @@
       "property": "Propriété de l'Afreximbank African Trade Centre"
     },
     "audit": {
-      "title": "Journal d'audit",
       "range": "Période d'audit",
       "ranges": {
         "today": "Aujourd'hui",
@@ -1484,6 +1529,7 @@
       "error": "Impossible de charger le journal d'audit. Veuillez réessayer.",
       "system": "Système",
       "open": "Ouvrir",
+      "sheetTitle": "Événement d'audit",
       "details": "Détails",
       "metadata": "Données de l'événement",
       "userAgent": "Navigateur",
@@ -1507,7 +1553,7 @@
         "auth": "Connexion et sécurité",
         "report": "Exports",
         "consent": "Consentements",
-        "desk_qr": "QR d'accueil",
+        "desk_qr": "QR sans rendez-vous",
         "notification": "Notifications",
         "rfid_card": "Cartes d'accès",
         "audit": "Journal d'audit"
@@ -1528,12 +1574,12 @@
         "consent_exported": "Consentements exportés",
         "consent_withdrawn": "Consentement retiré",
         "desk_qr_code_sent": "Code d'accueil envoyé",
-        "desk_qr_created": "QR d'accueil créé",
-        "desk_qr_disabled": "QR d'accueil désactivé",
-        "desk_qr_enabled": "QR d'accueil activé",
-        "desk_qr_imported": "QR d'accueil importé",
-        "desk_qr_rotated": "QR d'accueil remplacé",
-        "desk_qr_updated": "QR d'accueil mis à jour",
+        "desk_qr_created": "QR sans rendez-vous créé",
+        "desk_qr_disabled": "QR sans rendez-vous désactivé",
+        "desk_qr_enabled": "QR sans rendez-vous activé",
+        "desk_qr_imported": "QR sans rendez-vous importé",
+        "desk_qr_rotated": "QR sans rendez-vous remplacé",
+        "desk_qr_updated": "QR sans rendez-vous mis à jour",
         "invitation_created": "Invitation créée",
         "note_added": "Note ajoutée",
         "notification_retried": "Notification renvoyée",

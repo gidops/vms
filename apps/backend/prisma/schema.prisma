@@ -525,6 +525,8 @@ model Notification {
 enum ConsentSource {
   VISIT
   WITHDRAWAL
+  // Recorded by a System Admin on the visitor's behalf (opted back in).
+  ADMIN
 }
 
 // Append-only log of every comms-consent answer, keyed on the normalised

@@ -2,7 +2,7 @@
 
 import { Badge, Spinner } from "@vms/ui";
 import { ChevronRight } from "lucide-react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useNow, useTranslations } from "next-intl";
 import type {
   StaffActivityCategory,
   StaffActivityItem,
@@ -33,6 +33,8 @@ export function RecentUpdates({
 }: RecentUpdatesProps) {
   const t = useTranslations("staff");
   const format = useFormatter();
+  // Reference "now" for relative times; ticks each minute so they stay fresh.
+  const now = useNow({ updateInterval: 60_000 });
 
   return (
     <section className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 shadow-xs">
@@ -63,7 +65,7 @@ export function RecentUpdates({
                   {t(`updates.category.${item.category}`)}
                 </Badge>
                 <span className="text-xs text-fg-subtle">
-                  {format.relativeTime(new Date(item.createdAt))}
+                  {format.relativeTime(new Date(item.createdAt), now)}
                 </span>
               </div>
               <p className="text-sm font-semibold text-fg">{item.title}</p>

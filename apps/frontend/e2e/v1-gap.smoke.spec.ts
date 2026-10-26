@@ -9,7 +9,7 @@ test.describe("V1 gap smoke (Security Manager)", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.getByLabel("Email").fill(email);
-    await page.getByLabel("Password").fill(password);
+    await page.getByLabel("Password", { exact: true }).fill(password);
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await page.waitForURL(/\/admin/);
   });
@@ -17,22 +17,27 @@ test.describe("V1 gap smoke (Security Manager)", () => {
   test("opens the Evacuation Roll", async ({ page }) => {
     await page.goto("/admin/evacuation");
     await expect(
-      page.getByRole("heading", { name: "Evacuation Roll" }),
-    ).toBeVisible();
+      page.getByRole("radio", { name: "Evacuation Roll" }),
+    ).toBeChecked();
     await expect(
-      page.getByRole("button", { name: "Print for wardens" }),
+      page.getByRole("button", { name: "Print", exact: true }),
     ).toBeVisible();
   });
 
-  test("opens Comms Opt-ins with export and withdraw", async ({ page }) => {
+  test("opens Email consent read-only, with export", async ({ page }) => {
+    // Redirects to Insights → Visitors; Email consent is a view there (no heading).
     await page.goto("/admin/opt-ins");
+    await page.getByRole("radio", { name: "Email consent" }).click();
     await expect(
-      page.getByRole("heading", { name: "Comms Opt-ins" }),
-    ).toBeVisible();
+      page.getByRole("radio", { name: "Email consent" }),
+    ).toBeChecked();
     await expect(
       page.getByRole("button", { name: /Export CSV/ }),
     ).toBeVisible();
-    await expect(page.getByText("Withdraw consent")).toBeVisible();
+    // The Security Manager can't add or remove consent.
+    await expect(
+      page.getByRole("button", { name: "Withdraw consent" }),
+    ).toHaveCount(0);
   });
 
   test("leads the overview with approvals and moves trends to Analytics", async ({
@@ -44,9 +49,7 @@ test.describe("V1 gap smoke (Security Manager)", () => {
     ).toBeVisible();
     await expect(page.getByText("Status Breakdown")).toHaveCount(0);
     await page.goto("/admin/analytics");
-    await expect(
-      page.getByRole("heading", { name: "Analytics & Reports" }),
-    ).toBeVisible();
+    await expect(page.getByRole("radio", { name: "Analytics" })).toBeChecked();
     await expect(page.getByText("Status Breakdown")).toBeVisible();
   });
 

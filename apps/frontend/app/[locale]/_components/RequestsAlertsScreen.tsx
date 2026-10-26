@@ -3,7 +3,6 @@
 import { VISIT_PURPOSES } from "@vms/contracts";
 import {
   Badge,
-  Button,
   EmptyState,
   FilterBar,
   InboxCard,
@@ -19,10 +18,11 @@ import {
   TopNavShell,
   type TopNavShellProps,
 } from "@vms/ui";
-import { ChevronLeft, ChevronRight, Inbox, MessageSquare } from "lucide-react";
+import { Inbox, MessageSquare } from "lucide-react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
+import { InboxPagination } from "@/app/[locale]/_components/InboxPagination";
 import { AdminShell } from "@/app/[locale]/admin/_components/AdminShell";
 import { VisitDetailSheet } from "@/app/[locale]/_components/VisitDetailSheet";
 import type { InboxItem, InboxKind } from "@/data/inbox/inbox.api";
@@ -99,12 +99,15 @@ export function RequestsAlertsScreen({
   app = "vmc",
   scope = "all",
   admin = false,
+  title,
 }: {
   /** `"admin"` renders the admin console v2 tabs (no sidebar). */
   app?: "vmc" | "staff" | "admin";
   scope?: "all" | "mine";
   /** Original admin console: render inside the sidebar `AdminShell`. */
   admin?: boolean;
+  /** Page title; defaults to "Requests & Alerts" (admin v2: "Recent Activity"). */
+  title?: string;
 }) {
   const Shell = admin ? AdminActivityShell : TopNavShell;
   const t = useTranslations("requests");
@@ -264,7 +267,9 @@ export function RequestsAlertsScreen({
     >
       <div className="flex flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-3xl font-semibold text-primary">{t("title")}</h1>
+          <h1 className="text-3xl font-semibold text-primary">
+            {title ?? t("title")}
+          </h1>
           <SegmentedControl
             aria-label={t("title")}
             value={tab}
@@ -337,39 +342,11 @@ export function RequestsAlertsScreen({
               })}
             </div>
 
-            {totalPages > 1 ? (
-              <div className="flex items-center justify-center gap-3">
-                <Button
-                  intent="neutral"
-                  tone="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                >
-                  <ChevronLeft
-                    className="size-4 rtl:rotate-180"
-                    aria-hidden="true"
-                  />
-                  {t("pagination.prev")}
-                </Button>
-                <span className="text-sm text-fg-muted">
-                  {t("pagination.pageOf", { page, total: totalPages })}
-                </span>
-                <Button
-                  intent="neutral"
-                  tone="outline"
-                  size="sm"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                >
-                  {t("pagination.next")}
-                  <ChevronRight
-                    className="size-4 rtl:rotate-180"
-                    aria-hidden="true"
-                  />
-                </Button>
-              </div>
-            ) : null}
+            <InboxPagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
           </>
         )}
       </div>

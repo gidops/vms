@@ -6,7 +6,6 @@ import {
   Avatar,
   Button,
   DetailDrawer,
-  DetailSection,
   Input,
   Label,
   SearchInput,
@@ -20,6 +19,7 @@ import {
 } from "@vms/ui";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
+import { SheetSection } from "@/app/[locale]/_components/visit-detail/sections/SheetSection";
 import { ApiError } from "@/data/http/client";
 import type { VisitorItem } from "@/data/insights/insights.api";
 import {
@@ -233,6 +233,7 @@ export function AssignCardDrawer({
   return (
     <DetailDrawer
       open={open}
+      side="start"
       onOpenChange={(next) => !pending && onOpenChange(next)}
       title={t("title")}
       description={t("subtitle")}
@@ -270,7 +271,7 @@ export function AssignCardDrawer({
           </Alert>
         ) : null}
 
-        <DetailSection title={t("visitor")}>
+        <SheetSection title={t("visitor")}>
           <VisitorPicker
             value={visitor}
             onChange={(v) => {
@@ -288,9 +289,9 @@ export function AssignCardDrawer({
               />
             </div>
           ) : null}
-        </DetailSection>
+        </SheetSection>
 
-        <DetailSection title={t("card")}>
+        <SheetSection title={t("card")}>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="assign-card-number">{t("cardNumber")}</Label>
             <Input
@@ -303,9 +304,9 @@ export function AssignCardDrawer({
             />
             <span className="text-xs text-fg-muted">{t("cardNumberHint")}</span>
           </div>
-        </DetailSection>
+        </SheetSection>
 
-        <DetailSection title={t("validity")}>
+        <SheetSection title={t("validity")}>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="assign-from-date">{t("validFrom")}</Label>
@@ -339,20 +340,20 @@ export function AssignCardDrawer({
           >
             {rangeInvalid ? t("rangeInvalid") : t("validityHint")}
           </span>
-        </DetailSection>
+        </SheetSection>
 
-        <DetailSection title={t("photo")}>
+        <SheetSection title={t("photo")}>
           <PhotoInput value={photo} onChange={setPhoto} />
-        </DetailSection>
+        </SheetSection>
 
-        <DetailSection title={t("notes")}>
+        <SheetSection title={t("notes")}>
           <Textarea
             aria-label={t("notes")}
             value={notes}
             maxLength={1000}
             onChange={(e) => setNotes(e.target.value)}
           />
-        </DetailSection>
+        </SheetSection>
       </form>
     </DetailDrawer>
   );

@@ -47,7 +47,11 @@ function collect(stream: PassThrough): Promise<Buffer> {
 }
 
 describe('VisitExportService', () => {
-  function setup(rows: unknown[], emails: unknown[] = []) {
+  function setup(
+    rows: unknown[],
+    emails: unknown[] = [],
+    consents: unknown[] = [],
+  ) {
     const findMany = jest
       .fn()
       .mockResolvedValueOnce(rows)
@@ -55,6 +59,7 @@ describe('VisitExportService', () => {
     const prisma = {
       visit: { findMany },
       notification: { findMany: jest.fn().mockResolvedValue(emails) },
+      commsConsentEvent: { findMany: jest.fn().mockResolvedValue(consents) },
     } as unknown as PrismaService;
     const publish = jest.fn().mockResolvedValue({});
     const txm = {
@@ -227,6 +232,29 @@ describe('VisitExportService', () => {
         'Judith Francis',
       ].join(','),
     );
+  });
+
+  it("fills Email consent from the visitor's current status, not the visit's answer", async () => {
+    // Said yes at this visit, withdrew later: the export must read No.
+    const { service } = setup(
+      [row({ commsConsent: true })],
+      [],
+      [
+        { email: 'zoe@societe.fr', consent: false },
+        { email: 'zoe@societe.fr', consent: true },
+      ],
+    );
+    const out = new PassThrough();
+    const done = collect(out);
+    await service.write(
+      { from: '2026-10-17', to: '2026-10-17', format: 'csv' },
+      out,
+      'actor',
+    );
+    const [header, first] = (await done).toString('utf8').split('\r\n');
+    const col = header.split(',').indexOf('Email consent');
+    expect(col).toBeGreaterThan(-1);
+    expect(first.split(',')[col]).toBe('No');
   });
 
   it('produces an xlsx with typed date cells that parses back', async () => {

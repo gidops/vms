@@ -1,11 +1,16 @@
 "use client";
 
-import { PERMISSIONS, type OptInItem } from "@vms/contracts";
+import {
+  PERMISSIONS,
+  type ConsentStatusFilter,
+  type OptInItem,
+} from "@vms/contracts";
 import {
   Alert,
   AlertDescription,
   AlertTitle,
   Button,
+  Checkbox,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -32,34 +37,140 @@ import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import {
   useExportOptIns,
+  useGrantConsent,
   useOptIns,
   useWithdrawConsent,
 } from "@/data/consent/queries";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { useDebounced } from "@/shared/useDebounced";
 import { formatWatDateTime } from "@/shared/wat";
-import { VisitDetailSheet } from "./VisitDetailSheet";
+import { FilterPills } from "./FilterPills";
 
 const PAGE_SIZE = 8;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function SourceVisit({
+/** A status change the user asked for, waiting on their confirmation. */
+interface PendingChange {
+  email: string;
+  /** The status being set: false = remove consent, true = add it back. */
+  consent: boolean;
+}
+
+/**
+ * The row's Email consent checkbox. Unticking (opt out) needs consent:manage;
+ * ticking (opt back in) needs consent:grant (System Admin), otherwise the box
+ * is disabled with a note saying who can.
+ */
+function ConsentToggle({
   item,
-  onOpen,
+  canRemove,
+  canAdd,
+  onRequest,
 }: {
   item: OptInItem;
-  onOpen: (id: string) => void;
+  canRemove: boolean;
+  canAdd: boolean;
+  onRequest: (change: PendingChange) => void;
 }) {
   const t = useTranslations("consent");
-  if (!item.sourceVisitId) return <span className="text-fg-muted">—</span>;
+  const allowed = item.consent ? canRemove : canAdd;
+  const note = allowed
+    ? undefined
+    : item.consent
+      ? t("removeNotAllowed")
+      : t("addNotAllowed");
   return (
-    <button
-      type="button"
-      onClick={() => onOpen(item.sourceVisitId!)}
-      className="rounded-sm font-semibold tracking-wide text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+    <span className="inline-flex" title={note}>
+      <Checkbox
+        checked={item.consent}
+        disabled={!allowed}
+        aria-label={t("toggleLabel", { email: item.email })}
+        aria-description={note}
+        onCheckedChange={(next) =>
+          onRequest({ email: item.email, consent: next === true })
+        }
+      />
+    </span>
+  );
+}
+
+/** Confirm a checkbox change before it's recorded (both directions). */
+function ConfirmConsentDialog({
+  change,
+  onClose,
+  onDone,
+}: {
+  change: PendingChange | null;
+  onClose: () => void;
+  onDone: (change: PendingChange) => void;
+}) {
+  const t = useTranslations("consent");
+  const withdraw = useWithdrawConsent();
+  const grant = useGrantConsent();
+  const mutation = change?.consent ? grant : withdraw;
+  const [failed, setFailed] = React.useState(false);
+  const adding = change?.consent === true;
+
+  const confirm = () => {
+    if (!change) return;
+    setFailed(false);
+    mutation.mutate(change.email, {
+      onSuccess: (r) => {
+        if (r.affected) onDone(change);
+        else setFailed(true);
+      },
+      onError: () => setFailed(true),
+    });
+  };
+
+  return (
+    <Dialog
+      open={!!change}
+      onOpenChange={(o) => {
+        if (mutation.isPending) return;
+        if (!o) {
+          setFailed(false);
+          onClose();
+        }
+      }}
     >
-      {item.sourceReferenceCode ?? t("viewVisit")}
-    </button>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{adding ? t("addTitle") : t("removeTitle")}</DialogTitle>
+          <DialogDescription>
+            {t.rich(adding ? "addBody" : "removeBody", {
+              email: change?.email ?? "",
+              b: (chunks) => <b className="font-semibold text-fg">{chunks}</b>,
+            })}
+          </DialogDescription>
+        </DialogHeader>
+        {failed ? (
+          <Alert intent="danger">
+            <AlertDescription>{t("error")}</AlertDescription>
+          </Alert>
+        ) : null}
+        <DialogFooter>
+          <Button
+            type="button"
+            intent="neutral"
+            tone="outline"
+            onClick={onClose}
+            disabled={mutation.isPending}
+          >
+            {t("cancel")}
+          </Button>
+          <Button
+            type="button"
+            intent={adding ? "primary" : "danger"}
+            onClick={confirm}
+            disabled={mutation.isPending}
+            aria-busy={mutation.isPending || undefined}
+          >
+            {adding ? t("confirmAdd") : t("confirmRemove")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -213,33 +324,32 @@ export function WithdrawConsentDialog({
 }
 
 /**
- * Comms Opt-ins, on the Insights page (Visitors → Comms opt-in): the current
- * opt-in list (latest answer per email wins),
- * a CSV export for holders of consent:export, and consent withdrawal for
- * holders of consent:manage.
+ * Email consent, on the Insights page (Visitors → Email consent): everyone who
+ * answered "Get updates on Afreximbank events?", by current status (latest
+ * answer per email wins). Staff with consent:manage untick a row (or use
+ * Withdraw consent by email) to opt someone out; only consent:grant (System
+ * Admin) can tick it again. Export CSV (consent:export) is the consented list.
  */
-export function CommsOptInsScreen({
-  headingLevel = 1,
-}: { headingLevel?: 1 | 2 } = {}) {
-  // Under another page's h1 (Insights) the title steps down a level.
-  const Heading = headingLevel === 2 ? "h2" : "h1";
-  const headingSize = headingLevel === 2 ? "text-2xl" : "text-3xl";
+export function CommsOptInsScreen() {
   const t = useTranslations("consent");
   const locale = useLocale();
   const { hasPermission } = useAuth();
   const canExport = hasPermission(PERMISSIONS.CONSENT_EXPORT);
   const canManage = hasPermission(PERMISSIONS.CONSENT_MANAGE);
+  const canGrant = hasPermission(PERMISSIONS.CONSENT_GRANT);
 
   const [search, setSearch] = React.useState("");
+  const [status, setStatus] = React.useState<ConsentStatusFilter>("in");
   const [page, setPage] = React.useState(1);
-  const [visitId, setVisitId] = React.useState<string | null>(null);
-  const [withdrawn, setWithdrawn] = React.useState<string | null>(null);
+  const [pending, setPending] = React.useState<PendingChange | null>(null);
+  const [notice, setNotice] = React.useState<string | null>(null);
   const debounced = useDebounced(search.trim());
 
   const list = useOptIns({
     page,
     pageSize: PAGE_SIZE,
     search: debounced || undefined,
+    status,
   });
   const exporter = useExportOptIns();
   const data = list.data;
@@ -247,25 +357,22 @@ export function CommsOptInsScreen({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Heading className={`${headingSize} font-semibold text-primary`}>
-          {t("title")}
-        </Heading>
-        <div className="flex flex-wrap gap-3">
-          {canManage ? (
-            <WithdrawConsentDialog onWithdrawn={setWithdrawn} />
-          ) : null}
-          {canExport ? (
-            <Button
-              onClick={() => exporter.mutate()}
-              disabled={exporter.isPending}
-              aria-busy={exporter.isPending || undefined}
-            >
-              <Download className="size-4" aria-hidden="true" />
-              {t("exportCsv")}
-            </Button>
-          ) : null}
-        </div>
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        {canManage ? (
+          <WithdrawConsentDialog
+            onWithdrawn={(email) => setNotice(t("done", { email }))}
+          />
+        ) : null}
+        {canExport ? (
+          <Button
+            onClick={() => exporter.mutate()}
+            disabled={exporter.isPending}
+            aria-busy={exporter.isPending || undefined}
+          >
+            <Download className="size-4" aria-hidden="true" />
+            {t("exportCsv")}
+          </Button>
+        ) : null}
       </div>
 
       {exporter.isError ? (
@@ -273,9 +380,9 @@ export function CommsOptInsScreen({
           <AlertDescription>{t("exportError")}</AlertDescription>
         </Alert>
       ) : null}
-      {withdrawn ? (
-        <Alert intent="success" role="status">
-          <AlertDescription>{t("done", { email: withdrawn })}</AlertDescription>
+      {notice ? (
+        <Alert intent="success" role="status" className="border-0">
+          <AlertDescription>{notice}</AlertDescription>
         </Alert>
       ) : null}
 
@@ -283,13 +390,30 @@ export function CommsOptInsScreen({
         frameless
         toolbar={
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2
-              className="text-xl font-semibold text-primary"
-              aria-live="polite"
-            >
-              {data ? nf.format(data.total) : "—"}{" "}
-              <span className="font-normal text-fg-muted">{t("optedIn")}</span>
-            </h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <h2
+                className="text-xl font-semibold text-primary"
+                aria-live="polite"
+              >
+                {data ? nf.format(data.total) : "—"}{" "}
+                <span className="font-normal text-fg-muted">
+                  {t(`count.${status}`)}
+                </span>
+              </h2>
+              <FilterPills<ConsentStatusFilter>
+                aria-label={t("filterLabel")}
+                value={status}
+                onValueChange={(next) => {
+                  setStatus(next);
+                  setPage(1);
+                }}
+                options={[
+                  { value: "in", label: t("filters.in") },
+                  { value: "out", label: t("filters.out") },
+                  { value: "all", label: t("filters.all") },
+                ]}
+              />
+            </div>
             <SearchInput
               value={search}
               onChange={(e) => {
@@ -310,7 +434,7 @@ export function CommsOptInsScreen({
         emptyState={
           <EmptyState
             icon={MailCheck}
-            title={debounced ? t("noMatches") : t("empty")}
+            title={debounced ? t("noMatches") : t(`empty.${status}`)}
           />
         }
         pagination={
@@ -340,7 +464,7 @@ export function CommsOptInsScreen({
                     <TableHead>{t("columns.email")}</TableHead>
                     <TableHead>{t("columns.name")}</TableHead>
                     <TableHead>{t("columns.lastAnswered")}</TableHead>
-                    <TableHead>{t("columns.sourceVisit")}</TableHead>
+                    <TableHead>{t("columns.status")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody striped>
@@ -353,10 +477,15 @@ export function CommsOptInsScreen({
                         {item.fullName ?? "—"}
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-fg-muted">
-                        {formatWatDateTime(item.consentedAt, locale)}
+                        {formatWatDateTime(item.answeredAt, locale)}
                       </TableCell>
                       <TableCell>
-                        <SourceVisit item={item} onOpen={setVisitId} />
+                        <ConsentToggle
+                          item={item}
+                          canRemove={canManage}
+                          canAdd={canGrant}
+                          onRequest={setPending}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -368,22 +497,27 @@ export function CommsOptInsScreen({
               {data.items.map((item) => (
                 <li
                   key={item.email}
-                  className="flex flex-col gap-0.5 border-b border-border-subtle px-4 py-3 last:border-b-0"
+                  className="flex items-start justify-between gap-3 border-b border-border-subtle px-4 py-3 last:border-b-0"
                 >
-                  <span className="truncate font-medium text-fg">
-                    {item.email}
-                  </span>
-                  <span className="text-sm text-fg-muted">
-                    {[
-                      item.fullName,
-                      formatWatDateTime(item.consentedAt, locale),
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </span>
-                  <span className="text-sm">
-                    <SourceVisit item={item} onOpen={setVisitId} />
-                  </span>
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <span className="truncate font-medium text-fg">
+                      {item.email}
+                    </span>
+                    <span className="text-sm text-fg-muted">
+                      {[
+                        item.fullName,
+                        formatWatDateTime(item.answeredAt, locale),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
+                  </div>
+                  <ConsentToggle
+                    item={item}
+                    canRemove={canManage}
+                    canAdd={canGrant}
+                    onRequest={setPending}
+                  />
                 </li>
               ))}
             </ul>
@@ -391,13 +525,18 @@ export function CommsOptInsScreen({
         ) : null}
       </RecordTable>
 
-      {visitId ? (
-        <VisitDetailSheet
-          kind="request"
-          id={visitId}
-          onClose={() => setVisitId(null)}
-        />
-      ) : null}
+      <ConfirmConsentDialog
+        change={pending}
+        onClose={() => setPending(null)}
+        onDone={(change) => {
+          setPending(null);
+          setNotice(
+            change.consent
+              ? t("granted", { email: change.email })
+              : t("done", { email: change.email }),
+          );
+        }}
+      />
     </div>
   );
 }

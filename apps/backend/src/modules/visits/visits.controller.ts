@@ -122,8 +122,9 @@ export class VisitsController {
     return this.authoring.createVisits(input, principal.userId);
   }
 
+  /** Admin console overview counts: the System Admin and the Security Manager. */
   @Get('dashboard/stats')
-  @RequirePermissions(PERMISSIONS.USER_READ)
+  @RequirePermissions(PERMISSIONS.VISIT_APPROVE)
   dashboardStats(
     @Query(new ZodValidationPipe(AdminStatsQuery)) query: AdminStatsQuery,
   ) {

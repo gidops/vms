@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@vms/ui";
+import { CalendarCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   OverviewBar,
@@ -13,26 +14,32 @@ export interface StaffOverviewProps {
   /** Welcome heading, e.g. "Welcome Judith Francis". Spans the stat columns. */
   welcome: string;
   stats: StaffStat[];
-  /** Host's office/floor; shown top-right, above the book panel. Hidden when absent. */
+  /** Host's office/floor, top-right above the book panel; "Not set" when absent. */
   office?: string | null;
   onNewInvite: () => void;
 }
 
 /**
  * "Office Floor: 3RD FLOOR — LW" — teal label over an orange value, left-aligned
- * in the right column above the book panel. Renders nothing without an office.
+ * in the right column above the book panel (Figma colours #00736E / #FF6900).
+ * Always shown; "Not set" until the host picks a desk in Settings → My Desk.
  */
 function OfficeFloor({ office }: { office?: string | null }) {
   const t = useTranslations("staff");
-  if (!office) return null;
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-lg font-semibold text-primary">
+      <span className="text-lg font-semibold text-[#00736E]">
         {t("overview.officeFloor")}:
       </span>
-      <span className="text-xl font-bold uppercase tracking-tight text-warning">
-        {office}
-      </span>
+      {office ? (
+        <span className="text-xl font-bold uppercase tracking-tight text-[#FF6900]">
+          {office}
+        </span>
+      ) : (
+        <span className="text-base text-fg-muted">
+          {t("overview.officeFloorUnset")}
+        </span>
+      )}
     </div>
   );
 }
@@ -42,7 +49,7 @@ function BookPanel({ onNewInvite }: Pick<StaffOverviewProps, "onNewInvite">) {
   const t = useTranslations("staff");
   return (
     <>
-      <div className="relative flex flex-col gap-3">
+      <div className="relative flex flex-col gap-2">
         <h3 className="whitespace-pre-line text-lg font-semibold">
           {t("overview.bookTitle")}
         </h3>
@@ -70,9 +77,21 @@ export function StaffOverview({
   office,
   onNewInvite,
 }: StaffOverviewProps) {
+  const t = useTranslations("staff");
   return (
     <OverviewBar
-      heading={<h1 className="text-4xl font-semibold text-fg">{welcome}</h1>}
+      heading={
+        // "STAFF HUB" eyebrow + welcome, as the VMC "VMC HUB" header.
+        <div className="flex flex-col gap-1">
+          <span className="flex items-center gap-1.5 text-base font-semibold uppercase tracking-tight text-success">
+            <CalendarCheck className="size-4" aria-hidden="true" />
+            {t("hub")}
+          </span>
+          <h1 className="text-[2rem] font-medium leading-tight text-[#344054]">
+            {welcome}
+          </h1>
+        </div>
+      }
       aside={<OfficeFloor office={office} />}
       stats={stats}
       panel={<BookPanel onNewInvite={onNewInvite} />}

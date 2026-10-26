@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import {
   normalizeConsentEmail,
+  type ConsentStatusFilter,
+  type GrantConsentResult,
   type OptInItem,
   type OptInListQuery,
   type Paginated,
@@ -17,7 +19,8 @@ import { TransactionManager } from '../../shared/events/transaction.manager';
 
 interface OptInRow {
   email: string;
-  consentedAt: Date;
+  consent: boolean;
+  answeredAt: Date;
   sourceVisitId: string | null;
   sourceReferenceCode: string | null;
   sourceVisitDate: Date | null;
@@ -52,8 +55,20 @@ export class ConsentService {
     private readonly events: EventPublisher,
   ) {}
 
-  /** Opted-in people, newest answer first, with an optional email/name search. */
-  private optInSql(search?: string): Prisma.Sql {
+  /**
+   * Everyone who has answered, by current status (`in` = consented, `out` =
+   * not consented, `all`), with an optional email/name search. The name comes
+   * from the visitor record for that email, so withdrawn and admin-recorded
+   * answers (no visit) still show who it is.
+   */
+  private optInSql(
+    search?: string,
+    status: ConsentStatusFilter = 'in',
+  ): Prisma.Sql {
+    const statusFilter =
+      status === 'all'
+        ? Prisma.sql`TRUE`
+        : Prisma.sql`l.consent = ${status === 'in'}`;
     const filter = search
       ? Prisma.sql`AND (l.email ILIKE ${likePattern(search)} OR vi."fullName" ILIKE ${likePattern(search)})`
       : Prisma.empty;
@@ -64,7 +79,8 @@ export class ConsentService {
         ORDER BY email, "createdAt" DESC, id DESC
       )
       SELECT l.email,
-             l."createdAt" AS "consentedAt",
+             l.consent,
+             l."createdAt" AS "answeredAt",
              l."visitId" AS "sourceVisitId",
              v."referenceCode" AS "sourceReferenceCode",
              v."scheduledAt" AS "sourceVisitDate",
@@ -72,12 +88,17 @@ export class ConsentService {
              vi.organization AS organization
       FROM latest l
       LEFT JOIN "Visit" v ON v.id = l."visitId"
-      LEFT JOIN "Visitor" vi ON vi.id = v."visitorId"
-      WHERE l.consent = true ${filter}`;
+      LEFT JOIN LATERAL (
+        SELECT "fullName", organization FROM "Visitor"
+        WHERE lower(email) = l.email
+        ORDER BY "updatedAt" DESC
+        LIMIT 1
+      ) vi ON TRUE
+      WHERE ${statusFilter} ${filter}`;
   }
 
   async list(query: OptInListQuery): Promise<Paginated<OptInItem>> {
-    const base = this.optInSql(query.search);
+    const base = this.optInSql(query.search, query.status);
     const offset = (query.page - 1) * query.pageSize;
     const [rows, countRows] = await Promise.all([
       this.prisma.$queryRaw<OptInRow[]>`
@@ -108,7 +129,7 @@ export class ConsentService {
         r.email,
         r.fullName ?? '',
         r.organization ?? '',
-        formatWat(r.consentedAt),
+        formatWat(r.answeredAt),
         formatWat(r.sourceVisitDate),
       ]),
     );
@@ -144,6 +165,35 @@ export class ConsentService {
       });
       await this.events.publish(tx, {
         type: EVENT_TYPES.ConsentWithdrawn,
+        aggregateType: 'CommsConsent',
+        aggregateId: event.id,
+        payload: { email },
+        metadata: { actorUserId },
+      });
+    });
+    return { affected: true };
+  }
+
+  /**
+   * Record consent on a visitor's behalf (System Admin opting someone back in).
+   * Only for emails that have answered before; otherwise nothing is written.
+   */
+  async grant(
+    rawEmail: string,
+    actorUserId: string,
+  ): Promise<GrantConsentResult> {
+    const email = normalizeConsentEmail(rawEmail);
+    const known = await this.prisma.commsConsentEvent.findFirst({
+      where: { email },
+      select: { id: true },
+    });
+    if (!known) return { affected: false };
+    await this.txm.run(async (tx) => {
+      const event = await tx.commsConsentEvent.create({
+        data: { email, consent: true, source: 'ADMIN', actorUserId },
+      });
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.ConsentGranted,
         aggregateType: 'CommsConsent',
         aggregateId: event.id,
         payload: { email },

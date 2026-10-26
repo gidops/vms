@@ -7,6 +7,7 @@ import {
   Button,
   Input,
   Label,
+  PasswordInput,
   Spinner,
 } from "@vms/ui";
 import { Lock, Mail, User } from "lucide-react";
@@ -119,9 +120,10 @@ export default function SignupPage() {
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="password">{t("password")}</Label>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
+            showLabel={t("showPassword")}
+            hideLabel={t("hidePassword")}
             autoComplete="new-password"
             required
             minLength={8}
