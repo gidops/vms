@@ -8,6 +8,7 @@ import { ConsentModule } from './modules/consent/consent.module';
 import { DeskQrModule } from './modules/desk-qr/desk-qr.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { InboxModule } from './modules/inbox/inbox.module';
+import { InsightsModule } from './modules/insights/insights.module';
 import { NotesModule } from './modules/notes/notes.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { StaffModule } from './modules/staff/staff.module';
@@ -37,6 +38,7 @@ import { StorageModule } from './shared/storage/storage.module';
     AuthModule,
     InboxModule,
     VisitsModule,
+    InsightsModule,
     ConsentModule,
     DeskQrModule,
     AccessCardsModule,

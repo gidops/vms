@@ -146,9 +146,16 @@ export class VisitsController {
     return this.dashboard.traffic(query);
   }
 
+  /**
+   * One visit. Facility history readers (e.g. Read Admin) may open any visit
+   * from Insights → History; their other lists stay scoped (no visit:read).
+   */
   @Get(':id')
   async getOne(@Param('id') id: string, @CurrentUser() principal: AuthUser) {
-    if (!canReadAllVisits(principal)) {
+    if (
+      !canReadAllVisits(principal) &&
+      !principal.permissions.includes(PERMISSIONS.HISTORY_READ)
+    ) {
       await this.read.assertCanView(id, principal.userId);
     }
     return this.read.getDetail(id);

@@ -19,13 +19,17 @@ export const GROUP_PRE_CHECKIN_STATUSES = new Set<string>([
  * The list ordering. Defaults to scheduled date, earliest first (the VMC
  * check-in board surfaces who we're expecting soonest; undated visits sort
  * last). Callers may opt into `sortBy: "createdAt"` — the staff dashboard and
- * VMC records board order newest-created first. Whitelisted so no arbitrary
- * column leaks into Prisma's `orderBy`.
+ * VMC records board order newest-created first; Insights → History passes
+ * `sortBy: "scheduledAt"` with a direction (newest visit first). Whitelisted so
+ * no arbitrary column leaks into Prisma's `orderBy`.
  */
 export function buildOrderBy(
   query: VisitListQuery,
 ): Prisma.VisitOrderByWithRelationInput {
   if (query.sortBy === 'createdAt') return { createdAt: query.sortDir };
+  if (query.sortBy === 'scheduledAt') {
+    return { scheduledAt: { sort: query.sortDir, nulls: 'last' } };
+  }
   return { scheduledAt: { sort: 'asc', nulls: 'last' } };
 }
 

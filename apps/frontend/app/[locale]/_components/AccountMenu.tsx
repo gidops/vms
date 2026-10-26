@@ -1,7 +1,7 @@
 "use client";
 
 import { Avatar, Popover, PopoverContent, PopoverTrigger } from "@vms/ui";
-import { ChevronDown, HelpCircle, LogOut, Settings } from "lucide-react";
+import { ChartColumn, ChevronDown, LogOut, Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/shared/auth/AuthContext";
@@ -50,11 +50,11 @@ export function AccountMenu() {
             {t("accountSettings")}
           </Link>
           <Link
-            href="/help"
+            href="/insights"
             className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-sm text-fg transition-colors hover:bg-surface-muted"
           >
-            <HelpCircle className="size-4 text-fg-muted" aria-hidden="true" />
-            {t("help")}
+            <ChartColumn className="size-4 text-fg-muted" aria-hidden="true" />
+            {t("insights")}
           </Link>
         </div>
         <div className="border-t border-border p-2">

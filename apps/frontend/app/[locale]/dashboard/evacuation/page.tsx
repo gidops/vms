@@ -1,8 +1,7 @@
 import { redirect } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 
-// The VMC admin screens moved to the Help/Support page. Keep existing links
-// and bookmarks working by redirecting to the matching tab.
+// This screen moved to the Insights page. Keep existing links and bookmarks working by redirecting there.
 export default async function EvacuationRedirect({
   params,
 }: {
@@ -10,7 +9,7 @@ export default async function EvacuationRedirect({
 }) {
   const { locale } = await params;
   redirect({
-    href: { pathname: "/help", query: { tab: "evacuation" } },
+    href: { pathname: "/insights", query: { tab: "evacuation" } },
     locale,
   });
   // `redirect` throws, but satisfy the return type for the type checker.

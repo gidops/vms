@@ -66,18 +66,6 @@ export const ADMIN_SECTIONS: AdminSectionDef[] = [
     permission: ADMIN_PERMISSIONS.WATCHLIST_READ,
   },
   {
-    key: "evacuation",
-    icon: LifeBuoy,
-    href: "/admin/evacuation",
-    permission: PERMISSIONS.EVACUATION_READ,
-  },
-  {
-    key: "optIns",
-    icon: MailCheck,
-    href: "/admin/opt-ins",
-    permission: PERMISSIONS.CONSENT_READ,
-  },
-  {
     key: "deskQr",
     icon: QrCode,
     href: "/admin/desk-qr",
@@ -94,12 +82,6 @@ export const ADMIN_SECTIONS: AdminSectionDef[] = [
     key: "categories",
     icon: Tags,
     permission: ADMIN_PERMISSIONS.CONFIG_MANAGE,
-  },
-  {
-    key: "analytics",
-    icon: ChartColumn,
-    href: "/admin/analytics",
-    permission: ADMIN_PERMISSIONS.REPORT_READ,
   },
   {
     key: "integrations",

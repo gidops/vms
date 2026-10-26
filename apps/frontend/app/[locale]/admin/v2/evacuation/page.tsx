@@ -1,21 +1,21 @@
-"use client";
+import { redirect } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
 
-import { PERMISSIONS } from "@vms/contracts";
-import { TopNavShell } from "@vms/ui";
-import { EvacuationRollScreen } from "@/app/[locale]/_components/EvacuationRollScreen";
-import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
-import { PermissionGate } from "@/shared/auth/PermissionGate";
-import { RouteGuard } from "@/shared/auth/RouteGuard";
+// This screen moved to the Insights page. Keep existing links and bookmarks working by redirecting there.
+export default async function AdminV2EvacuationRedirect({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  redirect({
+    href: { pathname: "/insights", query: { tab: "evacuation" } },
+    locale,
+  });
+  // `redirect` throws, but satisfy the return type for the type checker.
+  return null;
+}
 
-/** Admin console v2 — Evacuation Roll tab: the shared staff/VMC screen. */
-export default function AdminV2EvacuationPage() {
-  return (
-    <RouteGuard home="/admin">
-      <TopNavShell nav={<AppTopNav app="admin" active="evacuation" />}>
-        <PermissionGate permission={PERMISSIONS.EVACUATION_READ}>
-          <EvacuationRollScreen />
-        </PermissionGate>
-      </TopNavShell>
-    </RouteGuard>
-  );
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
 }

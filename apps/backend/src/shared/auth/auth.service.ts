@@ -1,9 +1,10 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ROLES, type SignupInput } from '@vms/contracts';
+import { isAddonRole, ROLES, type SignupInput } from '@vms/contracts';
 import {
   UsersService,
   type UserWithAccess,
@@ -119,9 +120,10 @@ export class AuthService {
     if (!user || !user.isActive) {
       throw new UnauthorizedException('Invalid refresh token');
     }
-    // Preserve the session's active role; fall back if it was removed.
+    // Preserve the session's active role; fall back if it was removed (or is
+    // a legacy add-on role, which can no longer be active).
     const effectiveRole =
-      activeRole && user.roles.includes(activeRole)
+      activeRole && user.roles.includes(activeRole) && !isAddonRole(activeRole)
         ? activeRole
         : this.users.defaultRole(user);
     const accessToken = await this.tokens.signAccessToken(
@@ -191,6 +193,11 @@ export class AuthService {
     }
     if (!user.roles.includes(role)) {
       throw new ForbiddenException('You do not have that role');
+    }
+    if (isAddonRole(role)) {
+      throw new BadRequestException(
+        'Add-on roles extend your main role and cannot be switched to',
+      );
     }
     if (sessionId) {
       await this.refreshTokens.setSessionActiveRole(sessionId, role);

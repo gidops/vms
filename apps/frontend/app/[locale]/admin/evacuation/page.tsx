@@ -1,20 +1,21 @@
-"use client";
+import { redirect } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
 
-import { PERMISSIONS } from "@vms/contracts";
-import { EvacuationRollScreen } from "@/app/[locale]/_components/EvacuationRollScreen";
-import { AdminShell } from "@/app/[locale]/admin/_components/AdminShell";
-import { PermissionGate } from "@/shared/auth/PermissionGate";
-import { RouteGuard } from "@/shared/auth/RouteGuard";
+// This screen moved to the Insights page. Keep existing links and bookmarks working by redirecting there.
+export default async function AdminEvacuationRedirect({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  redirect({
+    href: { pathname: "/insights", query: { tab: "evacuation" } },
+    locale,
+  });
+  // `redirect` throws, but satisfy the return type for the type checker.
+  return null;
+}
 
-/** Admin console mount of the shared EvacuationRollScreen. */
-export default function AdminEvacuationPage() {
-  return (
-    <RouteGuard home="/admin">
-      <AdminShell active="evacuation">
-        <PermissionGate permission={PERMISSIONS.EVACUATION_READ}>
-          <EvacuationRollScreen />
-        </PermissionGate>
-      </AdminShell>
-    </RouteGuard>
-  );
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
 }

@@ -39,30 +39,19 @@ describe("AppTopNav — admin console tabs", () => {
   });
 
   it("adds each further tab only with its permission", () => {
+    // Analytics, evacuation and opt-ins moved to Insights; they never show here.
     perms.add(PERMISSIONS.REPORT_READ);
     perms.add(PERMISSIONS.EVACUATION_READ);
     perms.add(PERMISSIONS.CONSENT_READ);
     perms.add(PERMISSIONS.ISSUER_READ);
-    renderWithIntl(<AppTopNav app="admin" active="analytics" />);
-    expect(tabs()).toEqual([
-      "Overview",
-      "Requests & Alerts",
-      "Analytics",
-      "Evacuation",
-      "Opt-ins",
-      "Desk QR",
-    ]);
+    renderWithIntl(<AppTopNav app="admin" active="deskQr" />);
+    expect(tabs()).toEqual(["Overview", "Requests & Alerts", "Desk QR"]);
   });
 
   it("shows Users first among the gated tabs", () => {
     perms.add(PERMISSIONS.USER_READ);
     perms.add(PERMISSIONS.REPORT_READ);
     renderWithIntl(<AppTopNav app="admin" active="users" />);
-    expect(tabs()).toEqual([
-      "Overview",
-      "Requests & Alerts",
-      "Users",
-      "Analytics",
-    ]);
+    expect(tabs()).toEqual(["Overview", "Requests & Alerts", "Users"]);
   });
 });

@@ -11,7 +11,6 @@
     "visitors": "Visitors",
     "switchAccount": "Switch Account",
     "accountSettings": "Account Settings",
-    "help": "Help/Support",
     "logout": "Logout",
     "notifications": "Notifications",
     "notificationsUnread": "Notifications, {count} unread",
@@ -20,7 +19,8 @@
     "analytics": "Analytics",
     "evacuation": "Evacuation",
     "optIns": "Opt-ins",
-    "deskQr": "Desk QR"
+    "deskQr": "Desk QR",
+    "insights": "Insights"
   },
   "login": {
     "title": "Sign in",
@@ -307,7 +307,6 @@
   "roles": {
     "SUPER_ADMIN": "System Admin",
     "ADMIN": "Security Manager",
-    "AUDITOR": "Auditor",
     "STAFF": "Staff",
     "VMC": "VMC Reception",
     "GATE": "Gate",
@@ -603,10 +602,7 @@
         "onsiteFloors": "{count, plural, one {across # floor} other {across # floors}}",
         "console": {
           "SUPER_ADMIN": "System console",
-          "ADMIN": "Security console",
-          "VMC_ADMIN": "VMC console",
-          "READ_ADMIN": "Read-only console",
-          "AUDITOR": "Audit console"
+          "ADMIN": "Security console"
         }
       },
       "approvals": {
@@ -816,7 +812,8 @@
       "roles": "Roles",
       "create": "Create user",
       "save": "Save changes",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "addonHint": "Add-on for {base}"
     }
   },
   "settings": {
@@ -964,7 +961,15 @@
     "exporting": "Exporting…",
     "rangeTooLong": "Pick a range of 366 days or less.",
     "rangeInvalid": "The end date must be on or after the start date.",
-    "error": "The export failed. Please try again."
+    "error": "The export failed. Please try again.",
+    "quickRange": "Quick range",
+    "presets": {
+      "week": "Last week",
+      "month": "Last month",
+      "quarter": "Last 3 months",
+      "custom": "Custom"
+    },
+    "pdf": "PDF"
   },
   "delivery": {
     "title": "Notifications",
@@ -1171,25 +1176,6 @@
       "unknown": "Something went wrong. Try again, or register at the VMC desk."
     }
   },
-  "help": {
-    "title": "Help/Support",
-    "tabs": {
-      "evacuation": "Evacuation Roll",
-      "optIns": "Comms Opt-ins",
-      "deskQr": "Desk QR",
-      "export": "Export Data",
-      "support": "Help & Support"
-    },
-    "export": {
-      "title": "Export visitor data",
-      "help": "Download visitor records for a date range as a spreadsheet.",
-      "button": "Export Data"
-    },
-    "support": {
-      "title": "Help & Support",
-      "message": "Need help with the VMS or found a problem? Contact the development team through the established support channel."
-    }
-  },
   "auth": {
     "heroTitle": "AATC",
     "heroSubtitle": "Visitor Management Portal",
@@ -1200,5 +1186,144 @@
     "title": "Forgot password?",
     "body": "Password resets are handled by your system administrator. Contact support to have yours reset.",
     "back": "Back to login"
+  },
+  "insights": {
+    "title": "Insights",
+    "nothingHere": "There is nothing to show for your role yet.",
+    "tabs": {
+      "overview": "Overview",
+      "evacuation": "Evacuation Roll",
+      "history": "History",
+      "visitors": "Visitors",
+      "analytics": "Analytics"
+    },
+    "overview": {
+      "title": "Today at a glance",
+      "error": "Unable to load today's numbers. Please try again.",
+      "onsite": "On site now",
+      "onsiteFloors": "{count, plural, =0 {No floors occupied} one {Across # floor} other {Across # floors}}",
+      "visitorsToday": "Visitors today",
+      "yesterday": "{count, plural, one {# yesterday} other {# yesterday}}",
+      "expected": "Still expected",
+      "expectedHint": "Approved, not arrived yet",
+      "checkedOut": "Checked out",
+      "checkedInHint": "{count, plural, one {# checked in today} other {# checked in today}}"
+    },
+    "history": {
+      "titleFacility": "Visit history",
+      "titleMine": "My visit history",
+      "range": "History range",
+      "ranges": {
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "90d": "Last 3 months",
+        "all": "All time"
+      },
+      "export": "Export",
+      "visits": "visits",
+      "searchPlaceholder": "Search visitor, host, floor or code…",
+      "empty": "No visits in this range",
+      "noMatches": "No visits match your search",
+      "error": "Unable to load the history. Please try again.",
+      "noHost": "No host",
+      "viewDetails": "View details",
+      "columns": {
+        "visitor": "Visitor",
+        "host": "Host",
+        "date": "Visit date",
+        "purpose": "Purpose",
+        "status": "Status",
+        "action": "Action"
+      }
+    },
+    "visitors": {
+      "title": "Visitors",
+      "views": {
+        "directory": "Directory",
+        "optIns": "Comms opt-in"
+      },
+      "countFacility": "visitors",
+      "countMine": "people have visited you",
+      "searchPlaceholder": "Search name, email, organisation or phone…",
+      "empty": "No visitors yet",
+      "noMatches": "No visitors match your search",
+      "error": "Unable to load visitors. Please try again.",
+      "viewHistory": "View history",
+      "optedIn": "Opted in",
+      "optedOut": "Opted out",
+      "sheetTitle": "Visitor",
+      "summary": "Summary",
+      "firstVisit": "First visit",
+      "avgStay": "Average stay",
+      "minutes": "{count, plural, one {# min} other {# mins}}",
+      "visitHistory": "Visit history",
+      "columns": {
+        "visitor": "Visitor",
+        "organization": "Organisation",
+        "visits": "Visits",
+        "lastVisit": "Last visit",
+        "comms": "Comms",
+        "action": "Action"
+      }
+    },
+    "analytics": {
+      "title": "Facility analytics",
+      "titleMine": "My analytics",
+      "range": "Analytics range",
+      "ranges": {
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "90d": "Last 3 months"
+      },
+      "error": "Unable to load analytics. Please try again.",
+      "minutes": "{count, plural, one {# min} other {# mins}}",
+      "kpi": {
+        "hosted": "Visitors hosted",
+        "allTime": "All-time visits",
+        "upcoming": "Upcoming visits",
+        "avgStay": "Average stay",
+        "visits": "Visits",
+        "uniqueVisitors": "Unique visitors",
+        "arrived": "Arrived",
+        "noShows": "{count, plural, one {# no-show} other {# no-shows}}"
+      },
+      "daily": "Daily visitor volume",
+      "weekly": "Weekly visitor volume (12 weeks)",
+      "hourly": "Peak arrival hours",
+      "outcomes": "Visit outcomes",
+      "statusMix": "Status breakdown",
+      "visitMix": "Walk-ins vs invited",
+      "repeatVisitors": "Repeat visitors",
+      "noRepeat": "No repeat visitors in this range",
+      "onsiteByFloor": "On site now, by floor",
+      "nobodyOnsite": "Nobody is on site right now",
+      "topHosts": "Busiest hosts",
+      "topOrganizations": "Top visiting organisations",
+      "noData": "No visits in this range",
+      "security": {
+        "title": "Security",
+        "flagged": "Flagged for review",
+        "alertsRaised": "Alerts raised",
+        "alertsOpen": "Alerts still open",
+        "denied": "Requests denied",
+        "deniedDaily": "Denied requests per day"
+      }
+    },
+    "status": {
+      "PENDING": "Awaiting approval",
+      "REVIEW_REQUESTED": "Review requested",
+      "FLAGGED": "Flagged",
+      "APPROVED": "Expected",
+      "DENIED": "Denied",
+      "CHECKED_IN": "On site",
+      "CHECKED_OUT": "Checked out",
+      "CANCELLED": "Cancelled",
+      "EXPIRED": "Expired"
+    },
+    "visitType": {
+      "WALK_IN": "Walk-in",
+      "PRE_INVITED": "Invited",
+      "APPOINTMENT": "Appointment"
+    }
   }
 }

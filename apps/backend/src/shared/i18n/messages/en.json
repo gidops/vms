@@ -108,6 +108,9 @@
       "codeExpired": "This code has expired. Please scan the QR code again.",
       "codeWrong": "That code doesn't match. Check it with reception and try again.",
       "tooManyTries": "Too many wrong codes. Please scan the QR code again."
+    },
+    "visitor": {
+      "notFound": "Visitor not found"
     }
   },
   "validation": {

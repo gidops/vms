@@ -22,7 +22,7 @@ export const ExportVisitsQuery = z
   .object({
     from: IsoDay,
     to: IsoDay,
-    format: z.enum(["csv", "xlsx"]).default("csv"),
+    format: z.enum(["csv", "xlsx", "pdf"]).default("csv"),
   })
   .superRefine((v, ctx) => {
     const span = inclusiveDaySpan(v.from, v.to);

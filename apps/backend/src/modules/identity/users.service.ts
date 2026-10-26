@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import {
+  ADDON_ROLES,
+  isAddonRole,
   ROLES,
   type CreateUserInput,
   type HostOption,
@@ -68,15 +70,23 @@ export class UsersService {
     return user ? this.withAccess(user) : null;
   }
 
-  /** The user's default active role: the earliest-assigned one. */
+  /** The user's default active role: the earliest-assigned non-add-on one. */
   defaultRole(user: UserWithAccess): string | null {
-    return user.roles[0] ?? null;
+    return user.roles.find((r) => !isAddonRole(r)) ?? null;
   }
 
-  /** Permissions granted by a single role (for active-role scoping). */
+  /**
+   * Permissions for the active role (active-role scoping), plus those of any
+   * add-on the user holds that extends it (READ_ADMIN on STAFF, VMC_ADMIN on VMC).
+   */
   permissionsForRole(user: UserWithAccess, role: string | null): string[] {
     if (!role) return [];
-    return user.rolePermissions[role] ?? [];
+    const addons = user.roles.filter((r) => ADDON_ROLES[r] === role);
+    return [
+      ...new Set(
+        [role, ...addons].flatMap((r) => user.rolePermissions[r] ?? []),
+      ),
+    ];
   }
 
   /** Whether any SUPER_ADMIN user exists (gates first-run signup). */
@@ -394,7 +404,21 @@ export class UsersService {
     });
   }
 
-  private async resolveRoleIds(names: string[]): Promise<string[]> {
+  private async resolveRoleIds(requested: string[]): Promise<string[]> {
+    // An add-on only extends its base role, so it needs that role alongside it.
+    for (const name of requested) {
+      const base = ADDON_ROLES[name];
+      if (base && !requested.includes(base)) {
+        throw new BadRequestException(
+          `${name} is an add-on for ${base}; assign ${base} as well`,
+        );
+      }
+    }
+    // Add-ons go last so the first listed base role stays the default.
+    const names = [
+      ...requested.filter((r) => !isAddonRole(r)),
+      ...requested.filter(isAddonRole),
+    ];
     const roles = await this.prisma.role.findMany({
       where: { name: { in: names } },
     });

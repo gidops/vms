@@ -252,6 +252,34 @@ describe('VisitExportService', () => {
     expect(ws.getRow(2).getCell(20).value).toBe('Sent');
   });
 
+  it('produces a paginated landscape PDF', async () => {
+    const rows = Array.from({ length: 60 }, (_, i) => row({ id: `v${i}` }));
+    const { service } = setup(rows);
+    const out = new PassThrough();
+    const done = collect(out);
+    const q = { from: '2026-10-17', to: '2026-10-17', format: 'pdf' } as const;
+    const n = await service.write(q, out, 'actor');
+    const pdf = (await done).toString('latin1');
+    expect(n).toBe(60);
+    expect(pdf.startsWith('%PDF-')).toBe(true);
+    // 60 rows don't fit one page, so the table continues onto a second.
+    expect(pdf.match(/\/Type \/Page\b/g)?.length).toBeGreaterThan(1);
+    expect(service.contentType(q)).toBe('application/pdf');
+  });
+
+  it('writes a PDF that says so when the range is empty', async () => {
+    const { service } = setup([]);
+    const out = new PassThrough();
+    const done = collect(out);
+    const n = await service.write(
+      { from: '2026-10-17', to: '2026-10-17', format: 'pdf' },
+      out,
+      'actor',
+    );
+    expect(n).toBe(0);
+    expect((await done).toString('latin1').startsWith('%PDF-')).toBe(true);
+  });
+
   it('names the file after the range', () => {
     const { service } = setup([]);
     expect(

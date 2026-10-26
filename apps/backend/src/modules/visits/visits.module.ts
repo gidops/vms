@@ -24,6 +24,7 @@ import { VisitsController } from './visits.controller';
     VisitDeliveriesService,
   ],
   exports: [
+    VisitDashboardService,
     VisitReadService,
     VisitAuthoringService,
     VisitModerationService,

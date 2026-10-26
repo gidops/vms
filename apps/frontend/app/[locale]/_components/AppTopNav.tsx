@@ -27,21 +27,6 @@ const ADMIN_TABS = [
     permission: PERMISSIONS.USER_READ,
   },
   {
-    value: "analytics",
-    route: "/admin/v2/analytics",
-    permission: PERMISSIONS.REPORT_READ,
-  },
-  {
-    value: "evacuation",
-    route: "/admin/v2/evacuation",
-    permission: PERMISSIONS.EVACUATION_READ,
-  },
-  {
-    value: "optIns",
-    route: "/admin/v2/opt-ins",
-    permission: PERMISSIONS.CONSENT_READ,
-  },
-  {
     value: "deskQr",
     route: "/admin/v2/desk-qr",
     permission: PERMISSIONS.ISSUER_READ,
@@ -52,8 +37,8 @@ export interface AppTopNavProps {
   /**
    * Primary view toggle. The VMC dashboard toggles schedule/requests; the staff
    * dashboard toggles schedule/visits/updates; the admin console toggles
-   * overview/requests plus the permission-gated users, analytics, evacuation,
-   * opt-ins and desk QR tabs. Omit on dashboards with no toggle.
+   * overview/requests plus the permission-gated users and desk QR tabs
+   * (analytics, evacuation and opt-ins live on the Insights page). Omit on dashboards with no toggle.
    */
   active?:
     | "schedule"
@@ -62,9 +47,6 @@ export interface AppTopNavProps {
     | "updates"
     | "overview"
     | "users"
-    | "analytics"
-    | "evacuation"
-    | "optIns"
     | "deskQr";
   /** Which app's nav segments + routes to render (default "vmc"). */
   app?: "vmc" | "staff" | "admin";

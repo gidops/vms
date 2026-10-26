@@ -13,6 +13,11 @@ export const PERMISSIONS_KEY = 'requiredPermissions';
 export const RequirePermissions = (...permissions: string[]) =>
   SetMetadata(PERMISSIONS_KEY, permissions);
 
+export const ANY_PERMISSIONS_KEY = 'anyPermissions';
+/** Require at least one of the listed permission keys (checked by PermissionsGuard). */
+export const RequireAnyPermission = (...permissions: string[]) =>
+  SetMetadata(ANY_PERMISSIONS_KEY, permissions);
+
 /** The authenticated principal attached by the JWT strategy. */
 export interface AuthUser {
   userId: string;

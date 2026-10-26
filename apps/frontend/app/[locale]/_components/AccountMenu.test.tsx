@@ -21,12 +21,12 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 
 describe("AccountMenu", () => {
-  it("links Help/Support to the help page", () => {
+  it("links Insights to the insights page", () => {
     renderWithIntl(<AccountMenu />);
     fireEvent.click(screen.getByRole("button", { name: "Judith Francis" }));
-    expect(screen.getByRole("link", { name: "Help/Support" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Insights" })).toHaveAttribute(
       "href",
-      "/help",
+      "/insights",
     );
   });
 });

@@ -28,6 +28,12 @@ describe('buildOrderBy', () => {
       createdAt: 'asc',
     });
   });
+
+  it('orders by scheduled date in the requested direction when sortBy=scheduledAt', () => {
+    expect(
+      buildOrderBy(query({ sortBy: 'scheduledAt', sortDir: 'desc' })),
+    ).toEqual({ scheduledAt: { sort: 'desc', nulls: 'last' } });
+  });
 });
 
 describe('deriveGroupStatus', () => {

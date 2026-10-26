@@ -25,7 +25,19 @@ import type { DateValue, RangeValue } from "react-aria-components";
 import { reportsApi } from "@/data/reports/reports.api";
 import { addDaysIso, watTodayIso } from "@/shared/wat";
 
-export type ExportFormat = "csv" | "xlsx";
+export type ExportFormat = "csv" | "xlsx" | "pdf";
+
+/** Quick ranges ending today (inclusive days); "custom" uses the calendar. */
+export const EXPORT_PRESETS = { week: 7, month: 30, quarter: 90 } as const;
+export type ExportPreset = keyof typeof EXPORT_PRESETS | "custom";
+
+/** The `from`/`to` (WAT YYYY-MM-DD) of a quick range ending `today`. */
+export function presetRange(
+  preset: keyof typeof EXPORT_PRESETS,
+  today: string,
+): { from: string; to: string } {
+  return { from: addDaysIso(today, -(EXPORT_PRESETS[preset] - 1)), to: today };
+}
 
 /** Range check shared by the dialog and its tests. */
 export function exportRangeError(
@@ -40,10 +52,11 @@ export function exportRangeError(
 }
 
 /**
- * "Export Visitor Data": a WAT visit-date range (max 366 days) and CSV / Excel.
- * The server streams the file; this only collects the choice and downloads it.
- * The range uses the dashboard's Popover + RangeCalendar picker
- * (see RecordsRangeFilter); it defaults to yesterday → today.
+ * "Export Visitor Data": a WAT visit-date range (max 366 days) and CSV / Excel
+ * / PDF. The server streams the file; this only collects the choice and
+ * downloads it. Quick ranges cover the last week / month / 3 months (the VMC's
+ * weekly BI pull); "Custom" opens the dashboard's Popover + RangeCalendar
+ * picker (see RecordsRangeFilter). It defaults to the last week.
  */
 export function ExportVisitorsDialog({
   open,
@@ -55,7 +68,8 @@ export function ExportVisitorsDialog({
   const t = useTranslations("export");
   const format = useFormatter();
   const today = watTodayIso();
-  const [from, setFrom] = React.useState(() => addDaysIso(today, -1));
+  const [preset, setPreset] = React.useState<ExportPreset>("week");
+  const [from, setFrom] = React.useState(() => presetRange("week", today).from);
   const [to, setTo] = React.useState(today);
   const [pickerOpen, setPickerOpen] = React.useState(false);
   const [fileFormat, setFileFormat] = React.useState<ExportFormat>("csv");
@@ -76,7 +90,19 @@ export function ExportVisitorsDialog({
     if (!range) return;
     setFrom(range.start.toString());
     setTo(range.end.toString());
+    setPreset("custom");
     setPickerOpen(false);
+  };
+
+  const pickPreset = (next: ExportPreset) => {
+    setPreset(next);
+    if (next === "custom") {
+      setPickerOpen(true);
+      return;
+    }
+    const range = presetRange(next, today);
+    setFrom(range.from);
+    setTo(range.to);
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -114,6 +140,22 @@ export function ExportVisitorsDialog({
               <AlertDescription>{t("error")}</AlertDescription>
             </Alert>
           ) : null}
+
+          <div className="flex flex-col gap-1.5">
+            <Label>{t("quickRange")}</Label>
+            <SegmentedControl
+              aria-label={t("quickRange")}
+              value={preset}
+              onValueChange={(v) => pickPreset(v as ExportPreset)}
+              options={[
+                { value: "week", label: t("presets.week") },
+                { value: "month", label: t("presets.month") },
+                { value: "quarter", label: t("presets.quarter") },
+                { value: "custom", label: t("presets.custom") },
+              ]}
+              className="max-w-full self-start overflow-x-auto"
+            />
+          </div>
 
           <div className="flex flex-col gap-1.5">
             <Label id="export-range-label">{t("dateRange")}</Label>
@@ -161,6 +203,7 @@ export function ExportVisitorsDialog({
               options={[
                 { value: "csv", label: t("csv") },
                 { value: "xlsx", label: t("excel") },
+                { value: "pdf", label: t("pdf") },
               ]}
               className="self-start"
             />
