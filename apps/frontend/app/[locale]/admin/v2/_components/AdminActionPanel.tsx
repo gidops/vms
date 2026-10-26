@@ -3,23 +3,22 @@
 import { PERMISSIONS } from "@vms/contracts";
 import { Button } from "@vms/ui";
 import { useTranslations } from "next-intl";
-import * as React from "react";
 import {
   EvacuationRollLink,
   useEvacuationAlertCount,
 } from "@/app/[locale]/_components/EvacuationIndicator";
-import { ExportVisitorsDialog } from "@/app/[locale]/_components/ExportVisitorsDialog";
 import { DecorChevrons } from "@/app/[locale]/_components/OverviewBar";
-import { ADMIN_PERMISSIONS } from "@/app/[locale]/admin/_components/adminAccess";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/shared/auth/AuthContext";
+import { adminConsoleRole } from "@/shared/auth/adminConsoleRole";
 
 /**
  * The brand-green quick-actions content of the overview band (VMC
- * `QuickActions` / staff `BookPanel`), replacing the old admin `QuickActionsCard`
- * tiles. Export opens the shared visitor export dialog (date range + CSV/Excel). Actions are permission-gated; a role that can use none of them gets
- * a single call to action into the Requests tab instead (review for approvers,
- * view activity for read-only roles), so the panel is never empty.
+ * `QuickActions` / staff `BookPanel`): two buttons picked for the console.
+ * Security Manager: Review Requests + Visit History (Insights → History).
+ * System Admin: Add Visitor + Review Requests. Each is permission-gated; a
+ * role with neither gets a single "View Activity" into the Requests tab, so
+ * the panel is never empty.
  */
 export function AdminActionPanel({
   onAddVisitor,
@@ -30,19 +29,44 @@ export function AdminActionPanel({
   const tQa = useTranslations("admin.overview.quickActions");
   const router = useRouter();
   const { hasPermission } = useAuth();
-  const [exportOpen, setExportOpen] = React.useState(false);
   const evacuationCount = useEvacuationAlertCount();
 
   const canAdd = hasPermission(PERMISSIONS.INVITATION_CREATE);
-  const canExport = hasPermission(ADMIN_PERMISSIONS.REPORT_EXPORT);
   const canApprove = hasPermission(PERMISSIONS.VISIT_APPROVE);
-  const hasQuickActions = canAdd || canExport;
+  const canHistory = hasPermission(PERMISSIONS.HISTORY_READ);
+  const sm = adminConsoleRole(hasPermission) === "securityManager";
+  // Review Requests opens the approval queue for every approver (the System
+  // Admin approves too, just not as a primary duty).
+  const review = () => router.push("/admin/v2/approvals");
 
-  const title = hasQuickActions
-    ? tQa("title")
-    : canApprove
-      ? t("reviewTitle")
-      : t("activityTitle");
+  const actions: { key: string; label: string; onClick: () => void }[] = (
+    sm
+      ? [
+          { key: "review", label: t("reviewCta"), onClick: review, show: true },
+          {
+            key: "history",
+            label: t("historyCta"),
+            onClick: () =>
+              router.push({ pathname: "/insights", query: { tab: "history" } }),
+            show: canHistory,
+          },
+        ]
+      : [
+          {
+            key: "add",
+            label: tQa("addVisitor"),
+            onClick: onAddVisitor,
+            show: canAdd,
+          },
+          {
+            key: "review",
+            label: t("reviewCta"),
+            onClick: review,
+            show: canApprove,
+          },
+        ]
+  ).filter((a) => a.show);
+  const empty = actions.length === 0;
 
   return (
     <>
@@ -55,32 +79,32 @@ export function AdminActionPanel({
           className="size-12"
           aria-hidden="true"
         />
-        <h3 className="whitespace-pre-line text-lg font-semibold">{title}</h3>
+        <h3 className="whitespace-pre-line text-lg font-semibold">
+          {empty ? t("activityTitle") : tQa("title")}
+        </h3>
         <EvacuationRollLink count={evacuationCount} />
       </div>
       <div className="relative flex flex-wrap items-center gap-3">
-        {canAdd ? (
-          <Button intent="primary" onClick={onAddVisitor}>
-            {tQa("addVisitor")}
-          </Button>
-        ) : null}
-        {canExport ? (
-          <Button intent="accent" onClick={() => setExportOpen(true)}>
-            {tQa("exportData")}
-          </Button>
-        ) : null}
-        {!hasQuickActions || canApprove ? (
+        {empty ? (
           <Button
-            intent={hasQuickActions ? "primary" : "accent"}
+            intent="accent"
             onClick={() => router.push("/admin/v2/requests")}
           >
-            {canApprove ? t("reviewCta") : t("activityCta")}
+            {t("activityCta")}
           </Button>
-        ) : null}
+        ) : (
+          // First action primary, second accent (VMC Quick actions pair).
+          actions.map((a, i) => (
+            <Button
+              key={a.key}
+              intent={i === 0 ? "primary" : "accent"}
+              onClick={a.onClick}
+            >
+              {a.label}
+            </Button>
+          ))
+        )}
       </div>
-      {canExport ? (
-        <ExportVisitorsDialog open={exportOpen} onOpenChange={setExportOpen} />
-      ) : null}
     </>
   );
 }

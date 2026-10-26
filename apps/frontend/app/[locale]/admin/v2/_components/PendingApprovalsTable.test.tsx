@@ -110,3 +110,96 @@ describe("PendingApprovalsTable (v2)", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("PendingApprovalsTable — dashboard (vmc) variant", () => {
+  beforeEach(() => {
+    perms.clear();
+    rows = [visit("1", "Chidi Okonkwo", 72)];
+  });
+
+  it("titles the table like the VMC records table, with the status pills beside it", () => {
+    renderWithIntl(
+      <PendingApprovalsTable variant="vmc" query={{}} onOpen={vi.fn()} />,
+    );
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Pending Approvals" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+    expect(screen.getByRole("radio", { name: "All" })).toBeChecked();
+    expect(screen.getByText("Chidi Okonkwo")).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: "Host / Floor" }),
+    ).toBeInTheDocument();
+    // No Waiting column on the dashboard.
+    expect(screen.queryByRole("columnheader", { name: "Waiting" })).toBeNull();
+    expect(screen.queryByText("1h 12m")).toBeNull();
+    // Guest count as the bare number.
+    const row = screen.getByText("Chidi Okonkwo").closest("tr") as HTMLElement;
+    expect(within(row).getByText("1")).toBeInTheDocument();
+    expect(within(row).queryByText(/guest/i)).toBeNull();
+  });
+
+  it("gives each row one outline button: Review to decide, View while with the host", () => {
+    perms.add(PERMISSIONS.VISIT_APPROVE);
+    perms.add(PERMISSIONS.VISIT_DENY);
+    rows = [
+      visit("1", "Chidi Okonkwo", 72),
+      visit("2", "Kwame Mensah", 30, { status: "REVIEW_REQUESTED" }),
+      visit("3", "Ada Group", 5, {
+        isGroupVisit: true,
+        groupId: "g1",
+        groupName: "Ada Group",
+      }),
+    ];
+    const onOpen = vi.fn();
+    renderWithIntl(
+      <PendingApprovalsTable variant="vmc" query={{}} onOpen={onOpen} />,
+    );
+    for (const name of ["Chidi Okonkwo", "Kwame Mensah", "Ada Group"]) {
+      expect(within(rowOf(name)).getAllByRole("button")).toHaveLength(1);
+    }
+    expect(screen.queryByRole("button", { name: /Approve|Deny/ })).toBeNull();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Review Chidi Okonkwo" }),
+    );
+    expect(onOpen).toHaveBeenCalledWith(rows[0]);
+    expect(
+      within(rowOf("Kwame Mensah")).getByRole("button", {
+        name: "View Kwame Mensah",
+      }),
+    ).toHaveTextContent("View");
+    expect(
+      within(rowOf("Ada Group")).getByRole("button", {
+        name: "Review Ada Group",
+      }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("PendingApprovalsTable — full tab (page + review)", () => {
+  beforeEach(() => {
+    perms.clear();
+    perms.add(PERMISSIONS.VISIT_APPROVE);
+    perms.add(PERMISSIONS.VISIT_DENY);
+    rows = [visit("1", "Chidi Okonkwo", 72, { groupSize: 3 })];
+  });
+
+  it("keeps Waiting, the guest icon with the word, and one Review button", () => {
+    renderWithIntl(
+      <PendingApprovalsTable query={{}} onOpen={vi.fn()} actions="review" />,
+    );
+    const row = rowOf("Chidi Okonkwo");
+    expect(
+      screen.getByRole("columnheader", { name: "Waiting" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: "Host / Floor / Unit" }),
+    ).toBeInTheDocument();
+    expect(within(row).getByText("1h 12m")).toBeInTheDocument();
+    expect(within(row).getByText("3 Guests")).toBeInTheDocument();
+    expect(within(row).getAllByRole("button")).toHaveLength(1);
+    expect(
+      within(row).getByRole("button", { name: "Review Chidi Okonkwo" }),
+    ).toBeInTheDocument();
+  });
+});

@@ -188,6 +188,30 @@ describe('V1 gap features (e2e)', () => {
         },
       ],
       [
+        // Users and roles are the System Admin's; the Security Manager has none.
+        'GET',
+        '/users',
+        {
+          SUPER_ADMIN: 200,
+          ADMIN: 403,
+          VMC_ADMIN: 403,
+          READ_ADMIN: 403,
+          VMC: 403,
+          GATE: 403,
+          STAFF: 403,
+        },
+      ],
+      [
+        'GET',
+        '/roles',
+        {
+          SUPER_ADMIN: 200,
+          ADMIN: 403,
+          VMC: 403,
+          STAFF: 403,
+        },
+      ],
+      [
         'GET',
         '/consent/opt-ins',
         {
@@ -223,13 +247,18 @@ describe('V1 gap features (e2e)', () => {
     }
 
     it('POST /consent/withdraw is limited to consent:manage holders', async () => {
-      for (const role of [ROLES.READ_ADMIN, ROLES.STAFF, ROLES.GATE]) {
+      for (const role of [
+        ROLES.ADMIN,
+        ROLES.READ_ADMIN,
+        ROLES.STAFF,
+        ROLES.GATE,
+      ]) {
         await as(role)
           .post('/consent/withdraw')
           .send({ email: 'x@y.com' })
           .expect(403);
       }
-      for (const role of [ROLES.VMC, ROLES.ADMIN, ROLES.VMC_ADMIN]) {
+      for (const role of [ROLES.VMC, ROLES.VMC_ADMIN]) {
         await as(role)
           .post('/consent/withdraw')
           .send({ email: `nobody-${run}@y.com` })

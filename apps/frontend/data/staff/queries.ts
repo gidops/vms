@@ -4,6 +4,8 @@ import { staffApi } from "./staff.api";
 
 export interface ActivityFeedParams {
   date?: string;
+  /** Visitor name or email. */
+  search?: string;
   category?: StaffActivityCategory;
   page?: number;
   pageSize?: number;
@@ -17,6 +19,7 @@ const keys = {
       "activity",
       p.date ?? "all",
       p.category ?? "all",
+      p.search ?? "",
       p.page ?? 1,
       p.pageSize ?? 8,
     ] as const,
@@ -41,6 +44,7 @@ export function useStaffActivityFeed(params: ActivityFeedParams = {}) {
     queryFn: () =>
       staffApi.activityFeed({
         date: params.date,
+        search: params.search,
         category: params.category,
         page: params.page,
         pageSize: params.pageSize ?? 8,

@@ -1,33 +1,32 @@
 "use client";
 
 import { TopNavShell } from "@vms/ui";
-import { useSearchParams } from "next/navigation";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
 import { useEvacuationAlertCount } from "@/app/[locale]/_components/EvacuationIndicator";
 import { QuickActionSheet } from "@/app/[locale]/dashboard/_components/QuickActionSheet";
+import { useAuth } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
 import { AdminActionPanel } from "./_components/AdminActionPanel";
 import { AdminActivityFeed } from "./_components/AdminActivityFeed";
 import { AdminFilters, useAdminFilters } from "./_components/AdminFilters";
 import { AdminOverview } from "./_components/AdminOverview";
-import { AdminUpcomingFeed } from "./_components/AdminUpcomingFeed";
 import { AdminVisitsTable } from "./_components/AdminVisitsTable";
+import { adminConsoleRole } from "@/shared/auth/adminConsoleRole";
+import { PendingApprovalsTable } from "./_components/PendingApprovalsTable";
 import { useAdminBand } from "./_components/useAdminBand";
 import { useVisitOverlays } from "./_components/VisitOverlays";
 
 /**
  * Admin console v2 — Overview tab, rebuilt from the VMC and staff dashboards:
- * nav → filter bar → overview band → table area. Traffic and status charts
- * live on the Analytics tab (as /admin moved them to /admin/analytics).
- *
- * `?layout=staff` previews the staff-flavoured arrangement (search-only bar,
- * staff band, staff table beside the activity/upcoming feed column); the
- * default is the VMC arrangement (full filters, VMC band, full-width records
- * table with the Today / Upcoming / Yesterday pills).
+ * nav → filter bar → overview band → table beside Recent Activity (the staff
+ * dashboard grid). The table follows the console: the Security Manager gets
+ * the pending-approvals queue, the System Admin the Visitor Records. Traffic
+ * and status charts live on Insights → Analytics.
  */
 function Overview() {
-  const layout = useSearchParams().get("layout") === "staff" ? "staff" : "vmc";
+  const { hasPermission } = useAuth();
+  const role = adminConsoleRole(hasPermission);
   const band = useAdminBand();
   const filters = useAdminFilters();
   const { openRow, open, overlays } = useVisitOverlays();
@@ -40,7 +39,7 @@ function Overview() {
       nav={<AppTopNav app="admin" active="overview" />}
       filterBar={
         <AdminFilters
-          variant={layout === "staff" ? "search" : "full"}
+          variant="full"
           value={filters.filters}
           onChange={filters.onChange}
           onSearch={filters.onSearch}
@@ -49,40 +48,33 @@ function Overview() {
     >
       <div className="flex flex-col gap-6">
         <AdminOverview
-          variant={layout}
           eyebrow={band.eyebrow}
+          eyebrowIcon={band.eyebrowIcon}
           welcome={band.welcome}
           stats={band.stats}
-          pendingCount={band.pendingCount}
           panelTone={evacuationCount > 0 ? "alert" : "default"}
           panel={
             <AdminActionPanel onAddVisitor={() => setAddingVisitor(true)} />
           }
         />
 
-        {layout === "staff" ? (
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
-            <AdminVisitsTable
-              columns="staff"
-              range="staff"
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
+          {role === "securityManager" ? (
+            <PendingApprovalsTable
+              variant="vmc"
               query={filters.query}
               onOpen={openRow}
             />
-            <div className="flex flex-col gap-6">
-              <AdminActivityFeed variant="updates" onSelect={open} />
-              <AdminUpcomingFeed
-                onView={(id) => open({ kind: "request", id })}
-              />
-            </div>
-          </div>
-        ) : (
-          <AdminVisitsTable
-            columns="vmc"
-            range="myVisits"
-            query={filters.query}
-            onOpen={openRow}
-          />
-        )}
+          ) : (
+            <AdminVisitsTable
+              columns="vmc"
+              range="myVisits"
+              query={filters.query}
+              onOpen={openRow}
+            />
+          )}
+          <AdminActivityFeed variant="updates" onSelect={open} />
+        </div>
       </div>
 
       <QuickActionSheet

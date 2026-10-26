@@ -1,8 +1,9 @@
 "use client";
 
 import { cn } from "@vms/ui";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import * as React from "react";
+import { Link } from "@/i18n/navigation";
 
 export interface OverviewStat {
   label: string;
@@ -14,6 +15,11 @@ export interface OverviewStat {
    * label and value in the warning colour (the admin "Awaiting approval").
    */
   tone?: "default" | "warning";
+  /**
+   * Shortcut to the list behind the number: a chevron link beside the label
+   * (the Security Manager's "Awaiting approval" → Pending Approvals).
+   */
+  link?: { href: string; label: string };
 }
 
 export interface OverviewBarProps {
@@ -75,15 +81,38 @@ export function DecorChevrons() {
 export function StatCell({ stat }: { stat: OverviewStat }) {
   const warning = stat.tone === "warning";
   return (
-    <div className="flex flex-col gap-3 px-8 py-6" data-tone={stat.tone ?? "default"}>
-      <span
-        className={cn(
-          "text-xl leading-6 font-normal",
-          warning ? "text-warning" : "text-[#526070]",
-        )}
-      >
-        {stat.label}
-      </span>
+    <div
+      className="flex flex-col gap-3 px-8 py-6"
+      data-tone={stat.tone ?? "default"}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span
+          className={cn(
+            "text-xl leading-6 font-normal",
+            warning ? "text-warning" : "text-[#526070]",
+          )}
+        >
+          {stat.label}
+        </span>
+        {stat.link ? (
+          <Link
+            href={stat.link.href}
+            aria-label={stat.link.label}
+            title={stat.link.label}
+            className={cn(
+              "inline-flex size-8 shrink-0 items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]",
+              warning
+                ? "text-warning hover:bg-warning/10"
+                : "text-[#526070] hover:bg-primary/10",
+            )}
+          >
+            <ChevronRight
+              className="size-5 rtl:rotate-180"
+              aria-hidden="true"
+            />
+          </Link>
+        ) : null}
+      </div>
       <span
         className={cn(
           "text-[2.5rem] font-[550] leading-[1.2]",
@@ -171,17 +200,17 @@ export function OverviewBar({
         data-testid="overview-bar-desktop"
         className="hidden overflow-hidden rounded-t-xl border border-border shadow-xs lg:grid lg:grid-cols-[repeat(3,1fr)_minmax(300px,1.5fr)]"
       >
-        {/* Row 1 */}
+        {/* Row 1 — kept shorter than the stats/panel row beneath it. */}
         <div
           className={cn(
-            "flex items-center bg-surface p-6",
+            "flex items-center bg-surface px-6 py-3",
             aside ? "col-span-3" : "col-span-4",
           )}
         >
           {heading}
         </div>
         {aside ? (
-          <div className="flex flex-col justify-center border-s border-border bg-surface-muted px-6 py-5">
+          <div className="flex flex-col justify-center border-s border-border bg-surface-muted px-6 py-3">
             {aside}
           </div>
         ) : null}

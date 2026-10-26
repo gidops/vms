@@ -1,7 +1,14 @@
 import { fireEvent, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import type * as React from "react";
+import { describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render";
 import { OverviewBar } from "./OverviewBar";
+
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ children, ...rest }: React.ComponentProps<"a">) => (
+    <a {...rest}>{children}</a>
+  ),
+}));
 
 const stats = [
   {

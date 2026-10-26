@@ -9,7 +9,6 @@ import {
   Pagination,
   RecordTable,
   SearchInput,
-  SegmentedControl,
   Spinner,
   Table,
   TableBody,
@@ -21,6 +20,7 @@ import {
 import { IdCard, Plus } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
+import { FilterPills } from "@/app/[locale]/_components/FilterPills";
 import {
   useRfidAssignments,
   useRfidCards,
@@ -369,24 +369,22 @@ export function AccessCardsTab() {
 
   return (
     <section className="flex flex-col gap-6">
+      {/* Laid out like Insights → History: view pills, then the action. */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold text-primary">{t("title")}</h2>
-        <div className="flex flex-wrap items-center gap-3">
-          <SegmentedControl
-            aria-label={t("title")}
-            value={view}
-            onValueChange={(v) => setView(v as View)}
-            options={[
-              { value: "active", label: t("views.active") },
-              { value: "history", label: t("views.history") },
-              { value: "registry", label: t("views.registry") },
-            ]}
-          />
-          <Button onClick={() => setAssignOpen(true)}>
-            <Plus className="size-4" aria-hidden="true" />
-            {t("assignCard")}
-          </Button>
-        </div>
+        <FilterPills<View>
+          aria-label={t("title")}
+          value={view}
+          onValueChange={setView}
+          options={[
+            { value: "active", label: t("views.active") },
+            { value: "history", label: t("views.history") },
+            { value: "registry", label: t("views.registry") },
+          ]}
+        />
+        <Button onClick={() => setAssignOpen(true)}>
+          <Plus className="size-4" aria-hidden="true" />
+          {t("assignCard")}
+        </Button>
       </div>
 
       {view === "registry" ? (

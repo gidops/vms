@@ -133,8 +133,20 @@ export class StaffService {
     userId: string,
     query: StaffActivityQuery,
   ): Promise<Paginated<StaffActivityItem>> {
+    // A search narrows to visits (and below, alerts) of matching visitors.
+    const visitorMatch: Prisma.VisitorWhereInput | undefined = query.search
+      ? {
+          OR: [
+            { fullName: { contains: query.search, mode: 'insensitive' } },
+            { email: { contains: query.search, mode: 'insensitive' } },
+          ],
+        }
+      : undefined;
     const visits = await this.prisma.visit.findMany({
-      where: { OR: [{ createdById: userId }, { host: { userId } }] },
+      where: {
+        OR: [{ createdById: userId }, { host: { userId } }],
+        ...(visitorMatch ? { visitor: visitorMatch } : {}),
+      },
       select: {
         id: true,
         visitorId: true,

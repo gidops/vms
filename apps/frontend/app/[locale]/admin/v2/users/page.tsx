@@ -294,11 +294,23 @@ function UsersTab() {
   );
 }
 
+/** Users are the System Admin's; anyone else gets a notice, not a 403. */
+function UsersGate() {
+  const tV2 = useTranslations("adminV2.users");
+  const { hasPermission } = useAuth();
+  if (hasPermission(PERMISSIONS.USER_READ)) return <UsersTab />;
+  return (
+    <TopNavShell nav={<AppTopNav app="admin" active="overview" />}>
+      <EmptyState icon={Users} title={tV2("noAccess")} />
+    </TopNavShell>
+  );
+}
+
 export default function AdminV2UsersPage() {
   return (
     <RouteGuard home="/admin">
       <React.Suspense>
-        <UsersTab />
+        <UsersGate />
       </React.Suspense>
     </RouteGuard>
   );

@@ -9,7 +9,7 @@ test.describe("V1 gap smoke (Security Manager)", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.getByLabel("Email").fill(email);
-    await page.getByLabel("Password").fill(password);
+    await page.getByLabel("Password", { exact: true }).fill(password);
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await page.waitForURL(/\/admin/);
   });
@@ -24,7 +24,7 @@ test.describe("V1 gap smoke (Security Manager)", () => {
     ).toBeVisible();
   });
 
-  test("opens Email consent with export and withdraw", async ({ page }) => {
+  test("opens Email consent read-only, with export", async ({ page }) => {
     // Redirects to Insights → Visitors; Email consent is a view there (no heading).
     await page.goto("/admin/opt-ins");
     await page.getByRole("radio", { name: "Email consent" }).click();
@@ -34,7 +34,10 @@ test.describe("V1 gap smoke (Security Manager)", () => {
     await expect(
       page.getByRole("button", { name: /Export CSV/ }),
     ).toBeVisible();
-    await expect(page.getByText("Withdraw consent")).toBeVisible();
+    // The Security Manager can't add or remove consent.
+    await expect(
+      page.getByRole("button", { name: "Withdraw consent" }),
+    ).toHaveCount(0);
   });
 
   test("leads the overview with approvals and moves trends to Analytics", async ({

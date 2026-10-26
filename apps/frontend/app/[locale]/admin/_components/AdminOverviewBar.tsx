@@ -1,8 +1,8 @@
 "use client";
 
-import { PERMISSIONS } from "@vms/contracts";
+import { PERMISSIONS, ROLES } from "@vms/contracts";
 import { Button } from "@vms/ui";
-import { Download, ShieldCheck, UserPlus } from "lucide-react";
+import { Download, ServerCog, ShieldCheck, UserPlus } from "lucide-react";
 import { useNow, useTranslations } from "next-intl";
 import * as React from "react";
 import {
@@ -34,14 +34,16 @@ function Heading() {
   // Security Manager); anything else falls back to "Admin console".
   const consoleKey = `console.${activeRole ?? ""}` as "console.ADMIN";
   const eyebrow = t.has(consoleKey) ? t(consoleKey) : t("eyebrow");
+  // Same icons as the v2 console: system gear for the System Admin.
+  const Icon = activeRole === ROLES.SUPER_ADMIN ? ServerCog : ShieldCheck;
   const first = user?.fullName?.split(" ")[0];
   return (
     <div className="flex flex-col gap-1">
       <span className="flex items-center gap-1.5 text-base font-semibold uppercase tracking-tight text-success">
-        <ShieldCheck className="size-4" aria-hidden="true" />
+        <Icon className="size-4" aria-hidden="true" />
         {eyebrow}
       </span>
-      <h1 className="text-[2rem] font-medium text-[#344054]">
+      <h1 className="text-[2rem] font-medium leading-tight text-[#344054]">
         {first
           ? t("greetingName", { part: dayPart(now), name: first })
           : t("greeting", { part: dayPart(now) })}

@@ -7,6 +7,7 @@ import {
   Button,
   Input,
   Label,
+  PasswordInput,
 } from "@vms/ui";
 import { homeFor } from "@vms/contracts";
 import { Lock, Mail } from "lucide-react";
@@ -93,9 +94,10 @@ export default function LoginPage() {
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="password">{t("password")}</Label>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
+            showLabel={t("showPassword")}
+            hideLabel={t("hidePassword")}
             autoComplete="current-password"
             required
             startIcon={<Lock />}

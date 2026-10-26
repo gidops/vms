@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Label } from "../Label/Label";
 import { Input } from "./Input";
+import { PasswordInput } from "./PasswordInput";
 
 const meta = {
   title: "Primitives/Input",
@@ -39,4 +40,13 @@ export const Invalid: Story = {
 
 export const WithStartIcon: Story = {
   args: { startIcon: <span>@</span>, placeholder: "name@aatc.org" },
+};
+
+export const Password: Story = {
+  render: () => (
+    <div className="flex w-80 flex-col gap-1.5">
+      <Label htmlFor="password">Password</Label>
+      <PasswordInput id="password" placeholder="Enter your password" />
+    </div>
+  ),
 };

@@ -33,7 +33,9 @@ function WelcomeHeader({ welcome }: { welcome: string }) {
         <Signal className="size-4" aria-hidden="true" />
         {t("hub")}
       </span>
-      <h1 className="text-[2rem] font-medium text-[#344054]">{welcome}</h1>
+      <h1 className="text-[2rem] font-medium leading-tight text-[#344054]">
+        {welcome}
+      </h1>
     </div>
   );
 }

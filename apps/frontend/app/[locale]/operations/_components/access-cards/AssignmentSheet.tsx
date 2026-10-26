@@ -3,18 +3,20 @@
 import {
   Alert,
   AlertDescription,
+  Avatar,
   Button,
   DetailDrawer,
-  DetailSection,
   Input,
   Label,
   Spinner,
   StatusBadge,
   Textarea,
 } from "@vms/ui";
-import { Printer } from "lucide-react";
+import { CalendarDays, Printer } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
+import { Field } from "@/app/[locale]/_components/visit-detail/helpers";
+import { SheetSection } from "@/app/[locale]/_components/visit-detail/sections/SheetSection";
 import { ApiError } from "@/data/http/client";
 import {
   useCloseRfidAssignment,
@@ -156,9 +158,9 @@ export function AssignmentSheet({
   return (
     <DetailDrawer
       open={!!id}
+      side="start"
       onOpenChange={(open) => !open && onClose()}
-      title={a ? a.visitor.fullName : t("title")}
-      description={a ? t("cardNo", { number: a.card.cardNumber }) : undefined}
+      title={t("title")}
       footer={
         a?.status === "ACTIVE" ? (
           <div className="flex w-full justify-end">
@@ -171,7 +173,7 @@ export function AssignmentSheet({
       }
     >
       {isLoading ? (
-        <div className="flex justify-center py-12">
+        <div className="flex justify-center py-10">
           <Spinner />
         </div>
       ) : isError || !a ? (
@@ -180,77 +182,106 @@ export function AssignmentSheet({
         </Alert>
       ) : (
         <>
-          <DetailSection title={t("preview")}>
-            <div className="flex gap-3 overflow-x-auto pb-1">
-              <CardFront card={cardContent(a)} />
-              <CardBack card={cardContent(a)} />
+          {/* Identity card, as on the Insights visitor sheet. */}
+          <SheetSection title={t("visitorInfo")}>
+            <div className="flex items-start justify-between gap-3 rounded-lg bg-surface-muted p-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <Avatar name={a.visitor.fullName} size="md" />
+                <div className="flex min-w-0 flex-col">
+                  <span className="font-medium text-fg">
+                    {a.visitor.fullName}
+                  </span>
+                  {a.visitor.organization ? (
+                    <span className="text-sm text-fg-muted">
+                      {a.visitor.organization}
+                    </span>
+                  ) : null}
+                  <span className="text-sm text-fg-muted">
+                    {a.visitor.email} ·{" "}
+                    <span className="font-mono">
+                      {t("cardNo", { number: a.card.cardNumber })}
+                    </span>
+                  </span>
+                </div>
+              </div>
+              <AssignmentBadge item={a} />
             </div>
-            {!a.hasPhoto ? (
-              <span className="text-xs text-fg-muted">{t("noPhoto")}</span>
-            ) : null}
-            <span className="text-xs text-fg-muted">{t("printerHint")}</span>
-          </DetailSection>
+          </SheetSection>
 
-          <DetailSection title={t("details")}>
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-              <dt className="text-fg-muted">{t("status")}</dt>
-              <dd>
-                <AssignmentBadge item={a} />
-              </dd>
-              <dt className="text-fg-muted">{t("validFrom")}</dt>
-              <dd className="text-fg">{date(a.validFrom)}</dd>
-              <dt className="text-fg-muted">{t("validUntil")}</dt>
-              <dd className="text-fg">{date(a.validUntil)}</dd>
-              <dt className="text-fg-muted">{t("issued")}</dt>
-              <dd className="text-fg">
+          <SheetSection title={t("preview")}>
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-3 overflow-x-auto pb-1">
+                <CardFront card={cardContent(a)} />
+                <CardBack card={cardContent(a)} />
+              </div>
+              {!a.hasPhoto ? (
+                <span className="text-xs text-fg-muted">{t("noPhoto")}</span>
+              ) : null}
+              <span className="text-xs text-fg-muted">{t("printerHint")}</span>
+            </div>
+          </SheetSection>
+
+          <SheetSection title={t("details")}>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label={t("validFrom")}>{date(a.validFrom)}</Field>
+              <Field label={t("validUntil")}>{date(a.validUntil)}</Field>
+              <Field label={t("issued")}>
                 {date(a.issuedAt)}
                 {a.issuedByName ? ` · ${a.issuedByName}` : ""}
-              </dd>
-              <dt className="text-fg-muted">{t("prints")}</dt>
-              <dd className="text-fg">
+              </Field>
+              <Field label={t("prints")}>
                 {a.printCount === 0
                   ? t("notPrinted")
                   : t("printedTimes", {
                       count: a.printCount,
                       when: date(a.lastPrintedAt),
                     })}
-              </dd>
+              </Field>
               {a.returnedAt ? (
-                <>
-                  <dt className="text-fg-muted">{t("closed")}</dt>
-                  <dd className="text-fg">
+                <div className="col-span-2">
+                  <Field label={t("closed")}>
                     {date(a.returnedAt)}
                     {a.returnedByName ? ` · ${a.returnedByName}` : ""}
                     {a.closeNote ? ` — ${a.closeNote}` : ""}
-                  </dd>
-                </>
+                  </Field>
+                </div>
               ) : null}
               {a.notes ? (
-                <>
-                  <dt className="text-fg-muted">{t("notes")}</dt>
-                  <dd className="text-fg">{a.notes}</dd>
-                </>
+                <div className="col-span-2">
+                  <Field label={t("notes")}>{a.notes}</Field>
+                </div>
               ) : null}
-            </dl>
-          </DetailSection>
+            </div>
+          </SheetSection>
 
           {a.visit ? (
-            <DetailSection title={t("visit")}>
-              <span className="flex flex-wrap items-center gap-2 text-sm text-fg">
-                {date(a.visit.scheduledAt)} · {a.visit.purpose}
+            <SheetSection title={t("visit")}>
+              {/* Same row as the visitor sheet's visit history. */}
+              <div className="flex items-start gap-3 py-1">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-fg-muted">
+                  <CalendarDays className="size-5" aria-hidden="true" />
+                </span>
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="text-sm font-semibold text-fg">
+                    {date(a.visit.scheduledAt)}
+                  </span>
+                  <span className="text-sm text-fg-muted">
+                    {a.visit.purpose}
+                  </span>
+                </div>
                 <StatusBadge status={a.visit.status} />
-              </span>
-            </DetailSection>
+              </div>
+            </SheetSection>
           ) : null}
 
           {a.status === "ACTIVE" ? (
             <>
-              <DetailSection title={t("extend")}>
+              <SheetSection title={t("extend")}>
                 <ExtendValidity key={a.validUntil} a={a} />
-              </DetailSection>
-              <DetailSection title={t("close")}>
+              </SheetSection>
+              <SheetSection title={t("close")}>
                 <CloseCard a={a} />
-              </DetailSection>
+              </SheetSection>
             </>
           ) : null}
 

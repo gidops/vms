@@ -39,12 +39,14 @@ export const staffApi = {
   /** Recent Updates feed; optionally narrowed to a day and/or category. */
   activityFeed(opts?: {
     date?: string;
+    search?: string;
     category?: StaffActivityCategory;
     page?: number;
     pageSize?: number;
   }): Promise<Paginated<StaffActivityItem>> {
     const q = new URLSearchParams();
     if (opts?.date) q.set("date", opts.date);
+    if (opts?.search) q.set("search", opts.search);
     if (opts?.category) q.set("category", opts.category);
     if (opts?.page) q.set("page", String(opts.page));
     if (opts?.pageSize) q.set("pageSize", String(opts.pageSize));

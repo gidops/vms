@@ -1,8 +1,9 @@
 "use client";
 
-import { ChevronDown, SquareActivity } from "lucide-react";
+import { ChevronDown, ShieldCheck, type LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
+import { cn } from "@vms/ui";
 import {
   PANEL_ALERT_CLASS,
   STAT_SEPARATOR,
@@ -21,6 +22,8 @@ export interface AdminOverviewProps {
   variant?: "vmc" | "staff";
   /** Eyebrow text, e.g. "ADMIN CONSOLE · Super Admin" (vmc variant). */
   eyebrow: string;
+  /** Icon before the eyebrow: the console's (see `useAdminBand`). */
+  eyebrowIcon?: LucideIcon;
   welcome: string;
   /** 3–5 stats; the grid sizes its columns to the count. */
   stats: OverviewStat[];
@@ -32,10 +35,10 @@ export interface AdminOverviewProps {
   panelTone?: "default" | "alert";
 }
 
-function Eyebrow({ text }: { text: string }) {
+function Eyebrow({ text, icon: Icon }: { text: string; icon: LucideIcon }) {
   return (
     <span className="flex items-center gap-1.5 text-base font-semibold uppercase tracking-tight text-success">
-      <SquareActivity className="size-4" aria-hidden="true" />
+      <Icon className="size-4" aria-hidden="true" />
       {text}
     </span>
   );
@@ -71,14 +74,16 @@ const panelClass =
 export function AdminOverview({
   variant = "vmc",
   eyebrow,
+  eyebrowIcon = ShieldCheck,
   welcome,
   stats,
   pendingCount,
   panel,
   panelTone = "default",
 }: AdminOverviewProps) {
-  const tinted =
-    panelClass + (panelTone === "alert" ? ` ${PANEL_ALERT_CLASS}` : "");
+  // cn (tailwind-merge) drops bg-emphasis when tinted; with both classes the
+  // green wins on stylesheet order and the alert tint never shows.
+  const tinted = cn(panelClass, panelTone === "alert" && PANEL_ALERT_CLASS);
   const t = useTranslations("dashboard");
   const [open, setOpen] = React.useState(true);
   // Column count follows the stat count (VMC/staff fix it at three).
@@ -93,25 +98,25 @@ export function AdminOverview({
       >
         {variant === "vmc" ? (
           <div
-            className="flex flex-col gap-1 bg-surface p-6"
+            className="flex flex-col gap-1 bg-surface px-6 py-3"
             style={{ gridColumn: "1 / -1" }}
           >
-            <Eyebrow text={eyebrow} />
-            <h1 className="text-[2rem] font-medium text-[#344054]">
+            <Eyebrow text={eyebrow} icon={eyebrowIcon} />
+            <h1 className="text-[2rem] font-medium leading-tight text-[#344054]">
               {welcome}
             </h1>
           </div>
         ) : (
           <>
             <div
-              className="flex items-center bg-surface p-6"
+              className="flex items-center bg-surface px-6 py-3"
               style={{ gridColumn: `span ${stats.length}` }}
             >
-              <h1 className="text-[2rem] font-medium text-[#344054]">
+              <h1 className="text-[2rem] font-medium leading-tight text-[#344054]">
                 {welcome}
               </h1>
             </div>
-            <div className="flex flex-col justify-center border-s border-border bg-surface-muted px-6 py-5">
+            <div className="flex flex-col justify-center border-s border-border bg-surface-muted px-6 py-3">
               <PendingCell count={pendingCount} />
             </div>
           </>
@@ -129,7 +134,7 @@ export function AdminOverview({
             <OverviewStatCell stat={stat} />
           </div>
         ))}
-        <div className={tinted + " border-s border-t border-border"}>
+        <div className={cn(tinted, "border-s border-t border-border")}>
           {panel}
         </div>
       </div>
@@ -137,11 +142,15 @@ export function AdminOverview({
       {/* ── Mobile: heading, panel, then the stats ───────────────────────── */}
       <div className="flex flex-col gap-4 lg:hidden">
         <div className="flex flex-col gap-1">
-          {variant === "vmc" ? <Eyebrow text={eyebrow} /> : null}
-          <h1 className="text-[2rem] font-medium text-[#344054]">{welcome}</h1>
+          {variant === "vmc" ? (
+            <Eyebrow text={eyebrow} icon={eyebrowIcon} />
+          ) : null}
+          <h1 className="text-[2rem] font-medium leading-tight text-[#344054]">
+            {welcome}
+          </h1>
           {variant === "staff" ? <PendingCell count={pendingCount} /> : null}
         </div>
-        <div className={tinted + " rounded-xl"}>{panel}</div>
+        <div className={cn(tinted, "rounded-xl")}>{panel}</div>
 
         {variant === "vmc" ? (
           <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-xs">

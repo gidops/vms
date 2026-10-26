@@ -1,17 +1,38 @@
 "use client";
 
 import { PERMISSIONS } from "@vms/contracts";
+import { ServerCog, ShieldCheck } from "lucide-react";
 import { useNow, useTranslations } from "next-intl";
 import type { OverviewStat } from "@/app/[locale]/_components/OverviewBar";
 import { countOverdue } from "@/app/[locale]/admin/_components/pendingApprovals";
 import { useAdminOverviewStats, useApprovalQueue } from "@/data/admin/queries";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { roleLabel } from "@/shared/auth/roleLabels";
+import {
+  adminConsoleRole,
+  type AdminConsoleRole,
+} from "@/shared/auth/adminConsoleRole";
+
+export type BandStatKey =
+  | "visitorsToday"
+  | "awaiting"
+  | "onsite"
+  | "checkedOut";
 
 /**
- * Data for the admin overview band: the eyebrow/welcome copy and the five
- * headline stats (formerly the `StatCard` grid). "Visitors Today" carries the
- * vs-yesterday trend as its sub-line.
+ * The band's three stats per console: the Security Manager leads with what
+ * waits on them; the System Admin watches the day's traffic.
+ */
+export function bandStatKeys(role: AdminConsoleRole): BandStatKey[] {
+  return role === "securityManager"
+    ? ["awaiting", "visitorsToday", "onsite"]
+    : ["visitorsToday", "onsite", "checkedOut"];
+}
+
+/**
+ * Data for the admin overview band: the eyebrow/welcome copy and the
+ * console's three headline stats (see `bandStatKeys`). "Visitors Today"
+ * carries the vs-yesterday trend as its sub-line.
  *
  * From the role-aware /admin overview: the eyebrow names the role's console
  * ("Security console" …), "Awaiting approval" counts requests to decide plus
@@ -52,23 +73,33 @@ export function useAdminBand() {
           : tBar("awaitingHint");
   const floors = s?.onsiteFloors ?? 0;
 
-  const stats: OverviewStat[] = [
-    { label: t("visitorsToday"), value: v(s?.visitorsToday), hint: trend },
-    { label: t("expected"), value: v(s?.expected) },
-    {
+  const role = adminConsoleRole(hasPermission);
+  const all: Record<BandStatKey, OverviewStat> = {
+    visitorsToday: {
+      label: t("visitorsToday"),
+      value: v(s?.visitorsToday),
+      hint: trend,
+    },
+    awaiting: {
       label: tBar("awaiting"),
       value: v(awaiting),
       hint: awaitingHint,
       // The hero only for roles that can act on it.
       tone: canApprove ? "warning" : "default",
+      // The SM's shortcut straight to their queue.
+      link:
+        role === "securityManager"
+          ? { href: "/admin/v2/approvals", label: tV2("openApprovals") }
+          : undefined,
     },
-    {
+    onsite: {
       label: t("onsite"),
       value: v(s?.onsite),
       hint: floors > 0 ? tBar("onsiteFloors", { count: floors }) : undefined,
     },
-    { label: t("checkedOut"), value: v(s?.checkedOutToday) },
-  ];
+    checkedOut: { label: t("checkedOut"), value: v(s?.checkedOutToday) },
+  };
+  const stats = bandStatKeys(role).map((key) => all[key]);
 
   // Each admin role has its own console name; anything else keeps the
   // generic "Admin Console · <role>".
@@ -84,6 +115,8 @@ export function useAdminBand() {
     stats,
     pendingCount: awaiting,
     eyebrow,
+    // Security console: approvals and alerts; System console: configuration.
+    eyebrowIcon: role === "securityManager" ? ShieldCheck : ServerCog,
     welcome: tV2("welcome", { name: user?.fullName ?? "" }),
   };
 }

@@ -15,15 +15,19 @@
     "notifications": "Notifications",
     "notificationsUnread": "Notifications, {count} unread",
     "overview": "Overview",
+    "pendingApprovals": "Pending Approvals",
+    "recentActivity": "Recent Activity",
     "users": "Users",
     "analytics": "Analytics",
     "evacuation": "Evacuation",
     "optIns": "Opt-ins",
-    "deskQr": "Desk QR",
+    "deskQr": "Walk-in QR",
     "insights": "Insights",
     "operations": "Operations"
   },
   "login": {
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "title": "Sign in",
     "email": "Email",
     "emailPlaceholder": "name@aatc.org",
@@ -93,7 +97,7 @@
       "action": "Action",
       "guestCount": "No of Guest"
     },
-    "guestCount": "{count} Guest",
+    "guestCount": "{count, plural, one {# Guest} other {# Guests}}",
     "onsiteElapsed": "{time} hr",
     "noVisits": "No visits to show.",
     "noMatches": "No visits match your search or filters."
@@ -295,8 +299,8 @@
     "evacuationAssistYes": "Needs evacuation help",
     "evacuationAssistNo": "Evacuation help: No",
     "sources": {
-      "deskQr": "Desk QR (self-registered)",
-      "selfRegistered": "Visitor, via the desk QR"
+      "deskQr": "Walk-in QR (self-registered)",
+      "selfRegistered": "Visitor, via the walk-in QR"
     }
   },
   "language": {
@@ -315,6 +319,8 @@
     "READ_ADMIN": "Read Admin"
   },
   "signup": {
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "title": "Create admin account",
     "subtitle": "Set up the first administrator for the VMS",
     "fullName": "Full name",
@@ -478,7 +484,7 @@
       "expand": "Expand sidebar",
       "evacuation": "Evacuation Roll",
       "optIns": "Comms Opt-ins",
-      "deskQr": "Desk QR"
+      "deskQr": "Walk-in QR"
     },
     "requests": {
       "title": "Requests & Approvals",
@@ -549,13 +555,13 @@
       "quickActions": {
         "title": "Quick Actions",
         "addVisitor": "Add Visitor",
-        "exportData": "Export Data",
         "printBadge": "Print Badge",
         "scanQr": "Scan QR",
         "comingSoon": "Coming soon",
         "exportFailed": "Export failed. Try again."
       },
       "activity": {
+        "empty": "No recent activity yet.",
         "loadError": "Unable to load dashboard data. Please try again.",
         "title": "Recent Activity",
         "viewAll": "View all",
@@ -658,6 +664,7 @@
   "adminV2": {
     "overview": {
       "eyebrow": "Admin Console · {role}",
+      "openApprovals": "Open Pending Approvals",
       "welcome": "Welcome {name}",
       "pendingApprovals": "Pending approvals",
       "pendingCount": "{count, plural, =0 {None} one {# request} other {# requests}}",
@@ -665,8 +672,8 @@
       "trendDown": "−{count} from yesterday"
     },
     "panel": {
-      "reviewTitle": "Requests are waiting\nfor your decision",
       "reviewCta": "Review Requests",
+      "historyCta": "Visit History",
       "activityTitle": "Today's activity\nat a glance",
       "activityCta": "View Activity"
     },
@@ -684,7 +691,13 @@
     },
     "approvals": {
       "title": "Pending Approvals",
+      "columns": {
+        "hostFloor": "Host / Floor"
+      },
       "review": "Review",
+      "view": "View",
+      "reviewFor": "Review {name}",
+      "viewFor": "View {name}",
       "empty": "Nothing is waiting for a decision.",
       "bucket": {
         "all": "All",
@@ -694,6 +707,7 @@
       }
     },
     "users": {
+      "noAccess": "Only a System Admin can manage users.",
       "searchPlaceholder": "Search users by name or email…",
       "allRoles": "All Roles",
       "createSubtitle": "Create an account and assign its roles."
@@ -704,7 +718,7 @@
     "welcome": "Welcome {name}",
     "recentVisitors": "Recent Visitors",
     "expectedGuests": "Expected Guests",
-    "guestCount": "{count} Guest",
+    "guestCount": "{count, plural, one {# Guest} other {# Guests}}",
     "onsiteFor": "For {time} HR",
     "statusSub": {
       "fromSm": "From SM"
@@ -715,6 +729,7 @@
     "noVisits": "No visits to show.",
     "overview": {
       "officeFloor": "Office Floor",
+      "officeFloorUnset": "Not set",
       "bookTitle": "Book Guests into Abuja\nAATC facilities",
       "newInvite": "New Invite Request"
     },
@@ -769,8 +784,10 @@
       "viewUpdate": "View Update",
       "viewDetails": "View Details",
       "allTitle": "All Updates",
-      "all": "All",
-      "updateRequest": "Update Request",
+      "searchPlaceholder": "Search visitor name or email",
+      "categoryLabel": "Update type",
+      "allCategories": "All updates",
+      "dateLabel": "Filter by day",
       "category": {
         "ARRIVAL_UPDATE": "Arrival Update",
         "SM_FEEDBACK": "SM Feedback",
@@ -1046,13 +1063,13 @@
     "describeOther": "Describe the assistance needed"
   },
   "deskQr": {
-    "title": "Desk QR",
+    "title": "Walk-in QR",
     "walkInBadge": "Walk-in · no approval needed",
     "status": {
       "active": "Active",
       "disabled": "Disabled"
     },
-    "qrAlt": "Desk QR code",
+    "qrAlt": "Walk-in QR code",
     "copyLink": "Copy link",
     "copied": "Copied",
     "scansToday": "Scans today",
@@ -1078,7 +1095,7 @@
       "help": "After a visitor fills in the form, a 6-digit code goes to this inbox. Read it to the visitor at the desk to finish their registration. Codes work once and expire after 10 minutes."
     },
     "codeEmail": {
-      "createTitle": "Set up the desk QR",
+      "createTitle": "Set up the walk-in QR",
       "changeTitle": "Change where codes go",
       "help": "Verification codes for visitors are emailed here. Use an inbox someone at the VMC desk is reading.",
       "label": "Email for verification codes",
@@ -1086,18 +1103,18 @@
       "save": "Save"
     },
     "empty": {
-      "title": "No desk QR yet",
-      "body": "Create the QR, print the poster and put it on the VMC desk. Visitors who scan it register as today's walk-ins.",
-      "readOnly": "Reception hasn't set up the desk QR yet.",
-      "create": "Create desk QR"
+      "title": "No walk-in QR yet",
+      "body": "Create the QR, print the poster and put it on the VMC desk.",
+      "readOnly": "Reception hasn't set up the walk-in QR yet.",
+      "create": "Create walk-in QR"
     },
     "loadError": {
-      "title": "Couldn't load the desk QR.",
+      "title": "Couldn't load the walk-in QR.",
       "body": "Check your connection, then try again. The poster on the desk keeps working."
     },
     "retry": "Try again",
     "errors": {
-      "create": "The desk QR wasn't created. Try again in a moment.",
+      "create": "The walk-in QR wasn't created. Try again in a moment.",
       "update": "The email wasn't changed. Try again in a moment.",
       "rotate": "New QR wasn't created. The current QR still works. Try again in a moment.",
       "disable": "The QR wasn't disabled. It still works. Try again in a moment.",
@@ -1106,12 +1123,12 @@
       "image": "Couldn't show the QR."
     },
     "confirmRotate": {
-      "title": "Replace the desk QR?",
+      "title": "Replace the walk-in QR?",
       "body": "The QR on the desk poster <b>stops working immediately</b>. Visitors who scan it will be asked to register at the desk. Print and put up the new poster straight after.",
       "confirm": "Create new QR"
     },
     "confirmDisable": {
-      "title": "Disable the desk QR?",
+      "title": "Disable the walk-in QR?",
       "body": "Visitors can't register by scanning until you enable it again. Reception can still register walk-ins as usual.",
       "confirm": "Disable"
     },
@@ -1361,7 +1378,7 @@
     "noAccess": "Operations is for System Admins.",
     "tabs": {
       "accessCards": "Access cards",
-      "deskQr": "Desk QR",
+      "deskQr": "Walk-in QR",
       "audit": "Audit trail"
     },
     "accessCards": {
@@ -1424,13 +1441,13 @@
       },
       "sheet": {
         "title": "Access card",
+        "visitorInfo": "Visitor information",
         "cardNo": "Card {number}",
         "loadError": "Unable to load this card. Please try again.",
         "preview": "Card preview",
         "noPhoto": "No photo on file: the card prints with an empty photo frame.",
         "printerHint": "DTC printer: choose CR80, portrait, and print both sides.",
         "details": "Details",
-        "status": "Status",
         "validFrom": "Valid from",
         "validUntil": "Valid until",
         "validUntilTime": "Valid until (time)",
@@ -1491,7 +1508,6 @@
       "property": "Property of Afreximbank African Trade Centre"
     },
     "audit": {
-      "title": "Audit trail",
       "range": "Audit range",
       "ranges": {
         "today": "Today",
@@ -1513,6 +1529,7 @@
       "error": "Unable to load the audit trail. Please try again.",
       "system": "System",
       "open": "Open",
+      "sheetTitle": "Audit event",
       "details": "Details",
       "metadata": "Event data",
       "userAgent": "Browser",
@@ -1536,7 +1553,7 @@
         "auth": "Sign-in & security",
         "report": "Exports",
         "consent": "Comms opt-ins",
-        "desk_qr": "Desk QR",
+        "desk_qr": "Walk-in QR",
         "notification": "Notifications",
         "rfid_card": "Access cards",
         "audit": "Audit trail"
@@ -1557,12 +1574,12 @@
         "consent_exported": "Opt-ins exported",
         "consent_withdrawn": "Opt-in withdrawn",
         "desk_qr_code_sent": "Desk code sent",
-        "desk_qr_created": "Desk QR created",
-        "desk_qr_disabled": "Desk QR disabled",
-        "desk_qr_enabled": "Desk QR enabled",
-        "desk_qr_imported": "Desk QR imported",
-        "desk_qr_rotated": "Desk QR replaced",
-        "desk_qr_updated": "Desk QR updated",
+        "desk_qr_created": "Walk-in QR created",
+        "desk_qr_disabled": "Walk-in QR disabled",
+        "desk_qr_enabled": "Walk-in QR enabled",
+        "desk_qr_imported": "Walk-in QR imported",
+        "desk_qr_rotated": "Walk-in QR replaced",
+        "desk_qr_updated": "Walk-in QR updated",
         "invitation_created": "Invitation created",
         "note_added": "Note added",
         "notification_retried": "Notification resent",
