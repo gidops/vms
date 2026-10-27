@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ADDON_ROLES, ROLES } from '@vms/contracts';
+import { ADDON_ROLES, DESK_QR_CODE_ATTEMPTS, ROLES } from '@vms/contracts';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
@@ -254,16 +254,59 @@ describe('Desk QR (e2e)', () => {
     await verify(code).expect(423);
   });
 
-  it('drops a filled-in honeypot without sending a code', async () => {
+  it('traps a filled-in honeypot: no code sent, no personal data, a security row', async () => {
     const qr = await as(ROLES.SUPER_ADMIN).get('/desk-qr');
     const token = tokenOf(qr.body.url as string);
     const open = await http().get(`/public/desk-qr/${token}`).expect(200);
-    const before = await prisma.deskQrRegistration.count();
-    await http()
+    const emailsBefore = await prisma.notification.count();
+    const res = await http()
       .post(`/public/desk-qr/${token}/registrations`)
-      .send(form(open.body.formToken as string, { website: 'spam.example' }))
+      .send(
+        form(open.body.formToken as string, {
+          website: 'spam.example',
+          fullName: 'Honey Pot',
+        }),
+      )
       .expect(201);
-    expect(await prisma.deskQrRegistration.count()).toBe(before);
+    const id = res.body.registrationId as string;
+    const stored = await prisma.deskQrRegistration.findUnique({
+      where: { id },
+    });
+    expect(stored).not.toBeNull();
+    expect(stored?.payload).not.toContain('Honey');
+    expect(await prisma.notification.count()).toBe(emailsBefore);
+    expect(
+      await prisma.auditLog.count({
+        where: {
+          action: 'desk_qr.honeypot_triggered',
+          entityId: stored!.deskQrId,
+        },
+      }),
+    ).toBeGreaterThan(0);
+  });
+
+  it('holds the attempt limit when guesses arrive at the same time', async () => {
+    const qr = await as(ROLES.SUPER_ADMIN).get('/desk-qr');
+    const token = tokenOf(qr.body.url as string);
+    const id = await register(token, { fullName: 'Parallel Guesses' });
+    const code = await emailedCode('Parallel Guesses');
+    const wrong = code === '000000' ? '111111' : '000000';
+    const results = await Promise.all(
+      Array.from({ length: 6 }, () =>
+        http()
+          .post(`/public/desk-qr/${token}/registrations/${id}/verify`)
+          .send({ code: wrong }),
+      ),
+    );
+    const statuses = results.map((r) => r.status);
+    // Each 422 is a counted guess; at most attempts - 1 can be "wrong, try again".
+    expect(statuses.filter((s) => s === 422).length).toBeLessThanOrEqual(
+      DESK_QR_CODE_ATTEMPTS - 1,
+    );
+    expect(statuses.every((s) => [422, 423, 429].includes(s))).toBe(true);
+    const reg = await prisma.deskQrRegistration.findUnique({ where: { id } });
+    expect(reg?.attempts).toBeLessThanOrEqual(DESK_QR_CODE_ATTEMPTS);
+    expect(reg?.visitId).toBeNull();
   });
 
   it('rejects a forged form and an unanswered help type', async () => {

@@ -8,6 +8,7 @@ import {
 } from "./auth/rbac.schema";
 import { normalizeE164, parsePhone, toE164 } from "./common/phone";
 import { normalizeConsentEmail } from "./consent/consent.schema";
+import { isPlainName, isPlainOrganization } from "./desk-qr/desk-qr.schema";
 import { ExportVisitsQuery, inclusiveDaySpan } from "./report/report.schema";
 import { evacuationAssistIssues } from "./visit/visit.schema";
 
@@ -130,4 +131,32 @@ describe("small normalisers", () => {
   it("normalises consent emails", () => {
     expect(normalizeConsentEmail("  Ada@Example.COM ")).toBe("ada@example.com");
   });
+});
+
+describe("self-registration plain-text rules", () => {
+  it.each([
+    "Ada Obi",
+    "Ngozi Okonjo-Iweala",
+    "D'Souza",
+    "Émilie Dubois",
+    "محمد علي",
+  ])("accepts the name %j", (name) => expect(isPlainName(name)).toBe(true));
+
+  it.each([
+    "Visit www.evil.com",
+    "evil.com",
+    "<b>Ada</b>",
+    "http://x",
+    "Ada 2",
+  ])("rejects the name %j", (name) => expect(isPlainName(name)).toBe(false));
+
+  it.each(["Dangote Group", "J.P. Morgan & Co. (Nigeria)", "Access Bank 2"])(
+    "accepts the organisation %j",
+    (org) => expect(isPlainOrganization(org)).toBe(true),
+  );
+
+  it.each(["acme.com", "Click https://x.y", "Acme <script>"])(
+    "rejects the organisation %j",
+    (org) => expect(isPlainOrganization(org)).toBe(false),
+  );
 });

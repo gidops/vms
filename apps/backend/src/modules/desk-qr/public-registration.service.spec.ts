@@ -2,6 +2,7 @@ import { HttpException } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import type { Env } from '../../shared/config/env.schema';
 import type { PrismaService } from '../../prisma/prisma.service';
+import type { SecurityAuditService } from '../../shared/audit/security-audit.service';
 import type { EncryptionService } from '../../shared/crypto/encryption.service';
 import type { EventPublisher } from '../../shared/events/event-publisher';
 import type { TransactionManager } from '../../shared/events/transaction.manager';
@@ -31,6 +32,7 @@ function setup(qr: Partial<typeof QR> | null = QR) {
     },
     deskQrRegistration: {
       count: jest.fn().mockResolvedValue(0),
+      create: jest.fn().mockResolvedValue({}),
       deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
       delete: jest.fn().mockResolvedValue({}),
       findFirst: jest.fn(),
@@ -45,6 +47,7 @@ function setup(qr: Partial<typeof QR> | null = QR) {
   const enqueue = jest.fn().mockResolvedValue(1);
   const users = { isActiveHost: jest.fn().mockResolvedValue(true) };
   const createSelfRegisteredWalkIn = jest.fn();
+  const record = jest.fn().mockResolvedValue(undefined);
   const service = new PublicRegistrationService(
     prisma as unknown as PrismaService,
     txm as unknown as TransactionManager,
@@ -57,6 +60,7 @@ function setup(qr: Partial<typeof QR> | null = QR) {
     users as unknown as UsersService,
     { createSelfRegisteredWalkIn } as unknown as VisitAuthoringService,
     { get: () => SECRET } as unknown as ConfigService<Env, true>,
+    { record } as unknown as SecurityAuditService,
   );
   return {
     service,
@@ -66,6 +70,7 @@ function setup(qr: Partial<typeof QR> | null = QR) {
     enqueue,
     users,
     createSelfRegisteredWalkIn,
+    record,
   };
 }
 
@@ -119,9 +124,9 @@ describe('PublicRegistrationService', () => {
   });
 
   it('keeps the form encrypted and emails the code to the desk', async () => {
-    const { service, tx, publish, enqueue } = setup();
+    const { service, prisma, publish, enqueue } = setup();
     const res = await service.submit(TOKEN, form(), NOW);
-    const created = tx.deskQrRegistration.create.mock.calls[0][0].data;
+    const created = prisma.deskQrRegistration.create.mock.calls[0][0].data;
     expect(created.payload).toMatch(/^enc\(/);
     expect(created.payload).not.toContain('formToken');
     const { code } = enqueue.mock.calls[0][0].data as { code: string };
@@ -149,10 +154,25 @@ describe('PublicRegistrationService', () => {
         setup().service.submit(TOKEN, form({ formToken: '1.x' }), NOW),
       ),
     ).toBe(422);
+  });
+
+  it('traps bots: no email, a security event, and a registration no code can open', async () => {
     const bot = setup();
-    await bot.service.submit(TOKEN, form({ website: 'spam' }), NOW);
-    expect(bot.tx.deskQrRegistration.create).not.toHaveBeenCalled();
+    const res = await bot.service.submit(TOKEN, form({ website: 'spam' }), NOW);
     expect(bot.enqueue).not.toHaveBeenCalled();
+    expect(bot.publish).not.toHaveBeenCalled();
+    const stored = bot.prisma.deskQrRegistration.create.mock.calls[0][0].data;
+    expect(stored).toMatchObject({
+      id: res.registrationId,
+      payload: 'enc(null)',
+    });
+    expect(stored.payload).not.toContain('Ifeoma');
+    expect(bot.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'desk_qr.honeypot_triggered',
+        metadata: { deskQrId: 'qr1', registrationId: res.registrationId },
+      }),
+    );
   });
 
   it('refuses a host who is not active staff', async () => {
@@ -174,12 +194,26 @@ describe('PublicRegistrationService', () => {
     s.enqueue.mockResolvedValue(0);
     expect(await status(s.service.submit(TOKEN, form(), NOW))).toBe(503);
     expect(s.prisma.deskQrRegistration.delete).toHaveBeenCalled();
+    // No "code sent" audit row for a code that never went out.
+    expect(s.publish).not.toHaveBeenCalled();
   });
 
   it('caps submissions per QR per minute', async () => {
     const s = setup();
     s.prisma.deskQrRegistration.count.mockResolvedValue(30);
     expect(await status(s.service.submit(TOKEN, form(), NOW))).toBe(429);
+  });
+
+  it('purges unfinished registrations older than a day', async () => {
+    const s = setup();
+    s.prisma.deskQrRegistration.deleteMany.mockResolvedValue({ count: 2 });
+    await expect(s.service.purgeExpired(NOW)).resolves.toBe(2);
+    expect(s.prisma.deskQrRegistration.deleteMany).toHaveBeenCalledWith({
+      where: {
+        visitId: null,
+        expiresAt: { lt: new Date(NOW.getTime() - 24 * 3_600_000) },
+      },
+    });
   });
 
   describe('verify', () => {
@@ -240,6 +274,15 @@ describe('PublicRegistrationService', () => {
         423,
       );
       expect(s.createSelfRegisteredWalkIn).not.toHaveBeenCalled();
+      expect(s.record.mock.calls.map(([e]) => e.action)).toEqual([
+        'desk_qr.code_rejected',
+        'desk_qr.registration_locked',
+        'desk_qr.registration_locked',
+      ]);
+      // Security rows never carry the code or the QR token.
+      const recorded = JSON.stringify(s.record.mock.calls);
+      expect(recorded).not.toContain('000000');
+      expect(recorded).not.toContain(TOKEN);
     });
 
     it('claims each try atomically before comparing the code', async () => {

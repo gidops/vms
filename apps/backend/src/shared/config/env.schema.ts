@@ -21,6 +21,8 @@ export const envSchema = z.object({
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
   DATABASE_URL: z.string().url(),
   JWT_SECRET: z.string().min(1),
+  // Keys desk QR form tokens and code hashes; derived from JWT_SECRET when unset.
+  DESK_QR_SECRET: z.preprocess(emptyToUndefined, z.string().min(32).optional()),
   JWT_EXPIRES_IN: z.string().min(1).default('1h'),
   LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])

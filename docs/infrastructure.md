@@ -128,16 +128,17 @@ Environment variables carry settings and secrets into the apps.
 
 **Backend** (main ones; the full list is in `apps/backend/.env.example`):
 
-| Variable                                          | Required?                 | Purpose                                                                  |
-| ------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------ |
-| `DATABASE_URL`                                    | yes                       | How to reach Postgres                                                    |
-| `JWT_SECRET`                                      | yes                       | Signs login tokens                                                       |
-| `ENCRYPTION_KEY`                                  | optional (derived in dev) | Encrypts personal data (AES-256)                                         |
-| `PORT`, `NODE_ENV`, `JWT_EXPIRES_IN`, `LOG_LEVEL` | optional                  | Defaults provided                                                        |
-| `TRUST_PROXY_HOPS`                                | optional                  | Number of proxies in front of the API (`1` behind the AWS load balancer) |
-| `SEED_DEMO_DATA`                                  | optional (off)            | Creates demo visits on boot                                              |
-| `APP_PUBLIC_URL`                                  | optional                  | Public frontend URL used in email links                                  |
-| Email / SMS / WhatsApp, `S3_BUCKET`, `SEQ_URL`    | optional                  | Messaging, uploads, log mirror; off when unset                           |
+| Variable                                          | Required?                 | Purpose                                                                   |
+| ------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------- |
+| `DATABASE_URL`                                    | yes                       | How to reach Postgres                                                     |
+| `JWT_SECRET`                                      | yes                       | Signs login tokens                                                        |
+| `DESK_QR_SECRET`                                  | optional (derived)        | Signs walk-in QR forms and desk codes; derived from `JWT_SECRET` if unset |
+| `ENCRYPTION_KEY`                                  | optional (derived in dev) | Encrypts personal data (AES-256)                                          |
+| `PORT`, `NODE_ENV`, `JWT_EXPIRES_IN`, `LOG_LEVEL` | optional                  | Defaults provided                                                         |
+| `TRUST_PROXY_HOPS`                                | optional                  | Number of proxies in front of the API (`1` behind the AWS load balancer)  |
+| `SEED_DEMO_DATA`                                  | optional (off)            | Creates demo visits on boot                                               |
+| `APP_PUBLIC_URL`                                  | optional                  | Public frontend URL used in email links                                   |
+| Email / SMS / WhatsApp, `S3_BUCKET`, `SEQ_URL`    | optional                  | Messaging, uploads, log mirror; off when unset                            |
 
 **Frontend** (`NEXT_PUBLIC_`, so public and fixed at build time; never put a
 secret here): `NEXT_PUBLIC_API_BASE_URL` (backend address) and
@@ -228,7 +229,9 @@ Each folder below is a separate Terraform project with its own state.
 6. **First login.** No admin is seeded. Right after the first deploy, open
    `/signup` and create the System Admin; the screen then locks.
 7. **Rate limits are in memory.** Self-registration limits are counted per
-   backend process. With more than one backend, they need a shared store.
+   backend process, capped at 50,000 entries and cleaned up every minute. Before
+   running more than one backend, move them to a shared store such as Redis;
+   otherwise each instance allows the full limit on its own.
 
 ## 11. Glossary
 

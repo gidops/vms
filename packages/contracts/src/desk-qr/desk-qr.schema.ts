@@ -58,6 +58,20 @@ export const PublicHostSearchQuery = z.object({
 });
 export type PublicHostSearchQuery = z.infer<typeof PublicHostSearchQuery>;
 
+// Visitor-typed text lands in the reception inbox, so it must not carry links or markup.
+const NAME_CHARS = /^[\p{L}\p{M} .'’-]+$/u;
+const ORGANIZATION_CHARS = /^[\p{L}\p{M}\p{N} .,'’&()-]+$/u;
+const LOOKS_LIKE_LINK =
+  /https?|www\.|[\p{L}\p{N}-]\.(?:com|net|org|info|biz|io|co|ng|xyz|app|link|click)\b/iu;
+
+export function isPlainName(value: string): boolean {
+  return NAME_CHARS.test(value) && !LOOKS_LIKE_LINK.test(value);
+}
+
+export function isPlainOrganization(value: string): boolean {
+  return ORGANIZATION_CHARS.test(value) && !LOOKS_LIKE_LINK.test(value);
+}
+
 export const PublicRegistrationInput = z
   .object({
     formToken: z.string().min(1).max(200),
@@ -65,8 +79,21 @@ export const PublicRegistrationInput = z
     website: z.string().max(200).optional(),
     email: z.string().trim().email().max(100),
     phone: z.string().min(3).max(30).transform(normalizeE164).optional(),
-    fullName: z.string().trim().min(1).max(100),
-    organization: z.string().trim().min(1).max(100),
+    fullName: z
+      .string()
+      .trim()
+      .min(1)
+      .max(100)
+      .refine(isPlainName, "Use letters only, without links or symbols"),
+    organization: z
+      .string()
+      .trim()
+      .min(1)
+      .max(100)
+      .refine(
+        isPlainOrganization,
+        "Use letters and numbers only, without links or symbols",
+      ),
     hostUserId: z.string().uuid().optional(),
     floor: z.string().trim().min(1).max(60).optional(),
     purpose: z.string().trim().min(1).max(60),

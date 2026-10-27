@@ -6,6 +6,8 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  OnModuleDestroy,
+  OnModuleInit,
   ServiceUnavailableException,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -21,8 +23,9 @@ import {
   type PublicRegistrationPending,
   type PublicRegistrationResult,
 } from '@vms/contracts';
-import { randomUUID } from 'node:crypto';
+import { hkdfSync, randomUUID } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service';
+import { SecurityAuditService } from '../../shared/audit/security-audit.service';
 import { formatWat, watToday } from '../../shared/common/wat';
 import type { Env } from '../../shared/config/env.schema';
 import { EncryptionService } from '../../shared/crypto/encryption.service';
@@ -43,13 +46,21 @@ import {
 
 /** Submissions per QR per minute, across all phones (a leaked link backstop). */
 const MAX_SUBMISSIONS_PER_MINUTE = 30;
+/** Unfinished registrations hold personal data: keep them only a day. */
+const RETENTION_MS = 24 * 3_600_000;
+const PURGE_INTERVAL_MS = 3_600_000;
 
 type StoredForm = Omit<PublicRegistrationInput, 'formToken' | 'website'>;
 
 /** The form only emails a one-time code to the desk; the walk-in is created once the visitor enters it, so only someone at the desk can register. */
 @Injectable()
-export class PublicRegistrationService {
+export class PublicRegistrationService
+  implements OnModuleInit, OnModuleDestroy
+{
   private readonly logger = new Logger(PublicRegistrationService.name);
+  private purgeTimer?: NodeJS.Timeout;
+  /** Keys form tokens and code hashes; never the raw JWT secret itself. */
+  private readonly secret: string;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -60,11 +71,43 @@ export class PublicRegistrationService {
     private readonly users: UsersService,
     private readonly visits: VisitAuthoringService,
     private readonly config: ConfigService<Env, true>,
-  ) {}
+    private readonly security: SecurityAuditService,
+  ) {
+    this.secret =
+      config.get('DESK_QR_SECRET', { infer: true }) ??
+      Buffer.from(
+        hkdfSync(
+          'sha256',
+          config.get('JWT_SECRET', { infer: true }),
+          '',
+          'vms/desk-qr',
+          32,
+        ),
+      ).toString('base64url');
+  }
 
-  /** Keyed by the app secret: form tokens and code hashes can't be forged. */
-  private get secret(): string {
-    return this.config.get('JWT_SECRET', { infer: true });
+  onModuleInit(): void {
+    this.purgeTimer = setInterval(
+      () =>
+        void this.purgeExpired().catch((err: Error) => this.logger.error(err)),
+      PURGE_INTERVAL_MS,
+    );
+    this.purgeTimer.unref();
+  }
+
+  onModuleDestroy(): void {
+    clearInterval(this.purgeTimer);
+  }
+
+  /** Deletes unfinished registrations past the retention window. */
+  async purgeExpired(now = new Date()): Promise<number> {
+    const { count } = await this.prisma.deskQrRegistration.deleteMany({
+      where: {
+        visitId: null,
+        expiresAt: { lt: new Date(now.getTime() - RETENTION_MS) },
+      },
+    });
+    return count;
   }
 
   private async activeQr(token: string): Promise<DeskQr> {
@@ -128,17 +171,9 @@ export class PublicRegistrationService {
       now.getTime() + DESK_QR_FORM_MINUTES * 60_000,
     );
     if (input.website?.trim()) {
-      this.logger.warn('Desk QR honeypot filled; registration dropped');
-      return { registrationId: randomUUID(), codeExpiresAt };
+      return this.trapBot(qr, codeExpiresAt);
     }
 
-    // Unfinished registrations hold personal data: keep them only a day.
-    await this.prisma.deskQrRegistration.deleteMany({
-      where: {
-        visitId: null,
-        expiresAt: { lt: new Date(now.getTime() - 24 * 3_600_000) },
-      },
-    });
     const recent = await this.prisma.deskQrRegistration.count({
       where: {
         deskQrId: qr.id,
@@ -158,23 +193,14 @@ export class PublicRegistrationService {
     const { formToken, website, ...stored } = input;
     const id = randomUUID();
     const code = newVerificationCode();
-    await this.txm.run(async (tx) => {
-      await tx.deskQrRegistration.create({
-        data: {
-          id,
-          deskQrId: qr.id,
-          payload: this.crypto.encrypt(JSON.stringify(stored)),
-          codeHash: hashVerificationCode(this.secret, id, code),
-          expiresAt: codeExpiresAt,
-        },
-      });
-      // Audit the attempt without personal data or the code.
-      await this.events.publish(tx, {
-        type: EVENT_TYPES.DeskQrCodeSent,
-        aggregateType: 'DeskQr',
-        aggregateId: qr.id,
-        payload: { deskQrId: qr.id, registrationId: id },
-      });
+    await this.prisma.deskQrRegistration.create({
+      data: {
+        id,
+        deskQrId: qr.id,
+        payload: this.crypto.encrypt(JSON.stringify(stored)),
+        codeHash: hashVerificationCode(this.secret, id, code),
+        expiresAt: codeExpiresAt,
+      },
     });
 
     const queued = await this.notifications.enqueue({
@@ -196,6 +222,43 @@ export class PublicRegistrationService {
       await this.prisma.deskQrRegistration.delete({ where: { id } });
       throw new ServiceUnavailableException('errors.deskQr.codeNotSent');
     }
+    // Only audited once the email is really queued; no personal data or code.
+    await this.txm.run((tx) =>
+      this.events.publish(tx, {
+        type: EVENT_TYPES.DeskQrCodeSent,
+        aggregateType: 'DeskQr',
+        aggregateId: qr.id,
+        payload: { deskQrId: qr.id, registrationId: id },
+      }),
+    );
+    return { registrationId: id, codeExpiresAt };
+  }
+
+  /**
+   * A bot filled the hidden field. Store a registration whose code can never
+   * match (its hash is of a random UUID, not six digits), so the bot sees the
+   * same wrong-code and lockout answers a person would.
+   */
+  private async trapBot(
+    qr: DeskQr,
+    codeExpiresAt: Date,
+  ): Promise<PublicRegistrationPending> {
+    const id = randomUUID();
+    await this.prisma.deskQrRegistration.create({
+      data: {
+        id,
+        deskQrId: qr.id,
+        payload: this.crypto.encrypt('null'),
+        codeHash: hashVerificationCode(this.secret, id, randomUUID()),
+        expiresAt: codeExpiresAt,
+      },
+    });
+    await this.security.record({
+      action: EVENT_TYPES.DeskQrHoneypotTriggered,
+      entityType: 'DeskQr',
+      entityId: qr.id,
+      metadata: { deskQrId: qr.id, registrationId: id },
+    });
     return { registrationId: id, codeExpiresAt };
   }
 
@@ -222,6 +285,12 @@ export class PublicRegistrationService {
       data: { attempts: { increment: 1 } },
     });
     if (claimed.count === 0) {
+      await this.recordCodeAbuse(
+        EVENT_TYPES.DeskQrRegistrationLocked,
+        qr,
+        reg.id,
+        DESK_QR_CODE_ATTEMPTS,
+      );
       throw new HttpException('errors.deskQr.tooManyTries', HttpStatus.LOCKED);
     }
     if (!verificationCodeMatches(this.secret, reg.id, code, reg.codeHash)) {
@@ -230,7 +299,16 @@ export class PublicRegistrationService {
         select: { attempts: true },
       });
       const attempts = after?.attempts ?? DESK_QR_CODE_ATTEMPTS;
-      throw attempts >= DESK_QR_CODE_ATTEMPTS
+      const locked = attempts >= DESK_QR_CODE_ATTEMPTS;
+      await this.recordCodeAbuse(
+        locked
+          ? EVENT_TYPES.DeskQrRegistrationLocked
+          : EVENT_TYPES.DeskQrCodeRejected,
+        qr,
+        reg.id,
+        attempts,
+      );
+      throw locked
         ? new HttpException('errors.deskQr.tooManyTries', HttpStatus.LOCKED)
         : new UnprocessableEntityException('errors.deskQr.codeWrong');
     }
@@ -245,6 +323,21 @@ export class PublicRegistrationService {
       if (claimed.count === 0) {
         throw new ConflictException('errors.deskQr.registrationNotFound');
       }
+    });
+  }
+
+  /** Never records the code or the QR token, only which registration was guessed at. */
+  private recordCodeAbuse(
+    action: string,
+    qr: DeskQr,
+    registrationId: string,
+    attempts: number,
+  ): Promise<void> {
+    return this.security.record({
+      action,
+      entityType: 'DeskQr',
+      entityId: qr.id,
+      metadata: { deskQrId: qr.id, registrationId, attempts },
     });
   }
 }

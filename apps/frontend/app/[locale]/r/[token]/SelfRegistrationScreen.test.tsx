@@ -56,6 +56,14 @@ describe("self-registration form rules", () => {
     expect(selfFormErrors(filled())).toEqual({});
   });
 
+  it("rejects links and markup in the name and organisation", () => {
+    expect(
+      selfFormErrors(
+        filled({ fullName: "Visit www.evil.com", organization: "acme.com" }),
+      ),
+    ).toEqual({ fullName: "plainName", organization: "plainOrganization" });
+  });
+
   it("keeps the phone optional but checks it when given", () => {
     expect(selfFormErrors(filled({ phoneNumber: "12" }))).toHaveProperty(
       "phone",

@@ -1159,7 +1159,9 @@
       "choose": "Choose one",
       "yesNo": "Choose Yes or No",
       "chooseType": "Choose the type of assistance you need",
-      "describeOther": "Describe the assistance you need"
+      "describeOther": "Describe the assistance you need",
+      "plainName": "Use letters only, without links or symbols",
+      "plainOrganization": "Use letters and numbers only, without links or symbols"
     },
     "checkAnswers": "{count, plural, one {Check # answer below.} other {Check # answers below.}}",
     "submit": "Register my visit",
@@ -1581,7 +1583,10 @@
         "visit_updated": "Visit updated",
         "visitor_checked_in": "Visitor checked in",
         "visitor_checked_out": "Visitor checked out",
-        "visitor_rated": "Visit rated"
+        "visitor_rated": "Visit rated",
+        "desk_qr_honeypot_triggered": "Walk-in QR bot blocked",
+        "desk_qr_code_rejected": "Wrong desk code entered",
+        "desk_qr_registration_locked": "Walk-in registration locked"
       }
     }
   }

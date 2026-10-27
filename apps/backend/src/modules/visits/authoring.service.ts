@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import {
+  ROLES,
   VISIT_SOURCE_DESK_QR,
   normalizeConsentEmail,
   type CreateVisitsInput,
@@ -44,16 +45,7 @@ export class VisitAuthoringService {
       ...new Set(input.guests.map((g) => g.hostUserId).filter(Boolean)),
     ] as string[];
     if (hostUserIds.length > 0) {
-      const staff = await this.prisma.user.findMany({
-        where: {
-          id: { in: hostUserIds },
-          userRoles: { some: { role: { name: 'STAFF' } } },
-        },
-        select: { id: true },
-      });
-      if (staff.length !== hostUserIds.length) {
-        throw new BadRequestException('errors.host.notStaff');
-      }
+      await this.assertActiveHosts(hostUserIds);
     }
 
     const actor = await this.prisma.user.findUnique({
@@ -162,16 +154,7 @@ export class VisitAuthoringService {
     input: Omit<PublicRegistrationInput, 'formToken' | 'website'>,
     onCreated: (tx: Prisma.TransactionClient, visitId: string) => Promise<void>,
   ): Promise<PublicRegistrationResult> {
-    if (input.hostUserId) {
-      const host = await this.prisma.user.count({
-        where: {
-          id: input.hostUserId,
-          isActive: true,
-          userRoles: { some: { role: { name: 'STAFF' } } },
-        },
-      });
-      if (host === 0) throw new BadRequestException('errors.host.notStaff');
-    }
+    if (input.hostUserId) await this.assertActiveHosts([input.hostUserId]);
 
     return this.txm.run(async (tx) => {
       const hostId = input.hostUserId
@@ -258,16 +241,7 @@ export class VisitAuthoringService {
     if (visit.status !== 'PENDING' && visit.status !== 'REVIEW_REQUESTED') {
       throw new BadRequestException('errors.visit.notEditable');
     }
-    if (input.hostUserId) {
-      const staff = await this.prisma.user.findFirst({
-        where: {
-          id: input.hostUserId,
-          userRoles: { some: { role: { name: 'STAFF' } } },
-        },
-        select: { id: true },
-      });
-      if (!staff) throw new BadRequestException('errors.host.notStaff');
-    }
+    if (input.hostUserId) await this.assertActiveHosts([input.hostUserId]);
 
     const visitorData = {
       fullName: input.fullName,
@@ -421,5 +395,20 @@ export class VisitAuthoringService {
       });
     });
     return this.read.getDetail(id);
+  }
+
+  /** Every host must be an active staff member; deactivated accounts can't host. */
+  private async assertActiveHosts(userIds: string[]): Promise<void> {
+    const ids = [...new Set(userIds)];
+    const count = await this.prisma.user.count({
+      where: {
+        id: { in: ids },
+        isActive: true,
+        userRoles: { some: { role: { name: ROLES.STAFF } } },
+      },
+    });
+    if (count !== ids.length) {
+      throw new BadRequestException('errors.host.notStaff');
+    }
   }
 }
