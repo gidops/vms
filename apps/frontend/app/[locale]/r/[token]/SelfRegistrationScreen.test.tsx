@@ -1,11 +1,14 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/data/http/client";
 import { renderWithIntl } from "@/test/render";
 import { SelfRegistrationScreen } from "./SelfRegistrationScreen";
 import {
   blankSelfForm,
+  deadlineOf,
+  phaseOf,
   problemOf,
+  secondsUntil,
   selfFormErrors,
   toRegistrationInput,
   type SelfForm,
@@ -110,6 +113,49 @@ describe("self-registration form rules", () => {
   });
 });
 
+describe("phaseOf", () => {
+  const data = {
+    formToken: "ft",
+    formExpiresAt: new Date(),
+    secondsLeft: 600,
+    receivedAt: 0,
+  };
+  const open = { loading: false, problem: null, data };
+
+  it("waits while the form opens, whatever the step", () => {
+    expect(phaseOf({ ...open, loading: true }, { kind: "locked" })).toEqual({
+      kind: "opening",
+    });
+  });
+
+  it("puts a failed open ahead of the step", () => {
+    expect(phaseOf({ ...open, problem: "inactive" }, { kind: "form" })).toEqual(
+      { kind: "inactive" },
+    );
+    expect(phaseOf({ ...open, problem: "offline" }, { kind: "form" })).toEqual({
+      kind: "expired",
+    });
+  });
+
+  it("shows the form with its session, or the later step", () => {
+    expect(phaseOf(open, { kind: "form" })).toEqual({
+      kind: "form",
+      session: data,
+    });
+    expect(phaseOf({ ...open, data: undefined }, { kind: "form" })).toEqual({
+      kind: "opening",
+    });
+    expect(phaseOf(open, { kind: "locked" })).toEqual({ kind: "locked" });
+  });
+
+  it("counts down from the server's seconds, not the expiry timestamp", () => {
+    const deadline = deadlineOf({ receivedAt: 1_000, secondsLeft: 90 });
+    expect(secondsUntil(deadline, 1_000)).toBe(90);
+    expect(secondsUntil(deadline, 31_500)).toBe(60);
+    expect(secondsUntil(deadline, 999_999)).toBe(0);
+  });
+});
+
 const inTen = () => new Date(Date.now() + 10 * 60_000).toISOString();
 
 async function fillAndSubmit() {
@@ -135,8 +181,13 @@ async function fillAndSubmit() {
 describe("SelfRegistrationScreen", { timeout: 15_000 }, () => {
   beforeEach(() => {
     Object.values(api).forEach((f) => f.mockReset());
-    api.open.mockResolvedValue({ formToken: "ft", formExpiresAt: inTen() });
+    api.open.mockResolvedValue({
+      formToken: "ft",
+      formExpiresAt: inTen(),
+      secondsLeft: 600,
+    });
   });
+  afterEach(() => vi.useRealTimers());
 
   it("opens the form with today's date and the 10-minute timer", async () => {
     renderWithIntl(<SelfRegistrationScreen token="tok" />);
@@ -179,6 +230,7 @@ describe("SelfRegistrationScreen", { timeout: 15_000 }, () => {
     api.submit.mockResolvedValue({
       registrationId: "r1",
       codeExpiresAt: inTen(),
+      secondsLeft: 600,
     });
     api.verify
       .mockRejectedValueOnce(new ApiError(422, "Wrong"))
@@ -216,6 +268,7 @@ describe("SelfRegistrationScreen", { timeout: 15_000 }, () => {
     api.submit.mockResolvedValue({
       registrationId: "r1",
       codeExpiresAt: inTen(),
+      secondsLeft: 600,
     });
     api.verify.mockRejectedValue(new ApiError(423, "Locked"));
     renderWithIntl(<SelfRegistrationScreen token="tok" />);
@@ -235,5 +288,67 @@ describe("SelfRegistrationScreen", { timeout: 15_000 }, () => {
     await fillAndSubmit();
     expect(await screen.findByRole("alert")).toHaveTextContent("No connection");
     expect(screen.getByLabelText(/Full name/)).toHaveValue("Ifeoma Chukwu");
+  });
+
+  it("times the form from secondsLeft, not the phone's clock", async () => {
+    // A phone set years ahead, and an expiry stamp that disagrees with it.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2040-01-01T09:00:00Z"));
+    api.open.mockResolvedValue({
+      formToken: "ft",
+      formExpiresAt: "2001-01-01T00:00:00.000Z",
+      secondsLeft: 125,
+    });
+    renderWithIntl(<SelfRegistrationScreen token="tok" />);
+    expect(
+      await screen.findByText(/Form expires in 2:0[45]/),
+    ).toBeInTheDocument();
+  });
+
+  it("announces the last minute and focuses the notice when time runs out", async () => {
+    api.open.mockResolvedValue({
+      formToken: "ft",
+      formExpiresAt: inTen(),
+      secondsLeft: 2,
+    });
+    renderWithIntl(<SelfRegistrationScreen token="tok" />);
+    expect(await screen.findByText("1 minute left")).toHaveAttribute(
+      "aria-live",
+      "polite",
+    );
+    const heading = await screen.findByRole(
+      "heading",
+      { name: "This form has expired" },
+      { timeout: 4_000 },
+    );
+    expect(heading).toHaveFocus();
+  });
+
+  it("links each field error to its control", async () => {
+    renderWithIntl(<SelfRegistrationScreen token="tok" />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Register my visit" }),
+    );
+    const name = screen.getByLabelText(/Full name/);
+    expect(name).toHaveAttribute("aria-invalid", "true");
+    expect(name).toHaveAccessibleDescription("Fill this in");
+    expect(
+      screen.getByRole("radiogroup", { name: /emergency/ }),
+    ).toHaveAccessibleDescription("Choose Yes or No");
+  });
+
+  it("labels the host search and announces the results", async () => {
+    api.searchHosts.mockResolvedValue([]);
+    renderWithIntl(<SelfRegistrationScreen token="tok" />);
+    const search = await screen.findByLabelText(
+      "Search for the person you're visiting",
+    );
+    fireEvent.change(search, { target: { value: "Ade" } });
+    await waitFor(() =>
+      expect(screen.getAllByRole("status").map((s) => s.textContent)).toContain(
+        "No matching staff. Leave blank for a general enquiry.",
+      ),
+    );
+    expect(api.searchHosts).toHaveBeenCalledWith("tok", "Ade", "ft");
   });
 });

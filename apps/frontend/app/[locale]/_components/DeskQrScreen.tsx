@@ -24,10 +24,13 @@ import { Ban, Download, Printer, QrCode, RefreshCw } from "lucide-react";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { deskQrApi } from "@/data/desk-qr/desk-qr.api";
 import {
   useDeskQr,
-  useDeskQrAction,
+  useCreateDeskQr,
+  useDisableDeskQr,
+  useEnableDeskQr,
+  useRotateDeskQr,
+  useUpdateDeskQr,
   useDeskQrImage,
   useDownloadDeskQr,
 } from "@/data/desk-qr/queries";
@@ -249,15 +252,11 @@ export function DeskQrScreen({
   const view = qr.data ?? null;
   const image = useDeskQrImage(view?.url);
   const download = useDownloadDeskQr();
-  const create = useDeskQrAction((codeEmail: string) =>
-    deskQrApi.create({ codeEmail }),
-  );
-  const update = useDeskQrAction((codeEmail: string) =>
-    deskQrApi.update({ codeEmail }),
-  );
-  const rotate = useDeskQrAction(() => deskQrApi.rotate());
-  const disable = useDeskQrAction(() => deskQrApi.disable());
-  const enable = useDeskQrAction(() => deskQrApi.enable());
+  const create = useCreateDeskQr();
+  const update = useUpdateDeskQr();
+  const rotate = useRotateDeskQr();
+  const disable = useDisableDeskQr();
+  const enable = useEnableDeskQr();
   const [emailDialog, setEmailDialog] = React.useState<
     "create" | "change" | null
   >(null);
@@ -386,8 +385,8 @@ export function DeskQrScreen({
           <Button
             intent="neutral"
             tone="outline"
-            onClick={() => download.mutate()}
-            disabled={download.isPending || !active}
+            onClick={() => image.blob && download.mutate(image.blob)}
+            disabled={download.isPending || !active || !image.blob}
             aria-busy={download.isPending || undefined}
           >
             <Download className="size-4" aria-hidden="true" />

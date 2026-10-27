@@ -15,6 +15,8 @@ export interface PhoneInputProps {
   placeholder?: string;
   invalid?: boolean;
   id?: string;
+  /** Id of the element describing the number box, e.g. its error message. */
+  describedBy?: string;
 }
 
 /** The number box accepts digits only, so a dial code can't be typed twice into the E.164 result. */
@@ -26,6 +28,7 @@ export function PhoneInput({
   placeholder,
   invalid,
   id,
+  describedBy,
 }: PhoneInputProps) {
   const t = useTranslations("common");
   return (
@@ -54,6 +57,7 @@ export function PhoneInput({
       </div>
       <Input
         id={id}
+        aria-describedby={describedBy}
         type="tel"
         inputMode="tel"
         value={number}

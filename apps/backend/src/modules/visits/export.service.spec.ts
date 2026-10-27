@@ -1,11 +1,12 @@
 import ExcelJS from 'exceljs';
-import { PassThrough } from 'node:stream';
+import { PassThrough, Writable } from 'node:stream';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
 import { EventPublisher } from '../../shared/events/event-publisher';
 import { TransactionManager } from '../../shared/events/transaction.manager';
 import {
   EXPORT_COLUMNS,
+  ExportAbortedError,
   VisitExportService,
   channelLabel,
 } from './export.service';
@@ -306,6 +307,51 @@ describe('VisitExportService', () => {
     );
     expect(n).toBe(0);
     expect((await done).toString('latin1').startsWith('%PDF-')).toBe(true);
+  });
+
+  it('waits for a slow client to drain before writing more', async () => {
+    const { service } = setup([row(), row({ id: 'v2' })]);
+    const written: string[] = [];
+    let release: () => void = () => undefined;
+    // A client whose buffer is always full until it drains.
+    const out = new Writable({
+      highWaterMark: 1,
+      write(chunk: Buffer, _enc, cb) {
+        written.push(chunk.toString());
+        release = cb;
+      },
+    });
+    const done = service.write(
+      { from: '2026-10-17', to: '2026-10-17', format: 'csv' },
+      out,
+      'actor',
+    );
+    await new Promise((r) => setImmediate(r));
+    // Only the header has gone out: the rows wait for the drain.
+    expect(written).toHaveLength(1);
+    release();
+    await new Promise((r) => setImmediate(r));
+    release();
+    await done;
+    expect(written.length).toBeGreaterThan(1);
+  });
+
+  it('stops querying once the client has disconnected and audits the failure', async () => {
+    const { service, findMany, publish } = setup([row()]);
+    const out = new PassThrough();
+    out.destroy();
+    await expect(
+      service.write(
+        { from: '2026-10-17', to: '2026-10-17', format: 'csv' },
+        out,
+        'actor',
+      ),
+    ).rejects.toBeInstanceOf(ExportAbortedError);
+    expect(findMany).not.toHaveBeenCalled();
+    expect(publish).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({ type: EVENT_TYPES.VisitsExportFailed }),
+    );
   });
 
   it('names the file after the range', () => {

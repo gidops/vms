@@ -42,7 +42,7 @@ import { VisitDashboardService } from './dashboard.service';
 import { VisitAuthoringService } from './authoring.service';
 import { VisitDeliveriesService } from './deliveries.service';
 import { VisitEvacuationService } from './evacuation.service';
-import { VisitExportService } from './export.service';
+import { ExportAbortedError, VisitExportService } from './export.service';
 import { VisitModerationService } from './moderation.service';
 import { VisitReadService } from './read.service';
 
@@ -93,6 +93,8 @@ export class VisitsController {
     try {
       await this.exporter.write(query, res, principal.userId);
     } catch (err) {
+      // The client left mid-download; the export is already audited as failed.
+      if (err instanceof ExportAbortedError) return;
       // Once bytes are sent the status can't change, so cut the download short instead.
       if (!res.headersSent) throw err;
       this.logger.error(
