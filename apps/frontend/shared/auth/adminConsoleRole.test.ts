@@ -1,6 +1,6 @@
 import { PERMISSIONS } from "@vms/contracts";
 import { describe, expect, it } from "vitest";
-import { bandStatKeys } from "@/app/[locale]/admin/v2/_components/useAdminBand";
+import { bandStatKeys } from "@/app/[locale]/admin/_components/useAdminBand";
 import { adminConsoleRole } from "./adminConsoleRole";
 
 const holds =
@@ -24,8 +24,8 @@ describe("admin console by role", () => {
   it("shows three stats each: approvals first for the SM, traffic for the SA", () => {
     expect(bandStatKeys("securityManager")).toEqual([
       "awaiting",
-      "visitorsToday",
       "onsite",
+      "expected",
     ]);
     expect(bandStatKeys("systemAdmin")).toEqual([
       "visitorsToday",

@@ -100,6 +100,16 @@ describe('VisitReadService.list scoping', () => {
     );
   });
 
+  it('keeps only group visits when groupVisit is set', async () => {
+    const { service, findMany } = setup();
+    await service.list(query({ groupVisit: true }), 'me');
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ isGroupVisit: true }),
+      }),
+    );
+  });
+
   it('builds a case-insensitive OR search across guest/host/floor/pass id', async () => {
     const { service, findMany } = setup();
     await service.list(query({ search: 'jordan' }), 'me');

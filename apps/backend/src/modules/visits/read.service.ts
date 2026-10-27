@@ -244,6 +244,7 @@ function buildListWhere(
   if (query.type) where.type = query.type;
   if (query.purpose) where.purpose = query.purpose;
   if (query.groupId) where.groupId = query.groupId;
+  if (query.groupVisit) where.isGroupVisit = true;
   if (query.dateFrom || query.dateTo) {
     where[query.dateField] = {
       ...(query.dateFrom ? { gte: query.dateFrom } : {}),

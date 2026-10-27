@@ -54,12 +54,9 @@ test.describe("Security Manager smoke", () => {
   });
 
   test("opens the visitor export dialog", async ({ page }) => {
-    await page.goto("/admin");
-    // The overview bar's Export action (desktop bar; the mobile copy is hidden).
-    await page
-      .getByTestId("overview-bar-desktop")
-      .getByRole("button", { name: "Export", exact: true })
-      .click();
+    // Export lives on Insights → History, not the admin overview.
+    await page.goto("/insights?tab=history");
+    await page.getByRole("button", { name: "Export", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toContainText("Export Visitor Data");
     await expect(dialog.getByRole("button", { name: "Export" })).toBeVisible();

@@ -99,11 +99,9 @@ those two branches only.
 
 ## Unfinished work
 
-- **Two admin consoles.** Admins land on the old `/admin`; the new one is
-  `/admin/v2`. To switch: move `admin/v2/*` up to `admin/*` (first move
-  `admin/_components/users/UserDialogs` and `admin/_components/pendingApprovals`,
-  which v2 still uses), delete the old admin components and pages, and pick one
-  `?layout=` option on v2 Recent Activity and Users.
+- **Admin layout variants.** `/admin/requests?layout=staff` and
+  `/admin/users?layout=drawer` are alternative layouts kept for review; pick
+  one of each and delete the other.
 - The thank-you message links to `/rating/<visitId>`, but that page doesn't
   exist yet.
 - Plain VMC users can't reach the email consent screen without the VMC Admin

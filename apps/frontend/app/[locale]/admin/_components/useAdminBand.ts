@@ -17,12 +17,13 @@ export type BandStatKey =
   | "visitorsToday"
   | "awaiting"
   | "onsite"
+  | "expected"
   | "checkedOut";
 
 /** The Security Manager leads with pending work; the System Admin watches traffic. */
 export function bandStatKeys(role: AdminConsoleRole): BandStatKey[] {
   return role === "securityManager"
-    ? ["awaiting", "visitorsToday", "onsite"]
+    ? ["awaiting", "onsite", "expected"]
     : ["visitorsToday", "onsite", "checkedOut"];
 }
 
@@ -62,6 +63,7 @@ export function useAdminBand() {
   const floors = s?.onsiteFloors ?? 0;
 
   const role = adminConsoleRole(hasPermission);
+  const sm = role === "securityManager";
   const all: Record<BandStatKey, OverviewStat> = {
     visitorsToday: {
       label: t("visitorsToday"),
@@ -74,15 +76,20 @@ export function useAdminBand() {
       hint: awaitingHint,
       // The hero only for roles that can act on it.
       tone: canApprove ? "warning" : "default",
-      link:
-        role === "securityManager"
-          ? { href: "/admin/v2/approvals", label: tV2("openApprovals") }
-          : undefined,
+      link: sm
+        ? { href: "/admin/approvals", label: tV2("openApprovals") }
+        : undefined,
     },
     onsite: {
-      label: t("onsite"),
+      // The Security Manager's band reads "Onsite now", like the v1 console.
+      label: sm ? tBar("onsite") : t("onsite"),
       value: v(s?.onsite),
       hint: floors > 0 ? tBar("onsiteFloors", { count: floors }) : undefined,
+    },
+    expected: {
+      label: tBar("expected"),
+      value: v(s?.expected),
+      hint: tBar("expectedHint"),
     },
     checkedOut: { label: t("checkedOut"), value: v(s?.checkedOutToday) },
   };
@@ -101,7 +108,7 @@ export function useAdminBand() {
     stats,
     pendingCount: awaiting,
     eyebrow,
-    eyebrowIcon: role === "securityManager" ? ShieldCheck : ServerCog,
+    eyebrowIcon: sm ? ShieldCheck : ServerCog,
     welcome: tV2("welcome", { name: user?.fullName ?? "" }),
   };
 }

@@ -1,9 +1,19 @@
 "use client";
 
+import { PERMISSIONS } from "@vms/contracts";
 import {
   Badge,
   Button,
   EmptyState,
+  FilterBar,
+  Pagination,
+  RecordTable,
+  SearchInput,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Spinner,
   Table,
   TableBody,
@@ -11,11 +21,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TopNavShell,
 } from "@vms/ui";
-import { Trash2, Users } from "lucide-react";
+import { Users } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
-import { AdminShell } from "@/app/[locale]/admin/_components/AdminShell";
+import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
 import {
   CreateUserDialog,
   DeleteUserDialog,
@@ -31,39 +43,129 @@ import type { UserListItem } from "@/data/users/users.api";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
 import { roleLabel } from "@/shared/auth/roleLabels";
+import { UserFormDrawer } from "../_components/users/UserFormDrawer";
 
-function Users_() {
+const ALL = "all";
+const PAGE_SIZE = 10;
+
+/** `?layout=drawer` opens create/edit as a leading-edge drawer; read-only roles see the table only. */
+function UsersTab() {
   const t = useTranslations("users");
+  const tV2 = useTranslations("adminV2.users");
   const tRoles = useTranslations("roles");
   const format = useFormatter();
-  const { user } = useAuth();
+  const drawer = useSearchParams().get("layout") === "drawer";
+  const { user, hasPermission } = useAuth();
+  const canCreate = hasPermission(PERMISSIONS.USER_CREATE);
+  const canUpdate = hasPermission(PERMISSIONS.USER_UPDATE);
+  const canDelete = hasPermission(PERMISSIONS.USER_DELETE);
+  const hasActions = canUpdate || canDelete;
+
   const { data, isLoading } = useUsers();
   const { data: roles = [] } = useRoles();
   const createUser = useCreateUser();
   const updateRoles = useUpdateUserRoles();
 
+  const [search, setSearch] = React.useState("");
+  const [role, setRole] = React.useState(ALL);
+  const [page, setPage] = React.useState(1);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<UserListItem | null>(null);
   const [deleting, setDeleting] = React.useState<UserListItem | null>(null);
 
-  const items = data?.items ?? [];
+  // The users API returns a single page (≤100), so filter + page client-side.
+  const filtered = React.useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return (data?.items ?? []).filter(
+      (u) =>
+        (role === ALL || u.roles.includes(role)) &&
+        (!term ||
+          u.fullName.toLowerCase().includes(term) ||
+          u.email.toLowerCase().includes(term)),
+    );
+  }, [data, search, role]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const onCreate = (input: Parameters<typeof createUser.mutate>[0]) =>
+    createUser.mutate(input, { onSuccess: () => setCreateOpen(false) });
+  const onUpdateRoles = (id: string, next: string[]) =>
+    updateRoles.mutate(
+      { id, roles: next },
+      { onSuccess: () => setEditing(null) },
+    );
 
   return (
-    <AdminShell active="users">
+    <TopNavShell
+      nav={<AppTopNav app="admin" active="users" />}
+      filterBar={
+        <FilterBar>
+          <div className="min-w-56 flex-1">
+            <SearchInput
+              placeholder={tV2("searchPlaceholder")}
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              onClear={() => setSearch("")}
+            />
+          </div>
+          <Select
+            value={role}
+            onValueChange={(v) => {
+              setRole(v);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>{tV2("allRoles")}</SelectItem>
+              {roles.map((r) => (
+                <SelectItem key={r} value={r}>
+                  {roleLabel(tRoles, r)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterBar>
+      }
+    >
       <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-3xl font-semibold text-primary">{t("title")}</h1>
-          <Button onClick={() => setCreateOpen(true)}>{t("newUser")}</Button>
+        <div className="flex flex-wrap items-stretch justify-between overflow-hidden rounded-xl border-x border-b border-border bg-surface">
+          <h1 className="flex items-center px-6 py-4 text-3xl font-semibold text-fg">
+            {t("title")}
+          </h1>
+          {canCreate ? (
+            <div className="flex items-center bg-primary-subtle px-6 py-3">
+              <Button onClick={() => setCreateOpen(true)}>
+                {t("newUser")}
+              </Button>
+            </div>
+          ) : null}
         </div>
 
         {isLoading ? (
           <div className="flex justify-center py-16">
             <Spinner />
           </div>
-        ) : items.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <EmptyState icon={Users} title={t("empty")} />
         ) : (
-          <div className="overflow-hidden rounded-lg border border-border bg-surface">
+          <RecordTable
+            frameless
+            pagination={
+              totalPages > 1 ? (
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                />
+              ) : undefined
+            }
+          >
             <Table>
               <TableHeader>
                 <TableRow>
@@ -71,11 +173,13 @@ function Users_() {
                   <TableHead>{t("columns.roles")}</TableHead>
                   <TableHead>{t("columns.status")}</TableHead>
                   <TableHead>{t("columns.created")}</TableHead>
-                  <TableHead>{t("columns.actions")}</TableHead>
+                  {hasActions ? (
+                    <TableHead>{t("columns.actions")}</TableHead>
+                  ) : null}
                 </TableRow>
               </TableHeader>
               <TableBody striped>
-                {items.map((u) => (
+                {rows.map((u) => (
                   <TableRow key={u.id}>
                     <TableCell>
                       <span className="flex flex-col">
@@ -107,70 +211,101 @@ function Users_() {
                         dateStyle: "medium",
                       })}
                     </TableCell>
-                    <TableCell>
-                      <span className="flex items-center gap-2">
-                        <Button
-                          intent="neutral"
-                          tone="outline"
-                          size="sm"
-                          onClick={() => setEditing(u)}
-                        >
-                          {t("editRoles")}
-                        </Button>
-                        <Button
-                          intent="danger"
-                          tone="ghost"
-                          size="sm"
-                          aria-label={t("delete")}
-                          disabled={u.id === user?.id}
-                          onClick={() => setDeleting(u)}
-                        >
-                          <Trash2 className="size-4" aria-hidden="true" />
-                        </Button>
-                      </span>
-                    </TableCell>
+                    {hasActions ? (
+                      <TableCell>
+                        <span className="flex items-center gap-2">
+                          {canUpdate ? (
+                            <Button
+                              intent="neutral"
+                              tone="outline"
+                              size="sm"
+                              className="min-w-28 text-xs"
+                              onClick={() => setEditing(u)}
+                            >
+                              {t("editRoles")}
+                            </Button>
+                          ) : null}
+                          {canDelete ? (
+                            <Button
+                              intent="danger"
+                              tone="outline"
+                              size="sm"
+                              className="min-w-28 text-xs"
+                              disabled={u.id === user?.id}
+                              onClick={() => setDeleting(u)}
+                            >
+                              {t("delete")}
+                            </Button>
+                          ) : null}
+                        </span>
+                      </TableCell>
+                    ) : null}
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          </div>
+          </RecordTable>
         )}
       </div>
 
-      <CreateUserDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        roles={roles}
-        pending={createUser.isPending}
-        onSubmit={(input) =>
-          createUser.mutate(input, { onSuccess: () => setCreateOpen(false) })
-        }
-      />
-      <EditRolesDialog
-        user={editing}
-        onOpenChange={(open) => !open && setEditing(null)}
-        roles={roles}
-        pending={updateRoles.isPending}
-        onSubmit={(id, next) =>
-          updateRoles.mutate(
-            { id, roles: next },
-            { onSuccess: () => setEditing(null) },
-          )
-        }
-      />
+      {drawer ? (
+        <UserFormDrawer
+          creating={createOpen}
+          editing={editing}
+          roles={roles}
+          pending={createUser.isPending || updateRoles.isPending}
+          onClose={() => {
+            setCreateOpen(false);
+            setEditing(null);
+          }}
+          onCreate={onCreate}
+          onUpdateRoles={onUpdateRoles}
+        />
+      ) : (
+        <>
+          <CreateUserDialog
+            open={createOpen}
+            onOpenChange={setCreateOpen}
+            roles={roles}
+            pending={createUser.isPending}
+            onSubmit={onCreate}
+          />
+          <EditRolesDialog
+            user={editing}
+            onOpenChange={(open) => !open && setEditing(null)}
+            roles={roles}
+            pending={updateRoles.isPending}
+            onSubmit={onUpdateRoles}
+          />
+        </>
+      )}
       <DeleteUserDialog
         user={deleting}
         onOpenChange={(open) => !open && setDeleting(null)}
         onDeleted={() => setDeleting(null)}
       />
-    </AdminShell>
+    </TopNavShell>
   );
 }
 
-export default function UsersPage() {
+/** Users are the System Admin's; anyone else gets a notice, not a 403. */
+function UsersGate() {
+  const tV2 = useTranslations("adminV2.users");
+  const { hasPermission } = useAuth();
+  if (hasPermission(PERMISSIONS.USER_READ)) return <UsersTab />;
+  return (
+    <TopNavShell nav={<AppTopNav app="admin" active="overview" />}>
+      <EmptyState icon={Users} title={tV2("noAccess")} />
+    </TopNavShell>
+  );
+}
+
+export default function AdminUsersPage() {
   return (
     <RouteGuard home="/admin">
-      <Users_ />
+      <React.Suspense>
+        <UsersGate />
+      </React.Suspense>
     </RouteGuard>
   );
 }

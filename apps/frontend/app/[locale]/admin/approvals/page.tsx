@@ -33,7 +33,7 @@ function Approvals() {
   );
 }
 
-export default function AdminV2ApprovalsPage() {
+export default function AdminApprovalsPage() {
   return (
     <RouteGuard home="/admin">
       <React.Suspense>

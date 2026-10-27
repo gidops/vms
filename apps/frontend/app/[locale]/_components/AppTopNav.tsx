@@ -65,21 +65,21 @@ export function AppTopNav({
   }[] =
     app === "admin"
       ? [
-          { value: "overview", label: tNav("overview"), route: "/admin/v2" },
+          { value: "overview", label: tNav("overview"), route: "/admin" },
           // The Security Manager's work queue comes before the activity feed.
           ...(securityManager
             ? [
                 {
                   value: "approvals",
                   label: tNav("pendingApprovals"),
-                  route: "/admin/v2/approvals",
+                  route: "/admin/approvals",
                 },
               ]
             : []),
           {
             value: "requests",
             label: tNav("recentActivity"),
-            route: "/admin/v2/requests",
+            route: "/admin/requests",
             count,
           },
           ...(hasPermission(PERMISSIONS.USER_READ)
@@ -87,7 +87,7 @@ export function AppTopNav({
                 {
                   value: "users",
                   label: tNav("users"),
-                  route: "/admin/v2/users",
+                  route: "/admin/users",
                 },
               ]
             : []),

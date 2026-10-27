@@ -107,6 +107,7 @@ export interface AdminVisitsParams {
   statuses?: VisitStatus[];
   type?: VisitType;
   purpose?: string;
+  groupVisit?: boolean;
   dateFrom?: string;
   dateTo?: string;
   /** Which date column the window filters on (default `scheduledAt`). */

@@ -28,8 +28,8 @@ import {
 } from "@/app/[locale]/admin/_components/pendingApprovals";
 import { VisitorCell } from "./VisitorCell";
 
-type Bucket = "all" | VisitStatus;
-const BUCKETS: Bucket[] = ["all", "PENDING", "REVIEW_REQUESTED", "FLAGGED"];
+type Bucket = "all" | "REVIEW_REQUESTED" | "FLAGGED" | "group";
+const BUCKETS: Bucket[] = ["all", "REVIEW_REQUESTED", "FLAGGED", "group"];
 const DECISION_STATUSES: VisitStatus[] = [
   "PENDING",
   "REVIEW_REQUESTED",
@@ -192,8 +192,8 @@ export function PendingApprovalsTable({
 
   const visits = useAdminVisits({
     ...query,
-    ...(bucket === "all"
-      ? { statuses: DECISION_STATUSES }
+    ...(bucket === "all" || bucket === "group"
+      ? { statuses: DECISION_STATUSES, groupVisit: bucket === "group" }
       : { status: bucket }),
     sortBy: "createdAt",
     sortDir: "asc",
