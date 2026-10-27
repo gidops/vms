@@ -182,10 +182,12 @@ export class VisitExportService {
     ];
   }
 
-  private async *batches(q: ExportVisitsQuery) {
+  /** Stops querying as soon as the client has gone, instead of reading up to a year of visits for nobody. */
+  private async *batches(q: ExportVisitsQuery, out: Writable) {
     const range = watDayRange(q.from, q.to);
     let cursor: string | undefined;
     for (;;) {
+      if (out.destroyed) throw new ExportAbortedError();
       const batch = await this.fetchBatch(range, cursor);
       if (batch.length === 0) return;
       const [statuses, consent] = await Promise.all([
@@ -282,16 +284,17 @@ export class VisitExportService {
       }));
       ws.getRow(1).font = { bold: true };
       ws.getRow(1).commit();
-      for await (const rows of this.batches(q)) {
+      for await (const rows of this.batches(q, out)) {
         for (const r of rows) ws.addRow(r).commit();
         add(rows.length);
       }
       ws.commit();
       await wb.commit();
     } else {
-      out.write(CSV_BOM + toCsvRow([...EXPORT_COLUMNS]));
-      for await (const rows of this.batches(q)) {
-        out.write(
+      await writeChunk(out, CSV_BOM + toCsvRow([...EXPORT_COLUMNS]));
+      for await (const rows of this.batches(q, out)) {
+        await writeChunk(
+          out,
           rows
             .map((r) =>
               toCsvRow(
@@ -367,7 +370,7 @@ export class VisitExportService {
     doc.moveDown(0.5);
     drawHeader();
     let total = 0;
-    for await (const rows of this.batches(q)) {
+    for await (const rows of this.batches(q, out)) {
       for (const r of rows) {
         drawRow(
           PDF_COLUMNS.map(({ col }) => {
@@ -392,4 +395,25 @@ export class VisitExportService {
     doc.end();
     await done;
   }
+}
+
+export class ExportAbortedError extends Error {
+  constructor() {
+    super('Export stopped: the client disconnected');
+  }
+}
+
+/** Waits for the client to drain a full buffer (or for the connection to close) before writing more. */
+async function writeChunk(out: Writable, chunk: string): Promise<void> {
+  if (out.destroyed) throw new ExportAbortedError();
+  if (out.write(chunk)) return;
+  await new Promise<void>((resolve) => {
+    const done = () => {
+      out.off('drain', done);
+      out.off('close', done);
+      resolve();
+    };
+    out.once('drain', done);
+    out.once('close', done);
+  });
 }

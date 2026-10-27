@@ -1125,6 +1125,7 @@
     "title": "Register your visit",
     "today": "Today, {date}",
     "expiresIn": "Form expires in {countdown}",
+    "oneMinuteLeft": "1 minute left",
     "optional": "Optional",
     "yes": "Yes",
     "no": "No",
@@ -1147,9 +1148,11 @@
       "consent": "Would you like to receive updates on Afreximbank's activities and events?"
     },
     "host": {
+      "label": "Search for the person you're visiting",
       "placeholder": "Type a name",
       "help": "Leave this empty if your visit is a general enquiry.",
       "results": "Matching staff",
+      "count": "{count, plural, one {# matching staff member.} other {# matching staff members.}}",
       "none": "No matching staff. Leave blank for a general enquiry.",
       "remove": "Remove {name}"
     },

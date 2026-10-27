@@ -141,6 +141,12 @@ export async function apiDownload(
     headers.get("Content-Disposition"),
     fallbackName,
   );
+  saveBlob(blob, filename);
+  return { filename, size: blob.size };
+}
+
+/** Hands a Blob to the browser as a download through a short-lived object URL. */
+export function saveBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -149,5 +155,4 @@ export async function apiDownload(
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  return { filename, size: blob.size };
 }

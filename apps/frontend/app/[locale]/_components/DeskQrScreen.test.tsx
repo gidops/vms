@@ -43,11 +43,19 @@ vi.mock("@/data/desk-qr/desk-qr.api", () => ({
 }));
 vi.mock("@/data/desk-qr/queries", () => ({
   useDeskQr: () => deskQr,
-  useDeskQrImage: () => ({ data: "blob:qr", isError: false }),
+  useDeskQrImage: () => ({
+    data: "blob:qr",
+    blob: new Blob(["png"]),
+    isError: false,
+  }),
   useDownloadDeskQr: () => mutation(vi.fn()),
-  // Runs the screen's own mutationFn so we see which API call it makes.
-  useDeskQrAction: (fn: (arg: unknown) => unknown) =>
-    mutation((arg) => void fn(arg)),
+  useCreateDeskQr: () =>
+    mutation((codeEmail) => void actions.create({ codeEmail })),
+  useUpdateDeskQr: () =>
+    mutation((codeEmail) => void actions.update({ codeEmail })),
+  useRotateDeskQr: () => mutation(() => void actions.rotate()),
+  useDisableDeskQr: () => mutation(() => void actions.disable()),
+  useEnableDeskQr: () => mutation(() => void actions.enable()),
 }));
 
 const view = (over: Partial<DeskQrView> = {}): DeskQrView => ({

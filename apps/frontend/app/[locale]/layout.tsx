@@ -4,7 +4,7 @@ import { GeistSans } from "geist/font/sans";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { isRtl, routing } from "@/i18n/routing";
+import { APP_TIME_ZONE, isRtl, routing } from "@/i18n/routing";
 import { AppProviders } from "@/shared/providers/AppProviders";
 import "../globals.css";
 
@@ -40,7 +40,11 @@ export default async function LocaleLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <NextIntlClientProvider locale={locale} messages={messages}>
+        <NextIntlClientProvider
+          locale={locale}
+          messages={messages}
+          timeZone={APP_TIME_ZONE}
+        >
           <AppProviders>{children}</AppProviders>
         </NextIntlClientProvider>
       </body>

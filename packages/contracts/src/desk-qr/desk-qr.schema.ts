@@ -40,6 +40,8 @@ export type UpdateDeskQrInput = z.infer<typeof UpdateDeskQrInput>;
 export const DeskQrFormSession = z.object({
   formToken: z.string(),
   formExpiresAt: z.coerce.date(),
+  /** Counted from the response, so the countdown never depends on the phone's clock. */
+  secondsLeft: z.number().int().nonnegative(),
 });
 export type DeskQrFormSession = z.infer<typeof DeskQrFormSession>;
 
@@ -115,6 +117,7 @@ export type PublicRegistrationInput = z.infer<typeof PublicRegistrationInput>;
 export const PublicRegistrationPending = z.object({
   registrationId: z.string().uuid(),
   codeExpiresAt: z.coerce.date(),
+  secondsLeft: z.number().int().nonnegative(),
 });
 export type PublicRegistrationPending = z.infer<
   typeof PublicRegistrationPending

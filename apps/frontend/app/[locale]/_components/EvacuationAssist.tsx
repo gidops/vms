@@ -6,7 +6,7 @@ import {
   type EvacuationAssistType,
 } from "@vms/contracts";
 import { Checkbox, Input, cn } from "@vms/ui";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 export interface EvacuationAssistValue {
   evacuationAssistTypes: EvacuationAssistType[];
@@ -104,15 +104,17 @@ export function EvacuationAssistFields({
   );
 }
 
-/** "Mobility, Other: needs a ramp" for read-only views. */
+/** "Mobility, Other: needs a ramp" for read-only views, joined the way the locale lists things. */
 export function useEvacuationAssistText() {
   const t = useTranslations("evacuationAssist");
+  const format = useFormatter();
   return (types: readonly EvacuationAssistType[], other?: string | null) =>
-    types
-      .map((type) =>
+    format.list(
+      types.map((type) =>
         type === "OTHER" && other
           ? `${t("short.OTHER")}: ${other}`
           : t(`short.${type}`),
-      )
-      .join(", ");
+      ),
+      { type: "unit" },
+    );
 }

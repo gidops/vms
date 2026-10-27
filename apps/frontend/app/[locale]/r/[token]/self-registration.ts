@@ -6,8 +6,12 @@ import {
   toE164,
   type EvacuationAssistType,
   type PublicHostOption,
+  type DeskQrFormSession,
   type PublicRegistrationInput,
+  type PublicRegistrationPending,
+  type PublicRegistrationResult,
 } from "@vms/contracts";
+import type { Timed } from "@/data/desk-qr/public-registration.queries";
 import { ApiError } from "@/data/http/client";
 
 /** The visitor's form on their phone; email is required. */
@@ -158,3 +162,57 @@ export function problemOf(err: unknown): RegistrationProblem {
   // fetch() rejects with a TypeError when the phone has no connection.
   return err instanceof TypeError ? "offline" : "unknown";
 }
+
+export function problemText(
+  t: (key: "problems.offline" | "problems.unknown") => string,
+  problem: RegistrationProblem,
+  err: unknown,
+): string {
+  if (problem === "offline") return t("problems.offline");
+  // Everything else comes back from the server already in the visitor's language.
+  return err instanceof Error && err.message
+    ? err.message
+    : t("problems.unknown");
+}
+
+export type Step =
+  | { kind: "form" }
+  | { kind: "inactive" }
+  | { kind: "code"; pending: Timed<PublicRegistrationPending> }
+  | { kind: "done"; result: PublicRegistrationResult }
+  /** `timedOut`: the countdown ran out on this screen, so focus moves to the notice. */
+  | { kind: "expired"; timedOut?: boolean }
+  | { kind: "locked" };
+
+/** What the screen shows: the step, unless opening or the form could not open. */
+export type Phase =
+  | Exclude<Step, { kind: "form" }>
+  | { kind: "opening" }
+  | { kind: "form"; session: Timed<DeskQrFormSession> };
+
+export function phaseOf(
+  session: {
+    loading: boolean;
+    problem: RegistrationProblem | null;
+    data: Timed<DeskQrFormSession> | undefined;
+  },
+  step: Step,
+): Phase {
+  if (session.loading) return { kind: "opening" };
+  if (session.problem === "inactive") return { kind: "inactive" };
+  if (session.problem) return { kind: "expired" };
+  if (step.kind !== "form") return step;
+  return session.data
+    ? { kind: "form", session: session.data }
+    : { kind: "opening" };
+}
+
+/** On the `performance.now()` clock: server-counted seconds from when the response arrived. */
+export const deadlineOf = (r: { receivedAt: number; secondsLeft: number }) =>
+  r.receivedAt + r.secondsLeft * 1000;
+
+export const secondsUntil = (deadline: number, now = performance.now()) =>
+  Math.max(0, Math.ceil((deadline - now) / 1000));
+
+export const formatCountdown = (seconds: number) =>
+  `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;

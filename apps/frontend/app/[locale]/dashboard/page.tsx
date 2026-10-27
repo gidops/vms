@@ -1,6 +1,5 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { VISIT_PURPOSES, VISIT_SOURCE_DESK_QR } from "@vms/contracts";
 import {
   Avatar,
@@ -51,7 +50,8 @@ import {
   boardListParams,
   type BoardFilters,
 } from "@/app/[locale]/dashboard/_components/board-filters";
-import { visitsApi, type VisitListItem } from "@/data/visits/visits.api";
+import { useDeskStats, useVmcBoardVisits } from "@/data/visits/queries";
+import type { VisitListItem } from "@/data/visits/visits.api";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
 
@@ -110,33 +110,17 @@ function Dashboard() {
     filters.status !== "all" ||
     filters.type !== "all" ||
     filters.purpose !== "all";
-  const deskStats = useQuery({
-    queryKey: ["visits", "dashboard", "desk-stats"] as const,
-    queryFn: () => visitsApi.deskStats(),
-    refetchInterval: 30_000,
-  });
-  const visitsQ = useQuery({
-    queryKey: [
-      "visits",
-      "dashboard",
-      page,
-      dates.dateFrom,
-      dates.dateTo,
-      filters,
-    ] as const,
-    queryFn: () =>
-      visitsApi.list({
-        ...boardListParams(filters),
-        // The VMC board is a records log: window and sort by creation date.
-        dateField: "createdAt",
-        sortBy: "createdAt",
-        sortDir: "desc",
-        page,
-        pageSize: 10,
-        dateFrom: dates.dateFrom,
-        dateTo: dates.dateTo,
-      }),
-    placeholderData: (prev) => prev,
+  const deskStats = useDeskStats();
+  const visitsQ = useVmcBoardVisits({
+    ...boardListParams(filters),
+    // The VMC board is a records log: window and sort by creation date.
+    dateField: "createdAt",
+    sortBy: "createdAt",
+    sortDir: "desc",
+    page,
+    pageSize: 10,
+    dateFrom: dates.dateFrom,
+    dateTo: dates.dateTo,
   });
   const rows = React.useMemo(() => visitsQ.data?.items ?? [], [visitsQ.data]);
 

@@ -1125,6 +1125,7 @@
     "title": "Enregistrez votre visite",
     "today": "Aujourd'hui, {date}",
     "expiresIn": "Le formulaire expire dans {countdown}",
+    "oneMinuteLeft": "Il reste 1 minute",
     "optional": "Facultatif",
     "yes": "Oui",
     "no": "Non",
@@ -1147,9 +1148,11 @@
       "consent": "Souhaitez-vous recevoir des informations sur les activités et événements d'Afreximbank ?"
     },
     "host": {
+      "label": "Recherchez la personne que vous venez voir",
       "placeholder": "Saisissez un nom",
       "help": "Laissez vide s'il s'agit d'une demande générale.",
       "results": "Personnel correspondant",
+      "count": "{count, plural, one {# membre du personnel correspondant.} other {# membres du personnel correspondants.}}",
       "none": "Aucun membre du personnel trouvé. Laissez vide pour une demande générale.",
       "remove": "Retirer {name}"
     },

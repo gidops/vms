@@ -136,6 +136,7 @@ export class PublicRegistrationService
     return {
       formToken: signFormToken(this.secret, qr.token, formExpiresAt),
       formExpiresAt,
+      secondsLeft: DESK_QR_FORM_MINUTES * 60,
     };
   }
 
@@ -231,7 +232,11 @@ export class PublicRegistrationService
         payload: { deskQrId: qr.id, registrationId: id },
       }),
     );
-    return { registrationId: id, codeExpiresAt };
+    return {
+      registrationId: id,
+      codeExpiresAt,
+      secondsLeft: DESK_QR_FORM_MINUTES * 60,
+    };
   }
 
   /**
@@ -259,7 +264,11 @@ export class PublicRegistrationService
       entityId: qr.id,
       metadata: { deskQrId: qr.id, registrationId: id },
     });
-    return { registrationId: id, codeExpiresAt };
+    return {
+      registrationId: id,
+      codeExpiresAt,
+      secondsLeft: DESK_QR_FORM_MINUTES * 60,
+    };
   }
 
   async verify(

@@ -10,6 +10,9 @@ export const routing = defineRouting({
 
 export type Locale = (typeof routing.locales)[number];
 
+/** The AATC is in Abuja: show every date and time on its clock, whatever the device says. */
+export const APP_TIME_ZONE = "Africa/Lagos";
+
 const RTL_LOCALES: readonly string[] = ["ar"];
 
 export function isRtl(locale: string): boolean {
