@@ -59,11 +59,14 @@ const VISIT_TYPES = ["WALK_IN", "PRE_INVITED", "APPOINTMENT"] as const;
 const FEEDBACK_STATUSES = ["REVIEW_REQUESTED", "APPROVED", "DENIED"];
 
 function cardType(item: InboxItem): InboxCardType {
-  if (item.kind === "alert") return "alert";
+  if (item.kind === "alert" || item.kind === "card") return "alert";
   return FEEDBACK_STATUSES.includes(item.status) ? "feedback" : "request";
 }
 
-function statusMeta(item: InboxItem): { key: string; intent: Intent } {
+function statusMeta(item: Exclude<InboxItem, { kind: "card" }>): {
+  key: string;
+  intent: Intent;
+} {
   if (item.kind === "request") {
     const map: Record<string, { key: string; intent: Intent }> = {
       PENDING: { key: "awaitingApproval", intent: "warning" },
@@ -111,6 +114,7 @@ export function RequestsAlertsScreen({
   const t = useTranslations("requests");
   const tCommon = useTranslations("common");
   const tDash = useTranslations("dashboard");
+  const tCard = useTranslations("rfidCard");
   const format = useFormatter();
   // next-intl needs an explicit "now" for relative times, otherwise it warns.
   const now = useNow();
@@ -162,8 +166,35 @@ export function RequestsAlertsScreen({
 
   const statusOptions = tab === "alerts" ? ALERT_STATUSES : REQUEST_STATUSES;
 
+  const statusOf = (item: InboxItem): { label: string; intent: Intent } => {
+    if (item.kind === "card")
+      return { label: t("cardItem.overdue"), intent: "warning" };
+    const { key, intent } = statusMeta(item);
+    return { label: t(`status.${key}`), intent };
+  };
+
+  const openItem = (item: InboxItem): (() => void) | undefined => {
+    if (item.kind === "request")
+      return () => setSelected({ kind: "request", id: item.visitId });
+    if (item.kind === "alert")
+      return () => setSelected({ kind: "alert", id: item.alertId });
+    const { visitId } = item;
+    return visitId
+      ? () => setSelected({ kind: "request", id: visitId })
+      : undefined;
+  };
+
   const describe = (item: InboxItem): React.ReactNode => {
     if (item.kind === "alert") return item.reason;
+    if (item.kind === "card")
+      return t("cardItem.desc", {
+        visitor: item.visitorName,
+        number: item.cardNumber,
+        due: format.dateTime(new Date(item.validUntil), {
+          dateStyle: "medium",
+          timeStyle: "short",
+        }),
+      });
     // These sentences end with "…from" so the org is emphasised at the end.
     if (item.status === "PENDING" || item.status === "REVIEW_REQUESTED") {
       return (
@@ -187,15 +218,18 @@ export function RequestsAlertsScreen({
     });
   };
 
-  const titleOf = (item: InboxItem): string =>
-    item.kind === "alert"
+  const titleOf = (item: InboxItem): string => {
+    if (item.kind === "card") return t("cardItem.title");
+    return item.kind === "alert"
       ? (item.category ?? t("card.flaggedTitle"))
       : t(`card.title.${item.status}`, {
           visitor: item.visitorName,
           host: item.hostName ?? item.visitorName,
         });
+  };
 
   const typeLabelOf = (item: InboxItem): string => {
+    if (item.kind === "card") return t("typeCard");
     const ct = cardType(item);
     if (ct === "alert") return t("typeAlert");
     if (ct === "feedback") return t("typeFeedback");
@@ -214,47 +248,54 @@ export function RequestsAlertsScreen({
               onChange={(e) => setSearchInput(e.target.value)}
             />
           </div>
-          <Select value={status} onValueChange={resetTo(setStatus)}>
-            <SelectTrigger className="w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>{tCommon("allStatus")}</SelectItem>
-              {statusOptions.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {t(`statusOption.${s}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={type} onValueChange={resetTo(setType)}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>
-                {tDash("filters.allVisitTypes")}
-              </SelectItem>
-              {VISIT_TYPES.map((vt) => (
-                <SelectItem key={vt} value={vt}>
-                  {t(`typeOption.${vt}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={purpose} onValueChange={resetTo(setPurpose)}>
-            <SelectTrigger className="w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>{tDash("filters.allPurpose")}</SelectItem>
-              {VISIT_PURPOSES.map((p) => (
-                <SelectItem key={p} value={p}>
-                  {p}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Cards have no status, visit type or purpose to filter on. */}
+          {tab === "cards" ? null : (
+            <>
+              <Select value={status} onValueChange={resetTo(setStatus)}>
+                <SelectTrigger className="w-44">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>{tCommon("allStatus")}</SelectItem>
+                  {statusOptions.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {t(`statusOption.${s}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={type} onValueChange={resetTo(setType)}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>
+                    {tDash("filters.allVisitTypes")}
+                  </SelectItem>
+                  {VISIT_TYPES.map((vt) => (
+                    <SelectItem key={vt} value={vt}>
+                      {t(`typeOption.${vt}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={purpose} onValueChange={resetTo(setPurpose)}>
+                <SelectTrigger className="w-44">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>
+                    {tDash("filters.allPurpose")}
+                  </SelectItem>
+                  {VISIT_PURPOSES.map((p) => (
+                    <SelectItem key={p} value={p}>
+                      {p}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          )}
         </FilterBar>
       }
     >
@@ -275,6 +316,10 @@ export function RequestsAlertsScreen({
               { value: "all", label: t("tabs.all") },
               { value: "requests", label: t("tabs.requests") },
               { value: "alerts", label: t("tabs.alerts") },
+              // Overdue cards are only served to readers of every visit.
+              ...(scope === "all"
+                ? [{ value: "cards", label: t("tabs.cards") }]
+                : []),
             ]}
           />
         </div>
@@ -289,7 +334,7 @@ export function RequestsAlertsScreen({
           <>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               {items.map((item) => {
-                const status = statusMeta(item);
+                const status = statusOf(item);
                 return (
                   <InboxCard
                     key={item.id}
@@ -309,8 +354,15 @@ export function RequestsAlertsScreen({
                             </span>
                           </Badge>
                         ) : null}
+                        {item.kind === "card" ? (
+                          <Badge intent="neutral" tone="soft">
+                            <span dir="ltr">
+                              {tCard("badge", { number: item.cardNumber })}
+                            </span>
+                          </Badge>
+                        ) : null}
                         <Badge intent={status.intent} tone="soft">
-                          {t(`status.${status.key}`)}
+                          {status.label}
                         </Badge>
                         {item.notesCount > 0 ? (
                           <Badge intent="neutral" tone="soft">
@@ -323,13 +375,7 @@ export function RequestsAlertsScreen({
                         ) : null}
                       </>
                     }
-                    onClick={() =>
-                      setSelected({
-                        kind: item.kind,
-                        id:
-                          item.kind === "request" ? item.visitId : item.alertId,
-                      })
-                    }
+                    onClick={openItem(item)}
                   />
                 );
               })}

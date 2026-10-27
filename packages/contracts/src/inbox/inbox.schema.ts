@@ -7,7 +7,7 @@ import {
 } from "../common/enums.js";
 import { PaginationQuery } from "../common/pagination.js";
 
-export const InboxKind = z.enum(["all", "requests", "alerts"]);
+export const InboxKind = z.enum(["all", "requests", "alerts", "cards"]);
 export type InboxKind = z.infer<typeof InboxKind>;
 
 export const InboxQuery = PaginationQuery.extend({
@@ -56,9 +56,21 @@ export const InboxAlertItem = InboxItemBase.extend({
 });
 export type InboxAlertItem = z.infer<typeof InboxAlertItem>;
 
+/** An RFID card still out after its valid-until date: reception should chase it. */
+export const InboxCardItem = InboxItemBase.extend({
+  kind: z.literal("card"),
+  assignmentId: z.string().uuid(),
+  cardNumber: z.string(),
+  validUntil: z.coerce.date(),
+  visitorName: z.string(),
+  visitId: z.string().uuid().nullable(),
+});
+export type InboxCardItem = z.infer<typeof InboxCardItem>;
+
 export const InboxItem = z.discriminatedUnion("kind", [
   InboxRequestItem,
   InboxAlertItem,
+  InboxCardItem,
 ]);
 export type InboxItem = z.infer<typeof InboxItem>;
 

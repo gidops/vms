@@ -39,4 +39,27 @@ describe("GuestInformationSection", () => {
     renderWithIntl(<GuestInformationSection data={visit()} hasAlert={false} />);
     expect(screen.queryByRole("note")).not.toBeInTheDocument();
   });
+
+  it("shows the held RFID card, flagged when overdue", () => {
+    renderWithIntl(
+      <GuestInformationSection
+        data={visit({
+          rfidCard: {
+            assignmentId: "a1",
+            cardNumber: "0042",
+            validUntil: "2026-10-20T17:00:00Z",
+            overdue: true,
+          },
+        })}
+        hasAlert={false}
+      />,
+    );
+    expect(screen.getByText("RFID 0042")).toBeInTheDocument();
+    expect(screen.getByText("· Overdue")).toBeInTheDocument();
+  });
+
+  it("shows no card badge when the visitor holds none", () => {
+    renderWithIntl(<GuestInformationSection data={visit()} hasAlert={false} />);
+    expect(screen.queryByText(/RFID/)).not.toBeInTheDocument();
+  });
 });

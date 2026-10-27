@@ -7,5 +7,6 @@ import { RfidCardsService } from './rfid-cards.service';
   imports: [PrismaModule],
   controllers: [RfidCardsController],
   providers: [RfidCardsService],
+  exports: [RfidCardsService],
 })
 export class RfidCardsModule {}

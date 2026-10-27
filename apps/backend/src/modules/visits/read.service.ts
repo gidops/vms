@@ -8,6 +8,7 @@ import type {
 } from '@vms/contracts';
 import { toDataURL } from 'qrcode';
 import { PrismaService } from '../../prisma/prisma.service';
+import { heldRfidCards } from '../rfid-cards/held-cards';
 import {
   GROUP_INACTIVE_STATUSES,
   buildOrderBy,
@@ -53,6 +54,10 @@ export class VisitReadService {
     });
     if (!visit) throw new NotFoundException('errors.visit.notFound');
     const detail = toDetail(visit);
+    detail.rfidCard =
+      (await heldRfidCards(this.prisma, [visit.visitorId])).get(
+        visit.visitorId,
+      ) ?? null;
     // The QR is the invite's entry pass; a walk-in is already at the desk.
     if (visit.referenceCode && visit.type !== 'WALK_IN') {
       detail.qrCode = await toDataURL(visit.referenceCode, {
@@ -111,12 +116,25 @@ export class VisitReadService {
       : await this.pageOfVisits(where, orderBy, query);
     const groups = await this.summariseGroups(rows);
     return {
-      items: toListItems(rows, collapse, groups),
+      items: await this.withHeldCards(toListItems(rows, collapse, groups)),
       page: query.page,
       pageSize: query.pageSize,
       total,
       totalPages: Math.ceil(total / query.pageSize),
     };
+  }
+
+  private async withHeldCards(
+    items: VisitListItem[],
+  ): Promise<VisitListItem[]> {
+    const held = await heldRfidCards(
+      this.prisma,
+      items.map((i) => i.visitorId),
+    );
+    return items.map((i) => ({
+      ...i,
+      rfidCard: held.get(i.visitorId) ?? null,
+    }));
   }
 
   private async pageOfGroupRepresentatives(

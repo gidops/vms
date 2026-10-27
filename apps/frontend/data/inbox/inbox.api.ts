@@ -1,7 +1,7 @@
 import type { VisitStatus, VisitType } from "@vms/contracts";
 import { api } from "@/data/http/client";
 
-export type InboxKind = "all" | "requests" | "alerts";
+export type InboxKind = "all" | "requests" | "alerts" | "cards";
 
 interface InboxItemBase {
   id: string;
@@ -35,7 +35,17 @@ export interface InboxAlertItem extends InboxItemBase {
   visitorName?: string | null;
 }
 
-export type InboxItem = InboxRequestItem | InboxAlertItem;
+/** An RFID card still out after its valid-until date. */
+export interface InboxCardItem extends InboxItemBase {
+  kind: "card";
+  assignmentId: string;
+  cardNumber: string;
+  validUntil: string;
+  visitorName: string;
+  visitId: string | null;
+}
+
+export type InboxItem = InboxRequestItem | InboxAlertItem | InboxCardItem;
 
 export interface Paginated<T> {
   items: T[];

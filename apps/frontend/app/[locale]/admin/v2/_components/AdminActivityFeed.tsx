@@ -12,6 +12,7 @@ type Intent = "info" | "warning" | "success" | "danger" | "neutral";
 /** Event label key + badge intent for an inbox item (request status or alert). */
 function eventOf(item: InboxItem): { key: string; intent: Intent } {
   if (item.kind === "alert") return { key: "alert", intent: "danger" };
+  if (item.kind === "card") return { key: "cardOverdue", intent: "warning" };
   const map: Record<string, { key: string; intent: Intent }> = {
     PENDING: { key: "requested", intent: "info" },
     APPROVED: { key: "approved", intent: "success" },
@@ -27,7 +28,7 @@ function eventOf(item: InboxItem): { key: string; intent: Intent } {
 }
 
 function cardType(item: InboxItem): InboxCardType {
-  if (item.kind === "alert") return "alert";
+  if (item.kind === "alert" || item.kind === "card") return "alert";
   return ["REVIEW_REQUESTED", "APPROVED", "DENIED"].includes(item.status)
     ? "feedback"
     : "request";
@@ -43,6 +44,7 @@ export function AdminActivityFeed({
   onSelect,
 }: AdminActivityFeedProps) {
   const t = useTranslations("admin.overview.activity");
+  const tCard = useTranslations("rfidCard");
   const tReq = useTranslations("requests");
   const tV2 = useTranslations("adminV2.feed");
   const format = useFormatter();
@@ -52,16 +54,19 @@ export function AdminActivityFeed({
 
   const subtitle = (item: InboxItem) => {
     if (item.kind === "alert") return item.reason;
+    if (item.kind === "card")
+      return tCard("badge", { number: item.cardNumber });
     return item.hostName
       ? t("visitorForHost", { visitor: item.visitorName, host: item.hostName })
       : item.visitorName;
   };
-  const select = (item: InboxItem) =>
-    onSelect(
-      item.kind === "request"
-        ? { kind: "request", id: item.visitId }
-        : { kind: "alert", id: item.alertId },
-    );
+  const select = (item: InboxItem) => {
+    if (item.kind === "request")
+      onSelect({ kind: "request", id: item.visitId });
+    else if (item.kind === "alert")
+      onSelect({ kind: "alert", id: item.alertId });
+    else if (item.visitId) onSelect({ kind: "request", id: item.visitId });
+  };
 
   return (
     <FeedCard
@@ -81,11 +86,13 @@ export function AdminActivityFeed({
                 key={item.id}
                 type={type}
                 typeLabel={
-                  type === "alert"
-                    ? tReq("typeAlert")
-                    : type === "feedback"
-                      ? tReq("typeFeedback")
-                      : tReq("typeRequest")
+                  item.kind === "card"
+                    ? tReq("typeCard")
+                    : type === "alert"
+                      ? tReq("typeAlert")
+                      : type === "feedback"
+                        ? tReq("typeFeedback")
+                        : tReq("typeRequest")
                 }
                 title={t(`events.${eventOf(item).key}`)}
                 description={subtitle(item)}

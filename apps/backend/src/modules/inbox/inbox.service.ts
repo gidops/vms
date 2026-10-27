@@ -26,6 +26,15 @@ const alertInclude = Prisma.validator<Prisma.AlertInclude>()({
 
 type AlertRow = Prisma.AlertGetPayload<{ include: typeof alertInclude }>;
 
+const cardInclude = Prisma.validator<Prisma.RfidCardAssignmentInclude>()({
+  card: true,
+  visitor: true,
+});
+
+type CardRow = Prisma.RfidCardAssignmentGetPayload<{
+  include: typeof cardInclude;
+}>;
+
 /** Merges visit requests and alerts in memory (fine at current scale); `unread` derives from the user's `lastInboxSeenAt`. */
 @Injectable()
 export class InboxService {
@@ -106,6 +115,12 @@ export class InboxService {
 
     // Principals without `visit:read` (staff, gate) are always limited to `scope=mine`.
     const mine = query.scope === 'mine' || !canReadAll;
+    // Overdue cards are reception's job, so they never appear in a personal scope.
+    const wantCards =
+      !mine &&
+      !requestOnly &&
+      !alertOnly &&
+      (query.kind === 'all' || query.kind === 'cards');
     const requestWhere: Prisma.VisitWhereInput = {
       ...(mine ? { host: { userId: currentUserId } } : {}),
       ...(query.type ? { type: query.type } : {}),
@@ -119,7 +134,7 @@ export class InboxService {
       ...(alertStatus ? { status: alertStatus } : {}),
     };
 
-    const [requests, alerts] = await Promise.all([
+    const [requests, alerts, cards] = await Promise.all([
       wantRequests
         ? this.prisma.visit.findMany({
             where: requestWhere,
@@ -132,6 +147,12 @@ export class InboxService {
             include: alertInclude,
           })
         : Promise.resolve([] as AlertRow[]),
+      wantCards
+        ? this.prisma.rfidCardAssignment.findMany({
+            where: { status: 'ACTIVE', validUntil: { lt: new Date() } },
+            include: cardInclude,
+          })
+        : Promise.resolve([] as CardRow[]),
     ]);
 
     // Alerts store the raiser as a plain id; resolve names in one batch.
@@ -151,6 +172,7 @@ export class InboxService {
     let items: InboxItem[] = [
       ...requests.map((r) => this.toRequestItem(r, seenAt)),
       ...alerts.map((a) => this.toAlertItem(a, raiserName, seenAt)),
+      ...cards.map((c) => this.toCardItem(c, seenAt)),
     ];
 
     const search = query.search?.trim().toLowerCase();
@@ -166,7 +188,9 @@ export class InboxService {
     const haystack =
       item.kind === 'request'
         ? [item.visitorName, item.hostName, item.organization, item.purpose]
-        : [item.visitorName, item.category, item.reason, item.organization];
+        : item.kind === 'alert'
+          ? [item.visitorName, item.category, item.reason, item.organization]
+          : [item.visitorName, item.cardNumber, item.organization];
     return haystack.some((v) => v?.toLowerCase().includes(search));
   }
 
@@ -211,6 +235,25 @@ export class InboxService {
       createdAt: a.createdAt,
       updatedAt: a.updatedAt,
       unread: a.updatedAt > seenAt,
+    };
+  }
+
+  /** Dated from when the card fell due, so it surfaces as new at that moment. */
+  private toCardItem(c: CardRow, seenAt: Date): InboxItem {
+    return {
+      kind: 'card',
+      id: c.id,
+      assignmentId: c.id,
+      cardNumber: c.card.cardNumber,
+      validUntil: c.validUntil,
+      visitorName: c.visitor.fullName,
+      visitId: c.visitId,
+      organization: c.visitor.organization ?? null,
+      createdByName: null,
+      notesCount: 0,
+      createdAt: c.validUntil,
+      updatedAt: c.validUntil,
+      unread: c.validUntil > seenAt,
     };
   }
 }

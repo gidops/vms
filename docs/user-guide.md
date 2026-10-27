@@ -142,7 +142,11 @@ Check-in is refused if the visit is not approved or has an open security alert.
 1. Find the guest (status **Onsite**) and press **Check-Out**.
 2. Collect the badge. Use **Change Pass ID** if the badge differs from the one
    recorded.
-3. Press **Complete Check-Out**. The badge goes back into the pool and the guest
+3. If the guest holds a personalised RFID access card, the dialog shows its
+   number. Choose **Card retrieved** or **Not returned** (with a note saying
+   what happened). The card must be dealt with at every check-out, even if it
+   is valid for more days.
+4. Press **Complete Check-Out**. The badge goes back into the pool and the guest
    is sent a thank-you message.
 
 ### 5. Rating
@@ -263,8 +267,13 @@ days. (These are different from the shared badges handed out at check-in.)
    (**Upload photo** or **Take photo**), then **Assign card**.
 4. Open the card and press **Print card**. Use a card printer set to CR80,
    portrait, both sides.
-5. When the visitor leaves, open the card and choose **Card returned** or
-   **Card lost**.
+5. When the visitor leaves, reception records the card as retrieved or not
+   returned during check-out. The System Admin can also open the card here and
+   choose **Card returned** or **Card lost**.
+
+Visitors holding a card show its number on their visit details, on the VMC
+board and on the evacuation roll. A card still out after its **Valid until**
+time appears in **Requests & Alerts** as an overdue card.
 
 Views: **Out now** (cards currently out, with overdue warnings), **History** and
 **Card registry** (where a card can be marked found, reinstated or retired).

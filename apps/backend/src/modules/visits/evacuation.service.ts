@@ -5,6 +5,7 @@ import {
   type EvacuationRoll,
 } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
+import { heldRfidCards } from '../rfid-cards/held-cards';
 import { identityAtVisit } from './helpers/visit-identity';
 
 /** Higher floors first (building order in `FLOORS`); unknown or empty floors last. */
@@ -32,9 +33,15 @@ export class VisitEvacuationService {
       this.prisma.visit.count({ where: { status: 'CHECKED_IN' } }),
     ]);
 
+    const held = await heldRfidCards(
+      this.prisma,
+      visits.map((v) => v.visitorId),
+      now,
+    );
     const rows = visits
       .map((v) => ({
         visitId: v.id,
+        rfidCardNumber: held.get(v.visitorId)?.cardNumber ?? null,
         ...identityAtVisit(v),
         phone: v.visitor.phone,
         floor: v.floor,

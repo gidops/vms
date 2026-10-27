@@ -17,12 +17,38 @@ const visit = (
 });
 
 describe('VisitEvacuationService', () => {
-  function setup(rows: unknown[], checkedIn = 9) {
+  function setup(rows: unknown[], checkedIn = 9, cards: unknown[] = []) {
     const findMany = jest.fn().mockResolvedValue(rows);
     const count = jest.fn().mockResolvedValue(checkedIn);
-    const prisma = { visit: { findMany, count } } as unknown as PrismaService;
+    const prisma = {
+      visit: { findMany, count },
+      rfidCardAssignment: { findMany: jest.fn().mockResolvedValue(cards) },
+    } as unknown as PrismaService;
     return { service: new VisitEvacuationService(prisma), findMany, count };
   }
+
+  it('shows the RFID card number of visitors holding one', async () => {
+    const { service } = setup(
+      [
+        visit('v1', '3rd Floor', '2026-10-27T08:00:00Z', { visitorId: 'p1' }),
+        visit('v2', '3rd Floor', '2026-10-27T08:05:00Z', { visitorId: 'p2' }),
+      ],
+      9,
+      [
+        {
+          id: 'asg1',
+          visitorId: 'p1',
+          validUntil: new Date('2026-10-28T17:00:00Z'),
+          card: { cardNumber: '0042' },
+        },
+      ],
+    );
+    const roll = await service.roll(new Date('2026-10-27T09:00:00Z'));
+    const byVisit = Object.fromEntries(
+      roll.rows.map((r) => [r.visitId, r.rfidCardNumber]),
+    );
+    expect(byVisit).toEqual({ v1: '0042', v2: null });
+  });
 
   it('reads only CHECKED_IN visits that answered Yes', async () => {
     const { service, findMany, count } = setup([]);

@@ -43,14 +43,17 @@ const alertRow = (over: Record<string, unknown> = {}) => ({
 function setup(opts: {
   requests?: Record<string, unknown>[];
   alerts?: Record<string, unknown>[];
+  cards?: Record<string, unknown>[];
   lastInboxSeenAt?: Date | null;
 }) {
   const findManyVisit = jest.fn().mockResolvedValue(opts.requests ?? []);
   const findManyAlert = jest.fn().mockResolvedValue(opts.alerts ?? []);
+  const findManyCard = jest.fn().mockResolvedValue(opts.cards ?? []);
   const userUpdate = jest.fn().mockResolvedValue({});
   const prisma = {
     visit: { findMany: findManyVisit },
     alert: { findMany: findManyAlert },
+    rfidCardAssignment: { findMany: findManyCard },
     user: {
       findUnique: jest
         .fn()
@@ -60,7 +63,7 @@ function setup(opts: {
     },
   } as unknown as PrismaService;
   const service = new InboxService(prisma);
-  return { service, findManyVisit, findManyAlert, userUpdate };
+  return { service, findManyVisit, findManyAlert, findManyCard, userUpdate };
 }
 
 describe('InboxService.list', () => {
@@ -188,5 +191,46 @@ describe('InboxService.markSeen', () => {
         data: expect.objectContaining({ lastInboxSeenAt: expect.any(Date) }),
       }),
     );
+  });
+});
+
+describe('InboxService overdue RFID cards', () => {
+  const card = {
+    id: '00000000-0000-4000-8000-0000000000c1',
+    visitId: null,
+    validUntil: new Date('2026-06-04T17:00:00Z'),
+    card: { cardNumber: '0042' },
+    visitor: { fullName: 'Ada Obi', organization: 'Dangote' },
+  };
+
+  it('lists overdue cards for reception, searchable by card number', async () => {
+    const { service, findManyCard } = setup({ cards: [card] });
+    const res = await service.list(query({ search: '0042' }), 'me');
+    expect(res.items).toEqual([
+      expect.objectContaining({
+        kind: 'card',
+        cardNumber: '0042',
+        visitorName: 'Ada Obi',
+        updatedAt: card.validUntil,
+      }),
+    ]);
+    expect(findManyCard).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ status: 'ACTIVE' }),
+      }),
+    );
+  });
+
+  it('never shows cards in a personal scope or under request/alert filters', async () => {
+    for (const [q, canReadAll] of [
+      [query({ scope: 'mine' }), true],
+      [query(), false],
+      [query({ kind: 'alerts' }), true],
+      [query({ status: 'PENDING' }), true],
+    ] as const) {
+      const { service, findManyCard } = setup({ cards: [card] });
+      await service.list(q, 'me', canReadAll);
+      expect(findManyCard).not.toHaveBeenCalled();
+    }
   });
 });

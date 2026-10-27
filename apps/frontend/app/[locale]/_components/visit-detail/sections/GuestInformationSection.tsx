@@ -1,6 +1,7 @@
 import { Avatar, Badge } from "@vms/ui";
 import { useTranslations } from "next-intl";
 import { useEvacuationAssistText } from "@/app/[locale]/_components/EvacuationAssist";
+import { RfidCardBadge } from "@/app/[locale]/_components/RfidCardBadge";
 import type { VisitRequestDetail } from "@/data/visits/visits.api";
 import type { VisitStatus } from "../helpers";
 import { SheetSection } from "./SheetSection";
@@ -47,6 +48,11 @@ export function GuestInformationSection({
               {visitor.email}
               {visitor.phone ? ` · ${visitor.phone}` : ""}
             </span>
+            {data.rfidCard ? (
+              <span className="mt-1 flex">
+                <RfidCardBadge card={data.rfidCard} />
+              </span>
+            ) : null}
             {/* The walk-in QR can't verify the email, so flag a different stored owner. */}
             {data.storedVisitor ? (
               <span role="note" className="mt-1 text-sm text-warning">

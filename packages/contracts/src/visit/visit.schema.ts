@@ -122,8 +122,18 @@ export const VisitPass = z.object({
 });
 export type VisitPass = z.infer<typeof VisitPass>;
 
+/** The visitor's active personalised RFID card, shown wherever reception sees them. */
+export const HeldRfidCard = z.object({
+  assignmentId: z.string().uuid(),
+  cardNumber: z.string(),
+  validUntil: z.coerce.date(),
+  overdue: z.boolean(),
+});
+export type HeldRfidCard = z.infer<typeof HeldRfidCard>;
+
 export const VisitListItem = Visit.extend({
   visitor: Visitor,
+  rfidCard: HeldRfidCard.nullable().optional(),
   host: HostWithUser.nullable(),
   createdByName: z.string().nullable().optional(),
   source: z.string().nullable().optional(),
@@ -208,10 +218,23 @@ export const CheckInVisitInput = z.object({
 });
 export type CheckInVisitInput = z.infer<typeof CheckInVisitInput>;
 
+/** A visitor holding an RFID card can't be checked out without saying what happened to it. */
+export const CheckOutRfidCard = z
+  .object({
+    outcome: z.enum(["RETURNED", "LOST"]),
+    note: z.string().trim().max(1000).optional(),
+  })
+  .refine((v) => v.outcome === "RETURNED" || Boolean(v.note), {
+    path: ["note"],
+    message: "Say what happened to the card",
+  });
+export type CheckOutRfidCard = z.infer<typeof CheckOutRfidCard>;
+
 /** `accessCardId` corrects the assigned badge; omitted releases the current one. */
 export const CheckOutVisitInput = z
   .object({
     accessCardId: z.string().uuid().optional(),
+    rfidCard: CheckOutRfidCard.optional(),
   })
   .default({});
 export type CheckOutVisitInput = z.infer<typeof CheckOutVisitInput>;
@@ -281,6 +304,7 @@ export const VisitRequestDetail = Visit.extend({
   source: z.string().nullable().optional(),
   createdById: z.string().uuid().nullable().optional(),
   createdByName: z.string().nullable().optional(),
+  rfidCard: HeldRfidCard.nullable().optional(),
   /** The stored visitor record, when it differs from the name or organisation given at this visit. */
   storedVisitor: z
     .object({ fullName: z.string(), organization: z.string().nullable() })

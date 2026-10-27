@@ -2,11 +2,15 @@ import type { VisitListQuery } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 import { VisitReadService, phoneSearchDigits } from './read.service';
 
+/** No visitor holds an RFID card unless a test says so. */
+const noCards = () => ({ findMany: jest.fn().mockResolvedValue([]) });
+
 describe('VisitReadService.list scoping', () => {
   function setup() {
     const findMany = jest.fn().mockResolvedValue([]);
     const count = jest.fn().mockResolvedValue(0);
     const prisma = {
+      rfidCardAssignment: noCards(),
       visit: { findMany, count },
       $transaction: (ops: unknown[]) => Promise.all(ops as Promise<unknown>[]),
     } as unknown as PrismaService;
@@ -204,6 +208,7 @@ describe('VisitReadService.list statuses + groupSize', () => {
       { groupId: 'g1', status: 'CHECKED_IN', _count: { _all: 1 } },
     ]);
     const prisma = {
+      rfidCardAssignment: noCards(),
       visit: { findMany, count, groupBy },
       $transaction: (ops: unknown[]) => Promise.all(ops as Promise<unknown>[]),
     } as unknown as PrismaService;
@@ -258,6 +263,7 @@ describe('VisitReadService.list statuses + groupSize', () => {
       })),
     );
     const prisma = {
+      rfidCardAssignment: noCards(),
       visit: { findMany, count, groupBy },
       $transaction: (ops: unknown[]) => Promise.all(ops as Promise<unknown>[]),
     } as unknown as PrismaService;
@@ -316,6 +322,7 @@ describe('VisitReadService.list statuses + groupSize', () => {
         { groupId: 'g1', status: 'APPROVED', _count: { _all: 2 } },
       ]);
     const prisma = {
+      rfidCardAssignment: noCards(),
       visit: { findMany, count, groupBy },
       $transaction: (ops: unknown[]) => Promise.all(ops as Promise<unknown>[]),
     } as unknown as PrismaService;
@@ -362,6 +369,7 @@ describe('VisitReadService.list statuses + groupSize', () => {
         { groupId: 'g1', status: 'APPROVED', _count: { _all: 2 } },
       ]);
     const prisma = {
+      rfidCardAssignment: noCards(),
       visit: { findMany, count, groupBy },
       $transaction: (ops: unknown[]) => Promise.all(ops as Promise<unknown>[]),
     } as unknown as PrismaService;
@@ -408,6 +416,7 @@ describe('VisitReadService.getDetail', () => {
       notes: [],
     };
     const prisma = {
+      rfidCardAssignment: noCards(),
       visit: { findUnique: jest.fn().mockResolvedValue(visitRow) },
       gateEvent: {
         findMany: jest.fn().mockResolvedValue([
@@ -444,6 +453,7 @@ describe('VisitReadService.getDetail', () => {
     };
     const detailOf = (type: string) =>
       new VisitReadService({
+        rfidCardAssignment: noCards(),
         visit: {
           findUnique: jest.fn().mockResolvedValue({ ...base, type }),
         },
@@ -461,6 +471,7 @@ describe('VisitReadService.getDetail', () => {
 describe('VisitReadService.assertCanView', () => {
   function setup(visit: unknown) {
     const prisma = {
+      rfidCardAssignment: noCards(),
       visit: { findUnique: jest.fn().mockResolvedValue(visit) },
     } as unknown as PrismaService;
     return new VisitReadService(prisma);

@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import type {
   CheckInVisitInput,
@@ -15,7 +16,7 @@ import { EVENT_TYPES } from '../../shared/events/domain-event';
 import { EventPublisher } from '../../shared/events/event-publisher';
 import { TransactionManager } from '../../shared/events/transaction.manager';
 import { PASS_TTL_MS, generateAccessCode } from './helpers/visit.codes';
-import { ensureExists } from './helpers/visit.guards';
+import { RfidCardsService } from '../rfid-cards/rfid-cards.service';
 import { VisitReadService } from './read.service';
 
 @Injectable()
@@ -25,6 +26,7 @@ export class VisitAccessService {
     private readonly txm: TransactionManager,
     private readonly events: EventPublisher,
     private readonly read: VisitReadService,
+    private readonly rfid: RfidCardsService,
   ) {}
 
   /** Also records gate validation, since there is no separate gate-scan step. */
@@ -121,14 +123,40 @@ export class VisitAccessService {
   }
 
   /** `accessCardId` lets the operator correct the recorded badge before it is released. */
+  /**
+   * A visitor holding a personalised RFID card can't leave without the desk
+   * recording whether it came back; closing it shares this transaction.
+   */
   async checkOut(
     id: string,
     input: CheckOutVisitInput,
     actorUserId: string,
+    canReturnCards = false,
   ): Promise<VisitRequestDetail> {
-    await ensureExists(this.prisma, id);
+    const visit = await this.prisma.visit.findUnique({
+      where: { id },
+      select: { visitorId: true },
+    });
+    if (!visit) throw new NotFoundException('errors.visit.notFound');
     const now = new Date();
     await this.txm.run(async (tx) => {
+      const held = (await this.rfid.heldCards([visit.visitorId], now, tx)).get(
+        visit.visitorId,
+      );
+      if (held) {
+        if (!input.rfidCard) {
+          throw new UnprocessableEntityException('errors.rfid.returnRequired');
+        }
+        if (!canReturnCards) {
+          throw new ForbiddenException('errors.rfid.returnNotAllowed');
+        }
+        await this.rfid.closeInTx(
+          tx,
+          held.assignmentId,
+          input.rfidCard,
+          actorUserId,
+        );
+      }
       const pass = await tx.pass.findUnique({
         where: { visitId: id },
         include: { accessCard: true },
