@@ -14,6 +14,12 @@ const detailInclude = Prisma.validator<Prisma.AlertInclude>()({
 
 type AlertDetailRow = Prisma.AlertGetPayload<{ include: typeof detailInclude }>;
 
+function isVisitOwner(alert: AlertDetailRow, userId: string): boolean {
+  return (
+    alert.visit?.createdById === userId || alert.visit?.host?.userId === userId
+  );
+}
+
 @Injectable()
 export class AlertsService {
   constructor(
@@ -22,12 +28,18 @@ export class AlertsService {
     private readonly events: EventPublisher,
   ) {}
 
-  async getDetail(id: string): Promise<AlertWithVisitor> {
+  /**
+   * `ownerUserId` restricts the read to alerts on a visit that user created or
+   * hosts; anything else reads as "not found" so existence isn't confirmed.
+   */
+  async getDetail(id: string, ownerUserId?: string): Promise<AlertWithVisitor> {
     const alert = await this.prisma.alert.findUnique({
       where: { id },
       include: detailInclude,
     });
-    if (!alert) throw new NotFoundException('Alert not found');
+    if (!alert || (ownerUserId && !isVisitOwner(alert, ownerUserId))) {
+      throw new NotFoundException('Alert not found');
+    }
     return this.toDetail(alert);
   }
 

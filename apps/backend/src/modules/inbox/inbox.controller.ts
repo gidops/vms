@@ -5,6 +5,7 @@ import { canReadAllVisits } from '../../shared/auth/visit-scope';
 import { ZodValidationPipe } from '../../shared/common/pipes/zod-validation.pipe';
 import { InboxService } from './inbox.service';
 
+/** Requests & alerts feed; callers without visit:read only see their own visits. */
 @Controller('inbox')
 export class InboxController {
   constructor(private readonly inbox: InboxService) {}

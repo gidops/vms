@@ -14,5 +14,11 @@ export default defineConfig({
     include: ["**/*.test.{ts,tsx}"],
     exclude: ["node_modules/**", ".next/**", "e2e/**"],
     css: false,
+    coverage: {
+      provider: "v8",
+      reporter: ["text-summary", "lcov"],
+      include: ["app/**/*.{ts,tsx}", "data/**/*.ts", "shared/**/*.{ts,tsx}"],
+      exclude: ["**/*.test.{ts,tsx}"],
+    },
   },
 });

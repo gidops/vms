@@ -45,3 +45,9 @@ CLAUDE.md
 # Local SonarQube state (bootstrapped credentials/token) + scanner work dir
 /.sonar/
 /.scannerwork/
+
+# Local tooling downloads, scratch files and screenshots
+/aws/
+*.zip
+apps/temp.txt
+/*.png

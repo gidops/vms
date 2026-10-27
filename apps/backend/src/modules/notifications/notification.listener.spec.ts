@@ -82,6 +82,32 @@ describe('NotificationListener', () => {
     expect(email.recipient).toBe('paebi@x.com');
   });
 
+  it('formats the visit date and time on the WAT clock', async () => {
+    const { listener, enqueue } = setup({
+      id: 'v1',
+      scheduledAt: new Date('2026-06-15T23:30:00Z'),
+      purpose: 'Official',
+      visitor: {
+        fullName: 'Paebi Bobson',
+        email: 'paebi@x.com',
+        phone: null,
+        preferredLocale: 'EN',
+      },
+      host: {
+        userId: 'host-user',
+        user: { fullName: 'Sarah Lee', email: 'sarah@x.com', phone: null },
+      },
+      pass: { code: '4486-BC9C' },
+    });
+
+    await listener.onVisitApproved(event('v1'));
+
+    expect(enqueue.mock.calls[0][0].data).toMatchObject({
+      visitDate: '16-06-2026',
+      time: '00:30',
+    });
+  });
+
   it('does nothing when the visit is gone', async () => {
     const { listener, enqueue } = setup(null);
     await listener.onVisitApproved(event('missing'));

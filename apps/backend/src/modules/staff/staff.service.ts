@@ -8,14 +8,13 @@ import type {
   StaffDashboardStats,
 } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
+import { watDayRange, watToday } from '../../shared/common/wat';
 
-/** Inclusive start / exclusive end of the calendar day containing `ref`. */
+/** Inclusive start / exclusive end of the WAT calendar day containing `ref`. */
 function dayBounds(ref: Date): { start: Date; end: Date } {
-  const start = new Date(ref);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
-  return { start, end };
+  const day = watToday(ref);
+  const { gte, lt } = watDayRange(day, day);
+  return { start: gte, end: lt };
 }
 
 /** Maps an audit event type → the feed card's category + copy. */

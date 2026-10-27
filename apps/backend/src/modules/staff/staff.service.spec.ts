@@ -164,3 +164,49 @@ describe('StaffService.activityFeed search', () => {
     expect(page.items).toEqual([]);
   });
 });
+
+describe('StaffService WAT day boundaries', () => {
+  it('filters the feed to the WAT calendar day, whatever the server zone', async () => {
+    const findMany = jest.fn().mockResolvedValue([]);
+    const prisma = {
+      visit: {
+        findMany: jest
+          .fn()
+          .mockResolvedValue([
+            { id: 'v1', visitorId: 'vis1', visitor: { fullName: 'X' } },
+          ]),
+      },
+      alert: { findMany: jest.fn().mockResolvedValue([]) },
+      auditLog: { findMany, count: jest.fn().mockResolvedValue(0) },
+      $transaction: (ops: unknown[]) => Promise.all(ops as Promise<unknown>[]),
+    } as unknown as PrismaService;
+
+    await new StaffService(prisma).activityFeed('me', {
+      page: 1,
+      pageSize: 20,
+      sortDir: 'desc',
+      date: new Date('2026-10-27'),
+    });
+
+    expect(findMany.mock.calls[0][0].where.createdAt).toEqual({
+      gte: new Date('2026-10-26T23:00:00Z'),
+      lt: new Date('2026-10-27T23:00:00Z'),
+    });
+  });
+
+  it("counts today's expected visits on the WAT day", async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-10-27T23:30:00Z'));
+    try {
+      const count = jest.fn().mockResolvedValue(0);
+      const prisma = { visit: { count } } as unknown as PrismaService;
+      await new StaffService(prisma).stats('me');
+      // 23:30 UTC is already 00:30 on the 28th in WAT.
+      expect(count.mock.calls[0][0].where.scheduledAt).toEqual({
+        gte: new Date('2026-10-27T23:00:00Z'),
+        lt: new Date('2026-10-28T23:00:00Z'),
+      });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+});

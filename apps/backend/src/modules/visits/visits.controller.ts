@@ -152,7 +152,10 @@ export class VisitsController {
    * from Insights → History; their other lists stay scoped (no visit:read).
    */
   @Get(':id')
-  async getOne(@Param('id') id: string, @CurrentUser() principal: AuthUser) {
+  async getOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() principal: AuthUser,
+  ) {
     if (
       !canReadAllVisits(principal) &&
       !principal.permissions.includes(PERMISSIONS.HISTORY_READ)
@@ -189,14 +192,17 @@ export class VisitsController {
 
   @Post(':id/cancel')
   @RequirePermissions(PERMISSIONS.VISIT_CANCEL)
-  cancel(@Param('id') id: string, @CurrentUser() principal: AuthUser) {
+  cancel(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() principal: AuthUser,
+  ) {
     return this.authoring.cancel(id, principal.userId);
   }
 
   @Patch(':id')
   @RequirePermissions(PERMISSIONS.VISIT_EDIT)
   update(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(UpdateVisitRequestInput))
     input: UpdateVisitRequestInput,
     @CurrentUser() principal: AuthUser,
@@ -211,7 +217,7 @@ export class VisitsController {
   @Post(':id/resubmit')
   @RequirePermissions(PERMISSIONS.INVITATION_CREATE)
   resubmit(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(ResubmitVisitInput)) input: ResubmitVisitInput,
     @CurrentUser() principal: AuthUser,
   ) {
@@ -246,14 +252,17 @@ export class VisitsController {
 
   @Post(':id/approve')
   @RequirePermissions(PERMISSIONS.VISIT_APPROVE)
-  approve(@Param('id') id: string, @CurrentUser() principal: AuthUser) {
+  approve(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() principal: AuthUser,
+  ) {
     return this.moderation.approve(id, principal.userId);
   }
 
   @Post(':id/deny')
   @RequirePermissions(PERMISSIONS.VISIT_DENY)
   deny(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(DenyVisitInput)) input: DenyVisitInput,
     @CurrentUser() principal: AuthUser,
   ) {
@@ -264,7 +273,7 @@ export class VisitsController {
   @Post(':id/flag')
   @RequirePermissions(PERMISSIONS.VISIT_FLAG)
   flag(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(FlagVisitInput)) input: FlagVisitInput,
     @CurrentUser() principal: AuthUser,
   ) {
@@ -275,7 +284,7 @@ export class VisitsController {
   @Post(':id/request-info')
   @RequirePermissions(PERMISSIONS.VISIT_REQUEST_INFO)
   requestInfo(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(RequestInfoInput)) input: RequestInfoInput,
     @CurrentUser() principal: AuthUser,
   ) {
@@ -288,14 +297,17 @@ export class VisitsController {
    */
   @Post(':id/resend-code')
   @RequirePermissions(PERMISSIONS.INVITATION_CREATE)
-  resendCode(@Param('id') id: string, @CurrentUser() principal: AuthUser) {
+  resendCode(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() principal: AuthUser,
+  ) {
     return this.authoring.resendCode(id, principal.userId);
   }
 
   /** Host rates a completed visit (1-5). Authorized by host/creator in the service. */
   @Post(':id/rating')
   rate(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(RateVisitInput)) input: RateVisitInput,
     @CurrentUser() principal: AuthUser,
   ) {
@@ -306,7 +318,7 @@ export class VisitsController {
   @Post(':id/check-in')
   @RequirePermissions(PERMISSIONS.VISIT_CHECK_IN)
   checkIn(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(CheckInVisitInput)) input: CheckInVisitInput,
     @CurrentUser() principal: AuthUser,
   ) {
@@ -317,7 +329,7 @@ export class VisitsController {
   @Post(':id/check-out')
   @RequirePermissions(PERMISSIONS.VISIT_CHECK_OUT)
   checkOut(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(CheckOutVisitInput)) input: CheckOutVisitInput,
     @CurrentUser() principal: AuthUser,
   ) {

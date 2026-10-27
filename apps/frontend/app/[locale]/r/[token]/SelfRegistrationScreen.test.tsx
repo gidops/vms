@@ -123,7 +123,8 @@ async function fillAndSubmit() {
   fireEvent.click(screen.getByRole("button", { name: "Register my visit" }));
 }
 
-describe("SelfRegistrationScreen", () => {
+// Each case walks the whole multi-step form, which can exceed 5s on a busy CI runner.
+describe("SelfRegistrationScreen", { timeout: 15_000 }, () => {
   beforeEach(() => {
     Object.values(api).forEach((f) => f.mockReset());
     api.open.mockResolvedValue({ formToken: "ft", formExpiresAt: inTen() });

@@ -330,9 +330,15 @@ export class UsersService {
 
   /** Persist a freshly-uploaded avatar's S3 object key. */
   async setAvatar(userId: string, avatarKey: string): Promise<UserWithAccess> {
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { avatarKey },
+    await this.txm.run(async (tx) => {
+      await tx.user.update({ where: { id: userId }, data: { avatarKey } });
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.UserProfileUpdated,
+        aggregateType: 'User',
+        aggregateId: userId,
+        payload: { fields: ['avatarKey'] },
+        metadata: { actorUserId: userId },
+      });
     });
     const fresh = await this.findByIdWithAccess(userId);
     if (!fresh) throw new NotFoundException('User not found');

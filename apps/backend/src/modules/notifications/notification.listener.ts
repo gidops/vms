@@ -4,6 +4,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { NotificationChannel } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../shared/config/env.schema';
+import { formatWat } from '../../shared/common/wat';
 import { EncryptionService } from '../../shared/crypto/encryption.service';
 import type { DomainEvent } from '../../shared/events/domain-event';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
@@ -14,18 +15,16 @@ import {
   type ChannelTarget,
 } from './notification.types';
 
-/** Format a date as DD-MM-YYYY (matches the visitor-facing email convention). */
+/** DD-MM-YYYY on the WAT calendar (the visitor-facing email convention). */
 function formatDate(d?: Date | null): string {
   if (!d) return '';
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`;
+  const [y, m, day] = formatWat(d).slice(0, 10).split('-');
+  return `${day}-${m}-${y}`;
 }
 
-/** Format a time as HH:mm. */
+/** HH:mm on the WAT clock. */
 function formatTime(d?: Date | null): string {
-  if (!d) return '';
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return formatWat(d).slice(11);
 }
 
 /**

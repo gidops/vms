@@ -3,6 +3,7 @@ import {
   Get,
   HttpCode,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -27,7 +28,10 @@ export class NotificationsController {
 
   @Patch(':id/read')
   @HttpCode(200)
-  markRead(@Param('id') id: string, @CurrentUser() principal: AuthUser) {
+  markRead(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() principal: AuthUser,
+  ) {
     return this.notifications.markRead(principal.userId, id);
   }
 
