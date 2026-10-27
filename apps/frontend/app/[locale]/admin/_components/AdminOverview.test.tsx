@@ -58,7 +58,7 @@ describe("AdminOverview", () => {
             value: 3,
             tone: "warning",
             link: {
-              href: "/admin/v2/approvals",
+              href: "/admin/approvals",
               label: "Open Pending Approvals",
             },
           },
@@ -70,7 +70,7 @@ describe("AdminOverview", () => {
     const [link] = screen.getAllByRole("link", {
       name: "Open Pending Approvals",
     });
-    expect(link).toHaveAttribute("href", "/admin/v2/approvals");
+    expect(link).toHaveAttribute("href", "/admin/approvals");
     // Only the linked stat gets one (desktop + mobile copies of that cell).
     expect(
       screen.getAllByRole("link", { name: "Open Pending Approvals" }).length,

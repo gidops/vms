@@ -192,16 +192,16 @@ Critical).
 
 ### Security Manager and System Admin (`/admin`)
 
-The admin console opens on **Overview**: Awaiting approval, Onsite now and
-Expected today, the **Pending approvals** list (Approve / Deny / Review group),
-today's visitors and recent activity. The side menu has **Requests &
-Approvals**, **Users & Staff Roles** (System Admin only) and **Settings**. Some
-menu items are marked **Coming soon**.
+The admin console has tabs for **Overview**, **Pending Approvals** (Security
+Manager), **Recent Activity** and **Users** (System Admin).
 
-A redesigned console is being built at `/admin/v2` (tabs **Overview**, **Pending
-Approvals** for the Security Manager, **Recent Activity**, and **Users** for the
-System Admin). Both work today; the new one will replace the old one once it is
-signed off.
+- **Security Manager overview:** Awaiting approval, Onsite now and Expected
+  today, then the pending-approvals table (All · Info requested · Flagged ·
+  Group) and recent updates.
+- **System Admin overview:** Visitors today, Onsite and Checked out, then
+  **Today's Visitors** (All · Onsite · Expected · Out) and recent updates.
+
+To export visitor data, open **Insights → History** and choose **Export**.
 
 **Users** (System Admin): **New user**, **Edit roles** and **Delete**. Add-on
 roles are labelled "Add-on for …" in the role picker.

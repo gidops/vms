@@ -216,12 +216,12 @@ apps/frontend/
 ```
 
 Routes: `/` (sign-in), `/signup`, `/forgot-password`, `/dashboard` and
-`/requests` (VMC), `/staff` (+ `/visits`, `/updates`), `/admin` (+ `/requests`,
-`/users`, `/activity`), `/admin/v2` (+ `/approvals`, `/requests`, `/users`),
+`/requests` (VMC), `/staff` (+ `/visits`, `/updates`), `/admin` (+ `/approvals`,
+`/requests`, `/users`),
 `/gate` (+ `/evacuation`), `/insights`, `/operations`, `/settings`, and the
 public self-registration form `/r/[token]`. See the
 [user guide](./user-guide.md) for what each screen does and
-[development.md](./development.md#unfinished-work) for the two admin consoles.
+[development.md](./development.md#unfinished-work) for the admin layout variants.
 
 Server data is cached with **TanStack Query**. Auth is a React context that
 holds tokens and refreshes them silently. Screens hide buttons the user lacks

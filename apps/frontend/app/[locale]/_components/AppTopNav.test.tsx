@@ -68,6 +68,6 @@ describe("AppTopNav — admin console tabs", () => {
       "Recent Activity",
     ]);
     fireEvent.click(screen.getByRole("radio", { name: "Pending Approvals" }));
-    expect(push).toHaveBeenCalledWith("/admin/v2/approvals");
+    expect(push).toHaveBeenCalledWith("/admin/approvals");
   });
 });

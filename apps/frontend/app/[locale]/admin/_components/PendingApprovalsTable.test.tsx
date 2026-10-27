@@ -11,17 +11,21 @@ vi.mock("@/shared/auth/AuthContext", () => ({
 }));
 
 let rows: VisitListItem[] = [];
+const useAdminVisits = vi.fn();
 vi.mock("@/data/admin/queries", () => ({
-  useAdminVisits: () => ({
-    isLoading: false,
-    data: {
-      items: rows,
-      page: 1,
-      pageSize: 10,
-      total: rows.length,
-      totalPages: 1,
-    },
-  }),
+  useAdminVisits: (params: unknown) => {
+    useAdminVisits(params);
+    return {
+      isLoading: false,
+      data: {
+        items: rows,
+        page: 1,
+        pageSize: 10,
+        total: rows.length,
+        totalPages: 1,
+      },
+    };
+  },
 }));
 
 const minsAgo = (m: number) => new Date(Date.now() - m * 60_000).toISOString();
@@ -59,7 +63,7 @@ function setup() {
 const rowOf = (name: string) =>
   screen.getByText(name).closest("tr") as HTMLElement;
 
-describe("PendingApprovalsTable (v2)", () => {
+describe("PendingApprovalsTable", () => {
   beforeEach(() => {
     perms.clear();
     rows = [
@@ -108,6 +112,39 @@ describe("PendingApprovalsTable (v2)", () => {
     expect(
       within(rowOf("Chidi Okonkwo")).getByRole("button", { name: "Review" }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("PendingApprovalsTable — filter pills", () => {
+  beforeEach(() => {
+    perms.clear();
+    rows = [];
+    useAdminVisits.mockClear();
+  });
+
+  it("offers All, Info requested, Flagged and Group", () => {
+    setup();
+    const names = screen.getAllByRole("radio").map((r) => r.textContent);
+    expect(names).toEqual(["All", "Info requested", "Flagged", "Group"]);
+  });
+
+  it("Group keeps the decision statuses and asks for group visits only", () => {
+    setup();
+    fireEvent.click(screen.getByRole("radio", { name: "Group" }));
+    expect(useAdminVisits).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        statuses: ["PENDING", "REVIEW_REQUESTED", "FLAGGED"],
+        groupVisit: true,
+      }),
+    );
+  });
+
+  it("Info requested filters on that single status", () => {
+    setup();
+    fireEvent.click(screen.getByRole("radio", { name: "Info requested" }));
+    expect(useAdminVisits).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: "REVIEW_REQUESTED" }),
+    );
   });
 });
 

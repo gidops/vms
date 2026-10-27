@@ -1,38 +1,7 @@
 import type { VisitListItem } from "@/data/visits/visits.api";
 
-/** How many requests the overview shows before "See all". */
-export const PENDING_PREVIEW = 4;
-
-/** A request waiting longer than this is "overdue" (red chip, bar hint). */
+/** A request waiting longer than this is "overdue" (red chip, band hint). */
 export const OVERDUE_MINUTES = 60;
-
-export const APPROVAL_FILTERS = ["all", "walkIn", "invite", "group"] as const;
-export type ApprovalFilter = (typeof APPROVAL_FILTERS)[number];
-
-/** Whether a queue row belongs in a segment (a group is never a walk-in/invite row). */
-export function matchesApprovalFilter(
-  v: Pick<VisitListItem, "type" | "isGroupVisit">,
-  filter: ApprovalFilter,
-): boolean {
-  switch (filter) {
-    case "all":
-      return true;
-    case "group":
-      return v.isGroupVisit;
-    case "walkIn":
-      return !v.isGroupVisit && v.type === "WALK_IN";
-    case "invite":
-      return !v.isGroupVisit && v.type !== "WALK_IN";
-  }
-}
-
-export function sortOldestFirst<T extends Pick<VisitListItem, "createdAt">>(
-  items: readonly T[],
-): T[] {
-  return [...items].sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-  );
-}
 
 export function waitingMinutes(createdAt: string, now: Date): number {
   return Math.max(

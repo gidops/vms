@@ -259,6 +259,10 @@ export const VisitListQuery = PaginationQuery.extend({
   type: VisitType.optional(),
   purpose: z.string().min(1).optional(),
   groupId: z.string().uuid().optional(),
+  /** `true` keeps only group visits (`?groupVisit=true`). */
+  groupVisit: z
+    .preprocess((v) => v === true || v === "true", z.boolean())
+    .optional(),
   dateFrom: z.coerce.date().optional(),
   dateTo: z.coerce.date().optional(),
   /** Column the `dateFrom`/`dateTo` window applies to. */

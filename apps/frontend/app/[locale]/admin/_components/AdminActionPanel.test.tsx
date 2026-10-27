@@ -31,7 +31,7 @@ describe("AdminActionPanel", () => {
     renderWithIntl(<AdminActionPanel onAddVisitor={vi.fn()} />);
     expect(buttons()).toEqual(["Review Requests", "Visit History"]);
     fireEvent.click(screen.getByRole("button", { name: "Review Requests" }));
-    expect(push).toHaveBeenCalledWith("/admin/v2/approvals");
+    expect(push).toHaveBeenCalledWith("/admin/approvals");
     fireEvent.click(screen.getByRole("button", { name: "Visit History" }));
     expect(push).toHaveBeenCalledWith({
       pathname: "/insights",
@@ -45,7 +45,7 @@ describe("AdminActionPanel", () => {
     renderWithIntl(<AdminActionPanel onAddVisitor={onAddVisitor} />);
     expect(buttons()).toEqual(["Add Visitor", "Review Requests"]);
     fireEvent.click(screen.getByRole("button", { name: "Review Requests" }));
-    expect(push).toHaveBeenCalledWith("/admin/v2/approvals");
+    expect(push).toHaveBeenCalledWith("/admin/approvals");
     fireEvent.click(screen.getByRole("button", { name: "Add Visitor" }));
     expect(onAddVisitor).toHaveBeenCalled();
   });

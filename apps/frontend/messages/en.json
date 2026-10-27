@@ -699,9 +699,9 @@
       "empty": "Nothing is waiting for a decision.",
       "bucket": {
         "all": "All",
-        "PENDING": "Awaiting approval",
         "REVIEW_REQUESTED": "Info requested",
-        "FLAGGED": "Flagged"
+        "FLAGGED": "Flagged",
+        "group": "Group"
       }
     },
     "users": {

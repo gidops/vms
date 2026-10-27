@@ -71,7 +71,7 @@ export function AdminActivityFeed({
   return (
     <FeedCard
       title={t("title")}
-      seeAllHref="/admin/v2/requests"
+      seeAllHref="/admin/requests"
       seeAllLabel={tV2("seeAll")}
       isLoading={activity.isLoading}
       isEmpty={items.length === 0}

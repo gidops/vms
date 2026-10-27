@@ -40,7 +40,7 @@ function PendingCell({ count }: { count?: number }) {
   if (count === undefined) return null;
   return (
     <Link
-      href="/admin/v2/requests"
+      href="/admin/requests"
       className="flex flex-col gap-0.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
     >
       <span className="text-lg font-semibold text-primary">

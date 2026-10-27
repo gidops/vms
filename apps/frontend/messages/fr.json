@@ -699,9 +699,9 @@
       "empty": "Aucune demande en attente de décision.",
       "bucket": {
         "all": "Toutes",
-        "PENDING": "En attente d'approbation",
         "REVIEW_REQUESTED": "Informations demandées",
-        "FLAGGED": "Signalées"
+        "FLAGGED": "Signalées",
+        "group": "Groupe"
       }
     },
     "users": {

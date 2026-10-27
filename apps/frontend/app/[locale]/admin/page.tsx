@@ -1,53 +1,68 @@
 "use client";
 
-import { SearchInput } from "@vms/ui";
-import { useTranslations } from "next-intl";
+import { TopNavShell } from "@vms/ui";
 import * as React from "react";
-import { VisitDetailSheet } from "@/app/[locale]/_components/VisitDetailSheet";
-import { AdminOverviewBar } from "@/app/[locale]/admin/_components/AdminOverviewBar";
-import { AdminShell } from "@/app/[locale]/admin/_components/AdminShell";
-import { PendingApprovalsCard } from "@/app/[locale]/admin/_components/PendingApprovalsCard";
-import { RecentActivityCard } from "@/app/[locale]/admin/_components/RecentActivityCard";
-import { TodaysVisitorsCard } from "@/app/[locale]/admin/_components/TodaysVisitorsCard";
+import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
+import { useEvacuationAlertCount } from "@/app/[locale]/_components/EvacuationIndicator";
 import { QuickActionSheet } from "@/app/[locale]/dashboard/_components/QuickActionSheet";
+import { useAuth } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
+import { AdminActionPanel } from "./_components/AdminActionPanel";
+import { AdminActivityFeed } from "./_components/AdminActivityFeed";
+import { AdminFilters, useAdminFilters } from "./_components/AdminFilters";
+import { AdminOverview } from "./_components/AdminOverview";
+import { adminConsoleRole } from "@/shared/auth/adminConsoleRole";
+import { PendingApprovalsTable } from "./_components/PendingApprovalsTable";
+import { TodaysVisitorsTable } from "./_components/TodaysVisitorsTable";
+import { useAdminBand } from "./_components/useAdminBand";
+import { useVisitOverlays } from "./_components/VisitOverlays";
 
-/** Every block is permission-gated so one page serves all admin roles; empty blocks are omitted. */
+/** The Security Manager gets the pending-approvals queue; the System Admin gets Today's Visitors. */
 function Overview() {
-  const t = useTranslations("admin.overview");
-  // The top-nav search and the table's own field drive the same filter.
-  const [search, setSearch] = React.useState("");
-  const [detailId, setDetailId] = React.useState<string | null>(null);
+  const { hasPermission } = useAuth();
+  const role = adminConsoleRole(hasPermission);
+  const band = useAdminBand();
+  const filters = useAdminFilters();
+  const { openRow, open, overlays } = useVisitOverlays();
   const [addingVisitor, setAddingVisitor] = React.useState(false);
+  // Tints the quick-actions panel while anyone is on the Evacuation Roll.
+  const evacuationCount = useEvacuationAlertCount();
 
   return (
-    <AdminShell
-      active="overview"
-      search={
-        <SearchInput
-          variant="onEmphasis"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onClear={() => setSearch("")}
-          placeholder={t("searchPlaceholder")}
-          aria-label={t("searchPlaceholder")}
+    <TopNavShell
+      nav={<AppTopNav app="admin" active="overview" />}
+      filterBar={
+        <AdminFilters
+          variant="full"
+          value={filters.filters}
+          onChange={filters.onChange}
+          onSearch={filters.onSearch}
         />
       }
     >
       <div className="flex flex-col gap-6">
-        <AdminOverviewBar onAddVisitor={() => setAddingVisitor(true)} />
+        <AdminOverview
+          eyebrow={band.eyebrow}
+          eyebrowIcon={band.eyebrowIcon}
+          welcome={band.welcome}
+          stats={band.stats}
+          panelTone={evacuationCount > 0 ? "alert" : "default"}
+          panel={
+            <AdminActionPanel onAddVisitor={() => setAddingVisitor(true)} />
+          }
+        />
 
-        <PendingApprovalsCard />
-
-        {/* Flex, not grid: when one block is empty the other takes the full width. */}
-        <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
-          <TodaysVisitorsCard
-            search={search}
-            onSearchChange={setSearch}
-            onView={setDetailId}
-            className="min-w-0 xl:flex-[5]"
-          />
-          <RecentActivityCard className="min-w-0 xl:flex-[2.4]" />
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
+          {role === "securityManager" ? (
+            <PendingApprovalsTable
+              variant="vmc"
+              query={filters.query}
+              onOpen={openRow}
+            />
+          ) : (
+            <TodaysVisitorsTable query={filters.query} onOpen={openRow} />
+          )}
+          <AdminActivityFeed variant="updates" onSelect={open} />
         </div>
       </div>
 
@@ -55,21 +70,17 @@ function Overview() {
         mode={addingVisitor ? "invite" : null}
         onClose={() => setAddingVisitor(false)}
       />
-      {detailId ? (
-        <VisitDetailSheet
-          kind="request"
-          id={detailId}
-          onClose={() => setDetailId(null)}
-        />
-      ) : null}
-    </AdminShell>
+      {overlays}
+    </TopNavShell>
   );
 }
 
 export default function AdminPage() {
   return (
     <RouteGuard home="/admin">
-      <Overview />
+      <React.Suspense>
+        <Overview />
+      </React.Suspense>
     </RouteGuard>
   );
 }

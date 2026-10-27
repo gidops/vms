@@ -162,6 +162,8 @@ export const visitsApi = {
     type?: VisitType;
     purpose?: string;
     groupId?: string;
+    /** Only group visits. */
+    groupVisit?: boolean;
     dateFrom?: string;
     dateTo?: string;
     /** Which date column `dateFrom`/`dateTo` filter on (default `scheduledAt`). */
@@ -180,6 +182,7 @@ export const visitsApi = {
     if (params?.type) q.set("type", params.type);
     if (params?.purpose) q.set("purpose", params.purpose);
     if (params?.groupId) q.set("groupId", params.groupId);
+    if (params?.groupVisit) q.set("groupVisit", "true");
     if (params?.dateFrom) q.set("dateFrom", params.dateFrom);
     if (params?.dateTo) q.set("dateTo", params.dateTo);
     if (params?.dateField) q.set("dateField", params.dateField);

@@ -17,6 +17,11 @@ const MOVED_PAGES: Record<string, string> = {
   "/admin/desk-qr": "/operations?tab=deskQr",
   "/admin/v2/desk-qr": "/operations?tab=deskQr",
   "/dashboard/desk-qr": "/operations?tab=deskQr",
+  "/admin/v2": "/admin",
+  "/admin/v2/approvals": "/admin/approvals",
+  "/admin/v2/requests": "/admin/requests",
+  "/admin/v2/users": "/admin/users",
+  "/admin/activity": "/admin/requests",
   "/help": "/insights",
   "/staff/requests": "/staff/updates",
 };

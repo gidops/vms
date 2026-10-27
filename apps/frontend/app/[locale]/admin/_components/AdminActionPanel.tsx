@@ -29,7 +29,7 @@ export function AdminActionPanel({
   const canHistory = hasPermission(PERMISSIONS.HISTORY_READ);
   const sm = adminConsoleRole(hasPermission) === "securityManager";
   // The System Admin approves too, just not as a primary duty.
-  const review = () => router.push("/admin/v2/approvals");
+  const review = () => router.push("/admin/approvals");
 
   const actions: { key: string; label: string; onClick: () => void }[] = (
     sm
@@ -80,7 +80,7 @@ export function AdminActionPanel({
         {empty ? (
           <Button
             intent="accent"
-            onClick={() => router.push("/admin/v2/requests")}
+            onClick={() => router.push("/admin/requests")}
           >
             {t("activityCta")}
           </Button>

@@ -17,9 +17,6 @@ vi.mock("@/data/requests/queries", () => ({
 vi.mock("@/app/[locale]/_components/AppTopNav", () => ({
   AppTopNav: () => null,
 }));
-vi.mock("@/app/[locale]/admin/_components/AdminShell", () => ({
-  AdminShell: () => null,
-}));
 vi.mock("@/app/[locale]/_components/VisitDetailSheet", () => ({
   VisitDetailSheet: (p: { kind: string; id: string }) => {
     opened(p.kind, p.id);
