@@ -159,7 +159,7 @@ See [`apps/backend/.env.example`](../apps/backend/.env.example). Key vars:
 authorized to send as (verified single sender / domain), or delivery is rejected.
 
 In AWS, the email and WhatsApp settings come from `terraform/terraform.tfvars`
-(see [operations.md](./operations.md#81-one-time-setup)).
+(see [operations.md](./operations.md#61-one-time-setup)).
 
 ## Notes & limits
 

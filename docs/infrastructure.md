@@ -3,8 +3,9 @@
 **Who this is for:** anyone who needs to understand how the VMS runs, on a
 laptop and on AWS, without being an infrastructure expert. **What you'll
 learn:** the moving parts, how they talk to each other, where settings and
-secrets live, and the risks to know about. Step-by-step commands are in
-[operations.md](./operations.md).
+secrets live, and the risks to know about. To run it on your own computer,
+follow the [root README](../README.md); Docker, deploy and troubleshooting
+commands are in [operations.md](./operations.md).
 
 ## 1. The 30-second picture
 
@@ -203,12 +204,12 @@ first are in [ci-quality.md](./ci-quality.md).
 
 Each folder below is a separate Terraform project with its own state.
 
-| Folder        | What it creates                                                                                                                      |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `terraform/`  | The app environment described above.                                                                                                 |
-| `bootstrap/`  | An encrypted, versioned S3 bucket for Terraform state, plus a DynamoDB lock table. Applied once.                                     |
-| `governance/` | Account guardrails: an organisation-wide CloudTrail audit trail, GuardDuty threat detection, and cost budgets with alerts.           |
-| `jenkins/`    | The Jenkins server: an EC2 instance in the default VPC, a fixed IP, a firewall limited to one IP, and an IAM role allowed to deploy. |
+| Folder        | What it creates                                                                                                                                         |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `terraform/`  | The app environment described above.                                                                                                                    |
+| `bootstrap/`  | An encrypted, versioned S3 bucket for Terraform state, plus a DynamoDB lock table (no longer used: state locking now uses S3 lock files). Applied once. |
+| `governance/` | Account guardrails: an organisation-wide CloudTrail audit trail, GuardDuty threat detection, and cost budgets with alerts.                              |
+| `jenkins/`    | The Jenkins server: an EC2 instance in the default VPC, a fixed IP, a firewall limited to one IP, and an IAM role allowed to deploy.                    |
 
 ## 10. Risks to know about
 

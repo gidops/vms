@@ -221,7 +221,7 @@ Routes: `/` (sign-in), `/signup`, `/forgot-password`, `/dashboard` and
 `/gate` (+ `/evacuation`), `/insights`, `/operations`, `/settings`, and the
 public self-registration form `/r/[token]`. See the
 [user guide](./user-guide.md) for what each screen does and
-[admin-console-v2.md](./admin-console-v2.md) for the two admin consoles.
+[development.md](./development.md#unfinished-work) for the two admin consoles.
 
 Server data is cached with **TanStack Query**. Auth is a React context that
 holds tokens and refreshes them silently. Screens hide buttons the user lacks

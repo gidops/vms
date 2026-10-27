@@ -14,6 +14,10 @@
   ],
   "scripts": {
     "build": "turbo run build",
+    "db:start": "docker compose up -d postgres adminer seq",
+    "db:migrate": "npm exec -w @vms/backend -- prisma migrate deploy",
+    "backend": "npm run start:dev -w @vms/backend",
+    "frontend": "npm run dev -w @vms/frontend",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "lint:check": "turbo run lint:check",

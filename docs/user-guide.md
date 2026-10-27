@@ -29,13 +29,13 @@ by the System Admin under **Users**.
 
 ## Roles
 
-| Role (shown as)  | Code name     | Home screen  | What they do                                                                                                                                                                |
-| ---------------- | ------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| System Admin     | `SUPER_ADMIN` | `/admin`     | Everything. Manages users and roles, runs **Operations** (access cards, walk-in QR, audit trail), can add a person back to the email list.                                  |
-| Security Manager | `ADMIN`       | `/admin`     | Approves or denies visit requests, flags visits for security review, asks for more information, resolves alerts. Sees analytics and can export visitor data. No user admin. |
-| VMC Reception    | `VMC`         | `/dashboard` | Works the Visitor Management Centre (VMC) desk: registers walk-ins, creates invites, checks visitors in and out, hands out badges, records email opt-outs, exports data.    |
-| Staff            | `STAFF`       | `/staff`     | Hosts visitors: creates invite requests for their own guests, follows their progress, answers the Security Manager, cancels, and rates guests after the visit.              |
-| Gate             | `GATE`        | `/gate`      | Gate officers. Can view the evacuation roll. (The gate home screen is a placeholder for now.)                                                                               |
+| Role             | Home screen  | What they do                                                                                                                                                                |
+| ---------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| System Admin     | `/admin`     | Everything. Manages users and roles, runs **Operations** (access cards, walk-in QR, audit trail), can add a person back to the email list.                                  |
+| Security Manager | `/admin`     | Approves or denies visit requests, flags visits for security review, asks for more information, resolves alerts. Sees analytics and can export visitor data. No user admin. |
+| VMC Reception    | `/dashboard` | Works the Visitor Management Centre (VMC) desk: registers walk-ins, creates invites, checks visitors in and out, hands out badges, records email opt-outs, exports data.    |
+| Staff            | `/staff`     | Hosts visitors: creates invite requests for their own guests, follows their progress, answers the Security Manager, cancels, and rates guests after the visit.              |
+| Gate             | `/gate`      | Gate officers. Can view the evacuation roll. (The gate home screen is a placeholder for now.)                                                                               |
 
 **Add-on roles** are extra rights given on top of a main role. They never
 appear in the role switcher.
@@ -192,7 +192,7 @@ menu items are marked **Coming soon**.
 A redesigned console is being built at `/admin/v2` (tabs **Overview**, **Pending
 Approvals** for the Security Manager, **Recent Activity**, and **Users** for the
 System Admin). Both work today; the new one will replace the old one once it is
-signed off. See [admin-console-v2.md](./admin-console-v2.md).
+signed off.
 
 **Users** (System Admin): **New user**, **Edit roles** and **Delete**. Add-on
 roles are labelled "Add-on for …" in the role picker.

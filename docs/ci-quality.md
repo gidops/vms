@@ -139,7 +139,7 @@ Actions.
    validate)" succeeded on **that exact commit**. If not, the deploy stops.
 5. Jenkins pauses for a person to press **Deploy** (manual approval).
 6. It runs `./vms-deploy.sh --deploy <target>` with `VMS_AUTO_APPROVE=1`. See
-   [operations.md](./operations.md#8-deploying-to-aws) for what that does.
+   [operations.md](./operations.md#6-deploying-to-aws) for what that does.
 
 ### Jenkins setup
 

@@ -77,7 +77,6 @@ Storybook 9 + `@storybook/react-vite`, with addons: **a11y** (axe per story),
   state the backend doesn't define.
 
 - New screens follow the staff and VMC dashboard patterns (top nav, overview
-  band, record table). See [admin-console-v2.md](./admin-console-v2.md) for how
-  the admin console was converted to them.
+  band, record table).
 - Components consumed by the frontend as TypeScript source use
   **extensionless** relative imports.
