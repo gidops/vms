@@ -21,18 +21,7 @@ import {
   toListItem,
 } from './helpers/visit.mappers';
 
-/**
- * Read side of the visits module: the single-visit detail view and the
- * paginated list that powers the admin approval queue, the VMC board, and the
- * staff "My Visits" screens. Every write service depends on this to build the
- * fresh detail it returns after committing.
- */
-/**
- * The digits to look for in stored phone numbers (E.164, e.g. +2348035521904)
- * when someone searches by phone, or null if the search isn't one. A local
- * leading 0 ("0803 552 1904") is dropped so it matches the +234 form. Phones
- * are plaintext today; if they are ever encrypted this needs a search column.
- */
+/** Phone digits to match (local leading 0 dropped for +234), or null if not a phone search. */
 export function phoneSearchDigits(search: string): string | null {
   if (!/^[\d\s()+-]+$/.test(search)) return null;
   const digits = search.replace(/\D/g, '').replace(/^0/, '');
@@ -43,11 +32,7 @@ export function phoneSearchDigits(search: string): string | null {
 export class VisitReadService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Ownership gate for principals without `visit:read`: they may only open a
-   * visit they created or host. Anything else reads as "not found" so the
-   * endpoint never confirms another visit exists.
-   */
+  /** Without `visit:read`, others' visits read as "not found" so their existence isn't confirmed. */
   async assertCanView(id: string, userId: string): Promise<void> {
     const visit = await this.prisma.visit.findUnique({
       where: { id },
@@ -82,10 +67,6 @@ export class VisitReadService {
     return detail;
   }
 
-  /**
-   * Resolve the "Checked In By" / "Checked Out By" operative names from the gate
-   * log (the operativeUserId recorded at check-in / check-out).
-   */
   private async attachOperativeNames(
     detail: VisitRequestDetail,
   ): Promise<void> {
@@ -116,125 +97,86 @@ export class VisitReadService {
     detail.checkedOutByName = outOp ? (nameById.get(outOp) ?? null) : null;
   }
 
-  /**
-   * Paginated visit list. Ordering follows {@link buildOrderBy} (scheduled date
-   * earliest-first by default; `sortBy: "createdAt"` for the staff/VMC boards).
-   * The admin approval queue passes no scope; the staff dashboard passes
-   * `scope: "mine"` to restrict the result to visits the requesting user hosts.
-   * `type`/`purpose`, free-text `search`, and the `dateFrom`/`dateTo` window
-   * (over `dateField`, default `scheduledAt`) are the staff facets.
-   */
   async list(
     query: VisitListQuery,
     currentUserId: string,
-    /** False for principals without `visit:read` — forces the "mine" scope. */
     canReadAll = true,
   ): Promise<Paginated<VisitListItem>> {
-    const where: Prisma.VisitWhereInput = {};
-    if (query.statuses?.length) where.status = { in: query.statuses };
-    else if (query.status) where.status = query.status;
-    if (query.type) where.type = query.type;
-    if (query.purpose) where.purpose = query.purpose;
-    if (query.groupId) where.groupId = query.groupId;
-    if (query.dateFrom || query.dateTo) {
-      // The window applies to whichever date column the caller asked for
-      // (`scheduledAt` by default; the staff/VMC boards pass `createdAt`).
-      where[query.dateField] = {
-        ...(query.dateFrom ? { gte: query.dateFrom } : {}),
-        ...(query.dateTo ? { lte: query.dateTo } : {}),
-      };
-    }
-    // Scope and search are each an OR-group; they'd clobber one another as a
-    // single top-level `where.OR`, so AND them together.
-    const and: Prisma.VisitWhereInput[] = [];
-    if (query.scope === 'mine' || !canReadAll) {
-      // "Mine" = requests I created OR visits I host (a staff sees requests they
-      // raised even when the guest is hosted by someone else).
-      and.push({
-        OR: [
-          { createdById: currentUserId },
-          { host: { userId: currentUserId } },
-        ],
-      });
-    }
-    if (query.search) {
-      // Matches the staff search placeholder ("guest, host, floor, pass id"),
-      // plus the visitor's phone (V1 parity).
-      const contains = { contains: query.search, mode: 'insensitive' } as const;
-      const phone = phoneSearchDigits(query.search);
-      and.push({
-        OR: [
-          { visitor: { fullName: contains } },
-          { visitor: { email: contains } },
-          { visitor: { organization: contains } },
-          { host: { user: { fullName: contains } } },
-          { floor: contains },
-          { referenceCode: contains },
-          ...(phone ? [{ visitor: { phone: { contains: phone } } }] : []),
-        ],
-      });
-    }
-    if (and.length) where.AND = and;
+    const where = buildListWhere(query, currentUserId, canReadAll);
     const orderBy = buildOrderBy(query);
-    // Fetching one group's members (the group check-in / approval sheets pass a
-    // groupId) returns every guest as its own row; any other list collapses each
-    // group visit to a single representative row.
+    // A groupId fetch returns every member; otherwise each group collapses to one row.
     const collapse = !query.groupId;
+    const { rows, total } = collapse
+      ? await this.pageOfGroupRepresentatives(where, orderBy, query)
+      : await this.pageOfVisits(where, orderBy, query);
+    const groups = await this.summariseGroups(rows);
+    return {
+      items: toListItems(rows, collapse, groups),
+      page: query.page,
+      pageSize: query.pageSize,
+      total,
+      totalPages: Math.ceil(total / query.pageSize),
+    };
+  }
 
-    let rows: VisitListRow[];
-    let total: number;
-    if (collapse) {
-      // A group visit is ONE logical row, so pagination must run over logical rows:
-      // if we fetched a fixed-size page of raw rows and then collapsed group members,
-      // a page holding a group would return fewer than pageSize rows. Read the
-      // ordered ids once, keep one representative (the newest member) per group, then
-      // fetch just this page's rows. `total`/`totalPages` are the logical-row count.
-      const keys = await this.prisma.visit.findMany({
-        where,
-        select: { id: true, groupId: true, isGroupVisit: true },
-        orderBy,
-      });
-      const repIds: string[] = [];
-      const seen = new Set<string>();
-      for (const k of keys) {
-        if (k.isGroupVisit && k.groupId) {
-          if (seen.has(k.groupId)) continue;
-          seen.add(k.groupId);
-        }
-        repIds.push(k.id);
+  private async pageOfGroupRepresentatives(
+    where: Prisma.VisitWhereInput,
+    orderBy: Prisma.VisitOrderByWithRelationInput,
+    query: VisitListQuery,
+  ): Promise<{ rows: VisitListRow[]; total: number }> {
+    // Paginate over logical rows (one representative per group) so a page holding a group isn't short.
+    const keys = await this.prisma.visit.findMany({
+      where,
+      select: { id: true, groupId: true, isGroupVisit: true },
+      orderBy,
+    });
+    const repIds: string[] = [];
+    const seen = new Set<string>();
+    for (const k of keys) {
+      if (k.isGroupVisit && k.groupId) {
+        if (seen.has(k.groupId)) continue;
+        seen.add(k.groupId);
       }
-      total = repIds.length;
-      const pageIds = repIds.slice(
-        (query.page - 1) * query.pageSize,
-        query.page * query.pageSize,
-      );
-      const pageRows = pageIds.length
-        ? await this.prisma.visit.findMany({
-            where: { id: { in: pageIds } },
-            include: listInclude,
-          })
-        : [];
-      const byId = new Map(pageRows.map((r) => [r.id, r]));
-      // `in` doesn't preserve order — restore the ordered page order.
-      rows = pageIds
-        .map((id) => byId.get(id))
-        .filter((r): r is VisitListRow => !!r);
-    } else {
-      [rows, total] = await this.prisma.$transaction([
-        this.prisma.visit.findMany({
-          where,
-          include: listInclude,
-          orderBy,
-          skip: (query.page - 1) * query.pageSize,
-          take: query.pageSize,
-        }),
-        this.prisma.visit.count({ where }),
-      ]);
+      repIds.push(k.id);
     }
+    const total = repIds.length;
+    const pageIds = repIds.slice(
+      (query.page - 1) * query.pageSize,
+      query.page * query.pageSize,
+    );
+    const pageRows = pageIds.length
+      ? await this.prisma.visit.findMany({
+          where: { id: { in: pageIds } },
+          include: listInclude,
+        })
+      : [];
+    const byId = new Map(pageRows.map((r) => [r.id, r]));
+    // `in` doesn't preserve order.
+    const rows = pageIds
+      .map((id) => byId.get(id))
+      .filter((r): r is VisitListRow => !!r);
+    return { rows, total };
+  }
 
-    // Aggregate each group's size + member statuses across the whole filtered set
-    // (not just this page) so the representative row shows the true guest count and
-    // a derived status.
+  private async pageOfVisits(
+    where: Prisma.VisitWhereInput,
+    orderBy: Prisma.VisitOrderByWithRelationInput,
+    query: VisitListQuery,
+  ): Promise<{ rows: VisitListRow[]; total: number }> {
+    const [rows, total] = await this.prisma.$transaction([
+      this.prisma.visit.findMany({
+        where,
+        include: listInclude,
+        orderBy,
+        skip: (query.page - 1) * query.pageSize,
+        take: query.pageSize,
+      }),
+      this.prisma.visit.count({ where }),
+    ]);
+    return { rows, total };
+  }
+
+  private async summariseGroups(rows: VisitListRow[]): Promise<GroupSummaries> {
     const groupIds = [
       ...new Set(
         rows
@@ -243,9 +185,7 @@ export class VisitReadService {
           .filter((g): g is string => !!g),
       ),
     ];
-    // Aggregate over ALL of each group's members (no status filter) so the derived
-    // status and guest count reflect the whole group — including still-PENDING
-    // members that the board's status filter would otherwise hide.
+    // Aggregate over all members (no status filter) so the derived status counts hidden PENDING guests.
     const groupAgg = groupIds.length
       ? await this.prisma.visit.groupBy({
           by: ['groupId', 'status'],
@@ -257,8 +197,7 @@ export class VisitReadService {
     const statusesByGroup = new Map<string, Set<string>>();
     for (const g of groupAgg) {
       const id = g.groupId as string;
-      // Guest count = active members only (a denied/cancelled/expired guest is
-      // not part of the visiting group).
+      // Denied/cancelled/expired guests aren't part of the visiting group.
       if (!GROUP_INACTIVE_STATUSES.has(g.status)) {
         sizeByGroup.set(id, (sizeByGroup.get(id) ?? 0) + g._count._all);
       }
@@ -267,29 +206,80 @@ export class VisitReadService {
       statusesByGroup.set(id, set);
     }
 
-    const items: VisitListItem[] = [];
-    const seenGroups = new Set<string>();
-    for (const r of rows) {
-      const isGroup = r.isGroupVisit && !!r.groupId;
-      if (collapse && isGroup && seenGroups.has(r.groupId!)) continue;
-      const size = isGroup ? (sizeByGroup.get(r.groupId!) ?? 1) : 1;
-      const item = toListItem(r, size);
-      if (collapse && isGroup) {
-        seenGroups.add(r.groupId!);
-        item.status = deriveGroupStatus(
-          statusesByGroup.get(r.groupId!),
-          item.status,
-        );
-      }
-      items.push(item);
-    }
+    return { sizeByGroup, statusesByGroup };
+  }
+}
 
-    return {
-      items,
-      page: query.page,
-      pageSize: query.pageSize,
-      total,
-      totalPages: Math.ceil(total / query.pageSize),
+type GroupSummaries = {
+  sizeByGroup: Map<string, number>;
+  statusesByGroup: Map<string, Set<string>>;
+};
+
+function buildListWhere(
+  query: VisitListQuery,
+  currentUserId: string,
+  canReadAll: boolean,
+): Prisma.VisitWhereInput {
+  const where: Prisma.VisitWhereInput = {};
+  if (query.statuses?.length) where.status = { in: query.statuses };
+  else if (query.status) where.status = query.status;
+  if (query.type) where.type = query.type;
+  if (query.purpose) where.purpose = query.purpose;
+  if (query.groupId) where.groupId = query.groupId;
+  if (query.dateFrom || query.dateTo) {
+    where[query.dateField] = {
+      ...(query.dateFrom ? { gte: query.dateFrom } : {}),
+      ...(query.dateTo ? { lte: query.dateTo } : {}),
     };
   }
+  // Scope and search are both OR-groups; AND them so one doesn't clobber the other.
+  const and: Prisma.VisitWhereInput[] = [];
+  if (query.scope === 'mine' || !canReadAll) {
+    // Includes requests I raised even when someone else hosts the guest.
+    and.push({
+      OR: [{ createdById: currentUserId }, { host: { userId: currentUserId } }],
+    });
+  }
+  if (query.search) {
+    const contains = { contains: query.search, mode: 'insensitive' } as const;
+    const phone = phoneSearchDigits(query.search);
+    and.push({
+      OR: [
+        { visitor: { fullName: contains } },
+        { visitor: { email: contains } },
+        { visitor: { organization: contains } },
+        { host: { user: { fullName: contains } } },
+        { floor: contains },
+        { referenceCode: contains },
+        ...(phone ? [{ visitor: { phone: { contains: phone } } }] : []),
+      ],
+    });
+  }
+  if (and.length) where.AND = and;
+  return where;
+}
+
+function toListItems(
+  rows: VisitListRow[],
+  collapse: boolean,
+  { sizeByGroup, statusesByGroup }: GroupSummaries,
+): VisitListItem[] {
+  const items: VisitListItem[] = [];
+  const seenGroups = new Set<string>();
+  for (const r of rows) {
+    const isGroup = r.isGroupVisit && !!r.groupId;
+    if (collapse && isGroup && seenGroups.has(r.groupId!)) continue;
+    const size = isGroup ? (sizeByGroup.get(r.groupId!) ?? 1) : 1;
+    const item = toListItem(r, size);
+    if (collapse && isGroup) {
+      seenGroups.add(r.groupId!);
+      item.status = deriveGroupStatus(
+        statusesByGroup.get(r.groupId!),
+        item.status,
+      );
+    }
+    items.push(item);
+  }
+
+  return items;
 }

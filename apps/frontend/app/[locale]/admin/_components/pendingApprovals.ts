@@ -6,7 +6,6 @@ export const PENDING_PREVIEW = 4;
 /** A request waiting longer than this is "overdue" (red chip, bar hint). */
 export const OVERDUE_MINUTES = 60;
 
-/** The pending approvals card's segments, in display order. */
 export const APPROVAL_FILTERS = ["all", "walkIn", "invite", "group"] as const;
 export type ApprovalFilter = (typeof APPROVAL_FILTERS)[number];
 
@@ -27,7 +26,6 @@ export function matchesApprovalFilter(
   }
 }
 
-/** Oldest request first (by when it was raised), without mutating the input. */
 export function sortOldestFirst<T extends Pick<VisitListItem, "createdAt">>(
   items: readonly T[],
 ): T[] {
@@ -36,7 +34,6 @@ export function sortOldestFirst<T extends Pick<VisitListItem, "createdAt">>(
   );
 }
 
-/** Whole minutes a request has been waiting at `now` (never negative). */
 export function waitingMinutes(createdAt: string, now: Date): number {
   return Math.max(
     0,
@@ -44,11 +41,7 @@ export function waitingMinutes(createdAt: string, now: Date): number {
   );
 }
 
-/**
- * Number of requests awaiting a decision for longer than
- * {@link OVERDUE_MINUTES}. Requests sent back for more information are waiting
- * on the host, not the approver, so they never count.
- */
+/** Requests sent back for more information wait on the host, so they never count as overdue. */
 export function countOverdue(
   items: readonly Pick<VisitListItem, "createdAt" | "status">[],
   now: Date,

@@ -14,11 +14,7 @@ import { AccessCardsTab } from "./_components/access-cards/AccessCardsTab";
 import { AuditTrailTab } from "./_components/AuditTrailTab";
 import { OPERATIONS_TABS, type OperationsTab } from "./_components/tabs";
 
-/**
- * Operations: System Admin tools — RFID access cards, the desk QR and the
- * audit trail (more to come). Each tab shows with its permission (see
- * `_components/tabs.ts`); the tab lives in `?tab=` so links land on it.
- */
+/** Each tab shows with its permission; the tab lives in `?tab=` so links land on it. */
 function Operations() {
   const t = useTranslations("operations");
   const { hasPermission } = useAuth();

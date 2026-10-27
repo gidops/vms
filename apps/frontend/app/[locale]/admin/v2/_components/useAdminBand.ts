@@ -19,26 +19,14 @@ export type BandStatKey =
   | "onsite"
   | "checkedOut";
 
-/**
- * The band's three stats per console: the Security Manager leads with what
- * waits on them; the System Admin watches the day's traffic.
- */
+/** The Security Manager leads with pending work; the System Admin watches traffic. */
 export function bandStatKeys(role: AdminConsoleRole): BandStatKey[] {
   return role === "securityManager"
     ? ["awaiting", "visitorsToday", "onsite"]
     : ["visitorsToday", "onsite", "checkedOut"];
 }
 
-/**
- * Data for the admin overview band: the eyebrow/welcome copy and the
- * console's three headline stats (see `bandStatKeys`). "Visitors Today"
- * carries the vs-yesterday trend as its sub-line.
- *
- * From the role-aware /admin overview: the eyebrow names the role's console
- * ("Security console" …), "Awaiting approval" counts requests to decide plus
- * those sent back for more info, and for approvers it is the warning-toned
- * hero with an over-1-hour hint; "Onsite" says how many floors.
- */
+/** Overview band copy and the console's three headline stats. */
 export function useAdminBand() {
   const t = useTranslations("admin.overview.stats");
   const tBar = useTranslations("admin.overview.bar");
@@ -86,7 +74,6 @@ export function useAdminBand() {
       hint: awaitingHint,
       // The hero only for roles that can act on it.
       tone: canApprove ? "warning" : "default",
-      // The SM's shortcut straight to their queue.
       link:
         role === "securityManager"
           ? { href: "/admin/v2/approvals", label: tV2("openApprovals") }
@@ -101,8 +88,7 @@ export function useAdminBand() {
   };
   const stats = bandStatKeys(role).map((key) => all[key]);
 
-  // Each admin role has its own console name; anything else keeps the
-  // generic "Admin Console · <role>".
+  // Unknown roles fall back to the generic console name.
   const consoleKey = `console.${activeRole ?? ""}` as "console.ADMIN";
   const eyebrow = tBar.has(consoleKey)
     ? tBar(consoleKey)
@@ -115,7 +101,6 @@ export function useAdminBand() {
     stats,
     pendingCount: awaiting,
     eyebrow,
-    // Security console: approvals and alerts; System console: configuration.
     eyebrowIcon: role === "securityManager" ? ShieldCheck : ServerCog,
     welcome: tV2("welcome", { name: user?.fullName ?? "" }),
   };

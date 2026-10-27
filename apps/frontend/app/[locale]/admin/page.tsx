@@ -12,15 +12,7 @@ import { TodaysVisitorsCard } from "@/app/[locale]/admin/_components/TodaysVisit
 import { QuickActionSheet } from "@/app/[locale]/dashboard/_components/QuickActionSheet";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
 
-/**
- * Admin console overview. Four blocks, top to bottom: the shared overview bar
- * (Awaiting approval, Onsite now, Expected today + actions), the pending
- * approvals preview (approvers only, oldest first), today's visitors and recent
- * activity. Trends and outcomes live on /admin/analytics. Every block is gated
- * by permission, so the same page serves System Admin, Security Manager, VMC
- * Admin and Read Admin; without approve rights the visitors table leads. Each
- * block has its own loading and error state, and an empty block is left out.
- */
+/** Every block is permission-gated so one page serves all admin roles; empty blocks are omitted. */
 function Overview() {
   const t = useTranslations("admin.overview");
   // The top-nav search and the table's own field drive the same filter.
@@ -47,8 +39,7 @@ function Overview() {
 
         <PendingApprovalsCard />
 
-        {/* Flex, not grid: an empty block doesn't render, and the other one
-            then takes the full width instead of leaving a hole. */}
+        {/* Flex, not grid: when one block is empty the other takes the full width. */}
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
           <TodaysVisitorsCard
             search={search}

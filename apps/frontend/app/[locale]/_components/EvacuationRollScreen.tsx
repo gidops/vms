@@ -32,10 +32,7 @@ export interface FloorGroup {
   rows: EvacuationRollRow[];
 }
 
-/**
- * Group the roll by floor, keeping the server's top-floor-first order (rows
- * arrive sorted by floor, then check-in time).
- */
+/** Groups by floor, keeping the server's top-floor-first order. */
 export function groupByFloor(rows: EvacuationRollRow[]): FloorGroup[] {
   const groups: FloorGroup[] = [];
   for (const row of rows) {
@@ -56,8 +53,7 @@ function CountBanner({
   const t = useTranslations("evacuation");
   const empty = roll.count === 0;
   return (
-    // A polite live region: the roll refreshes every minute and shouldn't
-    // interrupt like an alert would.
+    // Polite: the roll refreshes every minute and shouldn't interrupt.
     <Alert
       role="status"
       intent={empty ? "success" : "warning"}
@@ -84,7 +80,6 @@ function FloorLabel({ floor }: { floor: string | null }) {
 }
 
 const COLUMN_COUNT = 6;
-/** Rows per page, matching the VMC records table. */
 const PAGE_SIZE = 10;
 
 function RollTable({
@@ -100,7 +95,6 @@ function RollTable({
   const locale = useLocale();
   return (
     <>
-      {/* Desktop / tablet: the standard records table, one body per floor */}
       <div className="hidden md:block">
         <Table aria-label={t("title")}>
           <TableHeader>
@@ -115,7 +109,6 @@ function RollTable({
           </TableHeader>
           {groups.map((g) => (
             <TableBody key={g.floor ?? "none"}>
-              {/* Floor label row in the records table's own colours. */}
               <TableRow className="border-t hover:bg-transparent">
                 <TableCell
                   colSpan={COLUMN_COUNT}
@@ -128,7 +121,6 @@ function RollTable({
                 </TableCell>
               </TableRow>
               {g.rows.map((r, i) => (
-                // Striped like the VMC records table: every second row, per floor.
                 <TableRow
                   key={r.visitId}
                   className={i % 2 === 1 ? "bg-surface-stripe" : undefined}
@@ -172,7 +164,7 @@ function RollTable({
         </Table>
       </div>
 
-      {/* Phone: grouped cards (wardens use this on the move) */}
+      {/* Phone: grouped cards for wardens on the move. */}
       <ul
         className="flex flex-col overflow-hidden rounded-lg border border-border md:hidden"
         aria-label={t("title")}
@@ -242,11 +234,7 @@ function RollTable({
 
 const subscribeNoop = () => () => {};
 
-/**
- * Print-only copy of the roll for wardens, portalled to <body> so the print
- * stylesheet can hide every bit of app chrome. A real <table> lets the browser
- * repeat the AATC header and generated timestamp (<thead>) on every A4 page.
- */
+/** Portalled to <body> so print CSS can hide the app chrome; <thead> repeats on every A4 page. */
 function PrintRoll({
   roll,
   groups,
@@ -328,11 +316,6 @@ function PrintRoll({
   );
 }
 
-/**
- * Live Evacuation Roll, shared by the Insights page (/insights?tab=evacuation)
- * and the gate. Refreshes every minute; "Print" prints a
- * chrome-free, floor-grouped A4 list.
- */
 export function EvacuationRollScreen({
   headingLevel = 1,
   showHeading = true,
@@ -377,8 +360,6 @@ export function EvacuationRollScreen({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Laid out like the History tab: refresh with the filters on the start
-          side, the print action where History's Export sits on the end. */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
           {showHeading ? (
@@ -386,7 +367,6 @@ export function EvacuationRollScreen({
               {t("title")}
             </Heading>
           ) : null}
-          {/* Same pill as the navbar Switch Account button, in light-surface colours. */}
           <button
             type="button"
             className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium text-fg transition-colors outline-none hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] disabled:pointer-events-none disabled:opacity-60"

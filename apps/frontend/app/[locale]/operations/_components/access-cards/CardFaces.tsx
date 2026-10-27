@@ -17,12 +17,7 @@ export interface CardContent {
   photoUrl: string | null;
 }
 
-/**
- * Portrait CR80 (54 × 85.6 mm) faces, sized in millimetres so the same markup
- * is the on-screen preview and the printed card. Always the light theme
- * (`data-theme="light"`): a printed card doesn't follow dark mode. The layout
- * mirrors in RTL.
- */
+/** Sized in mm so the same markup is the preview and the printed CR80 card; always light theme, since print doesn't follow dark mode. */
 function Face({
   className,
   children,

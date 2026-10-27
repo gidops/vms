@@ -5,6 +5,7 @@ import { canReadAllVisits } from '../../shared/auth/visit-scope';
 import { ZodValidationPipe } from '../../shared/common/pipes/zod-validation.pipe';
 import { InboxService } from './inbox.service';
 
+/** Requests & alerts feed; callers without visit:read only see their own visits. */
 @Controller('inbox')
 export class InboxController {
   constructor(private readonly inbox: InboxService) {}
@@ -34,7 +35,6 @@ export class InboxController {
     );
   }
 
-  /** Mark all items read for the current user (called when the page is opened). */
   @Post('seen')
   @HttpCode(200)
   markSeen(@CurrentUser() principal: AuthUser) {

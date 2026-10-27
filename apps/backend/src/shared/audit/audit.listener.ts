@@ -13,11 +13,7 @@ function isDomainEvent(value: unknown): value is DomainEvent {
   );
 }
 
-/**
- * Writes an append-only audit row for EVERY domain event relayed onto the bus.
- * Single source of truth for the audit trail — business code never calls the
- * audit log directly.
- */
+/** Business code never writes the audit log directly; it flows from domain events. */
 @Injectable()
 export class AuditListener {
   private readonly logger = new Logger(AuditListener.name);
@@ -51,7 +47,6 @@ export class AuditListener {
       // PostgreSQL is the source of truth: if the row failed, don't mirror to Seq.
       return;
     }
-    // Mirror to Seq for searchable trails (best-effort, never throws).
     this.seq.emit({
       action: event.type,
       entityType: event.aggregateType,

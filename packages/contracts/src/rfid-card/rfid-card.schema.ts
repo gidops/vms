@@ -2,13 +2,7 @@ import { z } from "zod";
 import { PaginationQuery } from "../common/pagination.js";
 import { VisitStatus } from "../common/enums.js";
 
-/**
- * Personalised RFID access cards (Operations → Access cards). Another
- * department configures the card's doors and floors; the System Admin team
- * logs it here, prints the visitor's photo and validity on it, and assigns it.
- * Not to be confused with the visitor-pass badge pool (`AccessCard`) that
- * reception assigns at check-in.
- */
+/** Personalised RFID cards; distinct from the check-in badge pool (`AccessCard`). */
 export const RfidCardStatus = z.enum([
   "AVAILABLE",
   "ASSIGNED",
@@ -20,7 +14,6 @@ export type RfidCardStatus = z.infer<typeof RfidCardStatus>;
 export const RfidAssignmentStatus = z.enum(["ACTIVE", "RETURNED", "LOST"]);
 export type RfidAssignmentStatus = z.infer<typeof RfidAssignmentStatus>;
 
-/** The number printed on / encoded in the card (trimmed, upper-cased). */
 export const RfidCardNumber = z
   .string()
   .trim()
@@ -53,14 +46,12 @@ export type UpdateRfidAssignmentInput = z.infer<
   typeof UpdateRfidAssignmentInput
 >;
 
-/** Close an active assignment: the card came back, or it is lost. */
 export const CloseRfidAssignmentInput = z.object({
   outcome: z.enum(["RETURNED", "LOST"]),
   note: z.string().trim().max(1000).optional(),
 });
 export type CloseRfidAssignmentInput = z.infer<typeof CloseRfidAssignmentInput>;
 
-/** Mark a lost card found again (AVAILABLE) or take a card out of use. */
 export const SetRfidCardStatusInput = z.object({
   status: z.enum(["AVAILABLE", "RETIRED"]),
   note: z.string().trim().max(1000).optional(),
@@ -74,7 +65,6 @@ export const RfidCardListQuery = PaginationQuery.extend({
 export type RfidCardListQuery = z.infer<typeof RfidCardListQuery>;
 
 export const RfidAssignmentListQuery = PaginationQuery.extend({
-  /** `active` (default) = cards out now; `history` = returned / lost. */
   view: z.enum(["active", "history"]).default("active"),
   cardId: z.string().uuid().optional(),
   search: z.string().trim().min(1).optional(),
@@ -96,7 +86,6 @@ export const RfidAssignmentItem = z.object({
   visitId: z.string().uuid().nullable(),
   validFrom: z.coerce.date(),
   validUntil: z.coerce.date(),
-  /** Still out after `validUntil`: reception should retrieve it. */
   overdue: z.boolean(),
   hasPhoto: z.boolean(),
   issuedAt: z.coerce.date(),
@@ -111,7 +100,7 @@ export const RfidAssignmentItem = z.object({
 export type RfidAssignmentItem = z.infer<typeof RfidAssignmentItem>;
 
 export const RfidAssignmentDetail = RfidAssignmentItem.extend({
-  /** Short-lived signed URL for the visitor photo (photos are personal data). */
+  /** Short-lived signed URL: photos are personal data. */
   photoUrl: z.string().url().nullable(),
   photoKey: z.string().nullable(),
   visit: z
@@ -131,7 +120,6 @@ export const RfidCardItem = z.object({
   status: RfidCardStatus,
   notes: z.string().nullable(),
   timesIssued: z.number().int(),
-  /** The open assignment while the card is out. */
   current: z
     .object({
       assignmentId: z.string().uuid(),

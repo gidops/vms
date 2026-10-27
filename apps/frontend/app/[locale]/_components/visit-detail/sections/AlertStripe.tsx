@@ -2,11 +2,6 @@ import { TriangleAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { VisitAlert } from "@/data/visits/visits.api";
 
-/**
- * The red banner at the top of the sheet when a security alert is open:
- * "Security Review Required" (flag / restricted match) or "Additional
- * Information Required" (more-info request).
- */
 export function AlertStripe({ alert }: { alert: VisitAlert }) {
   const t = useTranslations("requests");
   const label =

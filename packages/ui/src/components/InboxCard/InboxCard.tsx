@@ -3,24 +3,16 @@ import * as React from "react";
 import { cn } from "../../foundations/cn";
 import { Badge } from "../../primitives/Badge/index";
 
-/** Card category: a live request, a Security Manager feedback update, or a security alert. */
 export type InboxCardType = "request" | "feedback" | "alert";
 
 export interface InboxCardProps {
-  /**
-   * "request" tints the type pill teal (people icon); "feedback" amber (Security Manager
-   * update); "alert" red (flag).
-   */
   type: InboxCardType;
-  /** Localised label for the type pill ("Visit Request" / "SM Feedback" / "Security Alerts"). */
   typeLabel: string;
   title: React.ReactNode;
   description: React.ReactNode;
-  /** Relative timestamp, e.g. "2 min ago". */
   timeAgo: React.ReactNode;
-  /** Footer meta row (created-by, status pill, notes count). */
   meta?: React.ReactNode;
-  /** Unread items get a highlighted background that fades once read. */
+  /** Unread items get a highlight that fades once read. */
   unread?: boolean;
   onClick?: () => void;
   className?: string;
@@ -35,11 +27,6 @@ const TYPE_META: Record<
   alert: { intent: "danger", icon: Flag },
 };
 
-/**
- * Inbox list card for the Requests & Alerts feed. Clickable surface that opens
- * the detail drawer; reuses `Badge` for the type pill and exposes a `meta` slot
- * for the footer (created-by / status / notes).
- */
 export function InboxCard({
   type,
   typeLabel,

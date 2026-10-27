@@ -12,14 +12,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { adminConsoleRole } from "@/shared/auth/adminConsoleRole";
 
-/**
- * The brand-green quick-actions content of the overview band (VMC
- * `QuickActions` / staff `BookPanel`): two buttons picked for the console.
- * Security Manager: Review Requests + Visit History (Insights → History).
- * System Admin: Add Visitor + Review Requests. Each is permission-gated; a
- * role with neither gets a single "View Activity" into the Requests tab, so
- * the panel is never empty.
- */
+/** Two permission-gated actions per console, falling back to "View Activity" so the panel is never empty. */
 export function AdminActionPanel({
   onAddVisitor,
 }: {
@@ -35,8 +28,7 @@ export function AdminActionPanel({
   const canApprove = hasPermission(PERMISSIONS.VISIT_APPROVE);
   const canHistory = hasPermission(PERMISSIONS.HISTORY_READ);
   const sm = adminConsoleRole(hasPermission) === "securityManager";
-  // Review Requests opens the approval queue for every approver (the System
-  // Admin approves too, just not as a primary duty).
+  // The System Admin approves too, just not as a primary duty.
   const review = () => router.push("/admin/v2/approvals");
 
   const actions: { key: string; label: string; onClick: () => void }[] = (
@@ -93,7 +85,6 @@ export function AdminActionPanel({
             {t("activityCta")}
           </Button>
         ) : (
-          // First action primary, second accent (VMC Quick actions pair).
           actions.map((a, i) => (
             <Button
               key={a.key}

@@ -62,11 +62,7 @@ function Waiting({ row, now }: { row: VisitListItem; now: Date }) {
   );
 }
 
-/**
- * The dashboard's single row action. Every option opens the visit sheet, so
- * one honest label: Review where a decision waits (pending, flagged, groups),
- * View while the request is back with the host for more info.
- */
+/** Every option opens the visit sheet: Review where a decision waits, View while it's back with the host. */
 function ReviewButton({
   row,
   onOpen,
@@ -90,11 +86,7 @@ function ReviewButton({
   );
 }
 
-/**
- * Approve / Deny for a request an approver can decide now; a group opens its
- * group review, and everything else (more info asked, flagged, read-only
- * roles) keeps the single Review / Update button.
- */
+/** Approve / Deny when decidable now; groups and everything else fall back to Review. */
 function RowActions({
   row,
   canApprove,
@@ -171,16 +163,7 @@ function RowActions({
   );
 }
 
-/**
- * Approval queue in the staff "My Visits" layout (header strip with status
- * pills, record table with an action column) — the alternative to the VMC
- * Requests & Alerts card grid. Replaces the admin `PendingRequests` list.
- *
- * From the /admin approvals card: oldest first with how long each request has
- * waited (red past {@link OVERDUE_MINUTES}; "More info asked" while it is back
- * with the host), and Approve / Deny straight from the row for approvers —
- * both open the visit's side tray, Deny with its reason form expanded.
- */
+/** Approval queue, oldest first; Deny opens the visit sheet with its reason form expanded. */
 export function PendingApprovalsTable({
   query,
   onOpen,
@@ -191,16 +174,8 @@ export function PendingApprovalsTable({
   query: Pick<AdminVisitsParams, "search" | "type" | "purpose">;
   onOpen: (row: VisitListItem) => void;
   onDeny?: (row: VisitListItem) => void;
-  /**
-   * `page` — the Pending Approvals tab: page title strip with the status pills.
-   * `vmc` — the dashboard: the VMC records table (h2 + pills in the toolbar).
-   */
   variant?: "page" | "vmc";
-  /**
-   * `review` — one Review / View button per row (every action opens the
-   * sheet anyway). `decide` — Approve / Deny. Defaults: review on the
-   * dashboard, decide on the page.
-   */
+  /** Defaults to `review` for `vmc` and `decide` for `page`. */
   actions?: "review" | "decide";
 }) {
   const t = useTranslations("adminV2.approvals");
@@ -228,8 +203,6 @@ export function PendingApprovalsTable({
   const rows = visits.data?.items ?? [];
   const totalPages = visits.data?.totalPages ?? 1;
 
-  // The dashboard (vmc) is compact: no Waiting column, a bare guest count
-  // and one Review button per row. The Requests tab keeps all three.
   const compact = variant === "vmc";
   const showWaiting = !compact;
   const nf = new Intl.NumberFormat(locale);
@@ -298,7 +271,6 @@ export function PendingApprovalsTable({
               </TableCell>
               <TableCell className="text-fg-muted">{row.purpose}</TableCell>
               <TableCell className="text-fg-muted">
-                {/* Dashboard: the bare number, to save width. */}
                 {showWaiting ? (
                   <span className="flex items-center gap-1.5">
                     <CircleUser className="size-4" aria-hidden="true" />
@@ -343,7 +315,6 @@ export function PendingApprovalsTable({
   );
 
   if (variant === "vmc") {
-    // The VMC dashboard's records table: title and pills in the toolbar.
     return (
       <RecordTable
         frameless

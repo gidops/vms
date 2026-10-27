@@ -2,14 +2,11 @@ import { Badge } from "@vms/ui";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 import type { NotificationContext } from "../types";
 
-/**
- * Coloured banner shown when the sheet is opened from an activity-feed item,
- * describing the update (category, relative time, title, body).
- */
+/** Shown when the sheet is opened from an activity-feed item. */
 export function NotificationBanner({ ctx }: { ctx: NotificationContext }) {
   const tCat = useTranslations("staff.updates");
   const format = useFormatter();
-  // Reference "now" for relative times; ticks each minute so they stay fresh.
+  // Ticks each minute so relative times stay fresh.
   const now = useNow({ updateInterval: 60_000 });
   return (
     <div className="flex flex-col gap-1 rounded-lg bg-emphasis p-4 text-emphasis-fg">

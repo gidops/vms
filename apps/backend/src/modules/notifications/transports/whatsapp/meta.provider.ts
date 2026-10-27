@@ -5,7 +5,6 @@ import type { RenderedMessage } from '../../notification.types';
 import { normalizeE164 } from '../phone';
 import type { WhatsappProvider } from './whatsapp-provider.interface';
 
-/** Meta wants a bare E.164 number — drop any `whatsapp:` prefix, then normalize. */
 function toE164(value: string): string {
   const bare = value.startsWith('whatsapp:')
     ? value.slice('whatsapp:'.length)
@@ -13,12 +12,7 @@ function toE164(value: string): string {
   return normalizeE164(bare);
 }
 
-/**
- * WhatsApp via the Meta WhatsApp Cloud API (direct Graph API, no BSP). Posts to
- * `/{phone-number-id}/messages` with a permanent system-user token. Sends an
- * approved template when the message carries one, otherwise free-form text.
- * Throws on a non-2xx response so the dispatcher retries.
- */
+/** Meta WhatsApp Cloud API (no BSP); throws on non-2xx so the dispatcher retries. */
 @Injectable()
 export class MetaCloudWhatsappProvider implements WhatsappProvider {
   readonly name = 'meta';
@@ -59,7 +53,6 @@ export class MetaCloudWhatsappProvider implements WhatsappProvider {
     this.logger.debug(`Sent WhatsApp to ${message.to} via Meta Cloud API`);
   }
 
-  /** Build the Graph API message body (template or free text). */
   private payload(message: RenderedMessage): Record<string, unknown> {
     const to = toE164(message.to ?? '');
     if (message.template) {

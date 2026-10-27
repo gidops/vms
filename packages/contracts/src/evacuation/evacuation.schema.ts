@@ -1,10 +1,6 @@
 import { z } from "zod";
 import { EvacuationAssistType } from "../visit/visit.schema.js";
 
-/**
- * One row of the live Evacuation Roll: a CHECKED_IN visitor who answered "Yes"
- * to needing evacuation assistance at intake.
- */
 export const EvacuationRollRow = z.object({
   visitId: z.string().uuid(),
   fullName: z.string(),
@@ -12,7 +8,7 @@ export const EvacuationRollRow = z.object({
   phone: z.string().nullable(),
   floor: z.string().nullable(),
   hostName: z.string().nullable(),
-  /** The help this visitor asked for at intake (empty on legacy visits). */
+  /** Empty on legacy visits. */
   assistTypes: z.array(EvacuationAssistType),
   assistOther: z.string().nullable(),
   checkInAt: z.coerce.date().nullable(),
@@ -25,9 +21,7 @@ export type EvacuationRollRow = z.infer<typeof EvacuationRollRow>;
 /** Rows are ordered by floor, top floor first (unknown floors last). */
 export const EvacuationRoll = z.object({
   generatedAt: z.coerce.date(),
-  /** Visitors on the roll (CHECKED_IN and needing assistance). */
   count: z.number().int().min(0),
-  /** All visitors currently checked in (for the empty-state line). */
   checkedInTotal: z.number().int().min(0),
   rows: z.array(EvacuationRollRow),
 });

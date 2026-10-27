@@ -49,8 +49,6 @@ export class NotificationRepository {
     });
   }
 
-  // ── In-app (dashboard) queries ─────────────────────────────────────────────
-
   listForUser(
     userId: string,
     opts: { page: number; pageSize: number; unreadOnly: boolean },

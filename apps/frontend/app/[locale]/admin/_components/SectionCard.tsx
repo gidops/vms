@@ -1,10 +1,6 @@
 import { Card, cn } from "@vms/ui";
 import * as React from "react";
 
-/**
- * Overview panel: a card with a heading row (title, optional count/actions) and
- * a body. Keeps the admin overview's cards on one spacing rhythm.
- */
 export function SectionCard({
   title,
   titleId,
@@ -14,7 +10,6 @@ export function SectionCard({
   bodyClassName,
 }: {
   title: React.ReactNode;
-  /** Id for the heading so the region can be labelled by it. */
   titleId: string;
   actions?: React.ReactNode;
   children: React.ReactNode;

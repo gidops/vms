@@ -32,7 +32,6 @@ import { TokenService } from './token.service';
     RefreshTokenService,
     JwtStrategy,
     SeederService,
-    // Global auth (with @Public opt-out) then global permission enforcement.
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: PermissionsGuard },
   ],

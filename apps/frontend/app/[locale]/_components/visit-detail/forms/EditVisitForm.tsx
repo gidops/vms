@@ -14,7 +14,6 @@ import { useHosts } from "@/data/hosts/queries";
 import { useUpdateVisit } from "@/data/requests/queries";
 import type { VisitRequestDetail } from "@/data/visits/visits.api";
 
-/** Map a visit detail onto the invite form's guest shape for pre-filled editing. */
 function guestFromDetail(d: VisitRequestDetail): GuestEntry {
   const { code: phoneCode, number: phoneNumber } = parsePhone(
     d.visitor.phone ?? "",
@@ -47,12 +46,7 @@ function guestFromDetail(d: VisitRequestDetail): GuestEntry {
   };
 }
 
-/**
- * The evacuation fields to send: only when the answer changed, so editing a
- * visit's other details never re-validates an older answer (e.g. a "Yes" saved
- * before assistance types existed). A "Yes" carries its types; "No" clears them
- * server-side.
- */
+/** Send evacuation fields only when the answer changed, so other edits never re-validate an older answer. */
 function evacuationPatch(guest: GuestEntry, detail: VisitRequestDetail) {
   const answer = guest.needsEvacuationAssist;
   const types = guest.evacuationAssistTypes;
@@ -74,7 +68,6 @@ function evacuationPatch(guest: GuestEntry, detail: VisitRequestDetail) {
   };
 }
 
-/** Reception edit of a not-yet-approved request via the pre-filled invite form. */
 export function EditVisitForm({
   detail,
   onDone,

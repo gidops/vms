@@ -2,26 +2,16 @@ import * as React from "react";
 import { cn } from "../../foundations/cn";
 
 export interface RecordTableProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** Filter/search row above the table. */
   toolbar?: React.ReactNode;
-  /** Pagination row below the table. */
   pagination?: React.ReactNode;
-  /** Shown in place of the table body area when there are no records. */
   isEmpty?: boolean;
   emptyState?: React.ReactNode;
-  /**
-   * Drop the surrounding card (border/radius/background) so the table sits flush
-   * on the page. The `Table` primitive keeps its own horizontal scroll.
-   */
+  /** Drop the surrounding card so the table sits flush on the page. */
   frameless?: boolean;
-  /** The <Table> (or a loading skeleton). */
   children: React.ReactNode;
 }
 
-/**
- * Composes FilterBar + Table + Pagination + EmptyState into the standard
- * records surface (Dashboard "Visitor Records", inbox lists, etc.).
- */
+/** FilterBar + Table + Pagination + EmptyState as the standard records surface. */
 export function RecordTable({
   toolbar,
   pagination,

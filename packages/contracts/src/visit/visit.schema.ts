@@ -12,11 +12,7 @@ import { HostWithUser } from "../host/host.schema.js";
 import { Note } from "../note/note.schema.js";
 import { Alert } from "../alert/alert.schema.js";
 
-/**
- * Selectable visit-purpose categories and building floors/departments. Kept as
- * shared constants so the form dropdowns (frontend) and any validation stay in
- * sync; the chosen value is stored as a plain string on the visit.
- */
+/** Stored on the visit as plain strings, not enums. */
 export const VISIT_PURPOSES = [
   "Official",
   "Personal",
@@ -39,10 +35,6 @@ export const FLOORS = [
   "Rooftop",
 ] as const;
 
-/**
- * Kinds of help a visitor can ask for when they answer "Yes" to the evacuation
- * question (V1 parity). OTHER needs a short description.
- */
 export const EVACUATION_ASSIST_TYPES = [
   "MOBILITY",
   "VISUAL",
@@ -53,14 +45,9 @@ export const EVACUATION_ASSIST_TYPES = [
 export const EvacuationAssistType = z.enum(EVACUATION_ASSIST_TYPES);
 export type EvacuationAssistType = z.infer<typeof EvacuationAssistType>;
 
-/** Longest "Other (please specify)" answer we store. */
 export const EVACUATION_ASSIST_OTHER_MAX = 200;
 
-/**
- * Field-level problems with an evacuation answer, as [path, message] pairs:
- * "Yes" needs at least one assistance type, OTHER needs a description, and "No"
- * carries no types. Shared by every intake path (reception and self-registration).
- */
+/** Shared by every intake path; returns [path, message] pairs. */
 export function evacuationAssistIssues(answer: {
   needsEvacuationAssist: boolean;
   evacuationAssistTypes?: readonly EvacuationAssistType[];
@@ -83,10 +70,6 @@ export function evacuationAssistIssues(answer: {
   return issues;
 }
 
-/**
- * The ordered lifecycle a visit moves through. The UI Timeline/stepper and the
- * backend state machine both derive their steps from this single list.
- */
 export const VISIT_LIFECYCLE = [
   "INVITE_CREATED",
   "AWAITING_APPROVAL",
@@ -101,66 +84,36 @@ export type VisitLifecycleStep = z.infer<typeof VisitLifecycleStep>;
 export const Visit = z.object({
   id: z.string().uuid(),
   visitorId: z.string().uuid(),
-  /** Host is optional for walk-ins (the guest may not be visiting a named staff). */
   hostId: z.string().uuid().nullable().optional(),
   invitationId: z.string().uuid().nullable().optional(),
-  /**
-   * Set ONLY for a true "group visit" — all guests of that group share one
-   * groupId. Bulk invites / walk-ins and lone guests are independent visits with
-   * `groupId = null`. Presence of a groupId (with `isGroupVisit`) is what makes a
-   * row a group.
-   */
+  /** Set only for a true group visit; bulk submissions are independent visits. */
   groupId: z.string().uuid().nullable().optional(),
-  /** True when this visit belongs to a group visit (vs. a bulk/single visit). */
   isGroupVisit: z.boolean().default(false),
-  /** Group display name (e.g. "Pentagon"), shared by every guest of the group. */
   groupName: z.string().nullable().optional(),
-  /**
-   * Optional group contact — a free-text email OR phone number for the group,
-   * shared by every guest of the group.
-   */
+  /** Free-text email or phone number. */
   groupContact: z.string().nullable().optional(),
-  /**
-   * Human-friendly visit reference (e.g. "5A19-795") generated for every visit
-   * at creation. For invites it is also the code in the QR the guest presents;
-   * walk-ins get no QR. Null only on visits created before walk-ins had one.
-   */
+  /** Also the QR payload for invites; null only on legacy walk-ins. */
   referenceCode: z.string().nullable().optional(),
   type: VisitType,
   status: VisitStatus,
   purpose: z.string().min(1),
-  /** Per-visit floor/department (distinct from the host's home office). */
   floor: z.string().nullable().optional(),
   riskLevel: RiskLevel.nullable().optional(),
   scheduledAt: z.coerce.date().nullable().optional(),
-  /** Set when the gate validates the QR (or auto-set at VMC check-in for now). */
   gateValidatedAt: z.coerce.date().nullable().optional(),
   checkInAt: z.coerce.date().nullable().optional(),
   checkOutAt: z.coerce.date().nullable().optional(),
-  /**
-   * Intake answer: would the visitor need help evacuating in an emergency?
-   * `null` = legacy visit, never asked.
-   */
+  /** `null` = legacy visit, never asked. */
   needsEvacuationAssist: z.boolean().nullable().optional(),
-  /** The help asked for when `needsEvacuationAssist` is true (empty otherwise). */
   evacuationAssistTypes: z.array(EvacuationAssistType).default([]),
-  /** Free-text detail when OTHER is among the types. */
   evacuationAssistOther: z.string().nullable().optional(),
-  /**
-   * Intake answer: does the visitor want updates on Afreximbank events? The
-   * answer given at THIS visit (`null` = legacy). The current opt-in status is
-   * the latest consent event for the email, not this field.
-   */
+  /** Answer at this visit only; current opt-in status is the latest consent event. */
   commsConsent: z.boolean().nullable().optional(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
 export type Visit = z.infer<typeof Visit>;
 
-/**
- * The physical access badge assigned to a visit at check-in and released at
- * check-out. `cardNumber` is the number shown on the pass (e.g. "0019").
- */
 export const VisitPass = z.object({
   cardNumber: z.string(),
   zone: z.string().nullable().optional(),
@@ -169,74 +122,35 @@ export const VisitPass = z.object({
 });
 export type VisitPass = z.infer<typeof VisitPass>;
 
-/** A visit joined with its visitor — the common read model for list/detail views. */
-export const VisitWithVisitor = Visit.extend({ visitor: Visitor });
-export type VisitWithVisitor = z.infer<typeof VisitWithVisitor>;
-
-/** A row in the admin approval queue — visit + visitor + host + origin. */
 export const VisitListItem = Visit.extend({
   visitor: Visitor,
   host: HostWithUser.nullable(),
   createdByName: z.string().nullable().optional(),
-  /** Where the visit came from (e.g. VMC_STATION, QR_SELF_REGISTER). */
   source: z.string().nullable().optional(),
-  /**
-   * For a group visit's representative row, the number of guests in the group.
-   * A row is a group when `isGroupVisit === true` (not `groupSize > 1`); bulk and
-   * single visits are `isGroupVisit: false` with `groupSize: 1`.
-   */
+  /** Use `isGroupVisit`, not `groupSize > 1`, to detect a group row. */
   groupSize: z.number().int().min(1).default(1),
 });
 export type VisitListItem = z.infer<typeof VisitListItem>;
 
-export const CreateVisitRequestInput = z.object({
-  visitorId: z.string().uuid(),
-  hostId: z.string().uuid(),
-  type: VisitType,
-  purpose: z.string().min(1),
-  scheduledAt: z.coerce.date().optional(),
-});
-export type CreateVisitRequestInput = z.infer<typeof CreateVisitRequestInput>;
-
-/**
- * One guest in a "New Invite Request" / "Register Walk-In" submission: the
- * visitor's details plus that guest's own visit details. The form's "Use same
- * visit details" toggle simply copies the first guest's visit details into the
- * others before submit — the wire format always carries details per guest so
- * guests can differ. `hostUserId` and `scheduledAt` are optional here and
- * enforced per visit type by CreateVisitsInput's refinement below.
- */
+/** `hostUserId`/`scheduledAt` are enforced per visit type by CreateVisitsInput. */
 export const CreateVisitGuest = RegisterVisitorInput.extend({
   hostUserId: z.string().uuid().optional(),
   floor: z.string().min(1).optional(),
   purpose: z.string().min(1),
   scheduledAt: z.coerce.date().optional(),
   notes: z.string().max(2000).optional(),
-  /** Required Yes/No, no default: needs help evacuating in an emergency. */
   needsEvacuationAssist: z.boolean(),
-  /** Required (one or more) when the answer above is Yes. */
   evacuationAssistTypes: z.array(EvacuationAssistType).max(5).optional(),
   evacuationAssistOther: z
     .string()
     .trim()
     .max(EVACUATION_ASSIST_OTHER_MAX)
     .optional(),
-  /** Required Yes/No, no default: wants updates on Afreximbank events. */
   commsConsent: z.boolean(),
 });
 export type CreateVisitGuest = z.infer<typeof CreateVisitGuest>;
 
-/**
- * VMC creates one or more visits — the "New Invite Request" and "Register Walk-In"
- * forms. One visit is created per guest (each independently approvable). Walk-ins
- * (type WALK_IN) are auto-approved server-side; invites start PENDING and get a
- * referenceCode/QR. Invites require a host and a schedule on every guest; walk-ins
- * need neither.
- *
- * `isGroupVisit` distinguishes a true group (all guests share one groupId and a
- * `groupName`, collapse to one VMC row, check in together) from a bulk submission
- * (independent visits, one row each). A group requires a `groupName`.
- */
+/** One visit per guest; invites need a host and schedule per guest, walk-ins neither. */
 export const CreateVisitsInput = z
   .object({
     type: VisitType,
@@ -278,29 +192,23 @@ export const CreateVisitsInput = z
   });
 export type CreateVisitsInput = z.infer<typeof CreateVisitsInput>;
 
-/** Bulk-approve several visits at once (the group approval sheet's Approve All / Selected). */
 export const BulkApproveVisitsInput = z.object({
   visitIds: z.array(z.string().uuid()).min(1),
 });
 export type BulkApproveVisitsInput = z.infer<typeof BulkApproveVisitsInput>;
 
-/** Bulk-deny several visits at once with a shared reason. */
 export const BulkDenyVisitsInput = z.object({
   visitIds: z.array(z.string().uuid()).min(1),
   reason: z.string().min(1),
 });
 export type BulkDenyVisitsInput = z.infer<typeof BulkDenyVisitsInput>;
 
-/** Assign a physical access badge to a visit at check-in (VMC). */
 export const CheckInVisitInput = z.object({
   accessCardId: z.string().uuid(),
 });
 export type CheckInVisitInput = z.infer<typeof CheckInVisitInput>;
 
-/**
- * Check a visit out. `accessCardId` lets the operator correct ("Change Pass ID")
- * the assigned badge before completing; omitted = release the current badge.
- */
+/** `accessCardId` corrects the assigned badge; omitted releases the current one. */
 export const CheckOutVisitInput = z
   .object({
     accessCardId: z.string().uuid().optional(),
@@ -308,19 +216,10 @@ export const CheckOutVisitInput = z
   .default({});
 export type CheckOutVisitInput = z.infer<typeof CheckOutVisitInput>;
 
-/**
- * List visits for the admin approval queue (paginated). With `scope: "mine"` the
- * result is restricted server-side to visits the requesting user hosts — this
- * powers the staff "My Visits" / "Recent Visitors" screens. `type`, `purpose`
- * and the `dateFrom`/`dateTo` window are the staff filter-bar facets.
- */
+/** `scope: "mine"` restricts server-side to visits the requester hosts. */
 export const VisitListQuery = PaginationQuery.extend({
   status: VisitStatus.optional(),
-  /**
-   * Restrict to several statuses at once (the VMC "Today's Schedule" board shows
-   * only APPROVED/CHECKED_IN/CHECKED_OUT). Accepts a comma-separated string on the
-   * wire (`?statuses=APPROVED,CHECKED_IN`) and parses to a VisitStatus[].
-   */
+  /** Comma-separated on the wire (`?statuses=APPROVED,CHECKED_IN`). */
   statuses: z
     .preprocess(
       (v) =>
@@ -336,25 +235,17 @@ export const VisitListQuery = PaginationQuery.extend({
   scope: z.enum(["all", "mine"]).default("all"),
   type: VisitType.optional(),
   purpose: z.string().min(1).optional(),
-  /** Restrict to the guests of one invite/walk-in submission (group check-in). */
   groupId: z.string().uuid().optional(),
   dateFrom: z.coerce.date().optional(),
   dateTo: z.coerce.date().optional(),
-  /**
-   * Which date column the `dateFrom`/`dateTo` window filters on. Defaults to the
-   * scheduled date (the VMC/admin boards want "who's expected when"); the staff
-   * dashboard passes `createdAt` so its window tracks recently-submitted requests.
-   */
+  /** Column the `dateFrom`/`dateTo` window applies to. */
   dateField: z.enum(["scheduledAt", "createdAt"]).default("scheduledAt"),
-  /**
-   * Free-text search across the visitor (name/email/organization), host name,
-   * floor, and reference/pass code. Opt-in — only the staff dashboard sends it.
-   */
+  /** Matches visitor name/email/organization, host name, floor and reference/pass code. */
   search: z.string().trim().min(1).optional(),
 });
 export type VisitListQuery = z.infer<typeof VisitListQuery>;
 
-/** Host resubmits a REVIEW_REQUESTED visit after editing — transitions back to PENDING. */
+/** Moves a REVIEW_REQUESTED visit back to PENDING. */
 export const ResubmitVisitInput = z
   .object({
     purpose: z.string().min(1).optional(),
@@ -368,11 +259,7 @@ export const DenyVisitInput = z.object({
 });
 export type DenyVisitInput = z.infer<typeof DenyVisitInput>;
 
-/**
- * Security Manager/admin flags a visit as a security concern → status FLAGGED + a SECURITY_REVIEW
- * alert; check-in is blocked until the alert is resolved. The admin picks the risk
- * level (defaults applied server-side when omitted).
- */
+/** Check-in stays blocked until the resulting SECURITY_REVIEW alert is resolved. */
 export const FlagVisitInput = z.object({
   level: RiskLevel.default("HIGH"),
   reason: z.string().min(1),
@@ -380,55 +267,35 @@ export const FlagVisitInput = z.object({
 });
 export type FlagVisitInput = z.infer<typeof FlagVisitInput>;
 
-/**
- * Security Manager/admin requests more information on a suspicious visit → status REVIEW_REQUESTED
- * + an ADDITIONAL_INFO alert. The host/creator responds via notes and resubmits.
- */
 export const RequestInfoInput = z.object({
   reason: z.string().min(1),
 });
 export type RequestInfoInput = z.infer<typeof RequestInfoInput>;
 
-/**
- * Full visit-request detail powering the "Visit Request Details" drawer —
- * visit + visitor + host(+user) + notes, plus origin (who created it, source).
- */
 export const VisitRequestDetail = Visit.extend({
   visitor: Visitor,
   host: HostWithUser.nullable(),
   notes: z.array(Note).default([]),
-  /**
-   * Security alerts raised against this visit (flag / more-info / restricted match).
-   * The detail sheet renders the alert stripe + Alert Summary from the open one(s);
-   * an open security alert blocks check-in. Empty for a normal visit.
-   */
+  /** An open security alert blocks check-in. */
   alerts: z.array(Alert).default([]),
   source: z.string().nullable().optional(),
   createdById: z.string().uuid().nullable().optional(),
   createdByName: z.string().nullable().optional(),
-  /** Data-URL QR encoding the referenceCode (invites only); null for walk-ins. */
+  /** Data-URL QR of the referenceCode; null for walk-ins. */
   qrCode: z.string().nullable().optional(),
-  /** The access badge currently assigned (set at check-in, released at check-out). */
   pass: VisitPass.nullable().optional(),
-  /** Name of the operative who checked the visitor in / out (from the gate log). */
   checkedInByName: z.string().nullable().optional(),
   checkedOutByName: z.string().nullable().optional(),
 });
 export type VisitRequestDetail = z.infer<typeof VisitRequestDetail>;
 
-/** Host rates a completed (checked-out) visit — 1-5 stars + an optional note. */
 export const RateVisitInput = z.object({
   score: z.number().int().min(1).max(5),
   comment: z.string().max(2000).optional(),
 });
 export type RateVisitInput = z.infer<typeof RateVisitInput>;
 
-/**
- * Reception edit of a not-yet-approved request via the pre-filled invite form.
- * Covers both the visitor's details and that visit's details; every field is
- * optional but at least one must be present. The service authorizes the edit
- * (creator-only, pre-approval) and applies the visitor vs visit changes.
- */
+/** Authorization (creator-only, pre-approval) is enforced by the service. */
 export const UpdateVisitRequestInput = z
   .object({
     fullName: z.string().min(1).optional(),

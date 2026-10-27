@@ -4,32 +4,21 @@ import { cn } from "../../foundations/cn";
 export interface SegmentedOption {
   value: string;
   label: React.ReactNode;
-  /** Optional trailing count pill (e.g. "Requests & Alerts" → 8). */
   count?: number;
 }
 
 export interface SegmentedControlProps {
   options: SegmentedOption[];
-  /** Controlled selected value. */
   value?: string;
-  /** Uncontrolled initial value (defaults to the first option). */
   defaultValue?: string;
   onValueChange?: (value: string) => void;
-  /**
-   * `default` — light surface (e.g. the Today / Last 7 days toggle).
-   * `onEmphasis` — sits on a deep brand-green surface (the top nav), active
-   * option gets a gold outline.
-   */
+  /** `onEmphasis` sits on the brand-green top nav; its active option gets a gold outline. */
   variant?: "default" | "onEmphasis";
   "aria-label"?: string;
   className?: string;
 }
 
-/**
- * Pill-group toggle used in the top nav ("Today's Schedule" / "Requests &
- * Alerts") and above the records table ("Today" / "Last 7 days" / "Custom").
- * Works controlled or uncontrolled. Rendered as a radiogroup for a11y.
- */
+/** Pill-group toggle, rendered as a radiogroup; controlled or uncontrolled. */
 export function SegmentedControl({
   options,
   value,

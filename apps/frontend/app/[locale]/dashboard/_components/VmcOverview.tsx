@@ -12,19 +12,14 @@ import {
 export type { OverviewStat };
 
 export interface VmcOverviewProps {
-  /** Welcome heading, e.g. "Welcome Judith Francis". Rendered inside the bar. */
   welcome: string;
   stats: OverviewStat[];
   onRegisterWalkIn: () => void;
   onNewInvite: () => void;
-  /**
-   * Visitors on the live Evacuation Roll. Above zero, the quick-actions panel
-   * takes a muted red tint and links to the roll.
-   */
+  /** Above zero, the quick-actions panel turns red and links to the roll. */
   evacuationCount?: number;
 }
 
-/** "VMC HUB" eyebrow + welcome heading — the bar's white top row. */
 function WelcomeHeader({ welcome }: { welcome: string }) {
   const t = useTranslations("dashboard");
   return (
@@ -40,7 +35,6 @@ function WelcomeHeader({ welcome }: { welcome: string }) {
   );
 }
 
-/** The brand-green quick-actions content (logo, title, action buttons). */
 function QuickActions({
   onRegisterWalkIn,
   onNewInvite,
@@ -75,13 +69,6 @@ function QuickActions({
   );
 }
 
-/**
- * VMC dashboard overview on the shared {@link OverviewBar}:
- *   row 1 — "VMC HUB" eyebrow + welcome heading (full width, white)
- *   row 2 — three stat cells | brand-green quick-actions panel
- * Mobile: welcome heading, quick-actions panel, then the stats in a
- * collapsible "View your activity" section.
- */
 export function VmcOverview({
   welcome,
   stats,

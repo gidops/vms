@@ -1,9 +1,6 @@
 import { DetailSection, type DetailSectionProps, cn } from "@vms/ui";
 
-/**
- * A visit-detail sheet section: a collapsible, card-styled DetailSection. Every
- * section in the sheet uses this so they read as one consistent, foldable set.
- */
+/** Collapsible card section used by every part of the visit-detail sheet. */
 export function SheetSection({ className, ...props }: DetailSectionProps) {
   return (
     <DetailSection

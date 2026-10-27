@@ -20,11 +20,6 @@ import { useDeleteUser } from "@/data/users/queries";
 import type { UserListItem } from "@/data/users/users.api";
 import { roleLabel } from "@/shared/auth/roleLabels";
 
-/*
- * User-management dialogs and forms, shared by the original admin Users page
- * and the admin console v2 Users tab.
- */
-
 export function RoleChecklist({
   roles,
   selected,
@@ -76,7 +71,6 @@ export function RoleChecklist({
   );
 }
 
-/** Toggle helper shared by the create + edit forms. */
 export function useRoleSelection(initial: string[]) {
   const [selected, setSelected] = React.useState<Set<string>>(
     () => new Set(initial),

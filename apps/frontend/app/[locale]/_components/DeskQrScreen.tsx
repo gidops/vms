@@ -128,7 +128,6 @@ function CodeEmailDialog({
   );
 }
 
-/** New QR / Disable confirmation (the staff/VMC dialog: header, body, footer). */
 function ConfirmDialog({
   kind,
   pending,
@@ -187,10 +186,7 @@ function ConfirmDialog({
 
 const subscribeNoop = () => () => {};
 
-/**
- * The A4 poster, portalled to <body> so the print stylesheet can hide all app
- * chrome (same approach as the Evacuation Roll's warden print). V1 wording.
- */
+/** Portalled to <body> so the print stylesheet can hide all app chrome. */
 function PrintPoster({ qr, image }: { qr: DeskQrView; image: string }) {
   const t = useTranslations("deskQr.poster");
   const format = useFormatter();
@@ -232,12 +228,7 @@ function errorText(err: unknown, fallback: string): string {
   return err instanceof Error && err.message ? err.message : fallback;
 }
 
-/**
- * The VMC desk QR, managed by the System Admin from the admin console
- * (/admin/v2/desk-qr). One card: the QR and its link, scans today, where
- * verification codes are emailed, Print / Download, New QR and Disable/Enable.
- * Holders of issuer:read see it; only issuer:manage holders get the buttons.
- */
+/** Holders of issuer:read see the desk QR; only issuer:manage holders get the actions. */
 export function DeskQrScreen({
   headingLevel = 1,
   showHeading = true,
@@ -246,7 +237,7 @@ export function DeskQrScreen({
   /** Off where the host already names the screen (the Operations tab). */
   showHeading?: boolean;
 } = {}) {
-  // Under another page's h1 (another page) the title steps down a level.
+  // Under another page's h1 the title steps down a level.
   const Heading = headingLevel === 2 ? "h2" : "h1";
   const headingSize = headingLevel === 2 ? "text-2xl" : "text-3xl";
   const t = useTranslations("deskQr");
@@ -297,7 +288,6 @@ export function DeskQrScreen({
     }
   };
 
-  // Staff/VMC page header: title with the page's actions on the same row.
   // Without the title (Operations tab) the actions sit on the end side alone.
   const header = (actions?: React.ReactNode) =>
     showHeading || actions ? (

@@ -11,7 +11,6 @@ async function bootstrap() {
     bufferLogs: true,
   });
 
-  // Route Nest's logs through pino (structured + correlation ids).
   app.useLogger(app.get(Logger));
 
   app.use(helmet());
@@ -19,15 +18,12 @@ async function bootstrap() {
   app.enableCors({ exposedHeaders: ['Content-Disposition'] });
   app.enableShutdownHooks();
 
-  // AllExceptionsFilter is registered as a global APP_FILTER provider in
-  // AppModule so it can inject I18nService for localized error responses.
+  // AllExceptionsFilter is an APP_FILTER provider in AppModule so it can inject I18nService.
 
   const config = app.get<ConfigService<Env, true>>(ConfigService);
   const port = config.get('PORT', { infer: true });
 
-  // Take the client IP from X-Forwarded-For only for the configured number of
-  // proxy hops (see TRUST_PROXY_HOPS), so rate limits and audit IPs see the
-  // visitor, not the load balancer, and can't be spoofed.
+  // Trust only TRUST_PROXY_HOPS hops of X-Forwarded-For, so rate limits and audit IPs see the visitor and can't be spoofed.
   const proxyHops = config.get('TRUST_PROXY_HOPS', { infer: true });
   if (proxyHops > 0) app.set('trust proxy', proxyHops);
 

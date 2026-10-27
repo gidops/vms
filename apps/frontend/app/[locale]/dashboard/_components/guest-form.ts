@@ -8,40 +8,28 @@ import {
 
 export type VisitFormMode = "walkin" | "invite";
 
-/** One guest row in the invite/walk-in form: visitor details + that guest's visit details. */
 export interface GuestEntry {
   id: string;
-  // Guest details
   fullName: string;
   email: string;
   organization: string;
   phoneCode: string;
   phoneNumber: string;
-  // Visit details (per guest)
   hostUserId: string;
   floor: string;
   purpose: string;
   scheduledDate: string; // yyyy-mm-dd
   scheduledTime: string; // HH:mm
   notes: string;
-  /**
-   * Required intake answers with NO default (`null` = not answered yet). They
-   * belong to the person, so "Use same visit details" never copies them.
-   */
+  /** `null` = not answered yet; never copied by "Use same visit details". */
   needsEvacuationAssist: boolean | null;
-  /** When the answer is Yes: the help needed (at least one), and OTHER's text. */
   evacuationAssistTypes: EvacuationAssistType[];
   evacuationAssistOther: string;
   commsConsent: boolean | null;
-  /**
-   * "Use same visit details" — whether this guest's visit details were sourced
-   * from the previous guest. Only meaningful for guests after the first. Drives
-   * the copy-from-previous on check and the carry-forward on Add Guest.
-   */
+  /** Visit details were copied from the previous guest (guests after the first only). */
   useSame: boolean;
 }
 
-/** The visit-detail subset copied between guests by "Use same visit details". */
 export type VisitDetailFields = Pick<
   GuestEntry,
   | "hostUserId"
@@ -87,12 +75,11 @@ export function blankGuest(): GuestEntry {
   };
 }
 
-/** Assemble the guest's phone as clean E.164 (e.g. "+2348076480331"), or "". */
+/** Clean E.164 (e.g. "+2348076480331"), or "". */
 export function formatPhone(g: Pick<GuestEntry, "phoneCode" | "phoneNumber">) {
   return toE164(g.phoneCode, g.phoneNumber);
 }
 
-/** ISO datetime from the date + time pickers, or undefined if either is missing. */
 export function scheduledAtOf(g: GuestEntry): Date | undefined {
   if (!g.scheduledDate || !g.scheduledTime) return undefined;
   const d = new Date(`${g.scheduledDate}T${g.scheduledTime}`);
@@ -107,7 +94,6 @@ export function phoneValid(
   return e164 === "" || PHONE_E164_RE.test(e164);
 }
 
-/** Per-guest detail field validity (gates the form + drives inline errors). */
 export function guestDetailsValid(g: GuestEntry): boolean {
   return (
     g.fullName.trim().length > 0 &&
@@ -118,17 +104,13 @@ export function guestDetailsValid(g: GuestEntry): boolean {
 }
 
 export function visitDetailsValid(g: GuestEntry, mode: VisitFormMode): boolean {
-  // Notes are optional; floor + purpose are required for every visit type.
-  // The host is optional for walk-ins and required for invites.
+  // Floor + purpose are always required; the host only for invites.
   const base = Boolean(g.floor) && Boolean(g.purpose);
   if (mode === "walkin") return base;
   return base && Boolean(g.hostUserId) && Boolean(scheduledAtOf(g));
 }
 
-/**
- * Both "Safety & consent" questions answered (Yes or No — never defaulted), and
- * a Yes to evacuation help says what help is needed.
- */
+/** Both safety questions answered, and a Yes to evacuation help says what help is needed. */
 export function safetyConsentValid(
   g: Pick<
     GuestEntry,
@@ -150,22 +132,18 @@ export function safetyConsentValid(
   );
 }
 
-/** A guest is ready to submit: details, visit details and both answers. */
 export function guestComplete(g: GuestEntry, mode: VisitFormMode): boolean {
   return (
     guestDetailsValid(g) && visitDetailsValid(g, mode) && safetyConsentValid(g)
   );
 }
 
-/** Group-visit metadata collected once for the whole submission. */
 export interface GroupInfo {
   isGroupVisit: boolean;
   groupName: string;
-  /** Free-text group contact — email or phone. */
   groupContact: string;
 }
 
-/** A group visit requires a non-empty group name (gates the form). */
 export function groupNameValid(group: GroupInfo): boolean {
   return !group.isGroupVisit || group.groupName.trim().length > 0;
 }
@@ -176,13 +154,6 @@ function requireAnswer(v: boolean | null): boolean {
   return v;
 }
 
-/**
- * Build the create payload. Each guest carries its own visit details (the
- * "Use same visit details" copy-forward already materialized them per guest).
- * Walk-ins omit the schedule and send the host only when one was picked
- * (optional). A group visit adds the shared group name/email;
- * a bulk submission leaves those off so each visit stays independent.
- */
 export function buildCreateInput(
   guests: GuestEntry[],
   mode: VisitFormMode,

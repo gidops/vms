@@ -1,8 +1,4 @@
-/**
- * Minimal RFC 4180 CSV writer for exports that open cleanly in Excel:
- * UTF-8 BOM (so French/Arabic names render), CRLF rows, quoted fields, and
- * formula-injection escaping (a leading = + - @ tab or CR is prefixed with ').
- */
+// The BOM makes Excel render French/Arabic names; leading = + - @ tab/CR are escaped against formula injection.
 export const CSV_BOM = '\uFEFF';
 
 export function escapeCsvCell(value: unknown): string {

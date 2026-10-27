@@ -6,20 +6,13 @@ import {
 } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 
-/**
- * Rank a floor for the top-down roll: higher floors first, unknown or empty
- * floors last. Known floors follow the building order in `FLOORS`.
- */
+/** Higher floors first (building order in `FLOORS`); unknown or empty floors last. */
 export function floorRank(floor: string | null | undefined): number {
   if (!floor) return -1;
   return (FLOORS as readonly string[]).indexOf(floor);
 }
 
-/**
- * Live Evacuation Roll: every CHECKED_IN visit whose visitor answered "Yes" to
- * needing evacuation assistance at intake. A "No" or a legacy null never
- * appears. Ordered by floor (top first), then check-in time.
- */
+/** Only visitors who answered "Yes"; a "No" or legacy null never appears. */
 @Injectable()
 export class VisitEvacuationService {
   constructor(private readonly prisma: PrismaService) {}
@@ -56,8 +49,7 @@ export class VisitEvacuationService {
             }
           : null,
       }))
-      // Stable sort keeps check-in order within a floor; floors outside the
-      // known list share a rank, so tie-break on the name to keep them grouped.
+      // Unknown floors share a rank, so tie-break on the name to keep them grouped.
       .sort(
         (a, b) =>
           floorRank(b.floor) - floorRank(a.floor) ||

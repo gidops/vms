@@ -64,7 +64,6 @@ export class VisitDashboardService {
       this.prisma.visit.count({
         where: { status: 'DENIED', scheduledAt: today },
       }),
-      // Distinct floors with someone on site ("23 onsite across 6 floors").
       this.prisma.visit.groupBy({
         by: ['floor'],
         where: { status: 'CHECKED_IN', floor: { not: null } },
@@ -84,7 +83,7 @@ export class VisitDashboardService {
     };
   }
 
-  /** Reception's numbers for today's WAT day (the server clock may not be WAT). */
+  /** Uses the WAT day, since the server clock may not be WAT. */
   async deskStats(now: Date = new Date()): Promise<DeskStats> {
     const today = watToday(now);
     const { gte, lt } = watDayRange(today, today);
@@ -98,8 +97,7 @@ export class VisitDashboardService {
   }
 
   async traffic(query: AdminTrafficQuery): Promise<AdminTrafficPoint[]> {
-    // Read every individual arrival; no list pagination, group collapse, or
-    // scheduledAt filter. Members arriving separately count in their own hour.
+    // No group collapse: members arriving separately count in their own hour.
     const visits = await this.prisma.visit.findMany({
       where: { checkInAt: { gte: query.dateFrom, lte: query.dateTo } },
       select: { checkInAt: true },

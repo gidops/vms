@@ -3,19 +3,11 @@ import { cn } from "../../foundations/cn";
 import { contentContainer } from "../../foundations/layout";
 
 export interface TopNavProps extends React.HTMLAttributes<HTMLElement> {
-  /** Brand / logo, pinned to the leading edge. */
   brand?: React.ReactNode;
-  /** Centered content (e.g. a SegmentedControl for primary views). */
   center?: React.ReactNode;
-  /** Trailing content (e.g. notifications + avatar + chevron). */
   end?: React.ReactNode;
 }
 
-/**
- * Horizontal application bar on the deep brand-green emphasis surface. Three
- * slots: brand (leading), center, end (trailing). Replaces the sidebar in the
- * VMC top-nav layout.
- */
 export function TopNav({
   brand,
   center,

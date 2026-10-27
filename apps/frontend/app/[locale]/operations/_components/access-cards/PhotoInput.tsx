@@ -14,11 +14,7 @@ export interface PickedPhoto {
   previewUrl: string;
 }
 
-/**
- * The visitor's photo for the card: upload a file, or take a still with the
- * webcam (a frame drawn to a canvas and saved as JPEG). Nothing is uploaded
- * here; the parent uploads the blob when it saves.
- */
+/** Nothing is uploaded here; the parent uploads the blob when it saves. */
 export function PhotoInput({
   value,
   onChange,

@@ -356,11 +356,7 @@ function Registry({ onOpen }: { onOpen: (id: string) => void }) {
   );
 }
 
-/**
- * Access cards: personalised RFID cards the System Admin team logs, prints
- * (photo, name, validity) and assigns to a visitor; reception retrieves them
- * at check-out. Views: cards out now, past issues, and the card registry.
- */
+/** Reception retrieves personalised RFID cards at check-out. */
 export function AccessCardsTab() {
   const t = useTranslations("operations.accessCards");
   const [view, setView] = React.useState<View>("active");
@@ -369,7 +365,6 @@ export function AccessCardsTab() {
 
   return (
     <section className="flex flex-col gap-6">
-      {/* Laid out like Insights → History: view pills, then the action. */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <FilterPills<View>
           aria-label={t("title")}

@@ -10,7 +10,6 @@ import type { Env } from '../../shared/config/env.schema';
 import type { ChannelTarget, EnqueueSpec } from './notification.types';
 import { NotificationRepository } from './notification.repository';
 
-/** Per-channel env toggle keys. */
 const TOGGLE: Record<NotificationChannel, keyof Env> = {
   EMAIL: 'EMAIL_ENABLED',
   SMS: 'SMS_ENABLED',
@@ -18,11 +17,6 @@ const TOGGLE: Record<NotificationChannel, keyof Env> = {
   IN_APP: 'INAPP_ENABLED',
 };
 
-/**
- * Creates notification rows (the durable queue) for a domain event, honoring the
- * per-channel feature toggles and skipping channels with no recipient. Also
- * serves the in-app notification API.
- */
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
@@ -36,14 +30,12 @@ export class NotificationService {
     return this.config.get(TOGGLE[channel], { infer: true });
   }
 
-  /** Returns true if a target is deliverable (enabled + has a recipient). */
   private deliverable(t: ChannelTarget): boolean {
     if (!this.channelEnabled(t.channel)) return false;
     if (t.channel === NotificationChannel.IN_APP) return Boolean(t.userId);
     return Boolean(t.recipient);
   }
 
-  /** Enqueue a notification across its eligible channels. Returns rows created. */
   async enqueue(spec: EnqueueSpec): Promise<number> {
     const rows: Prisma.NotificationCreateManyInput[] = spec.channels
       .filter((t) => this.deliverable(t))
@@ -71,8 +63,6 @@ export class NotificationService {
     const res = await this.repo.createMany(rows);
     return res.count;
   }
-
-  // ── In-app API ─────────────────────────────────────────────────────────────
 
   async list(
     userId: string,

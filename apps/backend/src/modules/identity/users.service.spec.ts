@@ -77,3 +77,37 @@ describe('UsersService — add-on roles', () => {
     ]);
   });
 });
+
+describe('UsersService.setAvatar', () => {
+  it('saves the key and publishes a profile-updated event in one transaction', async () => {
+    const tx = { user: { update: jest.fn() } };
+    const txm = { run: jest.fn(async (cb: (t: unknown) => unknown) => cb(tx)) };
+    const publish = jest.fn();
+    const svc = new UsersService(
+      {} as never,
+      {} as never,
+      txm as never,
+      {
+        publish,
+      } as never,
+    );
+    jest
+      .spyOn(svc, 'findByIdWithAccess')
+      .mockResolvedValue({ id: 'u1' } as never);
+
+    await svc.setAvatar('u1', 'avatars/u1.png');
+
+    expect(tx.user.update).toHaveBeenCalledWith({
+      where: { id: 'u1' },
+      data: { avatarKey: 'avatars/u1.png' },
+    });
+    expect(publish).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({
+        type: 'user.profile_updated',
+        aggregateId: 'u1',
+        payload: { fields: ['avatarKey'] },
+      }),
+    );
+  });
+});

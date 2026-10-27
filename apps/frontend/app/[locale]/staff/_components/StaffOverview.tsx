@@ -11,19 +11,13 @@ import {
 export type StaffStat = OverviewStat;
 
 export interface StaffOverviewProps {
-  /** Welcome heading, e.g. "Welcome Judith Francis". Spans the stat columns. */
   welcome: string;
   stats: StaffStat[];
-  /** Host's office/floor, top-right above the book panel; "Not set" when absent. */
   office?: string | null;
   onNewInvite: () => void;
 }
 
-/**
- * "Office Floor: 3RD FLOOR — LW" — teal label over an orange value, left-aligned
- * in the right column above the book panel (Figma colours #00736E / #FF6900).
- * Always shown; "Not set" until the host picks a desk in Settings → My Desk.
- */
+/** Always shown; "Not set" until the host picks a desk in Settings → My Desk. */
 function OfficeFloor({ office }: { office?: string | null }) {
   const t = useTranslations("staff");
   return (
@@ -44,7 +38,6 @@ function OfficeFloor({ office }: { office?: string | null }) {
   );
 }
 
-/** The brand-green "book visitors" panel: title + invite action. */
 function BookPanel({ onNewInvite }: Pick<StaffOverviewProps, "onNewInvite">) {
   const t = useTranslations("staff");
   return (
@@ -63,14 +56,7 @@ function BookPanel({ onNewInvite }: Pick<StaffOverviewProps, "onNewInvite">) {
   );
 }
 
-/**
- * Staff "Today's Schedule" overview on the shared {@link OverviewBar}:
- *   row 1 — welcome heading (spans the stat columns) | office floor
- *   row 2 — three stat cells                         | book panel
- * The office floor and book panel share the trailing column, so the floor reads
- * as a heading for the "book visitors" call to action beneath it. On mobile the
- * pieces stack: heading, book panel, then the stats.
- */
+/** The office floor sits above the booking panel so it reads as that column's heading. */
 export function StaffOverview({
   welcome,
   stats,
@@ -81,7 +67,6 @@ export function StaffOverview({
   return (
     <OverviewBar
       heading={
-        // "STAFF HUB" eyebrow + welcome, as the VMC "VMC HUB" header.
         <div className="flex flex-col gap-1">
           <span className="flex items-center gap-1.5 text-base font-semibold uppercase tracking-tight text-success">
             <CalendarCheck className="size-4" aria-hidden="true" />

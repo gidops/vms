@@ -22,7 +22,6 @@ export interface Paginated<T> {
   totalPages: number;
 }
 
-/** A row in the admin approval queue. */
 export interface VisitListItem {
   id: string;
   type: string;
@@ -39,12 +38,10 @@ export interface VisitListItem {
   createdByName?: string | null;
   /** Where the visit came from (e.g. "QR_SELF_REGISTER" for the desk QR). */
   source?: string | null;
-  /** True when this row is a group visit's representative (the group signal). */
+  /** True for a group visit's representative row. */
   isGroupVisit: boolean;
-  /** Group display name / contact — email or phone (group visits only). */
   groupName?: string | null;
   groupContact?: string | null;
-  /** For a group's representative row, the number of guests in the group. */
   groupSize: number;
   visitor: {
     id: string;
@@ -55,7 +52,6 @@ export interface VisitListItem {
   };
   host: {
     id: string;
-    /** The host's unit, shown as "Host · Unit" in the approval queue. */
     department?: string | null;
     user: { id: string; fullName: string; email: string };
   } | null;
@@ -77,7 +73,6 @@ export interface VisitNote {
   createdAt: string;
 }
 
-/** A security alert raised against a visit (flag / more-info / restricted match). */
 export interface VisitAlert {
   id: string;
   visitId?: string | null;
@@ -96,7 +91,6 @@ export interface VisitRequestDetail {
   visitorId: string;
   hostId: string;
   type: string;
-  /** Derived from the shared contract enum so new statuses (FLAGGED, …) stay in sync. */
   status: VisitStatus;
   purpose: string;
   floor?: string | null;
@@ -112,7 +106,6 @@ export interface VisitRequestDetail {
   checkOutAt?: string | null;
   /** Intake answer; null = legacy visit, never asked. */
   needsEvacuationAssist?: boolean | null;
-  /** The help asked for when the answer is Yes. */
   evacuationAssistTypes?: EvacuationAssistType[];
   evacuationAssistOther?: string | null;
   /** Comms-consent answer given at this visit; null = legacy. */
@@ -138,7 +131,6 @@ export interface VisitRequestDetail {
   checkedInByName?: string | null;
   checkedOutByName?: string | null;
   notes: VisitNote[];
-  /** Security alerts on this visit; the sheet renders the stripe + Alert Summary from the open one. */
   alerts: VisitAlert[];
 }
 
@@ -153,13 +145,8 @@ export const visitsApi = {
       body: input,
     });
   },
-  /**
-   * Visit list. The admin queue filters by status; the staff dashboard passes
-   * `scope: "mine"` (host-scoped) plus the type/purpose/date facets.
-   */
   list(params?: {
     status?: VisitStatus;
-    /** Restrict to several statuses (e.g. the VMC board's APPROVED/CHECKED_IN/CHECKED_OUT). */
     statuses?: VisitStatus[];
     scope?: "all" | "mine";
     type?: VisitType;
@@ -194,21 +181,18 @@ export const visitsApi = {
     const qs = q.toString();
     return api<Paginated<VisitListItem>>(`/visits${qs ? `?${qs}` : ""}`);
   },
-  /** Reception's onsite / checked in today / checked out today numbers. */
   deskStats(): Promise<DeskStats> {
     return api<DeskStats>(`/visits/dashboard/desk-stats`);
   },
   cancel(id: string): Promise<VisitRequestDetail> {
     return api<VisitRequestDetail>(`/visits/${id}/cancel`, { method: "POST" });
   },
-  /** VMC check-in: assign a physical badge to an approved visit. */
   checkIn(id: string, input: CheckInVisitInput): Promise<VisitRequestDetail> {
     return api<VisitRequestDetail>(`/visits/${id}/check-in`, {
       method: "POST",
       body: input,
     });
   },
-  /** VMC check-out: release the badge and mark the visitor off-site. */
   checkOut(
     id: string,
     input: CheckOutVisitInput = {},
@@ -227,21 +211,18 @@ export const visitsApi = {
       body: { reason },
     });
   },
-  /** Approve several visits at once (group approval sheet — Approve All/Selected). */
   bulkApprove(visitIds: string[]): Promise<VisitRequestDetail[]> {
     return api<VisitRequestDetail[]>(`/visits/bulk-approve`, {
       method: "POST",
       body: { visitIds },
     });
   },
-  /** Deny several visits at once with a shared reason. */
   bulkDeny(visitIds: string[], reason: string): Promise<VisitRequestDetail[]> {
     return api<VisitRequestDetail[]>(`/visits/bulk-deny`, {
       method: "POST",
       body: { visitIds, reason },
     });
   },
-  /** VMC edit of a not-yet-approved request (visitor + visit details). */
   update(
     id: string,
     input: {
@@ -273,7 +254,6 @@ export const visitsApi = {
       body: input,
     });
   },
-  /** Re-send the invite code/QR email to the guest. */
   resendCode(id: string): Promise<VisitRequestDetail> {
     return api<VisitRequestDetail>(`/visits/${id}/resend-code`, {
       method: "POST",

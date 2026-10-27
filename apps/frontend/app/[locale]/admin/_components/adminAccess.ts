@@ -12,12 +12,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-/**
- * Admin-console permission keys. `report:read` (Analytics) and `report:export`
- * are issued by the backend and live in `PERMISSIONS`; the others are
- * not seeded yet, so `hasPermission` returns false for them and the gated UI
- * stays hidden. Move each into `PERMISSIONS` in @vms/contracts when it lands.
- */
+/** Keys the backend doesn't issue yet make `hasPermission` return false, so their UI stays hidden. */
 export const ADMIN_PERMISSIONS = {
   WATCHLIST_READ: "watchlist:read",
   REPORT_READ: PERMISSIONS.REPORT_READ,
@@ -51,7 +46,6 @@ export interface AdminSectionDef {
   permission?: string;
 }
 
-/** Sidebar order and gating, matching the Figma admin console. */
 export const ADMIN_SECTIONS: AdminSectionDef[] = [
   { key: "overview", icon: LayoutGrid, href: "/admin" },
   { key: "visitors", icon: Users },

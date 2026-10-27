@@ -7,11 +7,7 @@ import {
 
 export type { SelectedItem };
 
-/**
- * Backwards-compatible wrapper around the shared {@link VisitDetailSheet}. Older
- * screens (admin queue, staff schedule/visits) open the drawer with a
- * `selected` item; the canonical component now takes `{ kind, id }`.
- */
+/** Adapts a `selected` item to {@link VisitDetailSheet}'s `{ kind, id }`. */
 export function RequestDrawer({
   selected,
   onClose,

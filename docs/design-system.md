@@ -1,7 +1,13 @@
-# Design System
+# Design system
+
+**Who this is for:** frontend developers and designers. **What you'll learn:**
+where colours and components come from, what exists today, and the rules for
+adding to it.
 
 `@vms/ui` is the component library; `@vms/tokens` is the single source of truth
-for design tokens. Both are consumed by the frontend and rendered in Storybook.
+for **design tokens** (named values for colours, type sizes, spacing and so on).
+Both are used by the frontend and shown in **Storybook**, a workshop app that
+renders each component on its own.
 
 ## Tokens (`@vms/tokens`)
 
@@ -20,8 +26,8 @@ Tailwind v4 **CSS‑first** (`@theme`), two tiers:
 **Dark mode** swaps semantic values via `[data-theme="dark"]` on `<html>`
 (attribute strategy, also exposed as the `dark:` variant). **RTL** is handled by
 components using logical properties (`ms/me`, `ps/pe`, `start/end`,
-`text-start`); tokens are direction‑agnostic. A JS mirror (`tokens.ts`) backs
-Storybook docs.
+`text-start`); tokens are direction‑agnostic. All tokens live in one file,
+`packages/tokens/src/theme.css`.
 
 Apps and Storybook both `@import "tailwindcss"; @import "@vms/tokens/theme.css";`
 so they render identically.
@@ -29,17 +35,29 @@ so they render identically.
 ## Components (`@vms/ui`)
 
 Layered **foundations → primitives → components → patterns**, built on Radix UI /
-React Aria and styled with `tailwind-variants`. Every export has a Storybook
-story. Variant axes are standardized: `intent`, `tone`, `size`.
+React Aria and styled with `tailwind-variants`. Variant axes are standardized:
+`intent`, `tone`, `size`. The public list is `packages/ui/src/index.ts`.
 
-- **Foundations**: `cn` (clsx + tailwind‑merge), `tv` (tailwind‑variants), shared `Size`/`Intent`/`Tone` types.
-- **Primitives (13)**: Button (incl. `accent`/gold intent), Input, Label, Select, **Checkbox**, Dialog, Tabs, Tooltip, Popover, Badge (incl. `accent`), Avatar, Spinner, Skeleton.
-- **Components (16)**: Card, Alert, Table (incl. `striped` zebra rows), Pagination, Breadcrumbs, SearchInput, **SegmentedControl** (pill toggle, `default` + `onEmphasis`), Toast, EmptyState, StatCard, **StatStrip** (joined stat cells), **InboxCard** (Requests & Alerts feed card), **Timeline** (visit lifecycle stepper), StatusBadge (maps the contracts `VisitStatus` → display labels: Expected/Onsite/Checked Out/…), Drawer.
-- **Patterns (9)**: AppShell (sidebar shell), **TopNav** + **TopNavShell** (the deep‑green top‑nav layout), **QuickActionsPanel** (gold‑CTA promo panel), PageHeader, FilterBar, DetailDrawer, RecordTable, AlertModal.
+- **Foundations**: `cn` (clsx + tailwind‑merge), `tv` (tailwind‑variants),
+  `contentContainer` (page width), shared `Size`/`Intent`/`Tone` types.
+- **Primitives (15)**: Avatar, Badge, Button, Checkbox, Dialog, Input (also
+  exports `PasswordInput`), Label, Popover, Select, Skeleton, Spinner, Switch,
+  Tabs, Textarea, Tooltip.
+- **Components (19)**: Alert, AreaChart, BarChart, Breadcrumbs, Card,
+  DonutChart, Drawer, EmptyState, InboxCard (Requests & Alerts feed card),
+  Pagination, RangeCalendar, SearchInput, SegmentedControl (pill toggle,
+  `default` + `onEmphasis`), StatCard, StatusBadge (maps the contracts
+  `VisitStatus` to display labels), Table, Timeline (visit progress stepper),
+  Toast, YesNoControl.
+- **Patterns (8)**: AlertModal, AuthLayout, DetailDrawer, FilterBar,
+  RecordTable, SideNav, TopNav, TopNavShell (the deep‑green top‑nav layout).
 
-Pattern stories reconstruct the real VMC screens — the dashboard (top‑nav + stat
-strip + visitor records), the Requests & Alerts inbox, the Visit Request Details
-drawer, and the Flagged Visitor alert modal.
+Most exports have a Storybook story next to them. **Label** and **Drawer** do
+not have their own story yet; `PasswordInput` is shown in the Input story.
+
+Pattern stories rebuild parts of the real screens, such as the top‑nav layout,
+the visitor records table, the detail drawer and the flagged visitor alert
+modal.
 
 ## Storybook
 
@@ -58,7 +76,7 @@ Storybook 9 + `@storybook/react-vite`, with addons: **a11y** (axe per story),
 - Status/lifecycle values come from `@vms/contracts` so the UI can't render a
   state the backend doesn't define.
 
-## Roadmap
-
-`DataGrid` (TanStack Table) and token‑docs MDX pages (Colors/Typography/Spacing)
-are planned additions.
+- New screens follow the staff and VMC dashboard patterns (top nav, overview
+  band, record table).
+- Components consumed by the frontend as TypeScript source use
+  **extensionless** relative imports.

@@ -11,16 +11,11 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4 py-2">
       <span className="text-fg-muted">{label}</span>
-      <span className="text-right font-semibold text-fg">{value || "—"}</span>
+      <span className="text-end font-semibold text-fg">{value || "—"}</span>
     </div>
   );
 }
 
-/**
- * Post-create success screen. Invites show a per-guest QR + invite code carousel;
- * walk-ins show the summary plus a "Check-In Visitor" action. Both render the
- * teal-topped summary card from the design.
- */
 export function SuccessStep({
   created,
   mode,
@@ -34,6 +29,7 @@ export function SuccessStep({
   hideHost?: boolean;
 }) {
   const t = useTranslations("invite");
+  const tc = useTranslations("common");
   const format = useFormatter();
   const [idx, setIdx] = React.useState(0);
   const visit = created[idx] ?? created[0];
@@ -62,7 +58,7 @@ export function SuccessStep({
             {created.length > 1 ? (
               <button
                 type="button"
-                aria-label="Previous guest"
+                aria-label={tc("previousGuest")}
                 onClick={() =>
                   setIdx((i) => (i - 1 + created.length) % created.length)
                 }
@@ -77,7 +73,7 @@ export function SuccessStep({
             {created.length > 1 ? (
               <button
                 type="button"
-                aria-label="Next guest"
+                aria-label={tc("nextGuest")}
                 onClick={() => setIdx((i) => (i + 1) % created.length)}
                 className="text-fg-muted"
               >

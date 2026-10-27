@@ -4,10 +4,7 @@ import { Button } from "@vms/ui";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-/**
- * Previous · "Page X of Y" · Next under an inbox card grid (VMC Requests &
- * Alerts, staff Updates). Renders nothing for a single page.
- */
+/** Previous · "Page X of Y" · Next; renders nothing for a single page. */
 export function InboxPagination({
   page,
   totalPages,

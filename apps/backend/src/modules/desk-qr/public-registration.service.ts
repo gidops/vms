@@ -46,12 +46,7 @@ const MAX_SUBMISSIONS_PER_MINUTE = 30;
 
 type StoredForm = Omit<PublicRegistrationInput, 'formToken' | 'website'>;
 
-/**
- * The visitor's side of the desk QR (no login). Opening the link starts a
- * 10-minute form; submitting it emails a one-time 6-digit code to the desk
- * inbox (V1 parity); entering that code creates today's walk-in. Nothing is
- * created from the form alone, so someone who isn't at the desk can't register.
- */
+/** The form only emails a one-time code to the desk; the walk-in is created once the visitor enters it, so only someone at the desk can register. */
 @Injectable()
 export class PublicRegistrationService {
   private readonly logger = new Logger(PublicRegistrationService.name);
@@ -72,7 +67,6 @@ export class PublicRegistrationService {
     return this.config.get('JWT_SECRET', { infer: true });
   }
 
-  /** The active desk QR for a printed token, or the one "not active" answer. */
   private async activeQr(token: string): Promise<DeskQr> {
     const qr = DESK_QR_TOKEN_RE.test(token)
       ? await this.prisma.deskQr.findUnique({ where: { token } })
@@ -82,7 +76,6 @@ export class PublicRegistrationService {
     return qr;
   }
 
-  /** A visitor scanned the QR: count it and start the 10-minute form. */
   async open(token: string, now = new Date()): Promise<DeskQrFormSession> {
     const qr = await this.activeQr(token);
     const today = watToday(now);
@@ -108,10 +101,7 @@ export class PublicRegistrationService {
     return this.users.searchPublicHosts(q);
   }
 
-  /**
-   * Check the form, keep it (encrypted) and email the desk a one-time code.
-   * A filled-in honeypot gets a normal-looking answer and nothing else.
-   */
+  /** A filled-in honeypot gets a normal-looking answer and nothing else. */
   async submit(
     token: string,
     input: PublicRegistrationInput,
@@ -199,7 +189,6 @@ export class PublicRegistrationService {
     return { registrationId: id, codeExpiresAt };
   }
 
-  /** The visitor typed the code reception read out: create the walk-in. */
   async verify(
     token: string,
     registrationId: string,
@@ -213,9 +202,7 @@ export class PublicRegistrationService {
     if (!reg) throw new NotFoundException('errors.deskQr.registrationNotFound');
     if (reg.expiresAt <= now)
       throw new GoneException('errors.deskQr.codeExpired');
-    // Claim one try before comparing. A read-then-increment would let parallel
-    // guesses all see the same count and slip past the limit; the conditional
-    // increment is atomic, so at most DESK_QR_CODE_ATTEMPTS checks ever run.
+    // Atomic conditional increment before comparing, so parallel guesses cannot exceed DESK_QR_CODE_ATTEMPTS.
     const claimed = await this.prisma.deskQrRegistration.updateMany({
       where: {
         id: reg.id,
@@ -240,11 +227,9 @@ export class PublicRegistrationService {
 
     const form = JSON.parse(this.crypto.decrypt(reg.payload)) as StoredForm;
     return this.visits.createSelfRegisteredWalkIn(form, async (tx, visitId) => {
-      // Claim the registration in the same transaction; a second, racing
-      // correct code finds it already used and rolls its visit back.
+      // Claimed in the same transaction so a racing correct code rolls its visit back.
       const claimed = await tx.deskQrRegistration.updateMany({
         where: { id: reg.id, visitId: null },
-        // The visit now holds the details; drop the encrypted copy.
         data: { visitId, payload: '' },
       });
       if (claimed.count === 0) {

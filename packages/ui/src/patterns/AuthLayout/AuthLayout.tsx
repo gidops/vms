@@ -2,17 +2,13 @@ import * as React from "react";
 import { cn } from "../../foundations/cn";
 
 export interface AuthLayoutProps {
-  /** Hero photo URL shown on the start side (top banner on small screens). */
   heroSrc: string;
   heroTitle: React.ReactNode;
   heroSubtitle?: React.ReactNode;
-  /** Small line pinned to the bottom of the hero (desktop only). */
   heroCaption?: React.ReactNode;
-  /** Brand lockup shown at the top of the form card. */
   logo?: React.ReactNode;
   title: React.ReactNode;
   description?: React.ReactNode;
-  /** Secondary actions under the form card body (links, SSO). */
   footer?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
@@ -23,7 +19,7 @@ export function AuthLayout({
   heroSrc,
   heroTitle,
   heroSubtitle,
-  // heroCaption: unused while the caption is hidden.
+  // heroCaption is accepted but not rendered.
   logo,
   title,
   description,
@@ -34,20 +30,17 @@ export function AuthLayout({
   return (
     <main className={cn("flex min-h-screen flex-col lg:flex-row", className)}>
       <section className="relative flex h-44 shrink-0 items-center justify-center overflow-hidden bg-emphasis px-6 text-center text-white lg:h-auto lg:flex-1">
-        {/* Photo, shown unfiltered. */}
         <div
           aria-hidden
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${heroSrc})` }}
         />
-        {/* Even dark wash over the whole photo. */}
         <div aria-hidden className="absolute inset-0 bg-black/50" />
-        {/* Gold hairline where the photo meets the form (desktop). */}
         <div
           aria-hidden
           className="absolute inset-y-0 end-0 hidden w-px bg-[linear-gradient(to_bottom,transparent,color-mix(in_oklab,var(--color-gold-400)_55%,transparent)_50%,transparent)] lg:block"
         />
-        {/* Centred white type; subtitle is title / phi^3, caption gap is gap * phi^2. */}
+        {/* Subtitle size is title / phi^3. */}
         <div className="relative flex max-w-xl flex-col items-center gap-4">
           <h2 className="text-4xl font-semibold tracking-tighter text-white lg:text-7xl">
             {heroTitle}
@@ -57,13 +50,6 @@ export function AuthLayout({
               {heroSubtitle}
             </p>
           ) : null}
-          {/* Caption hidden for now.
-          {heroCaption ? (
-            <p className="mt-[1.6rem] hidden text-xs text-white lg:block">
-              {heroCaption}
-            </p>
-          ) : null}
-          */}
         </div>
       </section>
 

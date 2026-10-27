@@ -1,14 +1,7 @@
-/**
- * Africa/Lagos (WAT) display helpers. The operator's browser may not be on WAT,
- * so every time shown for the building (check-in, generated-at, consent dates)
- * is formatted explicitly in Africa/Lagos.
- */
+/** Building times are always shown in Africa/Lagos, whatever the browser's zone. */
 export const WAT_TIME_ZONE = "Africa/Lagos";
 
-/**
- * Intl locale for dates. Plain "en" formats US-style ("Oct 18, 2026"); the
- * building reads dates day-first ("18 Oct 2026"), so English maps to en-GB.
- */
+/** The building reads dates day-first, so English maps to en-GB. */
 export function watDateLocale(locale: string) {
   return locale === "en" ? "en-GB" : locale;
 }
@@ -49,7 +42,6 @@ export function watTodayIso(now: Date = new Date()): string {
   }).format(now);
 }
 
-/** Add whole days to a YYYY-MM-DD string. */
 export function addDaysIso(day: string, days: number): string {
   const d = new Date(`${day}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);

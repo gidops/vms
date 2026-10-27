@@ -39,28 +39,15 @@ import { VisitorCell } from "./VisitorCell";
 export const NEEDS_DECISION = ["PENDING", "REVIEW_REQUESTED", "FLAGGED"];
 
 export interface AdminVisitsTableProps {
-  /**
-   * `vmc` — VMC records columns (Guest, Channel, Host/Unit, Purpose, Guests,
-   * Status, Action), striped rows with an action button.
-   * `staff` — staff schedule columns (Guest, Purpose, Guests, Status); the
-   * whole row opens the detail sheet.
-   */
+  /** `staff` rows open the detail sheet; `vmc` rows have an action button. */
   columns?: "vmc" | "staff";
-  /**
-   * `myVisits` — staff My Visits header strip with Today / Upcoming /
-   * Yesterday / Pick date pills (this is where the old "Upcoming" card
-   * lives), soonest first. Both windows filter on the scheduled date.
-   * `staff` — staff dashboard toolbar with Today / Last 7 days / Custom
-   * (latest first).
-   */
+  /** Both range variants filter on the scheduled date. */
   range?: "myVisits" | "staff";
-  /** Debounced search + facets from the filter bar. */
   query: Pick<AdminVisitsParams, "search" | "status" | "type" | "purpose">;
   onOpen: (row: VisitListItem) => void;
   pageSize?: number;
 }
 
-/** The admin visits table, built from the VMC and staff record tables. */
 export function AdminVisitsTable({
   columns = "vmc",
   range = "myVisits",

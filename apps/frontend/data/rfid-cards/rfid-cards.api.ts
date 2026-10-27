@@ -16,7 +16,6 @@ export type AssignmentItem = Wire<RfidAssignmentItem>;
 export type AssignmentDetail = Wire<RfidAssignmentDetail>;
 export type CardItem = Wire<RfidCardItem>;
 
-/** What the assign form sends (dates as ISO strings). */
 export type AssignCardBody = Wire<AssignRfidCardInput>;
 
 export interface AssignmentListParams {
@@ -43,7 +42,7 @@ function query(params: object): string {
   return q ? `?${q}` : "";
 }
 
-/** Operations → Access cards (personalised RFID cards). System Admin only. */
+/** System Admin only. */
 export const rfidCardsApi = {
   assignments(params: AssignmentListParams = {}) {
     return api<Paginated<AssignmentItem>>(
@@ -85,10 +84,7 @@ export const rfidCardsApi = {
   setCardStatus(id: string, body: SetRfidCardStatusInput) {
     return api<void>(`/rfid-cards/${id}/status`, { method: "POST", body });
   },
-  /**
-   * Upload a visitor photo: presign → PUT straight to S3 (not through api()) →
-   * return the key to store on the assignment.
-   */
+  /** Uploads straight to S3 via a presigned PUT and returns the key to store. */
   async uploadPhoto(file: Blob): Promise<string> {
     const contentType = file.type as AvatarContentType;
     const { uploadUrl, key } = await api<{ uploadUrl: string; key: string }>(

@@ -1,14 +1,9 @@
-// VMS — Jenkins CI + CD pipeline.
+// VMS — Jenkins deployment pipeline.
 //
-// Mirrors .github/workflows/ci.yml (which stays in place) and adds an optional
-// CD stage that wraps ./vms-deploy.sh (build + push ECR images, terraform apply).
-//
-// Agent model:
-//   - CI + Terraform-validate stages run inside throwaway Docker containers
-//     (node:20.11.0 and hashicorp/terraform), so the Jenkins host only needs Docker.
-//   - The Deploy stage builds Docker images and runs Terraform/AWS, so it runs on a
-//     host agent labelled `vms-deploy` that has Docker, the AWS CLI v2 and Terraform
-//     installed (building images inside a container is awkward; a tooled host is cleaner).
+// Quality checks (lint, typecheck, tests, Sonar, terraform validate) run in
+// GitHub Actions (.github/workflows/ci.yml). Jenkins only deploys: it wraps
+// ./vms-deploy.sh (build + push ECR images, terraform apply), and refuses to run
+// unless GitHub Actions passed on the exact commit being deployed.
 //
 // Prerequisites on the Jenkins host — see the "Jenkins setup" notes at the bottom.
 
@@ -26,7 +21,7 @@ pipeline {
     booleanParam(
       name: 'DEPLOY',
       defaultValue: false,
-      description: 'Run the CD stage (build/push ECR images + terraform apply) after CI passes. Only honoured on main/staging.'
+      description: 'Build/push ECR images + terraform apply. Only honoured on main/staging, and only when GitHub Actions passed on the commit.'
     )
     choice(
       name: 'DEPLOY_TARGET',
@@ -36,118 +31,36 @@ pipeline {
   }
 
   environment {
-    AWS_REGION               = 'us-east-1'
-    TURBO_TELEMETRY_DISABLED = '1'
-    NPM_CONFIG_FUND          = 'false'
-    NPM_CONFIG_AUDIT         = 'false'
+    AWS_REGION = 'us-east-1'
   }
 
   stages {
-    // ---------------- CI gate (node:20.11.0 container) ----------------
-    stage('CI') {
-      agent {
-        docker {
-          image 'node:20.11.0'
-          // Run as root so npm can write into the workspace-mounted node_modules.
-          args  '-u root:root'
-        }
-      }
-      stages {
-        stage('Install') {
-          steps {
-            // Capture the branch into a GLOBAL env var while the SCM checkout is in
-            // scope here, so the Deploy gate (beforeAgent true) can read it later —
-            // at that point Deploy's own agent/checkout hasn't run, so GIT_BRANCH
-            // isn't yet populated there. Strip any "origin/" prefix to a bare name.
-            script {
-              env.DEPLOY_BRANCH = (env.GIT_BRANCH ?: env.BRANCH_NAME ?: '').replaceAll('^origin/', '')
-            }
-            sh 'npm ci'   // postinstall runs `prisma generate`
-          }
-        }
-        stage('Lint')      { steps { sh 'npx turbo run lint:check' } }
-        stage('Typecheck') { steps { sh 'npx turbo run typecheck' } }
-        stage('Build')     { steps { sh 'npx turbo run build' } }
-        stage('Storybook') { steps { sh 'npx turbo run build-storybook' } }
-        stage('Test')      { steps { sh 'npx turbo run test' } }
-      }
-    }
-
-    // ---------------- SonarCloud analysis (sonar-scanner-cli container) ----------------
-    // Runs on every CI build (not gated behind the Deploy params). Scan only for
-    // now — no quality-gate stage yet.
-    stage('SonarCloud analysis') {
-      agent {
-        docker {
-          image 'sonarsource/sonar-scanner-cli:latest'
-          args  '--entrypoint='
-        }
-      }
-      environment {
-        SONAR_TOKEN    = credentials('sonarcloud-token')
-        SONAR_HOST_URL = 'https://sonarcloud.io'
-        // The container runs as the jenkins UID, which can't write the scanner's
-        // default cache at /opt/sonar-scanner/.sonar (root-owned in the image).
-        // Point SONAR_USER_HOME at the workspace (jenkins-owned, writable).
-        SONAR_USER_HOME = "${WORKSPACE}/.sonar"
-      }
-      steps {
-        sh 'sonar-scanner'
-      }
-    }
-
-    // ---------------- Terraform validate (hashicorp/terraform container) ----------------
-    stage('Terraform validate') {
-      agent {
-        docker {
-          // Pin to the same Terraform the deploy box runs (1.15.6). A 1.9 container
-          // can't decode the 1.15.6-written backend cache ("unsupported attribute
-          // use_lockfile"), and they share the Jenkins workspace.
-          image 'hashicorp/terraform:1.15.6'
-          // The image's entrypoint is `terraform`; clear it so `sh` can run.
-          args  '--entrypoint='
-        }
-      }
-      steps {
-        dir('terraform') {
-          sh 'terraform fmt -check'
-          // Drop any .terraform left by the host deploy (shared workspace) so this
-          // validate is self-contained — it's only a local cache, and the
-          // -backend=false init below recreates what validate needs.
-          sh 'rm -rf .terraform'
-          sh 'terraform init -backend=false'
-          sh 'terraform validate'
-        }
-      }
-    }
-
-    // ---------------- CD (host agent with docker + aws + terraform) ----------------
     stage('Deploy') {
       when {
         beforeAgent true
-        allOf {
-          expression { return params.DEPLOY }
-          // env.DEPLOY_BRANCH is set in the CI stage's Install step, so it already
-          // exists when this gate evaluates (even with beforeAgent true).
-          expression { return ['main', 'staging'].contains(env.DEPLOY_BRANCH) }
-        }
+        expression { return params.DEPLOY }
       }
       agent { label 'vms-deploy' }
       environment {
         // Skip the interactive `read` prompt in vms-deploy.sh; the human gate is the
         // `input` step below, which shows the proposed target before anything applies.
         VMS_AUTO_APPROVE = '1'
+        GITHUB_TOKEN     = credentials('github-checks-token')
       }
       steps {
-        // Manual approval — last chance to read what is about to be deployed.
-        // NOTE: state is in S3 (see provider.tf backend blocks); the vms-deploy
-        // agent's instance profile provides AWS access.
+        script {
+          def branch = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceAll('^origin/', '')
+          if (!['main', 'staging'].contains(branch)) {
+            error "Deploys only run from main or staging (this build is '${branch}')."
+          }
+        }
+
+        sh './scripts/require-github-checks.sh "$GIT_COMMIT"'
+
         input message: "Deploy '${params.DEPLOY_TARGET}' from ${env.BRANCH_NAME} @ ${env.GIT_COMMIT?.take(8)}?",
               ok: 'Deploy'
 
-        // No withCredentials binding: the vms-deploy agent runs on an EC2 host
-        // whose instance profile (role vms-jenkins-role) grants AWS access, so
-        // the AWS CLI / Terraform inherit credentials automatically.
+        // AWS access comes from the agent's EC2 instance profile (vms-jenkins-role).
         sh './vms-deploy.sh --deploy ${DEPLOY_TARGET}'
       }
     }
@@ -160,27 +73,19 @@ pipeline {
 }
 
 // ──────────────────────────── Jenkins setup ────────────────────────────
-// One-time configuration needed for this pipeline:
+// Plugins:  Git, Credentials Binding. (No AWS plugin — the deploy shells out to
+//   the aws CLI + terraform on the agent, which use the instance-profile creds.)
 //
-// Plugins:  Docker Pipeline, Git. (No AWS plugin needed — the deploy shells out to
-//   the raw aws CLI + terraform on the agent, which use the instance-profile creds.)
+// Deploy agent:  a node labelled `vms-deploy` with Docker, AWS CLI v2,
+//   Terraform >= 1.9, curl and python3 installed, and the Docker daemon reachable.
 //
-// CI / validate stages:  any agent with Docker available (the controller or a
-//   build node where the `jenkins` user is in the `docker` group).
+// Credentials:
+//   - `github-checks-token` (Secret text): a fine-grained GitHub token with
+//     read-only "Checks" access to gidops/vms, used to confirm CI passed.
+//   - AWS: none stored — the agent's instance profile grants access.
 //
-// Deploy agent:  a node labelled `vms-deploy` with Docker, AWS CLI v2 and
-//   Terraform >= 1.9 installed, and the Docker daemon reachable.
+// Terraform state:  stored in S3 with a DynamoDB lock table (backend "s3" blocks
+//   in terraform/provider.tf), so Jenkins and humans share one source of truth.
 //
-// Credentials:  none stored in Jenkins. The vms-deploy agent runs on an EC2 host
-//   whose instance profile (role vms-jenkins-role) grants AWS access, so the AWS
-//   CLI / Terraform inherit credentials automatically — no aws-vms entry or
-//   AmazonWebServicesCredentialsBinding is needed.
-//
-// Terraform state:  vms-deploy.sh runs `terraform output`/`apply` against state
-//   in ./terraform, which is now stored remotely in S3 with a DynamoDB lock table
-//   (see the backend "s3" blocks in terraform/provider.tf and jenkins/provider.tf).
-//   Jenkins and humans share one source of truth, so a fresh Jenkins workspace
-//   reads existing state instead of trying to recreate the stack.
-//
-// Pipeline job:  create a Multibranch Pipeline (or Pipeline-from-SCM) pointing at
-//   this repo; the Jenkinsfile path is the repo root.
+// Pipeline job:  a Multibranch Pipeline (or Pipeline-from-SCM) pointing at this
+//   repo; the Jenkinsfile path is the repo root.

@@ -8,17 +8,14 @@ import type {
   StaffDashboardStats,
 } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
+import { watDayRange, watToday } from '../../shared/common/wat';
 
-/** Inclusive start / exclusive end of the calendar day containing `ref`. */
 function dayBounds(ref: Date): { start: Date; end: Date } {
-  const start = new Date(ref);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
-  return { start, end };
+  const day = watToday(ref);
+  const { gte, lt } = watDayRange(day, day);
+  return { start: gte, end: lt };
 }
 
-/** Maps an audit event type → the feed card's category + copy. */
 const ACTIVITY_MAP: Record<
   string,
   {
@@ -78,9 +75,7 @@ const ACTIVITY_MAP: Record<
     body: (n) =>
       `The Security Manager requested more information for ${n}'s visit.`,
   },
-  // Note: flag/request-info also emit `alert.created`; we map the visit-centric
-  // events above (not alert.created) so each action yields a single feed card
-  // with the right category.
+  // flag/request-info also emit `alert.created`; it is not mapped so each action yields one feed card.
   'alert.updated': {
     category: 'SECURITY_ALERT',
     title: 'Security Alert Updated',
@@ -92,10 +87,8 @@ const ACTIVITY_MAP: Record<
 export class StaffService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Headline counts for the signed-in staff's "Today's Schedule". */
   async stats(userId: string): Promise<StaffDashboardStats> {
-    // "Mine" = requests I created OR visits I host, so a staff's counts include
-    // requests they raised even when the guest is hosted by someone else.
+    // "Mine" = created OR hosted, so counts include requests raised for someone else's guest.
     const mineWhere: Prisma.VisitWhereInput = {
       OR: [{ createdById: userId }, { host: { userId } }],
     };
@@ -123,17 +116,11 @@ export class StaffService {
     return { expectedToday, awaitingApproval, onsite };
   }
 
-  /**
-   * The staff's "Recent Updates" feed, read from the append-only AuditLog. Resolves
-   * the staff's visits — those they created OR host — (+ their visitors' alerts)
-   * and surfaces audit rows for those aggregates, newest first, mapped to
-   * human-facing cards.
-   */
+  /** Read from the append-only AuditLog for visits the staff created or hosts, plus their visitors' alerts. */
   async activityFeed(
     userId: string,
     query: StaffActivityQuery,
   ): Promise<Paginated<StaffActivityItem>> {
-    // A search narrows to visits (and below, alerts) of matching visitors.
     const visitorMatch: Prisma.VisitorWhereInput | undefined = query.search
       ? {
           OR: [
@@ -173,7 +160,6 @@ export class StaffService {
       return this.emptyPage(query);
     }
 
-    // Category filter narrows to the audit actions that map to that category.
     const actions = Object.entries(ACTIVITY_MAP)
       .filter(([, m]) => !query.category || m.category === query.category)
       .map(([action]) => action);

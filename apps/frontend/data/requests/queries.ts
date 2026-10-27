@@ -17,7 +17,6 @@ import { visitsApi } from "@/data/visits/visits.api";
 
 type InboxScope = "all" | "mine";
 
-/** Filters + pagination the Requests & Alerts feed accepts. */
 export type InboxFilters = Omit<InboxListParams, "scope">;
 
 const keys = {
@@ -41,7 +40,6 @@ export function useInbox(
   });
 }
 
-/** Per-user unread count for the "Requests & Alerts" nav bubble. */
 export function useInboxUnread(kind: InboxKind, scope: InboxScope = "all") {
   return useQuery({
     queryKey: keys.inboxUnread(kind, scope),
@@ -74,7 +72,6 @@ export function useAlert(id: string | null) {
   });
 }
 
-/** Pending visit requests for the admin approval queue. */
 export function usePendingVisits() {
   return useQuery({
     queryKey: keys.pendingVisits,
@@ -90,7 +87,6 @@ export interface MyVisitsParams {
   dateTo?: string;
   /** Which date column `dateFrom`/`dateTo` filter on (default `scheduledAt`). */
   dateField?: "scheduledAt" | "createdAt";
-  /** Free-text search (guest/host/floor/pass id). */
   search?: string;
   sortBy?: string;
   sortDir?: "asc" | "desc";
@@ -98,7 +94,6 @@ export interface MyVisitsParams {
   pageSize?: number;
 }
 
-/** Host-scoped visit list powering "My Visits" / "Recent Visitors". */
 export function useMyVisits(params: MyVisitsParams = {}) {
   return useQuery({
     queryKey: ["visits", "mine", params] as const,
@@ -116,7 +111,6 @@ function useInvalidate() {
   };
 }
 
-/** VMC creates invite(s) / walk-in(s). */
 export function useCreateVisits() {
   const invalidate = useInvalidate();
   return useMutation({
@@ -134,7 +128,6 @@ export function useVisitGroup(groupId: string | null) {
   });
 }
 
-/** VMC assigns a badge and checks a visitor in. */
 export function useCheckIn(id: string) {
   const invalidate = useInvalidate();
   return useMutation({
@@ -143,7 +136,6 @@ export function useCheckIn(id: string) {
   });
 }
 
-/** VMC checks a visitor out and releases the badge. */
 export function useCheckOut(id: string) {
   const invalidate = useInvalidate();
   return useMutation({
@@ -153,7 +145,6 @@ export function useCheckOut(id: string) {
   });
 }
 
-/** Admin/super-admin approves a pending request. */
 export function useApproveVisit(id: string) {
   const invalidate = useInvalidate();
   return useMutation({
@@ -162,7 +153,6 @@ export function useApproveVisit(id: string) {
   });
 }
 
-/** Admin/super-admin denies a pending request with a reason. */
 export function useDenyVisit(id: string) {
   const invalidate = useInvalidate();
   return useMutation({
@@ -171,7 +161,6 @@ export function useDenyVisit(id: string) {
   });
 }
 
-/** Admin approves several visits at once (group approval sheet). */
 export function useBulkApproveVisits() {
   const invalidate = useInvalidate();
   return useMutation({
@@ -180,7 +169,6 @@ export function useBulkApproveVisits() {
   });
 }
 
-/** Admin denies several visits at once with a shared reason. */
 export function useBulkDenyVisits() {
   const invalidate = useInvalidate();
   return useMutation({
@@ -198,7 +186,6 @@ export function useCancelVisit(id: string) {
   });
 }
 
-/** VMC edits a not-yet-approved request (visitor + visit details). */
 export function useUpdateVisit(id: string) {
   const invalidate = useInvalidate();
   return useMutation({
@@ -238,11 +225,7 @@ export function useRequestInfo(id: string) {
   });
 }
 
-/**
- * Security Manager/admin resolves/dismisses a visit's security alert. Keyed by the visit so the
- * detail sheet (which now renders alerts inline) refreshes — resolving clears the
- * visit's hold, which the backend reflects in the visit status.
- */
+/** Keyed by the visit so its sheet refreshes; resolving clears the visit's hold. */
 export function useResolveAlert(visitId: string) {
   const invalidate = useInvalidate();
   return useMutation({
@@ -252,7 +235,6 @@ export function useResolveAlert(visitId: string) {
   });
 }
 
-/** Host rates a completed visit (1-5 stars). */
 export function useRateVisit(id: string) {
   const invalidate = useInvalidate();
   return useMutation({
@@ -262,7 +244,6 @@ export function useRateVisit(id: string) {
   });
 }
 
-/** Re-send the guest's invite code/QR email. */
 export function useResendCode(id: string) {
   const invalidate = useInvalidate();
   return useMutation({
@@ -281,14 +262,5 @@ export function useAddNote(target: { visitId?: string; alertId?: string }) {
           ? keys.visit(target.visitId)
           : keys.alert(target.alertId ?? ""),
       ),
-  });
-}
-
-export function useUpdateAlertStatus(id: string) {
-  const invalidate = useInvalidate();
-  return useMutation({
-    mutationFn: (status: AlertStatusAction) =>
-      alertsApi.updateStatus(id, status),
-    onSuccess: () => invalidate(keys.alert(id)),
   });
 }

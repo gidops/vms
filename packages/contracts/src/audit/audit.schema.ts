@@ -2,13 +2,9 @@ import { z } from "zod";
 import { PaginationQuery } from "../common/pagination.js";
 import { inclusiveDaySpan } from "../report/report.schema.js";
 
-/** Longest audit window, inclusive of both ends (as for visitor export). */
 export const AUDIT_MAX_RANGE_DAYS = 366;
 
-/**
- * Audit categories: the action's leading segment (`visit.approved` → `visit`).
- * `auth` also covers `authz.*` (permission denials).
- */
+/** The action's leading segment; `auth` also covers `authz.*`. */
 export const AUDIT_CATEGORIES = [
   "visit",
   "visitor",
@@ -35,7 +31,6 @@ export const AuditQuery = PaginationQuery.extend({
   to: IsoDay,
   category: AuditCategory.optional(),
   actorUserId: z.string().uuid().optional(),
-  /** Action, entity id, correlation id, or the actor's name / email. */
   search: z.string().trim().min(1).max(200).optional(),
 }).superRefine((v, ctx) => {
   const span = inclusiveDaySpan(v.from, v.to);

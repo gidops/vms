@@ -45,7 +45,6 @@ import {
   type SelfFormField,
 } from "./self-registration";
 
-/** Where the visitor has got to after the form opened. */
 type Step =
   | { kind: "form" }
   | { kind: "inactive" }
@@ -289,12 +288,7 @@ function problemText(
     : t("problems.unknown");
 }
 
-/**
- * The visitor's self-registration from the VMC desk QR (no login, phone
- * first). Opening it starts V1's 10-minute form; submitting sends a code to
- * the desk; the visitor types the code reception reads out and gets their
- * visit reference. Same day only, so there is no date or time picker.
- */
+/** Visitor self-registration from the desk QR: no login, same day only, confirmed with a code read out at reception. */
 export function SelfRegistrationScreen({ token }: { token: string }) {
   const t = useTranslations("selfRegister");
   const tf = useTranslations("invite.fields");
@@ -325,8 +319,7 @@ export function SelfRegistrationScreen({ token }: { token: string }) {
     setAttempt((n) => n + 1);
   };
 
-  // V1: "This form has expired. Please scan the QR code again." The form and
-  // the code each run out after 10 minutes.
+  // The form and the code each expire after 10 minutes.
   const deadline =
     step.kind === "form" && session.data
       ? new Date(session.data.formExpiresAt)
@@ -391,7 +384,7 @@ export function SelfRegistrationScreen({ token }: { token: string }) {
       const problem = problemOf(error);
       if (problem === "inactive") setStep({ kind: "inactive" });
       else if (problem === "expired" || problem === "codeWrong") {
-        // 410 or a form token the server no longer accepts: start again.
+        // 410 or a rejected form token: start again.
         setStep({ kind: "expired" });
         setBanner(problemText(t, problem, error));
       } else setBanner(problemText(t, problem, error));

@@ -11,7 +11,6 @@ import { AdminFilters, useAdminFilters } from "../_components/AdminFilters";
 import { PendingApprovalsTable } from "../_components/PendingApprovalsTable";
 import { useVisitOverlays } from "../_components/VisitOverlays";
 
-/** Variant B: the approval queue as a staff "My Visits"-style table. */
 function PendingApprovalsScreen() {
   const filters = useAdminFilters();
   const { openRow, denyRow, overlays } = useVisitOverlays();
@@ -37,12 +36,7 @@ function PendingApprovalsScreen() {
   );
 }
 
-/**
- * Admin console v2 — Recent Activity tab (formerly Requests & Alerts). Merges the old approval queue
- * (`/admin/requests`) and activity inbox (`/admin/activity`): by default the
- * VMC Requests & Alerts screen (approve/deny happen in the detail sheet);
- * `?layout=staff` previews the staff-style pending-approvals table.
- */
+/** Recent Activity tab; `?layout=staff` shows the pending-approvals table instead. */
 function Requests() {
   const tNav = useTranslations("nav");
   const layout = useSearchParams().get("layout");

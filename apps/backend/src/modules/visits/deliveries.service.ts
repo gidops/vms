@@ -13,21 +13,19 @@ import { TransactionManager } from '../../shared/events/transaction.manager';
 
 const OUTBOUND = ['EMAIL', 'SMS', 'WHATSAPP'] as const;
 
-/** `jane@x.com` → `j***@x.com`. */
 export function maskEmail(email: string): string {
   const at = email.indexOf('@');
   if (at < 1) return '***';
   return `${email[0]}***${email.slice(at)}`;
 }
 
-/** `+2348031184420` → `+234 ***420`. */
 export function maskPhone(phone: string): string {
   const digits = phone.replace(/\s+/g, '');
   if (digits.length <= 6) return '***';
   return `${digits.slice(0, 4)} ***${digits.slice(-3)}`;
 }
 
-export function maskRecipient(
+function maskRecipient(
   channel: string,
   recipient: string | null,
 ): string | null {
@@ -36,14 +34,14 @@ export function maskRecipient(
 }
 
 /** Raw provider errors are only shown to Security Manager / System Admin. */
-export function canSeeDeliveryErrors(principal: AuthUser): boolean {
+function canSeeDeliveryErrors(principal: AuthUser): boolean {
   return (
     principal.activeRole === ROLES.ADMIN ||
     principal.activeRole === ROLES.SUPER_ADMIN
   );
 }
 
-export function toDelivery(
+function toDelivery(
   n: Notification,
   revealErrors: boolean,
 ): NotificationDelivery {
@@ -62,11 +60,7 @@ export function toDelivery(
   };
 }
 
-/**
- * Per-visit delivery status of the email / SMS / WhatsApp messages the
- * notifications pipeline queued. "SENT" means the provider accepted the
- * message; real delivery receipts need provider webhooks (not built).
- */
+/** "SENT" means the provider accepted it; real delivery receipts would need provider webhooks. */
 @Injectable()
 export class VisitDeliveriesService {
   constructor(
@@ -92,10 +86,6 @@ export class VisitDeliveriesService {
     return rows.map((n) => toDelivery(n, reveal));
   }
 
-  /**
-   * Re-queue a FAILED message: back to PENDING with a fresh attempt budget so
-   * the dispatcher picks it up on its next poll.
-   */
   async retry(
     visitId: string,
     notificationId: string,

@@ -1,13 +1,6 @@
 import { tv } from "../../foundations/variants";
 
-/**
- * Each `intent` sets three CSS custom properties (--btn, --btn-fg, --btn-subtle)
- * from SEMANTIC tokens; each `tone` then renders using those vars. This keeps
- * the variant matrix to intent + tone and means dark mode / rebrands flow through
- * automatically via the token layer. The one exception is a compound variant:
- * neutral + outline is the app's "secondary" button, given a light fill + soft
- * gray border via dedicated tokens (see compoundVariants below).
- */
+/** Each `intent` sets --btn vars from semantic tokens that every `tone` renders with, so theming flows through. */
 export const buttonVariants = tv({
   base: [
     "inline-flex items-center justify-center gap-2 whitespace-nowrap",
@@ -50,9 +43,7 @@ export const buttonVariants = tv({
   },
   compoundVariants: [
     {
-      // Secondary button: light surface fill + soft gray border, dark text
-      // (text stays --color-fg from the outline tone). Scoped to neutral+outline
-      // so danger/primary/accent outline buttons are unaffected.
+      // Neutral + outline is the app's secondary button: light fill, soft gray border.
       intent: "neutral",
       tone: "outline",
       class:

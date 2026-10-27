@@ -21,17 +21,12 @@ export interface DetailDrawerProps {
   trigger?: React.ReactNode;
   title: React.ReactNode;
   description?: React.ReactNode;
-  /** Sticky footer action area. */
   footer?: React.ReactNode;
   side?: DrawerContentProps["side"];
   children: React.ReactNode;
 }
 
-/**
- * Right-side details panel used for "Visit Request Details" — a header, a
- * scrollable sectioned body, and a sticky action footer. Compose the body from
- * <DetailSection> blocks plus any cards / Timeline / badges.
- */
+/** Right-side details panel: header, scrollable sectioned body, sticky footer. */
 export function DetailDrawer({
   open,
   defaultOpen,
@@ -65,17 +60,11 @@ export interface DetailSectionProps extends Omit<
   "title"
 > {
   title: React.ReactNode;
-  /** When true, the section header becomes a toggle that shows/hides the body. */
   collapsible?: boolean;
-  /** Initial open state for a collapsible section (default open). */
   defaultOpen?: boolean;
 }
 
-/**
- * A titled block in a DetailDrawer body. With `collapsible`, the heading becomes
- * an accessible toggle (aria-expanded + a labelled region) with a rotating
- * chevron — used by the Visit Details sheet where every section can collapse.
- */
+/** With `collapsible`, the heading becomes an accessible toggle for the body. */
 export function DetailSection({
   title,
   collapsible = false,
@@ -85,8 +74,7 @@ export function DetailSection({
   ...props
 }: DetailSectionProps) {
   const [open, setOpen] = React.useState(defaultOpen);
-  // Stable, SSR-safe ids linking the toggle to its region (useId avoids hydration
-  // mismatch across server/client renders).
+  // useId keeps the toggle/region ids stable across server and client renders.
   const reactId = React.useId();
   const bodyId = `detail-section-${reactId}`;
 

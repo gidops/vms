@@ -8,57 +8,24 @@ import { Link } from "@/i18n/navigation";
 export interface OverviewStat {
   label: string;
   value: React.ReactNode;
-  /** Optional one-line context under the value (e.g. "2 waiting over 1 hour"). */
   hint?: React.ReactNode;
-  /**
-   * `warning` paints the cell as the bar's hero: warm background with the
-   * label and value in the warning colour (the admin "Awaiting approval").
-   */
   tone?: "default" | "warning";
-  /**
-   * Shortcut to the list behind the number: a chevron link beside the label
-   * (the Security Manager's "Awaiting approval" → Pending Approvals).
-   */
   link?: { href: string; label: string };
 }
 
 export interface OverviewBarProps {
-  /** Heading row content (eyebrow + welcome `<h1>`). */
   heading: React.ReactNode;
-  /**
-   * Optional trailing cell of the heading row, above the action panel (the
-   * staff office floor). On mobile it stacks under the heading.
-   */
+  /** Trailing heading-row cell; stacks under the heading on mobile. */
   aside?: React.ReactNode;
   /** Exactly three stat cells on desktop. */
   stats: OverviewStat[];
-  /** Brand-green action panel content (title + buttons). */
   panel: React.ReactNode;
-  /**
-   * `alert` gives the action panel a muted red tint (brand green blended with
-   * danger) as a quiet signal, e.g. people on the Evacuation Roll.
-   */
   panelTone?: "default" | "alert";
-  /**
-   * How the stats render below `lg`: `collapsible` (VMC "View your activity")
-   * or a plain `grid` (staff, admin).
-   */
   mobileStats?: "collapsible" | "grid";
-  /** Toggle label for the collapsible mobile stats. */
   collapsibleLabel?: string;
 }
 
-/**
- * Decorative nested chevrons bleeding off the top-right corner of the green
- * panel — a subtle brand watermark matching the Figma design.
- *
- * The SVG fills the panel and uses a `0 0 449 149` viewBox (the design panel's
- * own coordinate space) with `xMaxYMin slice`, so the chevrons stay pinned to
- * the top-right corner and scale with the panel at any width/height. The paths
- * are drawn at the exact design coordinates and intentionally extend past the
- * viewBox (negative Y / x > 449) so they bleed off the top and right edges,
- * clipped by the panel's `overflow-hidden`.
- */
+/** Decorative watermark; the paths deliberately overflow the viewBox so they bleed off the panel's clipped edges. */
 export function DecorChevrons() {
   return (
     <svg
@@ -128,18 +95,12 @@ export function StatCell({ stat }: { stat: OverviewStat }) {
   );
 }
 
-/** Background for a stat cell: the warning hero gets the warm tint. */
 export const cellBg = (stat: OverviewStat) =>
   stat.tone === "warning" ? "bg-warning-subtle" : "bg-primary-subtle";
 
-/** Colour of the vertical lines between stat cells (on every stats bar; 2px wide). */
 export const STAT_SEPARATOR = "border-s-[#A9B5C0]";
 
-/**
- * Borders for cell `i` of a wrapping 2-up (sm) / 4-up (xl) stat grid, as on
- * Insights: a horizontal rule between rows, and the separator line only where a
- * cell has a neighbour to its end side (never doubled against the outer border).
- */
+/** Borders for cell `i` of a 2-up (sm) / 4-up (xl) grid; the end separator appears only where a neighbour follows. */
 export const statGridCellClass = (i: number) =>
   cn(
     "border-b border-border last:border-b-0 xl:border-b-0",
@@ -148,7 +109,6 @@ export const statGridCellClass = (i: number) =>
     i % 4 === 3 ? "xl:border-e-0" : "xl:border-e-[2px]",
   );
 
-/** Muted red tint for an action panel: brand green blended with danger. */
 export const PANEL_ALERT_CLASS =
   "bg-[color-mix(in_oklab,var(--color-danger)_40%,var(--color-emphasis))]";
 
@@ -175,13 +135,7 @@ function Panel({
   );
 }
 
-/**
- * The overview bar shared by the VMC desk, the staff schedule and the admin
- * console, rendered as one unified bar:
- *   row 1 — heading (spans the stat columns, or all four without an aside) | aside
- *   row 2 — three stat cells | brand-green action panel
- * Mobile: heading (+ aside), the action panel, then the stats.
- */
+/** Heading row above three stat cells and the action panel; stacks vertically on mobile. */
 export function OverviewBar({
   heading,
   aside,
@@ -195,12 +149,10 @@ export function OverviewBar({
 
   return (
     <>
-      {/* ── Desktop: heading + stats/panel in one bar ─────────────────────── */}
       <div
         data-testid="overview-bar-desktop"
         className="hidden overflow-hidden rounded-t-xl border border-border shadow-xs lg:grid lg:grid-cols-[repeat(3,1fr)_minmax(300px,1.5fr)]"
       >
-        {/* Row 1 — kept shorter than the stats/panel row beneath it. */}
         <div
           className={cn(
             "flex items-center bg-surface px-6 py-3",
@@ -215,7 +167,6 @@ export function OverviewBar({
           </div>
         ) : null}
 
-        {/* Row 2 */}
         {stats.map((stat, i) => (
           <div
             key={stat.label}
@@ -233,7 +184,6 @@ export function OverviewBar({
         </Panel>
       </div>
 
-      {/* ── Mobile: heading, panel, then stats ────────────────────────────── */}
       <div className="flex flex-col gap-4 lg:hidden">
         <div className="flex flex-col gap-1">
           {heading}

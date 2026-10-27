@@ -1,6 +1,6 @@
 import * as React from "react";
 
-/** Debounce a fast-changing value (a search box): 300 ms like the staff search. */
+/** Debounce a fast-changing value such as a search box. */
 export function useDebounced<T>(value: T, ms = 300): T {
   const [v, setV] = React.useState(value);
   React.useEffect(() => {

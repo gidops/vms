@@ -6,6 +6,7 @@ import {
   HttpCode,
   NotFoundException,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Put,
@@ -94,7 +95,7 @@ export class UsersController {
   @Patch('users/:id/roles')
   @RequirePermissions(PERMISSIONS.USER_UPDATE)
   async updateRoles(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(UpdateUserRolesInput))
     input: UpdateUserRolesInput,
     @CurrentUser() principal: AuthUser,
@@ -110,7 +111,10 @@ export class UsersController {
   @Delete('users/:id')
   @HttpCode(204)
   @RequirePermissions(PERMISSIONS.USER_DELETE)
-  async remove(@Param('id') id: string, @CurrentUser() principal: AuthUser) {
+  async remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() principal: AuthUser,
+  ) {
     await this.users.deleteUser(id, principal.userId);
   }
 
@@ -120,7 +124,7 @@ export class UsersController {
     return this.users.listRoleNames();
   }
 
-  /** Selectable hosts (STAFF users) for the invite / walk-in forms. */
+  /** Staff directory for the host picker; open to every signed-in role that raises invites. */
   @Get('hosts')
   listHosts() {
     return this.users.listHosts();

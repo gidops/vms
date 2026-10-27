@@ -16,15 +16,11 @@ import { ZodValidationPipe } from '../../shared/common/pipes/zod-validation.pipe
 import { VisitReadService } from '../visits/read.service';
 import { InsightsService } from './insights.service';
 
-/**
- * Facility scope with the tab's facility permission; otherwise the caller's
- * own visits (the guard already required one of the two).
- */
+/** Facility scope needs the tab's facility permission; otherwise the caller's own visits. */
 function scopeFor(principal: AuthUser, facility: string): InsightsScope {
   return principal.permissions.includes(facility) ? 'facility' : 'self';
 }
 
-/** The Insights page (Overview / History / Visitors / Analytics). */
 @Controller('insights')
 export class InsightsController {
   constructor(
@@ -38,7 +34,6 @@ export class InsightsController {
     return this.insights.overview();
   }
 
-  /** Chronological visit history; facility-wide or the caller's own. */
   @Get('history')
   @RequireAnyPermission(PERMISSIONS.HISTORY_READ, PERMISSIONS.INSIGHTS_SELF)
   history(
@@ -87,7 +82,6 @@ export class InsightsController {
       query,
       scopeFor(principal, PERMISSIONS.REPORT_READ),
       principal.userId,
-      // Security trends are for whoever raises flags (Security Manager / System Admin).
       principal.permissions.includes(PERMISSIONS.VISIT_FLAG),
     );
   }

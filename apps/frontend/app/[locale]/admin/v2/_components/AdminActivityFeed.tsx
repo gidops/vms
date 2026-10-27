@@ -34,16 +34,10 @@ function cardType(item: InboxItem): InboxCardType {
 }
 
 export interface AdminActivityFeedProps {
-  /**
-   * `updates` — staff `RecentUpdates` card (badge, time, title, body, link).
-   * `inbox` — compact VMC `InboxCard`s, as on the Requests & Alerts tab.
-   */
   variant?: "updates" | "inbox";
-  /** Open the related visit/alert in the detail sheet. */
   onSelect: (selected: { kind: "request" | "alert"; id: string }) => void;
 }
 
-/** Latest requests + alerts across the site, replacing `RecentActivityCard`. */
 export function AdminActivityFeed({
   variant = "updates",
   onSelect,

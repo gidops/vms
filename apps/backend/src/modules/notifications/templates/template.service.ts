@@ -10,7 +10,6 @@ import { QrService } from '../qr/qr.service';
 
 const EMAIL_DIR = join(__dirname, 'email');
 
-/** Coerce a payload value to a WhatsApp template variable string safely. */
 function toTemplateVar(value: unknown): string {
   if (value == null) return '';
   if (typeof value === 'string') return value;
@@ -21,18 +20,11 @@ function toTemplateVar(value: unknown): string {
   ) {
     return String(value);
   }
-  // Objects/dates/arrays — payloads pre-format these to strings, so this is a
-  // defensive fallback rather than the expected path.
+  // Defensive fallback: payloads pre-format objects and dates to strings.
   return JSON.stringify(value) ?? '';
 }
 
-/**
- * Renders a notification for a channel + locale. Email uses MJML (responsive +
- * automatic CSS inlining) wrapped by a reusable Handlebars layout, with a `{{t}}`
- * helper that pulls localized strings from I18nService — so templates carry no
- * copy and designers can edit `.mjml.hbs` files without touching backend logic.
- * SMS/WhatsApp/in-app render localized text from the catalogs.
- */
+/** Templates carry no copy: the `{{t}}` helper pulls localized strings from I18nService. */
 @Injectable()
 export class TemplateService {
   private readonly logger = new Logger(TemplateService.name);
@@ -73,7 +65,6 @@ export class TemplateService {
         const text = this.i18n.translate(`whatsapp.${meta.ns}`, locale, data);
         const tpl = meta.whatsappTemplate;
         if (!tpl) return { text };
-        // Resolve the approved template's positional variables from the payload.
         // The transport decides (via WHATSAPP_USE_TEMPLATES) whether to send it.
         return {
           text,

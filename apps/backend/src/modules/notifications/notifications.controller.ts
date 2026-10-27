@@ -3,6 +3,7 @@ import {
   Get,
   HttpCode,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -12,7 +13,6 @@ import { CurrentUser, type AuthUser } from '../../shared/auth/auth.decorators';
 import { ZodValidationPipe } from '../../shared/common/pipes/zod-validation.pipe';
 import { NotificationService } from './notification.service';
 
-/** In-app (dashboard) notifications for the current user. */
 @Controller('notifications')
 export class NotificationsController {
   constructor(private readonly notifications: NotificationService) {}
@@ -27,7 +27,10 @@ export class NotificationsController {
 
   @Patch(':id/read')
   @HttpCode(200)
-  markRead(@Param('id') id: string, @CurrentUser() principal: AuthUser) {
+  markRead(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() principal: AuthUser,
+  ) {
     return this.notifications.markRead(principal.userId, id);
   }
 

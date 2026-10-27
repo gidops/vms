@@ -38,8 +38,7 @@
     "signingIn": "جارٍ تسجيل الدخول…",
     "error": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
     "or": "أو",
-    "okta": "تسجيل الدخول عبر Okta SSO",
-    "createFirstAdmin": "إعداد أول حساب مسؤول"
+    "okta": "تسجيل الدخول عبر Okta SSO"
   },
   "dashboard": {
     "hub": "مركز VMC",
@@ -65,9 +64,7 @@
     "quickActions": {
       "title": "إجراءات سريعة",
       "registerWalkIn": "تسجيل زائر بدون موعد",
-      "newInvite": "طلب دعوة جديد",
-      "formComingSoonTitle": "قريبًا",
-      "formComingSoon": "هذا النموذج قيد الإنشاء وسيتوفر قريبًا."
+      "newInvite": "طلب دعوة جديد"
     },
     "activity": {
       "title": "عرض نشاطك"
@@ -106,7 +103,12 @@
     "notifications": "الإشعارات",
     "logout": "تسجيل الخروج",
     "allStatus": "كل الحالات",
-    "noAccess": "ليس لديك صلاحية الوصول إلى هذه الصفحة."
+    "noAccess": "ليس لديك صلاحية الوصول إلى هذه الصفحة.",
+    "countryDialCode": "رمز الاتصال الدولي",
+    "previousGuest": "الضيف السابق",
+    "nextGuest": "الضيف التالي",
+    "previousVisitor": "الزائر السابق",
+    "nextVisitor": "الزائر التالي"
   },
   "requests": {
     "title": "الطلبات والتنبيهات",
@@ -121,15 +123,10 @@
     "notesCount": "{count} ملاحظات",
     "empty": "لا توجد طلبات أو تنبيهات",
     "detailTitle": "تفاصيل الزيارة",
-    "updateDetailTitle": "تفاصيل التحديث",
-    "inviteRequestDetailTitle": "تفاصيل طلب الدعوة",
     "addingNote": "جارٍ إضافة الملاحظة",
     "sendCode": "إرسال الرمز إلى الضيف",
     "codeSent": "تم إرسال الرمز",
     "notAssigned": "غير مخصّص",
-    "alertDetailTitle": "تفاصيل التنبيه",
-    "visitorAwaiting": "في انتظار الموافقة",
-    "vmcReception": "استقبال VMC",
     "noNotes": "لا توجد ملاحظات بعد.",
     "addNotePlaceholder": "ابدأ الكتابة",
     "status": {
@@ -175,7 +172,6 @@
       "visitNotes": "ملاحظات الزيارة",
       "destination": "الوجهة",
       "rateGuest": "قيّم الضيف",
-      "purposeOfVisit": "غرض الزيارة",
       "purposeCategory": "فئة الغرض",
       "scheduledFor": "مجدول لـ",
       "origin": "مصدر الطلب",
@@ -185,8 +181,6 @@
       "role": "الدور",
       "remarks": "ملاحظات",
       "reason": "السبب",
-      "requestingHost": "المضيف/الوحدة/الطابق الطالب",
-      "requestedBy": "طلب بواسطة",
       "staffRole": "المنصب",
       "scheduled": "مجدول",
       "alertSummary": "ملخص التنبيه",
@@ -218,7 +212,6 @@
     "denyReasonPlaceholder": "سبب الرفض",
     "typeFeedback": "ملاحظات SM",
     "editTitle": "تعديل طلب الزيارة",
-    "alertBanner": "لا تسجّل دخول هذا الضيف أو تُصدر تصريحًا حتى تتم مراجعة التنبيه من قبل SM/الأمن.",
     "alertNeedsAttention": "يتطلب الانتباه",
     "alertDefaultCategory": "تطابق ضيف مُعلَّم",
     "respondPlaceholder": "الرد على التنبيه…",
@@ -351,7 +344,6 @@
       "visitDetails": "تفاصيل الزيارة",
       "safetyConsent": "السلامة والموافقة"
     },
-    "guestLabel": "الضيف {index}",
     "fields": {
       "fullName": "الاسم الكامل للضيف",
       "fullNamePlaceholder": "أدخل الاسم الكامل",
@@ -368,7 +360,6 @@
       "purpose": "غرض الزيارة",
       "purposePlaceholder": "اختر فئة الزيارة",
       "visitDate": "تاريخ الزيارة",
-      "visitDatePlaceholder": "اختر التاريخ",
       "visitTime": "وقت الزيارة",
       "notes": "ملاحظات الزيارة",
       "notesPlaceholder": "أدخل ملاحظات الزيارة",
@@ -496,33 +487,25 @@
       "title": "نظرة عامة",
       "subtitle": "عمليات الزوار على مستوى النظام بلمحة سريعة.",
       "searchPlaceholder": "ابحث عن الزوار أو المضيفين أو الطوابق…",
-      "sidePanel": "الإجراءات والنشاط",
       "stats": {
         "visitorsToday": "زوار اليوم",
-        "fromYesterday": "مقارنة بالأمس",
         "sameAsYesterday": "مثل الأمس",
         "expected": "الزوار المتوقعون",
         "expectedHint": "معتمدون لليوم",
         "pending": "الطلبات المعلقة",
-        "pendingHint": "{count, plural, =0 {لا شيء بانتظار معلومات إضافية} other {# بانتظار معلومات إضافية}}",
-        "openPending": "فتح الطلبات المعلقة",
         "onsite": "في الموقع",
         "onsiteHint": "في الموقع الآن",
-        "checkedOut": "غادروا",
-        "checkedOutHint": "غادروا اليوم"
+        "checkedOut": "غادروا"
       },
       "traffic": {
         "loadError": "تعذر تحميل البيانات. يرجى المحاولة مرة أخرى.",
         "title": "حركة اليوم",
         "range": "فترة الحركة",
         "today": "اليوم",
-        "yesterday": "أمس",
-        "chartLabelToday": "تسجيلات الدخول في الساعة، اليوم",
-        "chartLabelYesterday": "تسجيلات الدخول في الساعة، أمس"
+        "yesterday": "أمس"
       },
       "breakdown": {
         "title": "توزيع الحالات",
-        "chartLabel": "نتائج الزيارات اليوم",
         "checkedIn": "سُجّل دخولهم",
         "checkedOut": "غادروا",
         "rejected": "مرفوضون"
@@ -555,10 +538,7 @@
       "quickActions": {
         "title": "إجراءات سريعة",
         "addVisitor": "إضافة زائر",
-        "printBadge": "طباعة بطاقة",
-        "scanQr": "مسح رمز QR",
-        "comingSoon": "قريبًا",
-        "exportFailed": "فشل التصدير. حاول مرة أخرى."
+        "comingSoon": "قريبًا"
       },
       "activity": {
         "empty": "لا يوجد نشاط حديث بعد.",
@@ -656,7 +636,6 @@
       "subtitle": "اتجاهات الزيارات ونتائجها. كل ما خرج من النظرة العامة موجود هنا.",
       "export": "تصدير CSV",
       "denied": "مرفوضة",
-      "deniedHint": "طلبات رُفضت اليوم",
       "loading": "جارٍ تحميل التحليلات…",
       "loadError": "تعذّر تحميل التحليلات. يُرجى المحاولة مرة أخرى."
     }
@@ -716,7 +695,6 @@
   "staff": {
     "hub": "مساحة الموظفين",
     "welcome": "مرحبًا {name}",
-    "recentVisitors": "الزوّار الأخيرون",
     "expectedGuests": "الضيوف المتوقعون",
     "guestCount": "{count, plural, zero {# ضيف} one {# ضيف} two {# ضيفان} few {# ضيوف} many {# ضيفًا} other {# ضيف}}",
     "onsiteFor": "منذ {time}",
@@ -916,7 +894,6 @@
     "countBanner": "في الموقع يحتاجون إلى مساعدة في الإخلاء",
     "floors": "{count, plural, one {طابق واحد} two {طابقان} few {# طوابق} many {# طابقًا} other {# طابق}}",
     "generated": "أُنشئت <b>{time}</b>",
-    "refreshesEvery": "تتحدث كل دقيقة",
     "noFloor": "الطابق غير محدد",
     "loadError": "تعذر تحميل قائمة الإخلاء. اضغط تحديث.",
     "columns": {
@@ -1255,8 +1232,6 @@
       "checkedInHint": "{count, plural, other {# سجّلوا الدخول اليوم}}"
     },
     "history": {
-      "titleFacility": "سجل الزيارات",
-      "titleMine": "سجل زياراتي",
       "range": "نطاق السجل",
       "ranges": {
         "7d": "آخر 7 أيام",
@@ -1315,7 +1290,6 @@
     },
     "analytics": {
       "title": "تحليلات المنشأة",
-      "titleMine": "تحليلاتي",
       "range": "نطاق التحليلات",
       "ranges": {
         "7d": "آخر 7 أيام",

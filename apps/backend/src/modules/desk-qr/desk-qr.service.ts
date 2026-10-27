@@ -20,17 +20,10 @@ import { TransactionManager } from '../../shared/events/transaction.manager';
 import { QrService } from '../notifications/qr/qr.service';
 import { newDeskToken, parseV1Token } from './desk-qr.tokens';
 
-/** The only row's fixed key (see the Prisma model). */
 const DESK = 'desk';
 
 type DeskQrWithCreator = DeskQr & { createdBy: { fullName: string } | null };
 
-/**
- * Reception's side of the desk QR: one QR for the whole VMC desk. Create it,
- * change where verification codes are emailed, replace it (the printed poster
- * stops working), disable/enable it, and render it for printing. Every change
- * is audit-logged through its domain event.
- */
 @Injectable()
 export class DeskQrService {
   constructor(
@@ -41,7 +34,6 @@ export class DeskQrService {
     private readonly config: ConfigService<Env, true>,
   ) {}
 
-  /** The URL printed in the QR. The app picks the visitor's language. */
   urlFor(token: string): string {
     const base = this.config.get('APP_PUBLIC_URL', { infer: true });
     return `${base.replace(/\/+$/, '')}/r/${token}`;
@@ -76,7 +68,6 @@ export class DeskQrService {
     return row;
   }
 
-  /** The desk QR, or null before one has been created. */
   async get(): Promise<DeskQrView | null> {
     const row = await this.find();
     return row ? this.toView(row) : null;
@@ -104,10 +95,7 @@ export class DeskQrService {
     return this.toView(await this.reload(id));
   }
 
-  /**
-   * Cutover: take over the V1 issuer QR that is already printed at the desk, so
-   * it keeps working in v2. Creates the desk QR or replaces its token.
-   */
+  /** Adopts the already-printed issuer QR so it keeps working; creates the desk QR or replaces its token. */
   async importV1(
     v1UrlOrToken: string,
     codeEmail: string,
@@ -161,7 +149,6 @@ export class DeskQrService {
     return this.toView(await this.reload(current.id));
   }
 
-  /** New token. The printed poster (and any form still open) stops working. */
   async rotate(actorUserId: string): Promise<DeskQrView> {
     return this.change(
       EVENT_TYPES.DeskQrRotated,
@@ -170,7 +157,6 @@ export class DeskQrService {
     );
   }
 
-  /** Scanning shows "please register at the desk" until enabled again. */
   async disable(actorUserId: string): Promise<DeskQrView> {
     return this.change(
       EVENT_TYPES.DeskQrDisabled,
@@ -179,7 +165,6 @@ export class DeskQrService {
     );
   }
 
-  /** Brings back the same token, so the poster on the desk works again. */
   async enable(actorUserId: string): Promise<DeskQrView> {
     return this.change(
       EVENT_TYPES.DeskQrEnabled,
@@ -188,7 +173,6 @@ export class DeskQrService {
     );
   }
 
-  /** The QR as a PNG, large enough to print (V1 parity: Download PNG). */
   async png(size = 1024): Promise<Buffer> {
     const row = await this.findOrThrow();
     return this.qr.toPngBuffer(this.urlFor(row.token), { width: size });

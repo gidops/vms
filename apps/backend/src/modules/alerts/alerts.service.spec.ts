@@ -97,3 +97,59 @@ describe('AlertsService.updateStatus', () => {
     expect(tx.visit.update).not.toHaveBeenCalled();
   });
 });
+
+describe('AlertsService.getDetail', () => {
+  const row = {
+    id: 'a1',
+    visitId: 'v1',
+    visit: { createdById: 'creator', host: { userId: 'host' } },
+    visitor: null,
+    notes: [],
+  };
+
+  function setup(alert: Record<string, unknown> | null = row) {
+    const prisma = {
+      alert: { findUnique: jest.fn().mockResolvedValue(alert) },
+    } as unknown as PrismaService;
+    const service = new AlertsService(
+      prisma,
+      {} as TransactionManager,
+      {} as EventPublisher,
+    );
+    jest
+      .spyOn(service as never, 'toDetail')
+      .mockReturnValue({ id: 'a1' } as never);
+    return service;
+  }
+
+  it('returns any alert when no owner scope is given', async () => {
+    await expect(setup().getDetail('a1')).resolves.toEqual({ id: 'a1' });
+  });
+
+  it.each(['creator', 'host'])(
+    'returns the alert to the visit %s',
+    async (userId) => {
+      await expect(setup().getDetail('a1', userId)).resolves.toEqual({
+        id: 'a1',
+      });
+    },
+  );
+
+  it('hides alerts on visits the caller neither created nor hosts', async () => {
+    await expect(setup().getDetail('a1', 'stranger')).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+
+  it('hides alerts with no visit from scoped callers', async () => {
+    await expect(
+      setup({ ...row, visit: null }).getDetail('a1', 'creator'),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('throws when the alert does not exist', async () => {
+    await expect(setup(null).getDetail('a1')).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+});

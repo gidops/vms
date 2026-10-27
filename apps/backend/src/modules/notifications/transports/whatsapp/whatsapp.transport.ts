@@ -9,12 +9,7 @@ import { MetaCloudWhatsappProvider } from './meta.provider';
 import { TwilioWhatsappProvider } from './twilio.provider';
 import type { WhatsappProvider } from './whatsapp-provider.interface';
 
-/**
- * WhatsApp channel. Selects a provider by WHATSAPP_PROVIDER (twilio | meta),
- * falling back to a log provider when the chosen one isn't configured, so
- * enabling WHATSAPP never breaks boot. Approved templates are only sent when
- * WHATSAPP_USE_TEMPLATES is on; otherwise free text (Twilio sandbox / 24h window).
- */
+/** Falls back to a log provider when the chosen one isn't configured, so enabling WHATSAPP never breaks boot. */
 @Injectable()
 export class WhatsappTransport implements NotificationTransport {
   readonly channel = NotificationChannel.WHATSAPP;
@@ -39,8 +34,7 @@ export class WhatsappTransport implements NotificationTransport {
   }
 
   async send(message: RenderedMessage): Promise<void> {
-    // Templates are opt-in: strip the payload so providers send free text until
-    // approved templates exist (keeps the Twilio sandbox path working).
+    // Templates are opt-in; free text keeps the Twilio sandbox path working.
     const useTemplates = this.config.get('WHATSAPP_USE_TEMPLATES', {
       infer: true,
     });

@@ -16,13 +16,7 @@ const BATCH_SIZE = 25;
 const BASE_BACKOFF_MS = 5000;
 const MAX_BACKOFF_MS = 5 * 60 * 1000;
 
-/**
- * Polls the Notification table and delivers PENDING rows via the channel's
- * transport — the same durable, at-least-once pattern as the outbox relay. Each
- * row is rendered for its locale at send time; failures back off exponentially
- * and are marked FAILED once attempts are exhausted. IN_APP rows have no
- * transport: rendering their localized title/body into the payload IS delivery.
- */
+/** At-least-once delivery like the outbox relay; IN_APP rows have no transport, rendering into the payload is delivery. */
 @Injectable()
 export class NotificationDispatcher
   implements OnApplicationBootstrap, OnModuleDestroy

@@ -45,9 +45,7 @@ export function VisitRequestForm({
   /** When set, the host is pinned to this user (a staff self-invite). */
   fixedHostUserId?: string;
   fixedHostName?: string;
-  /** Group walk-in success "Check-In Visitor" → open the group check-in sheet. */
   onRequestCheckIn?: (groupId: string) => void;
-  /** Single walk-in success "Check-In Visitor" → open the single check-in modal. */
   onRequestCheckInSingle?: (visitId: string) => void;
 }) {
   const t = useTranslations("invite");
@@ -65,21 +63,15 @@ export function VisitRequestForm({
     if (fixedHostUserId) g.hostUserId = fixedHostUserId;
     return [g];
   });
-  // The visitor currently being edited (one guest is shown at a time; the pager
-  // switches between them). Their data lives in `guests`, so navigating away and
-  // back preserves everything.
+  // One guest is edited at a time; all their data lives in `guests`.
   const [active, setActive] = React.useState(0);
 
-  // Group visit: one shared group name/contact across all guests, and "use same
-  // visit details" is forced on. A bulk submission keeps guests independent. The
-  // checkbox only appears with 2+ guests (see below), so a group always has a peer.
+  // The group checkbox only appears with 2+ guests, so a group always has a peer.
   const [isGroupVisit, setIsGroupVisit] = React.useState(false);
   const [groupName, setGroupName] = React.useState("");
   const [groupContact, setGroupContact] = React.useState("");
   const group = { isGroupVisit, groupName, groupContact };
 
-  // Clear all group state — used when the group is turned off and whenever the
-  // guest set changes such that a group is no longer possible/meaningful.
   const resetGroup = () => {
     setIsGroupVisit(false);
     setGroupName("");
@@ -92,8 +84,7 @@ export function VisitRequestForm({
       return;
     }
     setIsGroupVisit(true);
-    // A group shares one set of visit details — copy the first guest's details
-    // onto every guest (covers typed, "Add Guest", and CSV-imported guests).
+    // A group shares one set of visit details: copy the first guest's onto all.
     setGuests((prev) =>
       prev.map((g) => ({ ...g, ...visitDetailFields(prev[0]), useSame: true })),
     );
@@ -101,20 +92,15 @@ export function VisitRequestForm({
 
   const hostList = hosts.data ?? [];
 
-  // Every guest now carries its own visit details and safety/consent answers,
-  // so all must be complete; a group visit also needs a group name.
   const formValid =
     guests.every((g) => guestComplete(g, mode)) && groupNameValid(group);
 
-  // ── Guest list helpers ──────────────────────────────────────────────────
   const patchGuest = (i: number, patch: Partial<GuestEntry>) =>
     setGuests((prev) =>
       prev.map((g, idx) => (idx === i ? { ...g, ...patch } : g)),
     );
 
-  // "Add Guest" commits the current form (already in state) and swaps to a fresh
-  // blank visitor; the new guest inherits the previous (last) guest's "Use same
-  // visit details" choice — if set, its visit details are pre-copied.
+  // The new guest inherits the last guest's "Use same visit details" choice.
   const addGuest = () => {
     setGuests((prev) => {
       const prevLast = prev[prev.length - 1];
@@ -130,9 +116,7 @@ export function VisitRequestForm({
     setActive(guests.length);
   };
 
-  // "Use same visit details" toggle on a guest (index > 0): checking copies the
-  // previous guest's visit details into this one immediately; unchecking just
-  // clears the flag and leaves the fields as-is.
+  // Unchecking leaves the copied fields as-is.
   const setUseSameForActive = (checked: boolean) =>
     setGuests((prev) =>
       prev.map((g, idx) => {
@@ -151,8 +135,7 @@ export function VisitRequestForm({
   const removeGuest = (i: number) => {
     setGuests((prev) => prev.filter((_, idx) => idx !== i));
     setActive((a) => Math.max(0, Math.min(a, guests.length - 2)));
-    // Back down to a single guest → a group is no longer possible; the checkbox
-    // hides, so clear any group state rather than leak it into the payload.
+    // The group checkbox hides with one guest, so don't leak group state into the payload.
     if (guests.length - 1 <= 1) resetGroup();
   };
 
@@ -170,8 +153,7 @@ export function VisitRequestForm({
           g.email = r.email;
           g.organization = r.organization;
           g.phoneNumber = r.phone;
-          // Imported guests have no visit details yet — start unchecked so the
-          // checkbox isn't shown ticked over empty fields.
+          // Unchecked so the box isn't shown ticked over empty fields.
           g.useSame = false;
           const match = hostList.find(
             (h) => h.email.toLowerCase() === r.hostEmail.toLowerCase(),
@@ -181,15 +163,12 @@ export function VisitRequestForm({
         }),
       );
       setActive(0);
-      // A fresh guest set replaces any prior group intent; re-check "Group visit"
-      // (only shown for a multi-row import) to reapply shared details.
       resetGroup();
     } catch {
       /* ignore malformed CSV; the user can re-import */
     }
   }
 
-  // ── Navigation ──────────────────────────────────────────────────────────
   function goToConfirm() {
     if (!formValid) {
       setShowErrors(true);
@@ -211,9 +190,7 @@ export function VisitRequestForm({
     }
   }
 
-  // Walk-in success "Check-In Visitor": a group opens the group check-in sheet, a
-  // lone visitor the single check-in modal. Bulk walk-ins have no shared group,
-  // so they are checked in individually from the board (no button — see below).
+  // Bulk walk-ins have no shared group, so they are checked in from the board.
   const created1 = created?.[0];
   const canImmediateCheckIn =
     mode === "walkin" &&
@@ -228,14 +205,11 @@ export function VisitRequestForm({
   const headerSubtitle =
     mode === "walkin" ? t("subtitleWalkin") : t("subtitleInvite");
   const activeGuest = guests[active] ?? guests[0];
-  // Gate "Add Guest" on the visitor currently on screen being complete (guest +
-  // visit details) — this also covers CSV-imported guests, whose visit details
-  // still need filling in.
+  // Also covers CSV-imported guests whose visit details are still blank.
   const currentGuestComplete = guestComplete(activeGuest, mode);
 
   return (
     <>
-      {/* Header (white) */}
       <div className="flex flex-col gap-1 border-b border-border p-5 pe-12">
         <h2 className="text-xl font-semibold text-fg">
           {mode === "walkin" ? t("titleWalkin") : t("titleInvite")}
@@ -243,7 +217,6 @@ export function VisitRequestForm({
         <p className="text-sm text-fg-muted">{headerSubtitle}</p>
       </div>
 
-      {/* CSV banner (invite only, dark green) */}
       {mode === "invite" ? (
         <div className="flex gap-3 overflow-hidden bg-emphasis px-5 py-4 min-w-0">
           <input
@@ -280,11 +253,9 @@ export function VisitRequestForm({
         </div>
       ) : null}
 
-      {/* Body (scrollable) */}
       <div className="flex-1 overflow-y-auto p-5">
         {view === "form" ? (
           <div className="flex flex-col gap-6">
-            {/* Visitor pager — only once a second visitor exists */}
             {guests.length > 1 ? (
               <VisitorPager
                 count={guests.length}
@@ -293,7 +264,6 @@ export function VisitRequestForm({
               />
             ) : null}
 
-            {/* Group visit is only possible once a second guest exists. */}
             {guests.length > 1 ? (
               <label className="inline-flex cursor-pointer items-center gap-2 self-end text-sm font-medium text-primary underline">
                 <Checkbox
@@ -375,7 +345,6 @@ export function VisitRequestForm({
         ) : null}
       </div>
 
-      {/* Footer (sticky) — hidden on the success screen */}
       {view !== "success" ? (
         <div className="flex items-center gap-2 border-t border-border p-4">
           {view === "confirm" ? (

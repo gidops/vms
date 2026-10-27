@@ -2,15 +2,9 @@ import * as React from "react";
 import { cn } from "../../foundations/cn";
 
 export interface FilterBarProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** Trailing actions (e.g. a Search button or "Clear filters"). */
   actions?: React.ReactNode;
 }
 
-/**
- * Layout container for the search + filter row seen across the VMC screens.
- * Children (SearchInput, Selects) flow in a wrapping row; `actions` are pinned
- * to the trailing edge.
- */
 export function FilterBar({
   actions,
   className,

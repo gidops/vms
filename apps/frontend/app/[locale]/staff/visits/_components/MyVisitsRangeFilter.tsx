@@ -17,7 +17,6 @@ export interface DateRange {
   dateTo?: string;
 }
 
-/** A fixed tab whose date window is derived deterministically (not the calendar). */
 type FixedTab = "today" | "upcoming" | "yesterday";
 
 const container = "flex items-center gap-2 bg-primary-subtle px-6";
@@ -30,7 +29,6 @@ const pillState = (active: boolean) =>
     ? "border-primary text-primary"
     : "border-border text-fg-muted hover:text-fg";
 
-/** Local start-of-day / end-of-day ISO for a JS Date (inclusive window bounds). */
 const startOfDayIso = (d: Date) => {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
@@ -42,12 +40,7 @@ const endOfDayIso = (d: Date) => {
   return x.toISOString();
 };
 
-/**
- * Date window for the fixed pills, filtering over the scheduled date:
- *  - today     → start→end of today
- *  - yesterday → start→end of yesterday
- *  - upcoming  → from the start of tomorrow onward (open-ended)
- */
+/** Scheduled-date window for the fixed pills; `upcoming` is open-ended from tomorrow. */
 export function fixedTabBounds(tab: FixedTab): DateRange {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
@@ -59,21 +52,12 @@ export function fixedTabBounds(tab: FixedTab): DateRange {
     y.setDate(y.getDate() - 1);
     return { dateFrom: startOfDayIso(y), dateTo: endOfDayIso(y) };
   }
-  // upcoming
   const tomorrow = new Date(start);
   tomorrow.setDate(tomorrow.getDate() + 1);
   return { dateFrom: startOfDayIso(tomorrow) };
 }
 
-/**
- * Range selector above the staff "My Visits" table: Today / Upcoming / Yesterday
- * pills plus a "Pick date" pill that opens a calendar range picker. Controlled —
- * the parent owns the selected tab and the derived `{ dateFrom, dateTo }` window
- * it feeds to the query. Styled to match the design: a full-height rectangular
- * mint (`primary-subtle`) block flush to the right edge of the header card,
- * holding individually-outlined white pills — the active option outlined in the
- * brand primary, the rest with a neutral border.
- */
+/** Controlled: the parent owns the tab and the derived date window. */
 export function MyVisitsRangeFilter({
   value,
   onChange,

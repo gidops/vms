@@ -9,7 +9,6 @@ export function statusText(status: string): string {
   return status.replace(/_/g, " ");
 }
 
-/** Format an elapsed millisecond span as HH:MM:SS. */
 export function formatDuration(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -32,7 +31,7 @@ export function SummaryRow({
       <span className="text-fg-muted">{label}</span>
       <span
         className={
-          "text-right font-semibold " +
+          "text-end font-semibold " +
           (accent === "success" ? "text-success" : "text-fg")
         }
       >
@@ -42,10 +41,7 @@ export function SummaryRow({
   );
 }
 
-/**
- * The tinted left pane of the invited check-in/out modals: the visit QR, its
- * reference code, and a hint. `tone="danger"` is the rose check-out variant.
- */
+/** `tone="danger"` is the check-out variant. */
 export function QrPane({
   qrCode,
   code,

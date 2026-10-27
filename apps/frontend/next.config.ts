@@ -4,6 +4,35 @@ import path from "node:path";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
+// Screens that moved; old links and bookmarks still land on the new page.
+const MOVED_PAGES: Record<string, string> = {
+  "/admin/analytics": "/insights?tab=analytics",
+  "/admin/v2/analytics": "/insights?tab=analytics",
+  "/admin/evacuation": "/insights?tab=evacuation",
+  "/admin/v2/evacuation": "/insights?tab=evacuation",
+  "/dashboard/evacuation": "/insights?tab=evacuation",
+  "/admin/opt-ins": "/insights?tab=visitors",
+  "/admin/v2/opt-ins": "/insights?tab=visitors",
+  "/dashboard/opt-ins": "/insights?tab=visitors",
+  "/admin/desk-qr": "/operations?tab=deskQr",
+  "/admin/v2/desk-qr": "/operations?tab=deskQr",
+  "/dashboard/desk-qr": "/operations?tab=deskQr",
+  "/help": "/insights",
+  "/staff/requests": "/staff/updates",
+};
+
+// English is served without a locale prefix; /en, /fr and /ar are prefixed.
+const movedPageRedirects = Object.entries(MOVED_PAGES).flatMap(
+  ([from, to]) => [
+    { source: from, destination: to, permanent: false },
+    {
+      source: `/:locale(en|fr|ar)${from}`,
+      destination: `/:locale${to}`,
+      permanent: false,
+    },
+  ],
+);
+
 const nextConfig: NextConfig = {
   output: "standalone",
   // In a monorepo, trace files from the workspace root so the standalone
@@ -17,6 +46,7 @@ const nextConfig: NextConfig = {
   // (its token is imported as the desk QR; see apps/backend desk-qr:import-v1).
   async redirects() {
     return [
+      ...movedPageRedirects,
       {
         source: "/qr.php",
         has: [{ type: "query", key: "i", value: "(?<token>[0-9a-fA-F]{32})" }],

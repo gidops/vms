@@ -8,7 +8,6 @@ import { AccessCardsService } from './access-cards.service';
 export class AccessCardsController {
   constructor(private readonly cards: AccessCardsService) {}
 
-  /** Badge pool for the check-in "Assign pass" dropdown (optionally by zone). */
   @Get()
   @RequirePermissions(PERMISSIONS.VISIT_CHECK_IN)
   list(@Query(new ZodValidationPipe(AccessCardQuery)) query: AccessCardQuery) {

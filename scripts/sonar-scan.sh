@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-command local SonarQube scan (docs/sonarqube-local.md).
+# One-command local SonarQube scan (docs/ci-quality.md).
 #
 #   npm run sonar            # start server if needed, scan, print dashboard URL
 #   npm run sonar:coverage   # same, but runs backend jest coverage first

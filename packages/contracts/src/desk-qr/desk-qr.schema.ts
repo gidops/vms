@@ -6,32 +6,20 @@ import {
   evacuationAssistIssues,
 } from "../visit/visit.schema.js";
 
-/**
- * The one QR printed at the VMC desk. Any visitor scans it, fills in a short
- * form on their phone, and — once reception reads them the 6-digit code that
- * was emailed to the desk inbox — is registered as today's walk-in (no
- * approval, host optional).
- */
-
-/** `Visit.source` of a visit created from the desk QR. */
 export const VISIT_SOURCE_DESK_QR = "QR_SELF_REGISTER";
 
-/** Minutes a scanned form stays open, and a sent code stays valid (V1: 10). */
+/** Minutes a scanned form stays open, and a sent code stays valid. */
 export const DESK_QR_FORM_MINUTES = 10;
-/** Wrong codes allowed before the visitor has to start again. */
 export const DESK_QR_CODE_ATTEMPTS = 3;
-/** Shape of the token in the printed URL (new base64url, or an imported V1 hex). */
+/** Accepts base64url and imported legacy hex tokens. */
 export const DESK_QR_TOKEN_RE = /^[A-Za-z0-9_-]{16,64}$/;
 
-/** What reception and admins see on the Desk QR page. */
 export const DeskQrView = z.object({
   id: z.string().uuid(),
   isActive: z.boolean(),
-  /** The URL encoded in the printed QR. */
   url: z.string().url(),
-  /** Verification codes are emailed here (V1: the issuer's email). */
+  /** Verification codes are emailed here. */
   codeEmail: z.string().email(),
-  /** Scans (form opens) in the current WAT day. */
   scansToday: z.number().int().min(0),
   lastScanAt: z.coerce.date().nullable(),
   tokenRotatedAt: z.coerce.date(),
@@ -49,17 +37,13 @@ export type CreateDeskQrInput = z.infer<typeof CreateDeskQrInput>;
 export const UpdateDeskQrInput = CreateDeskQrInput;
 export type UpdateDeskQrInput = z.infer<typeof UpdateDeskQrInput>;
 
-// ── Public (no login) ────────────────────────────────────────────────────────
-
-/** Returned when a visitor opens the form from the QR. */
 export const DeskQrFormSession = z.object({
-  /** Signed proof the form was opened in the last DESK_QR_FORM_MINUTES. */
   formToken: z.string(),
   formExpiresAt: z.coerce.date(),
 });
 export type DeskQrFormSession = z.infer<typeof DeskQrFormSession>;
 
-/** A host the visitor can pick (no email or contact details). */
+/** Public: must not expose host contact details. */
 export const PublicHostOption = z.object({
   userId: z.string().uuid(),
   fullName: z.string(),
@@ -72,7 +56,6 @@ export const PublicHostSearchQuery = z.object({
 });
 export type PublicHostSearchQuery = z.infer<typeof PublicHostSearchQuery>;
 
-/** The visitor's self-registration form (V1 visit.php fields; email required). */
 export const PublicRegistrationInput = z
   .object({
     formToken: z.string().min(1).max(200),
@@ -100,7 +83,6 @@ export const PublicRegistrationInput = z
   });
 export type PublicRegistrationInput = z.infer<typeof PublicRegistrationInput>;
 
-/** The form was accepted; a code is on its way to the desk inbox. */
 export const PublicRegistrationPending = z.object({
   registrationId: z.string().uuid(),
   codeExpiresAt: z.coerce.date(),
@@ -114,7 +96,6 @@ export const VerifyRegistrationInput = z.object({
 });
 export type VerifyRegistrationInput = z.infer<typeof VerifyRegistrationInput>;
 
-/** Shown on the visitor's success screen. */
 export const PublicRegistrationResult = z.object({
   referenceCode: z.string(),
   fullName: z.string(),

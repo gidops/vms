@@ -21,7 +21,6 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/ ./
 COPY --from=pruner /app/out/full/ ./
-COPY --from=pruner /app/tsconfig.base.json ./tsconfig.base.json
 # NEXT_PUBLIC_* vars are inlined into the client bundle at build time. This ARG
 # lets `docker build --build-arg NEXT_PUBLIC_API_BASE_URL=...` pass the backend
 # URL in; the ENV promotes it into the build environment so Next/turbo bake it

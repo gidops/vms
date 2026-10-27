@@ -16,7 +16,6 @@ export class RefreshTokenService {
     private readonly security: SecurityAuditService,
   ) {}
 
-  /** Create a session + first refresh token (within the caller's transaction). */
   async issueForNewSession(
     tx: Prisma.TransactionClient,
     userId: string,
@@ -43,7 +42,6 @@ export class RefreshTokenService {
     return { token, sessionId: session.id };
   }
 
-  /** Rotate a refresh token; detect reuse of an already-used token. */
   async rotate(rawToken: string): Promise<{
     userId: string;
     token: string;
@@ -68,7 +66,6 @@ export class RefreshTokenService {
         where: { family: existing.family },
         data: { revokedAt: new Date() },
       });
-      // High-severity security signal — surface it in the audit trail + Seq.
       await this.security.record({
         action: EVENT_TYPES.RefreshReuseDetected,
         entityType: 'Session',
@@ -105,7 +102,6 @@ export class RefreshTokenService {
     });
   }
 
-  /** Revoke every session + refresh token for a user (e.g. after a password change). */
   async revokeAllForUser(userId: string): Promise<void> {
     const now = new Date();
     await this.prisma.$transaction([
@@ -120,7 +116,6 @@ export class RefreshTokenService {
     ]);
   }
 
-  /** Update the active role stored on a session (called by switch-role). */
   async setSessionActiveRole(sessionId: string, role: string): Promise<void> {
     await this.prisma.session.update({
       where: { id: sessionId },
@@ -128,10 +123,7 @@ export class RefreshTokenService {
     });
   }
 
-  /**
-   * Revoke the family + session behind a refresh token (logout). Returns the
-   * owning user id (or null if the token is unknown) so the caller can audit it.
-   */
+  /** Returns the owning user id so the caller can audit the logout. */
   async revoke(rawToken: string): Promise<string | null> {
     const tokenHash = this.tokens.hashRefreshToken(rawToken);
     const existing = await this.prisma.refreshToken.findUnique({

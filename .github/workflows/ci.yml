@@ -56,6 +56,9 @@ jobs:
       - name: Backend coverage gate
         run: npm run test:cov -w @vms/backend
 
+      - name: Frontend coverage
+        run: npm run test:cov -w @vms/frontend
+
       # Single self-provisioning command: `pretest:e2e` (auto-run by npm) creates
       # the test DB against the Postgres service container — CREATE DATABASE is
       # idempotent (the container pre-creates vms_test; the script swallows the
@@ -78,7 +81,7 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@v6
         with:
           # Cloud-only setting, kept out of sonar-project.properties so the same
-          # file drives the local SonarQube (docs/sonarqube-local.md).
+          # file drives the local SonarQube (docs/ci-quality.md).
           args: -Dsonar.organization=vmsvms
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

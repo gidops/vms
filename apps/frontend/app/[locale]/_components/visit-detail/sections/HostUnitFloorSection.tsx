@@ -4,10 +4,6 @@ import { useTranslations } from "next-intl";
 import type { VisitRequestDetail } from "@/data/visits/visits.api";
 import { SheetSection } from "./SheetSection";
 
-/**
- * The VMC/admin "Host/Unit/Floor Details" card shown above Guest Information: a
- * teal row with the requesting host + designation, and a gold floor row.
- */
 export function HostUnitFloorSection({ data }: { data: VisitRequestDetail }) {
   const t = useTranslations("requests");
   const host = data.host;

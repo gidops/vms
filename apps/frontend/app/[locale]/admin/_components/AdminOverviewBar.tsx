@@ -20,7 +20,6 @@ import { useAuth } from "@/shared/auth/AuthContext";
 import { ADMIN_PERMISSIONS } from "./adminAccess";
 import { countOverdue } from "./pendingApprovals";
 
-/** "morning" | "afternoon" | "evening" for the greeting, by local hour. */
 export function dayPart(now: Date): "morning" | "afternoon" | "evening" {
   const h = now.getHours();
   return h < 12 ? "morning" : h < 17 ? "afternoon" : "evening";
@@ -30,11 +29,9 @@ function Heading() {
   const t = useTranslations("admin.overview.bar");
   const { user, activeRole } = useAuth();
   const now = useNow({ updateInterval: 60_000 });
-  // Each admin role has its own console name ("Security console" for the
-  // Security Manager); anything else falls back to "Admin console".
+  // Unknown roles fall back to the generic "Admin console".
   const consoleKey = `console.${activeRole ?? ""}` as "console.ADMIN";
   const eyebrow = t.has(consoleKey) ? t(consoleKey) : t("eyebrow");
-  // Same icons as the v2 console: system gear for the System Admin.
   const Icon = activeRole === ROLES.SUPER_ADMIN ? ServerCog : ShieldCheck;
   const first = user?.fullName?.split(" ")[0];
   return (
@@ -105,11 +102,6 @@ function ActionsPanel({
   );
 }
 
-/**
- * Admin console overview bar on the shared {@link OverviewBar}: Awaiting
- * approval (the warning-toned hero), Onsite now, Expected today, and a
- * permission-gated action panel (Review approvals, Add visitor, Export).
- */
 export function AdminOverviewBar({
   onAddVisitor,
 }: {
@@ -122,8 +114,7 @@ export function AdminOverviewBar({
   const now = useNow({ updateInterval: 60_000 });
   const value = (n: number | undefined) => n ?? "—";
   const overdue = queue.data ? countOverdue(queue.data.items, now) : 0;
-  // Same count as the pending approvals card: requests to decide plus those
-  // sent back to the host for more information.
+  // Includes requests sent back to the host for more information.
   const moreInfo = stats.data?.reviewRequested ?? 0;
   const awaiting = stats.data ? stats.data.pending + moreInfo : undefined;
   const awaitingHint =

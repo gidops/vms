@@ -38,8 +38,7 @@
     "signingIn": "Signing in…",
     "error": "Invalid email or password.",
     "or": "or",
-    "okta": "Login with Okta SSO",
-    "createFirstAdmin": "Set up the first admin account"
+    "okta": "Login with Okta SSO"
   },
   "dashboard": {
     "hub": "VMC HUB",
@@ -65,9 +64,7 @@
     "quickActions": {
       "title": "Quick actions",
       "registerWalkIn": "Register Walk-In",
-      "newInvite": "New Invite Request",
-      "formComingSoonTitle": "Coming soon",
-      "formComingSoon": "This form is being built and will be available shortly."
+      "newInvite": "New Invite Request"
     },
     "activity": {
       "title": "View your activity"
@@ -106,7 +103,12 @@
     "notifications": "Notifications",
     "logout": "Log out",
     "allStatus": "All Status",
-    "noAccess": "You don't have access to this page."
+    "noAccess": "You don't have access to this page.",
+    "countryDialCode": "Country dialling code",
+    "previousGuest": "Previous guest",
+    "nextGuest": "Next guest",
+    "previousVisitor": "Previous visitor",
+    "nextVisitor": "Next visitor"
   },
   "requests": {
     "title": "Requests & Alerts",
@@ -121,11 +123,6 @@
     "notesCount": "{count} notes",
     "empty": "No requests or alerts",
     "detailTitle": "Visit Details",
-    "alertDetailTitle": "Alert Details",
-    "updateDetailTitle": "Update Details",
-    "inviteRequestDetailTitle": "Invite Request Details",
-    "visitorAwaiting": "Awaiting Approval",
-    "vmcReception": "VMC Reception",
     "noNotes": "No remarks yet.",
     "addNotePlaceholder": "Start typing",
     "addingNote": "Adding note",
@@ -175,7 +172,6 @@
       "visitNotes": "Visit Notes",
       "destination": "Destination",
       "rateGuest": "Rate Guest",
-      "purposeOfVisit": "Purpose of visit",
       "purposeCategory": "Purpose Category",
       "scheduledFor": "Scheduled for",
       "origin": "Request origin",
@@ -185,8 +181,6 @@
       "role": "Role",
       "remarks": "Remarks/notes",
       "reason": "Reason",
-      "requestingHost": "Requesting Host/Unit/Floor",
-      "requestedBy": "Requested By",
       "staffRole": "Staff Role",
       "scheduled": "Scheduled",
       "alertSummary": "Alert Summary",
@@ -218,7 +212,6 @@
     "denyReasonPlaceholder": "Reason for denial",
     "typeFeedback": "SM Feedback",
     "editTitle": "Edit Visit Request",
-    "alertBanner": "Do not check in this guest or issue a pass until the alert is reviewed by the Security Manager/security.",
     "alertNeedsAttention": "Needs Attention",
     "alertDefaultCategory": "Flagged Guest Match",
     "respondPlaceholder": "Respond to alert…",
@@ -351,7 +344,6 @@
       "visitDetails": "Visit Details",
       "safetyConsent": "Safety & consent"
     },
-    "guestLabel": "Guest {index}",
     "fields": {
       "fullName": "Enter Guests Full name",
       "fullNamePlaceholder": "Enter fullname",
@@ -368,7 +360,6 @@
       "purpose": "Visit Purpose",
       "purposePlaceholder": "Select visit category",
       "visitDate": "Visit Date",
-      "visitDatePlaceholder": "Pick date",
       "visitTime": "Time of Visit",
       "notes": "Visit notes",
       "notesPlaceholder": "Enter visit notes",
@@ -496,33 +487,25 @@
       "title": "Overview",
       "subtitle": "System-wide visitor operations at a glance.",
       "searchPlaceholder": "Search visitors, hosts, floors…",
-      "sidePanel": "Actions and activity",
       "stats": {
         "visitorsToday": "Visitors Today",
-        "fromYesterday": "from yesterday",
         "sameAsYesterday": "Same as yesterday",
         "expected": "Expected Visitors",
         "expectedHint": "Approved for today",
         "pending": "Pending Requests",
-        "pendingHint": "{count, plural, =0 {None awaiting more info} one {# awaiting more info} other {# awaiting more info}}",
-        "openPending": "Open pending requests",
         "onsite": "Onsite",
         "onsiteHint": "On site now",
-        "checkedOut": "Checked Out",
-        "checkedOutHint": "Checked out today"
+        "checkedOut": "Checked Out"
       },
       "traffic": {
         "loadError": "Unable to load dashboard data. Please try again.",
         "title": "Today's Traffic",
         "range": "Traffic period",
         "today": "Today",
-        "yesterday": "Yesterday",
-        "chartLabelToday": "Check-ins per hour, today",
-        "chartLabelYesterday": "Check-ins per hour, yesterday"
+        "yesterday": "Yesterday"
       },
       "breakdown": {
         "title": "Status Breakdown",
-        "chartLabel": "Visit outcomes today",
         "checkedIn": "Checked-in",
         "checkedOut": "Checked-out",
         "rejected": "Rejected"
@@ -555,10 +538,7 @@
       "quickActions": {
         "title": "Quick Actions",
         "addVisitor": "Add Visitor",
-        "printBadge": "Print Badge",
-        "scanQr": "Scan QR",
-        "comingSoon": "Coming soon",
-        "exportFailed": "Export failed. Try again."
+        "comingSoon": "Coming soon"
       },
       "activity": {
         "empty": "No recent activity yet.",
@@ -656,7 +636,6 @@
       "subtitle": "Visitor trends and outcomes. Everything that left the overview lives here.",
       "export": "Export CSV",
       "denied": "Denied",
-      "deniedHint": "Requests denied today",
       "loading": "Loading analytics…",
       "loadError": "Unable to load analytics. Please try again."
     }
@@ -716,7 +695,6 @@
   "staff": {
     "hub": "STAFF HUB",
     "welcome": "Welcome {name}",
-    "recentVisitors": "Recent Visitors",
     "expectedGuests": "Expected Guests",
     "guestCount": "{count, plural, one {# Guest} other {# Guests}}",
     "onsiteFor": "For {time} HR",
@@ -916,7 +894,6 @@
     "countBanner": "on site need evacuation help",
     "floors": "{count, plural, one {# floor} other {# floors}}",
     "generated": "Generated <b>{time}</b>",
-    "refreshesEvery": "refreshes every minute",
     "noFloor": "Floor not set",
     "loadError": "Couldn't load the evacuation roll. Try Refresh.",
     "columns": {
@@ -1255,8 +1232,6 @@
       "checkedInHint": "{count, plural, one {# checked in today} other {# checked in today}}"
     },
     "history": {
-      "titleFacility": "Visit history",
-      "titleMine": "My visit history",
       "range": "History range",
       "ranges": {
         "7d": "Last 7 days",
@@ -1315,7 +1290,6 @@
     },
     "analytics": {
       "title": "Facility analytics",
-      "titleMine": "My analytics",
       "range": "Analytics range",
       "ranges": {
         "7d": "Last 7 days",

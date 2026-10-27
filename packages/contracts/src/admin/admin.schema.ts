@@ -47,18 +47,16 @@ export interface AdminOverviewStats {
   pending: number;
   reviewRequested: number;
   onsite: number;
-  /** Distinct floors the onsite visitors are on (visits with no floor are skipped). */
   onsiteFloors: number;
   checkedOutToday: number;
   checkedInToday: number;
   deniedToday: number;
 }
 
-/** The VMC overview's three numbers (today = the WAT calendar day). */
+/** "Today" is the WAT calendar day. */
 export interface DeskStats {
-  /** Checked in and not yet out, right now. */
   onsite: number;
-  /** Everyone who arrived today, including those who have since left. */
+  /** Includes visitors who have since left. */
   checkedInToday: number;
   checkedOutToday: number;
 }

@@ -27,7 +27,6 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/ ./
 COPY --from=pruner /app/out/full/ ./
-COPY --from=pruner /app/tsconfig.base.json ./tsconfig.base.json
 RUN npm --workspace @vms/backend run db:generate
 RUN npx turbo run build --filter=@vms/backend
 

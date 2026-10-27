@@ -28,15 +28,10 @@ const PngQuery = z.object({
   size: z.coerce.number().int().min(256).max(2048).default(1024),
 });
 
-/**
- * The VMC desk QR, for reception (VMC, VMC Admin) and admins. Viewing needs
- * issuer:read; changing it needs issuer:manage. Both are System Admin only.
- */
 @Controller('desk-qr')
 export class DeskQrController {
   constructor(private readonly deskQr: DeskQrService) {}
 
-  /** The desk QR, or `null` before one has been created. */
   @Get()
   @RequirePermissions(PERMISSIONS.ISSUER_READ)
   get(): Promise<DeskQrView | null> {
@@ -52,7 +47,6 @@ export class DeskQrController {
     return this.deskQr.create(input, principal.userId);
   }
 
-  /** Change where verification codes are emailed. */
   @Patch()
   @RequirePermissions(PERMISSIONS.ISSUER_MANAGE)
   update(
@@ -83,7 +77,6 @@ export class DeskQrController {
     return this.deskQr.enable(principal.userId);
   }
 
-  /** The QR as a print-size PNG (Download PNG). */
   @Get('qr.png')
   @RequirePermissions(PERMISSIONS.ISSUER_READ)
   async png(

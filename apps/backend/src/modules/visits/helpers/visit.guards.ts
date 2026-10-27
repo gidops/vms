@@ -1,7 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 
-/** Throw if no visit with this id exists. */
 export async function ensureExists(
   prisma: PrismaService,
   id: string,
@@ -10,7 +9,6 @@ export async function ensureExists(
   if (count === 0) throw new NotFoundException('errors.visit.notFound');
 }
 
-/** Throw unless every id resolves to an existing visit. */
 export async function ensureAllExist(
   prisma: PrismaService,
   ids: string[],

@@ -3,11 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useAuth } from "./AuthContext";
 
-/**
- * Renders children only when the active role holds `permission`; otherwise a
- * plain "no access" note. The API enforces the same permission, so this is a
- * courtesy for a deep link, not the security boundary.
- */
+/** A courtesy for deep links; the API enforces the same permission. */
 export function PermissionGate({
   permission,
   children,

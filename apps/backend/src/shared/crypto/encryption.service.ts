@@ -8,12 +8,7 @@ import {
 } from 'node:crypto';
 import type { Env } from '../config/env.schema';
 
-/**
- * AES-256-GCM authenticated encryption for PII / biometric references stored at
- * rest (e.g. Visitor.phone, ShiftAttendance.fingerprintTemplateRef). Output is
- * `iv.tag.ciphertext` (base64 parts). The key comes from ENCRYPTION_KEY (base64,
- * 32 bytes); in dev it is derived deterministically from JWT_SECRET.
- */
+/** AES-256-GCM for PII at rest; output is `iv.tag.ciphertext` in base64 parts. */
 @Injectable()
 export class EncryptionService {
   private readonly key: Buffer;

@@ -8,10 +8,8 @@ import {
 } from "./StatCard.variants";
 
 export interface StatCardTrend {
-  /** Change amount, shown next to the arrow (e.g. 14). */
   value: React.ReactNode;
   direction: "up" | "down";
-  /** Caption after the change (e.g. "from yesterday"). */
   label?: string;
 }
 
@@ -19,14 +17,9 @@ export interface StatCardProps extends StatCardVariantProps {
   label: string;
   value: React.ReactNode;
   icon?: LucideIcon;
-  /** Small caption under the value (e.g. "overdue today"). */
   hint?: string;
-  /** Change versus a previous period; replaces `hint` when both are set. */
+  /** Replaces `hint` when both are set. */
   trend?: StatCardTrend;
-  /**
-   * Trailing control in the card's top corner (stacked layout), typically a
-   * chevron link to the metric's detail view.
-   */
   action?: React.ReactNode;
   className?: string;
 }

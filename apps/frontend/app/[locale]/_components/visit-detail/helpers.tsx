@@ -12,7 +12,6 @@ export const TERMINAL: VisitStatus[] = [
   "EXPIRED",
 ];
 
-/** Risk-level dot colours for the Alert Summary. */
 export const LEVEL_DOT: Record<string, string> = {
   LOW: "bg-success",
   MEDIUM: "bg-warning",
@@ -32,7 +31,6 @@ export function durationHms(from: string, to: string): string {
   )}:${pad(secs % 60)}`;
 }
 
-/** A labelled field in a summary grid. */
 export function Field({
   label,
   children,
@@ -50,7 +48,6 @@ export function Field({
   );
 }
 
-/** A labelled field on the emphasis (teal) Host/Unit/Floor card. */
 export function Meta({
   label,
   value,
@@ -68,12 +65,7 @@ export function Meta({
   );
 }
 
-/**
- * Derive the visit-progress steps from a visit. VMC/admin see the 5-step
- * "request status" (with the Invite Created origin); staff see the 4-step
- * "visit progress". Once on-site the stepper switches to the gate-validation
- * variant. `labels` maps step keys to translated text.
- */
+/** VMC/admin see the 5-step request status, staff the 4-step progress; on-site switches to gate validation. */
 export function timelineFor(
   status: VisitStatus,
   labels: Record<string, string>,
@@ -86,7 +78,6 @@ export function timelineFor(
       state: i < p ? "complete" : i === p ? "current" : "upcoming",
     }));
 
-  // On-site / checked-out: the gate-validation variant (both roles).
   if (status === "CHECKED_IN" || status === "CHECKED_OUT") {
     return toSteps(
       ["gateValidated", "checkedIn", "checkedOut"],

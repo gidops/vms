@@ -38,8 +38,7 @@
     "signingIn": "Connexion…",
     "error": "E-mail ou mot de passe invalide.",
     "or": "ou",
-    "okta": "Se connecter avec Okta SSO",
-    "createFirstAdmin": "Configurer le premier compte administrateur"
+    "okta": "Se connecter avec Okta SSO"
   },
   "dashboard": {
     "hub": "VMC HUB",
@@ -65,9 +64,7 @@
     "quickActions": {
       "title": "Actions rapides",
       "registerWalkIn": "Enregistrer une arrivée",
-      "newInvite": "Nouvelle invitation",
-      "formComingSoonTitle": "Bientôt disponible",
-      "formComingSoon": "Ce formulaire est en cours de création et sera bientôt disponible."
+      "newInvite": "Nouvelle invitation"
     },
     "activity": {
       "title": "Voir votre activité"
@@ -106,7 +103,12 @@
     "notifications": "Notifications",
     "logout": "Se déconnecter",
     "allStatus": "Tous les statuts",
-    "noAccess": "Vous n'avez pas accès à cette page."
+    "noAccess": "Vous n'avez pas accès à cette page.",
+    "countryDialCode": "Indicatif du pays",
+    "previousGuest": "Invité précédent",
+    "nextGuest": "Invité suivant",
+    "previousVisitor": "Visiteur précédent",
+    "nextVisitor": "Visiteur suivant"
   },
   "requests": {
     "title": "Demandes et alertes",
@@ -121,15 +123,10 @@
     "notesCount": "{count} notes",
     "empty": "Aucune demande ni alerte",
     "detailTitle": "Détails de la visite",
-    "updateDetailTitle": "Détails de la mise à jour",
-    "inviteRequestDetailTitle": "Détails de la demande d'invitation",
     "addingNote": "Ajout de la note",
     "sendCode": "Envoyer le CODE à l'invité",
     "codeSent": "Code envoyé",
     "notAssigned": "Non attribué",
-    "alertDetailTitle": "Détails de l'alerte",
-    "visitorAwaiting": "En attente d'approbation",
-    "vmcReception": "Réception VMC",
     "noNotes": "Aucune remarque pour l'instant.",
     "addNotePlaceholder": "Commencer à écrire",
     "status": {
@@ -175,7 +172,6 @@
       "visitNotes": "Notes de visite",
       "destination": "Destination",
       "rateGuest": "Évaluer l'invité",
-      "purposeOfVisit": "Objet de la visite",
       "purposeCategory": "Catégorie d'objet",
       "scheduledFor": "Prévu pour",
       "origin": "Origine de la demande",
@@ -185,8 +181,6 @@
       "role": "Rôle",
       "remarks": "Remarques / notes",
       "reason": "Motif",
-      "requestingHost": "Hôte/Unité/Étage demandeur",
-      "requestedBy": "Demandé par",
       "staffRole": "Fonction",
       "scheduled": "Planifié",
       "alertSummary": "Résumé de l'alerte",
@@ -218,7 +212,6 @@
     "denyReasonPlaceholder": "Motif du refus",
     "typeFeedback": "Retour du SM",
     "editTitle": "Modifier la demande de visite",
-    "alertBanner": "N'enregistrez pas ce visiteur et n'émettez pas de badge tant que l'alerte n'a pas été examinée par le SM/la sécurité.",
     "alertNeedsAttention": "Attention requise",
     "alertDefaultCategory": "Correspondance de visiteur signalé",
     "respondPlaceholder": "Répondre à l'alerte…",
@@ -351,7 +344,6 @@
       "visitDetails": "Détails de la visite",
       "safetyConsent": "Sécurité et consentement"
     },
-    "guestLabel": "Invité {index}",
     "fields": {
       "fullName": "Nom complet de l'invité",
       "fullNamePlaceholder": "Saisir le nom complet",
@@ -368,7 +360,6 @@
       "purpose": "Objet de la visite",
       "purposePlaceholder": "Sélectionner une catégorie",
       "visitDate": "Date de la visite",
-      "visitDatePlaceholder": "Choisir une date",
       "visitTime": "Heure de la visite",
       "notes": "Notes de visite",
       "notesPlaceholder": "Saisir les notes de visite",
@@ -496,33 +487,25 @@
       "title": "Vue d'ensemble",
       "subtitle": "Les opérations visiteurs de tout le site en un coup d'œil.",
       "searchPlaceholder": "Rechercher visiteurs, hôtes, étages…",
-      "sidePanel": "Actions et activité",
       "stats": {
         "visitorsToday": "Visiteurs du jour",
-        "fromYesterday": "par rapport à hier",
         "sameAsYesterday": "Comme hier",
         "expected": "Visiteurs attendus",
         "expectedHint": "Approuvés pour aujourd'hui",
         "pending": "Demandes en attente",
-        "pendingHint": "{count, plural, =0 {Aucune en attente d'informations} one {# en attente d'informations} other {# en attente d'informations}}",
-        "openPending": "Ouvrir les demandes en attente",
         "onsite": "Sur site",
         "onsiteHint": "Actuellement sur site",
-        "checkedOut": "Sortis",
-        "checkedOutHint": "Sortis aujourd'hui"
+        "checkedOut": "Sortis"
       },
       "traffic": {
         "loadError": "Impossible de charger les données. Veuillez réessayer.",
         "title": "Fréquentation du jour",
         "range": "Période de fréquentation",
         "today": "Aujourd'hui",
-        "yesterday": "Hier",
-        "chartLabelToday": "Enregistrements par heure, aujourd'hui",
-        "chartLabelYesterday": "Enregistrements par heure, hier"
+        "yesterday": "Hier"
       },
       "breakdown": {
         "title": "Répartition des statuts",
-        "chartLabel": "Issues des visites aujourd'hui",
         "checkedIn": "Enregistrés",
         "checkedOut": "Sortis",
         "rejected": "Refusés"
@@ -555,10 +538,7 @@
       "quickActions": {
         "title": "Actions rapides",
         "addVisitor": "Ajouter un visiteur",
-        "printBadge": "Imprimer un badge",
-        "scanQr": "Scanner un QR",
-        "comingSoon": "Bientôt disponible",
-        "exportFailed": "L'export a échoué. Réessayez."
+        "comingSoon": "Bientôt disponible"
       },
       "activity": {
         "empty": "Aucune activité récente pour l'instant.",
@@ -656,7 +636,6 @@
       "subtitle": "Tendances et résultats des visites. Tout ce qui a quitté la vue d'ensemble se trouve ici.",
       "export": "Exporter en CSV",
       "denied": "Refusées",
-      "deniedHint": "Demandes refusées aujourd'hui",
       "loading": "Chargement des analyses…",
       "loadError": "Impossible de charger les analyses. Veuillez réessayer."
     }
@@ -716,7 +695,6 @@
   "staff": {
     "hub": "ESPACE PERSONNEL",
     "welcome": "Bienvenue {name}",
-    "recentVisitors": "Visiteurs récents",
     "expectedGuests": "Invités attendus",
     "guestCount": "{count, plural, one {# invité} other {# invités}}",
     "onsiteFor": "Depuis {time} h",
@@ -916,7 +894,6 @@
     "countBanner": "sur place ont besoin d'aide pour évacuer",
     "floors": "{count, plural, one {# étage} other {# étages}}",
     "generated": "Générée à <b>{time}</b>",
-    "refreshesEvery": "actualisée chaque minute",
     "noFloor": "Étage non renseigné",
     "loadError": "Impossible de charger la liste d'évacuation. Réessayez avec Actualiser.",
     "columns": {
@@ -1255,8 +1232,6 @@
       "checkedInHint": "{count, plural, one {# entrée aujourd'hui} other {# entrées aujourd'hui}}"
     },
     "history": {
-      "titleFacility": "Historique des visites",
-      "titleMine": "Mon historique de visites",
       "range": "Période de l'historique",
       "ranges": {
         "7d": "7 derniers jours",
@@ -1315,7 +1290,6 @@
     },
     "analytics": {
       "title": "Analyses du site",
-      "titleMine": "Mes analyses",
       "range": "Période d'analyse",
       "ranges": {
         "7d": "7 derniers jours",

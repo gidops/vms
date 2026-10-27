@@ -3,7 +3,6 @@ import { cn } from "../../foundations/cn";
 export interface BarChartPoint {
   /** Unique key (e.g. an ISO day); defaults to `label`. */
   key?: string;
-  /** X-axis tick label (e.g. "Oct 17"). */
   label: string;
   value: number;
 }
@@ -12,14 +11,9 @@ export interface BarChartProps {
   data: BarChartPoint[];
   /** Accessible name for the chart (e.g. "Daily visitor volume, last 30 days"). */
   label: string;
-  /** Plot height in px (excluding the x-axis labels). */
   height?: number;
-  /**
-   * Show every nth x-axis label. Defaults to roughly eight labels across, so
-   * 30 or 90 daily bars stay readable.
-   */
+  /** Defaults to roughly eight labels across so 30 or 90 daily bars stay readable. */
   labelEvery?: number;
-  /** Bar colour (semantic token). */
   tone?: "primary" | "success" | "danger";
   className?: string;
 }
@@ -30,12 +24,7 @@ const TONE: Record<NonNullable<BarChartProps["tone"]>, string> = {
   danger: "bg-danger",
 };
 
-/**
- * Single-series column chart for daily / weekly volumes. Bars are flex items,
- * so the chart is responsive and runs right-to-left in RTL with no mirroring.
- * Coloured from semantic tokens; hovering a bar shows its label and value, and
- * the values are also exposed as a visually hidden list for screen readers.
- */
+/** Bars are flex items, so the chart runs right-to-left in RTL with no mirroring. */
 export function BarChart({
   data,
   label,

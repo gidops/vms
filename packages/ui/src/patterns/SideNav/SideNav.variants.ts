@@ -1,10 +1,6 @@
 import { tv, type VariantProps } from "../../foundations/variants";
 
-/**
- * Vertical section nav. The active item gets a muted surface plus a leading
- * emphasis bar (logical `border-s`, so it flips in RTL). `collapsed` narrows the
- * rail to icons only.
- */
+/** The active item's emphasis bar uses logical `border-s` so it flips in RTL. */
 export const sideNavVariants = tv({
   slots: {
     root: "flex h-full shrink-0 flex-col border-e border-border bg-surface transition-[width]",

@@ -40,7 +40,6 @@ export function presetRange(
   return { from: addDaysIso(today, -(EXPORT_PRESETS[preset] - 1)), to: today };
 }
 
-/** Range check shared by the dialog and its tests. */
 export function exportRangeError(
   from: string,
   to: string,
@@ -52,13 +51,7 @@ export function exportRangeError(
   return null;
 }
 
-/**
- * "Export Visitor Data": a WAT visit-date range (max 366 days) and CSV / Excel
- * / PDF. The server streams the file; this only collects the choice and
- * downloads it. Quick ranges cover the last week / month / 3 months (the VMC's
- * weekly BI pull); "Custom" opens the dashboard's Popover + RangeCalendar
- * picker (see RecordsRangeFilter). It defaults to the last week.
- */
+/** Collects a WAT date range (max 366 days) and format; the server streams the file. */
 export function ExportVisitorsDialog({
   open,
   onOpenChange,
@@ -79,8 +72,7 @@ export function ExportVisitorsDialog({
 
   const rangeError = exportRangeError(from, to);
 
-  // Calendar days are plain yyyy-mm-dd; format them as UTC so the label never
-  // shifts a day in the viewer's timezone.
+  // Format plain yyyy-mm-dd days as UTC so the label never shifts a day in the viewer's timezone.
   const dayLabel = (iso: string) =>
     format.dateTime(new Date(`${iso}T00:00:00Z`), {
       dateStyle: "medium",
@@ -148,7 +140,6 @@ export function ExportVisitorsDialog({
           ) : null}
 
           <div className="flex flex-col gap-1.5">
-            {/* Same pills as the History tab's range filter. */}
             <FilterPills<ExportPreset>
               aria-label={t("quickRange")}
               value={preset}
@@ -212,7 +203,6 @@ export function ExportVisitorsDialog({
                 { value: "xlsx", label: t("excel") },
                 { value: "pdf", label: t("pdf") },
               ]}
-              // Full width, like the Insights / Settings page tabs.
               className="w-full"
             />
           </div>

@@ -4,6 +4,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { NotificationChannel } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../shared/config/env.schema';
+import { formatWat } from '../../shared/common/wat';
 import { EncryptionService } from '../../shared/crypto/encryption.service';
 import type { DomainEvent } from '../../shared/events/domain-event';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
@@ -14,25 +15,17 @@ import {
   type ChannelTarget,
 } from './notification.types';
 
-/** Format a date as DD-MM-YYYY (matches the visitor-facing email convention). */
 function formatDate(d?: Date | null): string {
   if (!d) return '';
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`;
+  const [y, m, day] = formatWat(d).slice(0, 10).split('-');
+  return `${day}-${m}-${y}`;
 }
 
-/** Format a time as HH:mm. */
 function formatTime(d?: Date | null): string {
-  if (!d) return '';
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return formatWat(d).slice(11);
 }
 
-/**
- * Turns visitor-lifecycle domain events into notifications. It resolves the
- * recipients, their locale, and the channel set, then enqueues — the dispatcher
- * renders and delivers. Listeners never call transports directly.
- */
+/** Listeners only enqueue; the dispatcher renders and delivers, never transports directly. */
 @Injectable()
 export class NotificationListener {
   private readonly logger = new Logger(NotificationListener.name);
@@ -45,7 +38,6 @@ export class NotificationListener {
     private readonly config: ConfigService<Env, true>,
   ) {}
 
-  /** Visitor's preferred locale may be encrypted-free enum; normalize safely. */
   private localeFrom(
     value: string | null | undefined,
     event: DomainEvent,
@@ -53,7 +45,6 @@ export class NotificationListener {
     return this.i18n.resolveLocale(value ?? event.metadata?.locale);
   }
 
-  /** Visitor PII (phone) is stored encrypted; tolerate plaintext/legacy values. */
   private safeDecrypt(value: string | null | undefined): string | null {
     if (!value) return null;
     try {
@@ -68,21 +59,18 @@ export class NotificationListener {
     await this.sendInviteCode(event);
   }
 
-  /** Host re-triggered the invite email (Send CODE to guest) — same payload. */
   @OnEvent(EVENT_TYPES.VisitInviteResent)
   async onVisitInviteResent(event: DomainEvent): Promise<void> {
     await this.sendInviteCode(event);
   }
 
-  /** Email/SMS/WhatsApp the guest their invite code + QR (skips walk-ins). */
   private async sendInviteCode(event: DomainEvent): Promise<void> {
     const visit = await this.prisma.visit.findUnique({
       where: { id: event.aggregateId },
       include: { visitor: true, host: { include: { user: true } }, pass: true },
     });
     if (!visit) return;
-    // Walk-ins are auto-approved and start at the VMC — they carry no invite QR
-    // and get no approval email; the badge is assigned in person at check-in.
+    // Walk-ins are auto-approved at the VMC: no invite QR or approval email.
     if (visit.type === 'WALK_IN') return;
 
     const locale = this.localeFrom(visit.visitor.preferredLocale, event);
@@ -93,8 +81,7 @@ export class NotificationListener {
       visitDate: formatDate(visit.scheduledAt),
       time: formatTime(visit.scheduledAt),
       purpose: visit.purpose,
-      // The guest-facing invite code (encoded in the QR). Falls back to the
-      // internal pass code if a reference code was somehow not generated.
+      // Falls back to the internal pass code if no reference code was generated.
       code: visit.referenceCode ?? visit.pass?.code ?? '',
     };
 
@@ -128,7 +115,6 @@ export class NotificationListener {
     // No named host (e.g. a walk-in) → there is nobody to notify of the arrival.
     if (!visit.host) return;
 
-    // Notify the HOST that their guest has arrived (host's preferred locale).
     const locale = this.localeFrom(visit.host.user.preferredLocale, event);
     const data = {
       visitorName: visit.visitor.fullName,

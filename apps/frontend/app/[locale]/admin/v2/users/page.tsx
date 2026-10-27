@@ -48,13 +48,7 @@ import { UserFormDrawer } from "../_components/users/UserFormDrawer";
 const ALL = "all";
 const PAGE_SIZE = 10;
 
-/**
- * Admin console v2 — Users tab, in the staff "My Visits" layout: filter bar
- * (search + role), header strip with the primary action, then a record table
- * with an action column. Create/edit open the existing dialogs by default;
- * `?layout=drawer` previews them as a leading-edge drawer instead. Mutating
- * actions are permission-gated (read-only roles see the table only).
- */
+/** `?layout=drawer` opens create/edit as a leading-edge drawer; read-only roles see the table only. */
 function UsersTab() {
   const t = useTranslations("users");
   const tV2 = useTranslations("adminV2.users");

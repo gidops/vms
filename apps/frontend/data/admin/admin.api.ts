@@ -1,4 +1,4 @@
-import type { AdminOverviewStats, AdminTrafficPoint } from "@vms/contracts";
+import type { AdminOverviewStats } from "@vms/contracts";
 import { api } from "@/data/http/client";
 
 export const adminApi = {
@@ -10,11 +10,6 @@ export const adminApi = {
   ) {
     return api<AdminOverviewStats>(
       `/visits/dashboard/stats?${new URLSearchParams(params)}`,
-    );
-  },
-  traffic(params: Record<"dateFrom" | "dateTo" | "timeZone", string>) {
-    return api<AdminTrafficPoint[]>(
-      `/visits/dashboard/traffic?${new URLSearchParams(params)}`,
     );
   },
 };

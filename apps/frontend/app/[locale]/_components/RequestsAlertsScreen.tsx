@@ -101,12 +101,10 @@ export function RequestsAlertsScreen({
   admin = false,
   title,
 }: {
-  /** `"admin"` renders the admin console v2 tabs (no sidebar). */
   app?: "vmc" | "staff" | "admin";
   scope?: "all" | "mine";
-  /** Original admin console: render inside the sidebar `AdminShell`. */
   admin?: boolean;
-  /** Page title; defaults to "Requests & Alerts" (admin v2: "Recent Activity"). */
+  /** Defaults to "Requests & Alerts". */
   title?: string;
 }) {
   const Shell = admin ? AdminActivityShell : TopNavShell;
@@ -114,8 +112,7 @@ export function RequestsAlertsScreen({
   const tCommon = useTranslations("common");
   const tDash = useTranslations("dashboard");
   const format = useFormatter();
-  // Anchor relative timestamps to a single "now" (next-intl needs an explicit
-  // reference; without it the formatter warns and falls back to Date.now()).
+  // next-intl needs an explicit "now" for relative times, otherwise it warns.
   const now = useNow();
 
   const [tab, setTab] = React.useState<InboxKind>("all");
@@ -127,7 +124,6 @@ export function RequestsAlertsScreen({
   const [page, setPage] = React.useState(1);
   const [selected, setSelected] = React.useState<Selected | null>(null);
 
-  // Debounce the search box into the query term (and reset to page 1).
   React.useEffect(() => {
     const id = setTimeout(() => {
       setSearch(searchInput.trim());
@@ -144,9 +140,7 @@ export function RequestsAlertsScreen({
       setPage(1);
     };
 
-  // Opening the page marks everything read after a short beat, so the unread
-  // highlight is visible first and then fades (see InboxCard transition). The
-  // mutation's `mutate` is referentially stable, so this runs once on mount.
+  // Mark read after a short beat so the unread highlight shows, then fades.
   const markSeen = useMarkInboxSeen();
   const markSeenMutate = markSeen.mutate;
   React.useEffect(() => {
@@ -170,8 +164,7 @@ export function RequestsAlertsScreen({
 
   const describe = (item: InboxItem): React.ReactNode => {
     if (item.kind === "alert") return item.reason;
-    // PENDING / REVIEW_REQUESTED sentences end with "…from" so the org is
-    // emphasised at the end; the other statuses are self-contained sentences.
+    // These sentences end with "…from" so the org is emphasised at the end.
     if (item.status === "PENDING" || item.status === "REVIEW_REQUESTED") {
       return (
         <>

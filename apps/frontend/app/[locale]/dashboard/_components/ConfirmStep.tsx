@@ -34,15 +34,16 @@ function CardHeader({
   onNext?: () => void;
   showNav?: boolean;
 }) {
+  const t = useTranslations("common");
   return (
     <div className="flex items-center justify-between rounded-lg bg-primary-subtle px-4 py-3">
       <span className="font-semibold text-primary">{title}</span>
       {showNav ? (
         <div className="flex items-center gap-3 text-primary">
-          <button type="button" aria-label="Previous guest" onClick={onPrev}>
+          <button type="button" aria-label={t("previousGuest")} onClick={onPrev}>
             <ChevronLeft className="size-4" aria-hidden="true" />
           </button>
-          <button type="button" aria-label="Next guest" onClick={onNext}>
+          <button type="button" aria-label={t("nextGuest")} onClick={onNext}>
             <ChevronRight className="size-4" aria-hidden="true" />
           </button>
         </div>
@@ -70,7 +71,6 @@ export function ConfirmStep({
   const assistText = useEvacuationAssistText();
   const [idx, setIdx] = React.useState(0);
   const guest = guests[idx] ?? guests[0];
-  // Each guest carries its own visit details now.
   const source = guest;
   const hostName =
     hosts.find((h) => h.userId === source.hostUserId)?.fullName ?? "";

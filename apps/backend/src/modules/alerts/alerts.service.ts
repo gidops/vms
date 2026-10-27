@@ -14,6 +14,12 @@ const detailInclude = Prisma.validator<Prisma.AlertInclude>()({
 
 type AlertDetailRow = Prisma.AlertGetPayload<{ include: typeof detailInclude }>;
 
+function isVisitOwner(alert: AlertDetailRow, userId: string): boolean {
+  return (
+    alert.visit?.createdById === userId || alert.visit?.host?.userId === userId
+  );
+}
+
 @Injectable()
 export class AlertsService {
   constructor(
@@ -22,12 +28,15 @@ export class AlertsService {
     private readonly events: EventPublisher,
   ) {}
 
-  async getDetail(id: string): Promise<AlertWithVisitor> {
+  /** `ownerUserId` scopes to visits that user created or hosts; others read as not found so existence isn't confirmed. */
+  async getDetail(id: string, ownerUserId?: string): Promise<AlertWithVisitor> {
     const alert = await this.prisma.alert.findUnique({
       where: { id },
       include: detailInclude,
     });
-    if (!alert) throw new NotFoundException('Alert not found');
+    if (!alert || (ownerUserId && !isVisitOwner(alert, ownerUserId))) {
+      throw new NotFoundException('Alert not found');
+    }
     return this.toDetail(alert);
   }
 
@@ -51,10 +60,7 @@ export class AlertsService {
           resolvedById: closing ? actorUserId : null,
         },
       });
-      // Closing the alert that held the visit clears its hold so VMC can proceed:
-      // a resolved flag returns the visit to APPROVED (check-in allowed); a resolved
-      // more-info request returns it to PENDING (back in the Security Manager decision queue).
-      // Only clears once no other open alert of the matching kind remains.
+      // Lift the visit hold once no other open alert of the matching kind remains.
       if (closing && alert.visitId) {
         await this.clearVisitHold(tx, alert.visitId);
       }
@@ -69,11 +75,7 @@ export class AlertsService {
     return this.getDetail(id);
   }
 
-  /**
-   * After a security alert is resolved/dismissed, lift the visit's hold if no other
-   * open alert of the same kind remains: FLAGGED (security review / restricted match)
-   * → APPROVED; REVIEW_REQUESTED (additional info) → PENDING.
-   */
+  /** FLAGGED → APPROVED, REVIEW_REQUESTED → PENDING, once no open alert of that kind remains. */
   private async clearVisitHold(
     tx: Prisma.TransactionClient,
     visitId: string,

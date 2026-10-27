@@ -72,11 +72,7 @@ function VisitorCell({ row }: { row: VisitListItem }) {
   );
 }
 
-/**
- * History: every visit in chronological order (newest first). Facility-wide
- * for holders of history:read, otherwise the caller's own visits (staff).
- * Exporters get the CSV / Excel / PDF export (last week / month / 3 months).
- */
+/** Facility-wide for holders of history:read, otherwise the caller's own visits. */
 export function HistoryTab() {
   const t = useTranslations("insights.history");
   const locale = useLocale();

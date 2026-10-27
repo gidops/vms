@@ -41,7 +41,6 @@ const COLUMNS = 5;
 const LINK_CLASS =
   "inline-flex items-center gap-1 rounded text-sm font-semibold text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]";
 
-/** Quiet one-line slot used for the loading and error states. */
 function QuietLine({
   role,
   tone = "muted",
@@ -64,16 +63,7 @@ function QuietLine({
   );
 }
 
-/**
- * Security Manager's approval queue preview, right under the overview bar:
- * oldest request first, the top {@link PENDING_PREVIEW} with their waiting time,
- * an All / Walk-in / Invite / Group filter and a link to the full queue.
- * Approve/Deny open the visit's side-tray sheet (Deny with its reason form
- * expanded); a group opens the group review sheet; a request sent back for more
- * information shows a "More info asked" chip and opens read-only. Only rendered
- * for roles that can approve, and not at all when the queue is empty (the
- * overview bar's hero already says "All caught up").
- */
+/** Approver-only preview of the oldest requests; hidden when the queue is empty (the bar already says "All caught up"). */
 export function PendingApprovalsCard() {
   const t = useTranslations("admin.overview.approvals");
   const tType = useTranslations("requests.typeOption");
@@ -94,8 +84,7 @@ export function PendingApprovalsCard() {
   const rows = matching.slice(0, PENDING_PREVIEW);
   const total = queue.data?.total ?? all.length;
 
-  // Sheets stay mounted across states so a decision that empties the queue
-  // doesn't yank the open sheet away.
+  // Sheets stay mounted so a decision that empties the queue doesn't yank the open sheet away.
   const sheets = (
     <>
       {decision ? (

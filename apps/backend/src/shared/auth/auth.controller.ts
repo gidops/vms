@@ -2,17 +2,14 @@ import { Body, Controller, Get, HttpCode, Post, Req } from '@nestjs/common';
 import {
   ChangePasswordInput,
   LoginInput,
+  RefreshInput,
   SignupInput,
   SwitchRoleInput,
 } from '@vms/contracts';
 import type { Request } from 'express';
-import { z } from 'zod';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { CurrentUser, Public, type AuthUser } from './auth.decorators';
 import { AuthService } from './auth.service';
-
-const RefreshBody = z.object({ refreshToken: z.string().min(1) });
-type RefreshBody = z.infer<typeof RefreshBody>;
 
 @Controller('auth')
 export class AuthController {
@@ -32,7 +29,6 @@ export class AuthController {
     });
   }
 
-  /** First-run only: bootstraps the initial SUPER_ADMIN account. */
   @Public()
   @Post('signup')
   @HttpCode(201)
@@ -77,13 +73,13 @@ export class AuthController {
   @Public()
   @Post('refresh')
   @HttpCode(200)
-  refresh(@Body(new ZodValidationPipe(RefreshBody)) body: RefreshBody) {
+  refresh(@Body(new ZodValidationPipe(RefreshInput)) body: RefreshInput) {
     return this.auth.refresh(body.refreshToken);
   }
 
   @Post('logout')
   @HttpCode(204)
-  async logout(@Body(new ZodValidationPipe(RefreshBody)) body: RefreshBody) {
+  async logout(@Body(new ZodValidationPipe(RefreshInput)) body: RefreshInput) {
     await this.auth.logout(body.refreshToken);
   }
 }

@@ -34,7 +34,6 @@ export interface InsightsVisitorsParams {
   pageSize?: number;
 }
 
-/** Build `?a=1&b=2` from the defined params (empty string when none). */
 function query(params: object): string {
   const qs = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) {
@@ -44,16 +43,12 @@ function query(params: object): string {
   return q ? `?${q}` : "";
 }
 
-/**
- * The Insights page. The server picks the scope (facility-wide or the caller's
- * own visits) from the caller's permissions, so these never send one.
- */
+/** The server picks the scope from the caller's permissions, so these never send one. */
 export const insightsApi = {
   overview() {
     return api<AdminOverviewStats>(`/insights/overview`);
   },
   history(params: InsightsHistoryParams = {}) {
-    // Newest first by visit date.
     return api<Paginated<VisitListItem>>(
       `/insights/history${query({ sortBy: "scheduledAt", sortDir: "desc", ...params })}`,
     );

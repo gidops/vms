@@ -18,10 +18,7 @@ export function useDeskQr() {
   });
 }
 
-/**
- * The QR picture as an object URL. Keyed on the printed URL, so New QR loads
- * the new picture; the URL is revoked when it is replaced or unused.
- */
+/** Keyed on the printed URL so New QR loads the new picture; the object URL is revoked when replaced. */
 export function useDeskQrImage(qrUrl: string | undefined) {
   return useQuery({
     queryKey: [...KEY, "image", qrUrl] as const,
@@ -35,7 +32,6 @@ export function useDeskQrImage(qrUrl: string | undefined) {
 const store = (qc: QueryClient) => (view: DeskQrView) =>
   qc.setQueryData(KEY, view);
 
-/** Create / change email / New QR / Disable / Enable all return the new view. */
 export function useDeskQrAction<A>(fn: (arg: A) => Promise<DeskQrView>) {
   const qc = useQueryClient();
   return useMutation({ mutationFn: fn, onSuccess: store(qc) });

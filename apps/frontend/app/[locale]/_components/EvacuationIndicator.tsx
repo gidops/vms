@@ -7,10 +7,7 @@ import { useEvacuationRoll } from "@/data/evacuation/queries";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/shared/auth/AuthContext";
 
-/**
- * Visitors on the live Evacuation Roll, for the home-screen quick-actions
- * panels. Zero (and no request) for roles without `evacuation:read`.
- */
+/** Zero (and no request) for roles without `evacuation:read`. */
 export function useEvacuationAlertCount(): number {
   const { hasPermission } = useAuth();
   const roll = useEvacuationRoll({
@@ -19,10 +16,6 @@ export function useEvacuationAlertCount(): number {
   return roll.data?.count ?? 0;
 }
 
-/**
- * "3 need evacuation help · View roll →" under a quick-actions title, shown
- * while the panel is tinted (see `OverviewBar` `panelTone="alert"`).
- */
 export function EvacuationRollLink({ count }: { count: number }) {
   const t = useTranslations("evacuation.indicator");
   return (

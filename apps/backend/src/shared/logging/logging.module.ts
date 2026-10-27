@@ -10,12 +10,10 @@ import { CLS_IP, CLS_LOCALE, CLS_USER_AGENT } from './cls-keys';
 
 const CORRELATION_HEADER = 'x-correlation-id';
 
-/** First value of a possibly-repeated header. */
 function headerValue(v: string | string[] | undefined): string | undefined {
   return Array.isArray(v) ? v[0] : v;
 }
 
-/** Resolve the request locale from the explicit header, then Accept-Language. */
 function requestLocale(req: IncomingMessage): string {
   const explicit = headerValue(req.headers['x-locale']);
   if (explicit) return normalizeLocale(explicit);
@@ -23,23 +21,12 @@ function requestLocale(req: IncomingMessage): string {
   return normalizeLocale(accept?.split(',')[0]);
 }
 
-/** Best-effort client IP from proxy headers, falling back to the socket. */
 function clientIp(req: IncomingMessage & { ip?: string }): string | undefined {
   const forwarded = req.headers['x-forwarded-for'];
   const first = Array.isArray(forwarded) ? forwarded[0] : forwarded;
   return first?.split(',')[0]?.trim() ?? req.ip ?? req.socket?.remoteAddress;
 }
 
-/**
- * Structured logging (pino) + request-scoped correlation IDs (nestjs-cls).
- *
- * - Every request is wrapped in an AsyncLocalStorage context whose id is taken
- *   from the inbound `x-correlation-id` header (or generated). App code reads it
- *   via ClsService; the pino `mixin` stamps it onto every log line, so a single
- *   id ties together all logs (and later, audit rows + domain events).
- * - Sensitive fields are redacted. Pretty output in dev, JSON in prod
- *   (JSON is what a SEQ/Loki/CloudWatch sink ingests).
- */
 @Module({
   imports: [
     ClsModule.forRoot({
@@ -52,8 +39,7 @@ function clientIp(req: IncomingMessage & { ip?: string }): string | undefined {
           const fromHeader = Array.isArray(header) ? header[0] : header;
           return fromHeader ?? randomUUID();
         },
-        // Capture request origin so domain events (and their audit rows) record
-        // "who, from where" without threading it through every call site.
+        // Lets domain events record the request origin without threading it through call sites.
         setup: (cls, req: IncomingMessage & { ip?: string }) => {
           cls.set(CLS_IP, clientIp(req));
           cls.set(CLS_USER_AGENT, req.headers['user-agent']);

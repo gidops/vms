@@ -1,10 +1,7 @@
 /**
- * Token storage. Access token lives in memory (cleared on reload); the refresh
- * token is persisted so sessions survive reloads.
- *
- * NOTE: persisting the refresh token in localStorage is a pragmatic interim
- * choice. The hardening path (see plan) is to have the backend set an httpOnly,
- * SameSite cookie for the refresh token so it's not reachable from JS.
+ * Access token in memory; refresh token persisted so sessions survive reloads.
+ * Known trade-off: localStorage is readable by page scripts — moving the refresh
+ * token to an httpOnly SameSite cookie set by the backend is the hardening path.
  */
 const REFRESH_KEY = "vms.refreshToken";
 

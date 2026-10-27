@@ -22,12 +22,7 @@ export interface RangeCalendarProps<
 const navButton =
   "inline-flex size-8 items-center justify-center rounded-md text-fg-muted outline-none transition-colors hover:bg-surface-muted disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]";
 
-/**
- * Two-endpoint date-range picker built on react-aria-components' accessible
- * `RangeCalendar`, styled with VMS semantic tokens. Range ends get the solid
- * primary fill; the days between get the subtle primary tint. Values are
- * `@internationalized/date` objects (not JS `Date`) — convert at the boundary.
- */
+/** Values are `@internationalized/date` objects, not JS `Date`; convert at the boundary. */
 export function RangeCalendar<T extends DateValue>({
   className,
   ...props

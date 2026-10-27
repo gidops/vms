@@ -2,11 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { RenderedMessage } from '../../notification.types';
 import type { EmailProvider } from './email-provider.interface';
 
-/**
- * Fallback email provider used when EMAIL is enabled but no real provider is
- * configured (e.g. bare local dev). Logs the message instead of sending so the
- * pipeline still works end-to-end without crashing.
- */
+/** Used when EMAIL is enabled but no provider is configured; logs instead of sending. */
 @Injectable()
 export class LogEmailProvider implements EmailProvider {
   readonly name = 'log';

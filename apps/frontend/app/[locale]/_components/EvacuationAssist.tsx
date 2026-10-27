@@ -13,12 +13,7 @@ export interface EvacuationAssistValue {
   evacuationAssistOther: string;
 }
 
-/**
- * "What help would you need?" — shown under the evacuation Yes/No once the
- * answer is Yes (V1 parity). At least one type is required, and OTHER needs a
- * short description. Used by the reception intake and the visitor's
- * self-registration form.
- */
+/** Shown once the evacuation answer is Yes: at least one type is required, and OTHER needs a description. */
 export function EvacuationAssistFields({
   id,
   value,

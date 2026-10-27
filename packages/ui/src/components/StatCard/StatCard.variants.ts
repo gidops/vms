@@ -1,17 +1,5 @@
 import { tv, type VariantProps } from "../../foundations/variants";
 
-/**
- * StatCard layout + icon tint.
- *
- * `layout`:
- *   - `inline`  — label/value on the leading side, icon chip trailing (default;
- *                 the original compact card).
- *   - `stacked` — icon chip on top, then label, value and hint (admin overview).
- *
- * `tone` tints the icon chip from semantic tokens, so each metric can carry its
- * own colour (success for expected, warning for pending, …) and still follow
- * dark mode.
- */
 export const statCardVariants = tv({
   slots: {
     root: "p-5",

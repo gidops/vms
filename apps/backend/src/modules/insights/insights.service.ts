@@ -24,10 +24,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const INACTIVE: VisitStatus[] = ['DENIED', 'CANCELLED', 'EXPIRED'];
 const WEEKS = 12;
 const TOP_N = 5;
-/** Most visits shown in one visitor's history sheet. */
 const VISITOR_HISTORY_LIMIT = 100;
 
-/** `YYYY-MM-DD` plus `n` calendar days. */
 function addDays(day: string, n: number): string {
   const [y, m, d] = day.split('-').map(Number);
   return new Date(Date.UTC(y, m - 1, d) + n * DAY_MS)
@@ -35,7 +33,6 @@ function addDays(day: string, n: number): string {
     .slice(0, 10);
 }
 
-/** The Monday on or before a `YYYY-MM-DD` day. */
 function mondayOf(day: string): string {
   const [y, m, d] = day.split('-').map(Number);
   const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
@@ -45,7 +42,6 @@ function mondayOf(day: string): string {
 const watDay = (d: Date) => formatWat(d).slice(0, 10);
 const watHour = (d: Date) => Number(formatWat(d).slice(11, 13));
 
-/** Count by key, most frequent first (ties by key), keeping the top `n`. */
 function top(keys: (string | null | undefined)[], n = TOP_N): InsightsCount[] {
   return tally(keys).slice(0, n);
 }
@@ -69,12 +65,7 @@ function avgMinutes(
   return Math.round(spans.reduce((a, b) => a + b, 0) / spans.length / 60_000);
 }
 
-/**
- * Insights page: today's overview, the visitor directory and analytics. Each
- * read runs in the caller's scope: `facility` (everyone) or `self` (visits the
- * caller created or hosts — the same "mine" rule as the visit list). Counts are
- * per visit (one per guest); WAT calendar days throughout.
- */
+/** Scoped to `facility` or `self` (created or hosted, like the visit list); counts are per visit, WAT days throughout. */
 @Injectable()
 export class InsightsService {
   constructor(
@@ -88,7 +79,6 @@ export class InsightsService {
       : {};
   }
 
-  /** Today's facility-wide numbers (WAT today vs yesterday). */
   overview(now: Date = new Date()): Promise<AdminOverviewStats> {
     const today = watToday(now);
     const yesterday = addDays(today, -1);
@@ -103,7 +93,6 @@ export class InsightsService {
     });
   }
 
-  /** Everyone who visited (in scope), most recent visit first. */
   async visitors(
     query: InsightsVisitorsQuery,
     scope: InsightsScope,
@@ -169,7 +158,6 @@ export class InsightsService {
     };
   }
 
-  /** One visitor's visits (in scope). Out of scope reads as not found. */
   async visitor(
     id: string,
     scope: InsightsScope,
@@ -360,7 +348,6 @@ export class InsightsService {
     };
   }
 
-  /** Who is checked in right now, by floor (busiest first). */
   private async onsiteByFloor(): Promise<InsightsCount[]> {
     const groups = await this.prisma.visit.groupBy({
       by: ['floor'],
@@ -372,7 +359,6 @@ export class InsightsService {
       .sort((a, b) => b.count - a.count || a.key.localeCompare(b.key));
   }
 
-  /** Alert counts for the Security Manager / System Admin view. */
   private async security(window: { gte: Date; lt: Date }) {
     const [flagged, alertsRaised, alertsOpen] = await Promise.all([
       this.prisma.alert.count({

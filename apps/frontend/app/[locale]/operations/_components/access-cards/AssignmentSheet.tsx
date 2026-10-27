@@ -135,11 +135,7 @@ function CloseCard({ a }: { a: AssignmentDetail }) {
   );
 }
 
-/**
- * One card issue: the card preview (front and back, as printed), validity,
- * linked visit and history. While the card is out: print / reprint (each is
- * logged), extend validity, and close it as returned or lost.
- */
+/** Prints and reprints are each logged. */
 export function AssignmentSheet({
   id,
   onClose,
@@ -182,7 +178,6 @@ export function AssignmentSheet({
         </Alert>
       ) : (
         <>
-          {/* Identity card, as on the Insights visitor sheet. */}
           <SheetSection title={t("visitorInfo")}>
             <div className="flex items-start justify-between gap-3 rounded-lg bg-surface-muted p-4">
               <div className="flex min-w-0 items-center gap-3">
@@ -256,7 +251,6 @@ export function AssignmentSheet({
 
           {a.visit ? (
             <SheetSection title={t("visit")}>
-              {/* Same row as the visitor sheet's visit history. */}
               <div className="flex items-start gap-3 py-1">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-fg-muted">
                   <CalendarDays className="size-5" aria-hidden="true" />

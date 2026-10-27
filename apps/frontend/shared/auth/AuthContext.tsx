@@ -21,7 +21,6 @@ export type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 interface AuthContextValue {
   user: MeResponse | null;
   status: AuthStatus;
-  /** The role currently scoping permissions + dashboard. */
   activeRole: string | null;
   login: (email: string, password: string) => Promise<MeResponse>;
   signup: (
@@ -29,9 +28,9 @@ interface AuthContextValue {
     fullName: string,
     password: string,
   ) => Promise<MeResponse>;
-  /** Switch the active role profile (re-mints a scoped token). */
+  /** Re-mints a scoped access token. */
   switchRole: (role: string) => Promise<MeResponse>;
-  /** Re-fetch the current profile (after a settings save) so the nav updates. */
+  /** Re-fetch after a settings save so the nav updates. */
   refreshUser: () => Promise<MeResponse>;
   logout: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
@@ -72,7 +71,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => setUnauthorizedHandler(null);
   }, [tryRefresh]);
 
-  // On load, restore a session from the persisted refresh token (if any).
   useEffect(() => {
     let active = true;
     void (async () => {
