@@ -242,6 +242,14 @@
   --color-ring: var(--vms-ring);
 }
 
+/* ---- Print: always ink on paper, whatever the screen theme ------------- */
+:root {
+  --color-print-paper: #fff;
+  --color-print-ink: #000;
+  --color-print-rule: #bbb;
+  --color-print-band: #eee;
+}
+
 /* ---- Light theme (default) -------------------------------------------- */
 :root,
 [data-theme="light"] {

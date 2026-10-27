@@ -23,7 +23,6 @@ import {
 import { Ban, Download, Printer, QrCode, RefreshCw } from "lucide-react";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import * as React from "react";
-import { createPortal } from "react-dom";
 import {
   useDeskQr,
   useCreateDeskQr,
@@ -36,6 +35,7 @@ import {
 } from "@/data/desk-qr/queries";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { formatWatDateTime, formatWatTime } from "@/shared/wat";
+import { DeskQrPoster } from "./DeskQrPoster";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -184,46 +184,6 @@ function ConfirmDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-}
-
-const subscribeNoop = () => () => {};
-
-/** Portalled to <body> so the print stylesheet can hide all app chrome. */
-function PrintPoster({ qr, image }: { qr: DeskQrView; image: string }) {
-  const t = useTranslations("deskQr.poster");
-  const format = useFormatter();
-  const mounted = React.useSyncExternalStore(
-    subscribeNoop,
-    () => true,
-    () => false,
-  );
-  if (!mounted) return null;
-  return createPortal(
-    <div className="deskqr-print-root" aria-hidden="true">
-      <div className="deskqr-poster">
-        <div className="deskqr-poster-brand">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/afreximbank.svg" alt="" />
-          <span>{t("brand")}</span>
-        </div>
-        <h1>{t("title")}</h1>
-        <p className="deskqr-poster-sub">{t("subtitle")}</p>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="deskqr-poster-qr" src={image} alt="" />
-        <p>{t("then")}</p>
-        <p>{t("code")}</p>
-        <p className="deskqr-poster-langs">English · Français · العربية</p>
-        <p className="deskqr-poster-foot">
-          {t("footer", {
-            date: format.dateTime(new Date(qr.tokenRotatedAt), {
-              dateStyle: "medium",
-            }),
-          })}
-        </p>
-      </div>
-    </div>,
-    document.body,
   );
 }
 
@@ -585,7 +545,7 @@ export function DeskQrScreen({
         }
       />
       {image.data && active ? (
-        <PrintPoster qr={view} image={image.data} />
+        <DeskQrPoster qr={view} image={image.data} />
       ) : null}
     </div>
   );

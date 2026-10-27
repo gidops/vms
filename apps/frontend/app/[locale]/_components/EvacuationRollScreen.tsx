@@ -9,6 +9,7 @@ import {
   Button,
   EmptyState,
   Pagination,
+  PrintSheet,
   RecordTable,
   Spinner,
   Table,
@@ -22,10 +23,10 @@ import {
 import { CheckCircle2, LifeBuoy, Printer, RefreshCw } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
-import { createPortal } from "react-dom";
 import { useEvacuationRoll } from "@/data/evacuation/queries";
 import { formatWatDateTime, formatWatTime } from "@/shared/wat";
 import { useEvacuationAssistText } from "./EvacuationAssist";
+import print from "./EvacuationRollPrint.module.css";
 
 export interface FloorGroup {
   floor: string | null;
@@ -232,9 +233,7 @@ function RollTable({
   );
 }
 
-const subscribeNoop = () => () => {};
-
-/** Portalled to <body> so print CSS can hide the app chrome; <thead> repeats on every A4 page. */
+/** The paper copy for wardens; <thead> repeats on every A4 page. */
 function PrintRoll({
   roll,
   groups,
@@ -245,21 +244,14 @@ function PrintRoll({
   const t = useTranslations("evacuation");
   const assistText = useEvacuationAssistText();
   const locale = useLocale();
-  // Portals need document.body, which only exists on the client.
-  const mounted = React.useSyncExternalStore(
-    subscribeNoop,
-    () => true,
-    () => false,
-  );
-  if (!mounted) return null;
-  return createPortal(
-    <div className="evac-print-root" data-testid="evacuation-print">
-      <table className="evac-print-table">
+  return (
+    <PrintSheet className={print.sheet} data-testid="evacuation-print">
+      <table className={print.table}>
         <thead>
           <tr>
-            <th colSpan={6} className="evac-print-header">
-              <div className="evac-print-brand">{t("print.heading")}</div>
-              <div className="evac-print-meta">
+            <th colSpan={6} className={print.header}>
+              <div className={print.brand}>{t("print.heading")}</div>
+              <div className={print.meta}>
                 {t("print.generated", {
                   datetime: formatWatDateTime(roll.generatedAt, locale),
                 })}
@@ -268,7 +260,7 @@ function PrintRoll({
               </div>
             </th>
           </tr>
-          <tr className="evac-print-cols">
+          <tr className={print.columns}>
             <th>{t("columns.visitor")}</th>
             <th>{t("columns.organization")}</th>
             <th>{t("columns.host")}</th>
@@ -279,7 +271,7 @@ function PrintRoll({
         </thead>
         {groups.map((g) => (
           <tbody key={g.floor ?? "none"}>
-            <tr className="evac-print-floor">
+            <tr className={print.floor}>
               <td colSpan={6}>
                 <FloorLabel floor={g.floor} /> · {g.rows.length}
               </td>
@@ -311,8 +303,7 @@ function PrintRoll({
           </tbody>
         ))}
       </table>
-    </div>,
-    document.body,
+    </PrintSheet>
   );
 }
 

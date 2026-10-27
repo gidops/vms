@@ -1,6 +1,6 @@
 "use client";
 
-import { Label, YesNoControl } from "@vms/ui";
+import { Label, SegmentedControl } from "@vms/ui";
 import { useTranslations } from "next-intl";
 import type * as React from "react";
 
@@ -74,12 +74,16 @@ export function YesNo({
       <span id={`${id}-label`} className="text-sm font-medium text-fg">
         {label} <span className="text-danger">*</span>
       </span>
-      <YesNoControl
+      <SegmentedControl
         id={id}
-        value={value}
-        onValueChange={onChange}
-        yesLabel={t("yes")}
-        noLabel={t("no")}
+        options={[
+          { value: "yes", label: t("yes") },
+          { value: "no", label: t("no") },
+        ]}
+        value={value === null ? null : value ? "yes" : "no"}
+        onValueChange={(v) => onChange(v === "yes")}
+        tone="primary"
+        required
         invalid={Boolean(error)}
         aria-labelledby={`${id}-label`}
         aria-describedby={errorProps(id, error)["aria-describedby"]}

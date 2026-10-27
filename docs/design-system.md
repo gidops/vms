@@ -43,14 +43,28 @@ React Aria and styled with `tailwind-variants`. Variant axes are standardized:
 - **Primitives (15)**: Avatar, Badge, Button, Checkbox, Dialog, Input (also
   exports `PasswordInput`), Label, Popover, Select, Skeleton, Spinner, Switch,
   Tabs, Textarea, Tooltip.
-- **Components (19)**: Alert, AreaChart, BarChart, Breadcrumbs, Card,
+- **Components (18)**: Alert, AreaChart, BarChart, Breadcrumbs, Card,
   DonutChart, Drawer, EmptyState, InboxCard (Requests & Alerts feed card),
-  Pagination, RangeCalendar, SearchInput, SegmentedControl (pill toggle,
-  `default` + `onEmphasis`), StatCard, StatusBadge (maps the contracts
-  `VisitStatus` to display labels), Table, Timeline (visit progress stepper),
-  Toast, YesNoControl.
-- **Patterns (8)**: AlertModal, AuthLayout, DetailDrawer, FilterBar,
-  RecordTable, SideNav, TopNav, TopNavShell (the deep‑green top‑nav layout).
+  Pagination, RangeCalendar, SearchInput, SegmentedControl (pill toggle and
+  required Yes/No question: `default` or `onEmphasis` variant, `primary` tone,
+  `value={null}` for unanswered, `invalid`, `fullWidth`), StatCard,
+  StatusBadge (maps the contracts `VisitStatus` to display labels), Table,
+  Timeline (visit progress stepper), Toast.
+- **Patterns (9)**: AlertModal, AuthLayout, DetailDrawer, FilterBar,
+  PrintSheet (paper-only content, see below), RecordTable, SideNav, TopNav,
+  TopNavShell (the deep‑green top‑nav layout).
+
+### Printing
+
+Anything printed (the evacuation roll, the walk-in QR poster, access cards) is
+wrapped in `<PrintSheet>`. It is hidden on screen; while printing it is the
+only thing on the page, so menus and dialogs never reach the paper. The rules
+live in `@vms/ui/print.css` (imported by the app's `globals.css` and by
+Storybook), which also defines the A4 page and a card-sized `cr80` page.
+Colours come from the print tokens `--color-print-ink`, `--color-print-paper`,
+`--color-print-rule` and `--color-print-band`, which stay black on white in
+dark mode. Each view keeps its own layout in a CSS module next to it, e.g.
+`EvacuationRollPrint.module.css`.
 
 Most exports have a Storybook story next to them. **Label** and **Drawer** do
 not have their own story yet; `PasswordInput` is shown in the Input story.
