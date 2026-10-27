@@ -157,11 +157,13 @@ describe('Desk QR (e2e)', () => {
     const qr = await as(ROLES.SUPER_ADMIN).get('/desk-qr').expect(200);
     const token = tokenOf(qr.body.url as string);
 
-    const hosts = await http()
-      .get(
-        `/public/desk-qr/${token}/hosts?q=${encodeURIComponent(`STAFF ${run}`)}`,
-      )
-      .expect(200);
+    const hostSearch = (formToken: string) =>
+      http().get(
+        `/public/desk-qr/${token}/hosts?q=${encodeURIComponent(`STAFF ${run}`)}&formToken=${encodeURIComponent(formToken)}`,
+      );
+    await hostSearch('not-a-form-token').expect(422);
+    const opened = await http().get(`/public/desk-qr/${token}`).expect(200);
+    const hosts = await hostSearch(opened.body.formToken as string).expect(200);
     expect(hosts.body).toEqual([
       expect.objectContaining({ userId: userIds[ROLES.STAFF] }),
     ]);

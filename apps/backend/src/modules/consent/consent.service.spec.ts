@@ -64,7 +64,7 @@ describe('ConsentService', () => {
       expect.anything(),
       expect.objectContaining({
         type: EVENT_TYPES.ConsentWithdrawn,
-        payload: { email: 'emeka.obi@accessbankplc.com' },
+        payload: { consentEventId: 'evt1', email: 'e***@accessbankplc.com' },
       }),
     );
   });
@@ -206,7 +206,7 @@ describe('ConsentService', () => {
       expect.anything(),
       expect.objectContaining({
         type: EVENT_TYPES.ConsentGranted,
-        payload: { email: 'adaeze@example.com' },
+        payload: { consentEventId: 'evt1', email: 'a***@example.com' },
         metadata: { actorUserId: 'admin' },
       }),
     );

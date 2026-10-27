@@ -63,6 +63,8 @@ export const PERMISSIONS = {
   AUDIT_EXPORT: "audit:export",
   NOTIFICATION_READ: "notification:read",
   NOTIFICATION_RETRY: "notification:retry",
+  /** See raw provider error text on failed deliveries (may contain recipient details). */
+  NOTIFICATION_READ_ERRORS: "notification:read_errors",
 } as const;
 
 /** Stored as free strings in the DB; the active role scopes session permissions. */

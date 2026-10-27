@@ -13,6 +13,7 @@ import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { toCsv } from '../../shared/common/csv';
 import { formatWat } from '../../shared/common/wat';
+import { maskEmail } from '../../shared/common/mask';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
 import { EventPublisher } from '../../shared/events/event-publisher';
 import { TransactionManager } from '../../shared/events/transaction.manager';
@@ -153,7 +154,7 @@ export class ConsentService {
         type: EVENT_TYPES.ConsentWithdrawn,
         aggregateType: 'CommsConsent',
         aggregateId: event.id,
-        payload: { email },
+        payload: { consentEventId: event.id, email: maskEmail(email) },
         metadata: { actorUserId },
       });
     });
@@ -179,7 +180,7 @@ export class ConsentService {
         type: EVENT_TYPES.ConsentGranted,
         aggregateType: 'CommsConsent',
         aggregateId: event.id,
-        payload: { email },
+        payload: { consentEventId: event.id, email: maskEmail(email) },
         metadata: { actorUserId },
       });
     });

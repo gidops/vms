@@ -183,8 +183,11 @@ export class VisitAuthoringService {
             })
           ).id
         : null;
+      const existing = await tx.visitor.findUnique({
+        where: { email: input.email },
+      });
       const visitor =
-        (await tx.visitor.findUnique({ where: { email: input.email } })) ??
+        existing ??
         (await tx.visitor.create({
           data: {
             fullName: input.fullName,
@@ -210,14 +213,18 @@ export class VisitAuthoringService {
         },
         include: { host: { include: { user: true } } },
       });
-      await tx.commsConsentEvent.create({
-        data: {
-          email: normalizeConsentEmail(input.email),
-          consent: input.commsConsent,
-          source: 'VISIT',
-          visitId: visit.id,
-        },
-      });
+      // The email isn't verified on the public form, so it may only set consent
+      // for a visitor it creates, never change an existing person's choice.
+      if (!existing) {
+        await tx.commsConsentEvent.create({
+          data: {
+            email: normalizeConsentEmail(input.email),
+            consent: input.commsConsent,
+            source: 'VISIT',
+            visitId: visit.id,
+          },
+        });
+      }
       await this.events.publish(tx, {
         type: EVENT_TYPES.VisitApproved,
         aggregateType: 'Visit',

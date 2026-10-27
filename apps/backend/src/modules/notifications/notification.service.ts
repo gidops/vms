@@ -82,6 +82,27 @@ export class NotificationService {
     };
   }
 
+  /**
+   * Re-queues a FAILED outbound delivery in the caller's transaction. The status
+   * check is part of the update, so of two concurrent retries only one wins;
+   * the loser gets null.
+   */
+  async requeueFailed(
+    tx: Prisma.TransactionClient,
+    id: string,
+  ): Promise<Notification | null> {
+    const { count } = await tx.notification.updateMany({
+      where: { id, status: 'FAILED' },
+      data: {
+        status: 'PENDING',
+        attempts: 0,
+        availableAt: new Date(),
+        error: null,
+      },
+    });
+    return count ? tx.notification.findUniqueOrThrow({ where: { id } }) : null;
+  }
+
   async markRead(userId: string, id: string): Promise<{ id: string }> {
     const res = await this.repo.markRead(id, userId);
     if (res.count === 0)

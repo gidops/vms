@@ -45,13 +45,16 @@ export class PublicRegistrationController {
   }
 
   @Get('hosts')
-  @RateLimit({ name: 'hosts-ip', limit: 60, windowMs: MINUTE, by: 'ip' })
+  @RateLimit(
+    { name: 'hosts-ip', limit: 60, windowMs: MINUTE, by: 'ip' },
+    { name: 'hosts-qr', limit: 300, windowMs: MINUTE, by: { param: 'token' } },
+  )
   hosts(
     @Param('token') token: string,
     @Query(new ZodValidationPipe(PublicHostSearchQuery))
     query: PublicHostSearchQuery,
   ): Promise<PublicHostOption[]> {
-    return this.registrations.searchHosts(token, query.q);
+    return this.registrations.searchHosts(token, query.q, query.formToken);
   }
 
   @Post('registrations')

@@ -29,6 +29,8 @@ export const envSchema = z.object({
   ENCRYPTION_KEY: z.string().optional(),
   OUTBOX_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(2000),
   SEED_DEMO_DATA: boolEnv(false),
+  // Delete roles the code no longer defines (and their user assignments) on boot.
+  SEED_PRUNE_ROLES: boolEnv(false),
   SEQ_URL: z.preprocess(emptyToUndefined, z.string().url().optional()),
   SEQ_API_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
   // Optional so the app boots without S3; credentials come from the AWS default chain.

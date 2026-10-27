@@ -22,16 +22,14 @@ const MOVED_PAGES: Record<string, string> = {
 };
 
 // English is served without a locale prefix; /en, /fr and /ar are prefixed.
-const movedPageRedirects = Object.entries(MOVED_PAGES).flatMap(
-  ([from, to]) => [
-    { source: from, destination: to, permanent: false },
-    {
-      source: `/:locale(en|fr|ar)${from}`,
-      destination: `/:locale${to}`,
-      permanent: false,
-    },
-  ],
-);
+const movedPageRedirects = Object.entries(MOVED_PAGES).flatMap(([from, to]) => [
+  { source: from, destination: to, permanent: false },
+  {
+    source: `/:locale(en|fr|ar)${from}`,
+    destination: `/:locale${to}`,
+    permanent: false,
+  },
+]);
 
 const nextConfig: NextConfig = {
   output: "standalone",
@@ -44,6 +42,18 @@ const nextConfig: NextConfig = {
   // Cutover: the V1 QR already printed at the VMC desk points at
   // /qr.php?i=<32 hex>. Once the domain serves v2, send it to the desk QR form
   // (its token is imported as the desk QR; see apps/backend desk-qr:import-v1).
+  // The walk-in QR page carries its secret token in the URL: keep it out of
+  // Referer headers sent to other sites and out of search engines.
+  async headers() {
+    const privatePage = [
+      { key: "Referrer-Policy", value: "no-referrer" },
+      { key: "X-Robots-Tag", value: "noindex, nofollow" },
+    ];
+    return [
+      { source: "/r/:token", headers: privatePage },
+      { source: "/:locale(en|fr|ar)/r/:token", headers: privatePage },
+    ];
+  },
   async redirects() {
     return [
       ...movedPageRedirects,

@@ -40,7 +40,7 @@
       "ratingButton": "Évaluer votre visite"
     },
     "deskQrCode": {
-      "subject": "Code d'accueil pour {visitorName} : {code}",
+      "subject": "Code d'accueil pour {visitorName}",
       "heading": "Un visiteur s'enregistre à l'accueil",
       "intro": "{visitorName} ({organization}) a scanné le QR de l'accueil et attend son code.",
       "readOut": "Lisez-lui ce code pour terminer son enregistrement. Il ne sert qu'une fois et expire à {time}.",

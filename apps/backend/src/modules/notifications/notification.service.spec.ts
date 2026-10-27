@@ -77,4 +77,43 @@ describe('NotificationService', () => {
       expect(createMany).not.toHaveBeenCalled();
     });
   });
+
+  describe('requeueFailed', () => {
+    function setup(updated: number) {
+      const tx = {
+        notification: {
+          updateMany: jest.fn().mockResolvedValue({ count: updated }),
+          findUniqueOrThrow: jest.fn().mockResolvedValue({ id: 'n1' }),
+        },
+      };
+      const service = new NotificationService(
+        {} as NotificationRepository,
+        makeConfig({}),
+      );
+      return { service, tx };
+    }
+
+    it('only re-queues a delivery that is still FAILED', async () => {
+      const { service, tx } = setup(1);
+      await expect(service.requeueFailed(tx as never, 'n1')).resolves.toEqual({
+        id: 'n1',
+      });
+      expect(tx.notification.updateMany).toHaveBeenCalledWith({
+        where: { id: 'n1', status: 'FAILED' },
+        data: expect.objectContaining({
+          status: 'PENDING',
+          attempts: 0,
+          error: null,
+        }),
+      });
+    });
+
+    it('returns null when another retry already re-queued it', async () => {
+      const { service, tx } = setup(0);
+      await expect(
+        service.requeueFailed(tx as never, 'n1'),
+      ).resolves.toBeNull();
+      expect(tx.notification.findUniqueOrThrow).not.toHaveBeenCalled();
+    });
+  });
 });

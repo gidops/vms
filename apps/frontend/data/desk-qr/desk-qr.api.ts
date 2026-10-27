@@ -47,11 +47,11 @@ export const publicRegistrationApi = {
   open(token: string) {
     return api<DeskQrFormSession>(pub(token), { auth: false });
   },
-  searchHosts(token: string, q: string) {
-    return api<PublicHostOption[]>(
-      `${pub(token)}/hosts?q=${encodeURIComponent(q)}`,
-      { auth: false },
-    );
+  searchHosts(token: string, q: string, formToken: string) {
+    const query = new URLSearchParams({ q, formToken });
+    return api<PublicHostOption[]>(`${pub(token)}/hosts?${query}`, {
+      auth: false,
+    });
   },
   submit(token: string, input: PublicRegistrationInput) {
     return api<PublicRegistrationPending>(`${pub(token)}/registrations`, {

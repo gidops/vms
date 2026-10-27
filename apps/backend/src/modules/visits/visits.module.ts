@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../prisma/prisma.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { VisitAccessService } from './access.service';
 import { VisitDashboardService } from './dashboard.service';
 import { VisitAuthoringService } from './authoring.service';
@@ -11,7 +12,7 @@ import { VisitReadService } from './read.service';
 import { VisitsController } from './visits.controller';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, NotificationsModule],
   controllers: [VisitsController],
   providers: [
     VisitDashboardService,

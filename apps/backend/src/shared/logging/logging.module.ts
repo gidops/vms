@@ -7,6 +7,7 @@ import type { IncomingMessage } from 'node:http';
 import type { Env } from '../config/env.schema';
 import { normalizeLocale } from '../i18n/i18n.service';
 import { CLS_IP, CLS_LOCALE, CLS_USER_AGENT } from './cls-keys';
+import { redactRequest } from './redact-request';
 
 const CORRELATION_HEADER = 'x-correlation-id';
 
@@ -60,6 +61,10 @@ function clientIp(req: IncomingMessage & { ip?: string }): string | undefined {
             mixin() {
               const correlationId = cls.getId();
               return correlationId ? { correlationId } : {};
+            },
+            serializers: {
+              req: (req: Parameters<typeof redactRequest>[0]) =>
+                redactRequest(req),
             },
             redact: {
               paths: [

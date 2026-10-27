@@ -1,29 +1,20 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import type { Notification } from '@prisma/client';
-import { ROLES, type NotificationDelivery } from '@vms/contracts';
+import { PERMISSIONS, type NotificationDelivery } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { AuthUser } from '../../shared/auth/auth.decorators';
+import { maskEmail, maskPhone } from '../../shared/common/mask';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
 import { EventPublisher } from '../../shared/events/event-publisher';
 import { TransactionManager } from '../../shared/events/transaction.manager';
+import { NotificationService } from '../notifications/notification.service';
 
 const OUTBOUND = ['EMAIL', 'SMS', 'WHATSAPP'] as const;
-
-export function maskEmail(email: string): string {
-  const at = email.indexOf('@');
-  if (at < 1) return '***';
-  return `${email[0]}***${email.slice(at)}`;
-}
-
-export function maskPhone(phone: string): string {
-  const digits = phone.replace(/\s+/g, '');
-  if (digits.length <= 6) return '***';
-  return `${digits.slice(0, 4)} ***${digits.slice(-3)}`;
-}
 
 function maskRecipient(
   channel: string,
@@ -33,12 +24,8 @@ function maskRecipient(
   return channel === 'EMAIL' ? maskEmail(recipient) : maskPhone(recipient);
 }
 
-/** Raw provider errors are only shown to Security Manager / System Admin. */
 function canSeeDeliveryErrors(principal: AuthUser): boolean {
-  return (
-    principal.activeRole === ROLES.ADMIN ||
-    principal.activeRole === ROLES.SUPER_ADMIN
-  );
+  return principal.permissions.includes(PERMISSIONS.NOTIFICATION_READ_ERRORS);
 }
 
 function toDelivery(
@@ -67,6 +54,7 @@ export class VisitDeliveriesService {
     private readonly prisma: PrismaService,
     private readonly txm: TransactionManager,
     private readonly events: EventPublisher,
+    private readonly notifications: NotificationService,
   ) {}
 
   async list(
@@ -103,15 +91,8 @@ export class VisitDeliveriesService {
       throw new BadRequestException('errors.notification.notRetryable');
     }
     const updated = await this.txm.run(async (tx) => {
-      const n = await tx.notification.update({
-        where: { id: row.id },
-        data: {
-          status: 'PENDING',
-          attempts: 0,
-          availableAt: new Date(),
-          error: null,
-        },
-      });
+      const n = await this.notifications.requeueFailed(tx, row.id);
+      if (!n) throw new ConflictException('errors.notification.notRetryable');
       await this.events.publish(tx, {
         type: EVENT_TYPES.NotificationRetried,
         aggregateType: 'Visit',

@@ -52,7 +52,9 @@ export const PublicHostOption = z.object({
 export type PublicHostOption = z.infer<typeof PublicHostOption>;
 
 export const PublicHostSearchQuery = z.object({
-  q: z.string().trim().min(2).max(50),
+  q: z.string().trim().min(3).max(50),
+  /** The open form's token, so the directory can't be searched without loading the form. */
+  formToken: z.string().min(1).max(200),
 });
 export type PublicHostSearchQuery = z.infer<typeof PublicHostSearchQuery>;
 
