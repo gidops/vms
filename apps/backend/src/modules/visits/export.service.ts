@@ -12,6 +12,7 @@ import { EventPublisher } from '../../shared/events/event-publisher';
 import { TransactionManager } from '../../shared/events/transaction.manager';
 import { latestConsent } from '../consent/latest-consent';
 import { evacuationAssistLabel } from './helpers/evacuation-assist';
+import { identityAtVisit } from './helpers/visit-identity';
 
 const BATCH = 500;
 
@@ -158,10 +159,10 @@ export class VisitExportService {
     const card = v.pass?.accessCard;
     return [
       v.referenceCode ?? '',
-      v.visitor.fullName,
+      identityAtVisit(v).fullName,
       v.visitor.email,
       v.visitor.phone ?? '',
-      v.visitor.organization ?? '',
+      identityAtVisit(v).organization ?? '',
       v.host?.user.fullName ?? '',
       TYPE_LABEL[v.type] ?? v.type,
       channelLabel(v.source),

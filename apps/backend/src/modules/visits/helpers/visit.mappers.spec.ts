@@ -35,6 +35,8 @@ const visitRow = {
   groupName: null,
   groupContact: null,
   referenceCode: '5A19-795',
+  visitorNameAtVisit: null,
+  organizationAtVisit: null,
   type: 'PRE_INVITED',
   status: 'APPROVED',
   purpose: 'Meeting',
@@ -53,7 +55,7 @@ const visitRow = {
   source: 'VMC_STATION',
   createdById: 'u-creator',
   createdByName: null,
-  visitor: { id: 'vis1', fullName: 'Paebi Bobson' },
+  visitor: { id: 'vis1', fullName: 'Paebi Bobson', organization: null },
   host: hostRow,
 };
 
@@ -101,6 +103,22 @@ describe('toDetail', () => {
       zone: 'A',
       status: 'ACTIVE',
       assignedAt: at,
+    });
+  });
+
+  it('shows the name typed at the visit and flags the stored record', () => {
+    const d = detail({
+      visitorNameAtVisit: 'Typed Name',
+      organizationAtVisit: 'Typed Org',
+      visitor: { id: 'vis1', fullName: 'Paebi Bobson', organization: 'Acme' },
+    });
+    expect(d.visitor).toMatchObject({
+      fullName: 'Typed Name',
+      organization: 'Typed Org',
+    });
+    expect(d.storedVisitor).toEqual({
+      fullName: 'Paebi Bobson',
+      organization: 'Acme',
     });
   });
 

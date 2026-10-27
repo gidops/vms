@@ -294,7 +294,8 @@
     "sources": {
       "deskQr": "Walk-in QR (self-registered)",
       "selfRegistered": "Visitor, via the walk-in QR"
-    }
+    },
+    "storedVisitorDiffers": "This email belongs to {name} in our records. Check ID before check-in."
   },
   "language": {
     "select": "Select language",

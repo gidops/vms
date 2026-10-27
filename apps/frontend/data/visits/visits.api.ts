@@ -121,6 +121,8 @@ export interface VisitRequestDetail {
     phone?: string | null;
     organization?: string | null;
   };
+  /** The stored visitor record, when this visit was registered under other details. */
+  storedVisitor?: { fullName: string; organization: string | null } | null;
   host: {
     id: string;
     department?: string | null;

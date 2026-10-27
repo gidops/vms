@@ -190,6 +190,8 @@ export class VisitAuthoringService {
           floor: input.floor,
           scheduledAt: new Date(),
           source: VISIT_SOURCE_DESK_QR,
+          visitorNameAtVisit: input.fullName,
+          organizationAtVisit: input.organization,
           needsEvacuationAssist: input.needsEvacuationAssist,
           ...evacuationAssistData(input),
           commsConsent: input.commsConsent,

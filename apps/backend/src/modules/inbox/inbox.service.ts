@@ -8,6 +8,7 @@ import type {
 } from '@vms/contracts';
 import { AlertStatus, VisitStatus } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
+import { identityAtVisit } from '../visits/helpers/visit-identity';
 
 const requestInclude = Prisma.validator<Prisma.VisitInclude>()({
   visitor: true,
@@ -175,11 +176,11 @@ export class InboxService {
       id: r.id,
       visitId: r.id,
       status: r.status,
-      visitorName: r.visitor.fullName,
+      visitorName: identityAtVisit(r).fullName,
       hostName: r.host?.user.fullName ?? null,
       type: r.type,
       purpose: r.purpose,
-      organization: r.visitor.organization ?? null,
+      organization: identityAtVisit(r).organization ?? null,
       createdByName: r.createdByName ?? r.createdBy?.fullName ?? null,
       notesCount: r._count.notes,
       createdAt: r.createdAt,
