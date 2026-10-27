@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  DESK_QR_TOKEN_RE,
   PublicHostSearchQuery,
   PublicRegistrationInput,
   VerifyRegistrationInput,
@@ -27,6 +28,7 @@ import {
 import { PublicRegistrationService } from './public-registration.service';
 
 const MINUTE = 60_000;
+const BY_TOKEN = { param: 'token', pattern: DESK_QR_TOKEN_RE };
 
 /** No login: the printed token is checked on every call, and every route is rate-limited per IP and per QR. */
 @Public()
@@ -38,7 +40,7 @@ export class PublicRegistrationController {
   @Get()
   @RateLimit(
     { name: 'open-ip', limit: 30, windowMs: MINUTE, by: 'ip' },
-    { name: 'open-qr', limit: 300, windowMs: MINUTE, by: { param: 'token' } },
+    { name: 'open-qr', limit: 300, windowMs: MINUTE, by: BY_TOKEN },
   )
   open(@Param('token') token: string): Promise<DeskQrFormSession> {
     return this.registrations.open(token);
@@ -47,7 +49,7 @@ export class PublicRegistrationController {
   @Get('hosts')
   @RateLimit(
     { name: 'hosts-ip', limit: 60, windowMs: MINUTE, by: 'ip' },
-    { name: 'hosts-qr', limit: 300, windowMs: MINUTE, by: { param: 'token' } },
+    { name: 'hosts-qr', limit: 300, windowMs: MINUTE, by: BY_TOKEN },
   )
   hosts(
     @Param('token') token: string,
@@ -60,7 +62,7 @@ export class PublicRegistrationController {
   @Post('registrations')
   @RateLimit(
     { name: 'submit-ip', limit: 10, windowMs: MINUTE, by: 'ip' },
-    { name: 'submit-qr', limit: 60, windowMs: MINUTE, by: { param: 'token' } },
+    { name: 'submit-qr', limit: 60, windowMs: MINUTE, by: BY_TOKEN },
   )
   submit(
     @Param('token') token: string,
@@ -75,7 +77,7 @@ export class PublicRegistrationController {
   @RateLimit(
     { name: 'verify-ip', limit: 10, windowMs: MINUTE, by: 'ip' },
     // Per QR too: behind a proxy or with spoofed addresses, per-IP limits alone do not bound guesses.
-    { name: 'verify-qr', limit: 60, windowMs: MINUTE, by: { param: 'token' } },
+    { name: 'verify-qr', limit: 60, windowMs: MINUTE, by: BY_TOKEN },
   )
   verify(
     @Param('token') token: string,

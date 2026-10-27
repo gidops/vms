@@ -1159,7 +1159,9 @@
       "choose": "اختر خيارًا",
       "yesNo": "اختر نعم أو لا",
       "chooseType": "اختر نوع المساعدة التي تحتاجها",
-      "describeOther": "صف المساعدة التي تحتاجها"
+      "describeOther": "صف المساعدة التي تحتاجها",
+      "plainName": "استخدم الحروف فقط، بدون روابط أو رموز",
+      "plainOrganization": "استخدم الحروف والأرقام فقط، بدون روابط أو رموز"
     },
     "checkAnswers": "{count, plural, one {تحقق من إجابة واحدة أدناه.} two {تحقق من إجابتين أدناه.} few {تحقق من # إجابات أدناه.} other {تحقق من # إجابة أدناه.}}",
     "submit": "تسجيل زيارتي",
@@ -1581,7 +1583,10 @@
         "visit_updated": "تم تحديث الزيارة",
         "visitor_checked_in": "تم تسجيل دخول الزائر",
         "visitor_checked_out": "تم تسجيل خروج الزائر",
-        "visitor_rated": "تم تقييم الزيارة"
+        "visitor_rated": "تم تقييم الزيارة",
+        "desk_qr_honeypot_triggered": "تم حظر روبوت على رمز QR للاستقبال",
+        "desk_qr_code_rejected": "تم إدخال رمز استقبال خاطئ",
+        "desk_qr_registration_locked": "تم قفل التسجيل الحضوري"
       }
     }
   }

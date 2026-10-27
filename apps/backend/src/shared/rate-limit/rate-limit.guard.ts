@@ -4,6 +4,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  OnModuleDestroy,
   SetMetadata,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -13,8 +14,12 @@ export interface RateLimitRule {
   name: string;
   limit: number;
   windowMs: number;
-  /** A param key (e.g. the desk QR token) stops one leaked link being hammered from many IPs. */
-  by: 'ip' | { param: string };
+  /**
+   * A param key (e.g. the desk QR token) stops one leaked link being hammered
+   * from many IPs. Values failing `pattern` share one bucket, so random tokens
+   * can't each create an entry.
+   */
+  by: 'ip' | { param: string; pattern?: RegExp };
 }
 
 export const RATE_LIMIT_KEY = 'rateLimitRules';
@@ -27,12 +32,27 @@ interface Window {
   resetAt: number;
 }
 
-/** In-memory counts: a multi-instance deployment needs a shared store. */
-@Injectable()
-export class RateLimitGuard implements CanActivate {
-  private readonly windows = new Map<string, Window>();
+const SWEEP_INTERVAL_MS = 60_000;
 
-  constructor(private readonly reflector: Reflector) {}
+/**
+ * In-memory counts, so limits are per process: running more than one backend
+ * instance needs a shared store (e.g. Redis) instead.
+ */
+@Injectable()
+export class RateLimitGuard implements CanActivate, OnModuleDestroy {
+  private readonly windows = new Map<string, Window>();
+  /** Hard cap; the oldest windows are evicted first once it is reached. */
+  maxKeys = 50_000;
+  private readonly sweeper: NodeJS.Timeout;
+
+  constructor(private readonly reflector: Reflector) {
+    this.sweeper = setInterval(() => this.sweep(Date.now()), SWEEP_INTERVAL_MS);
+    this.sweeper.unref();
+  }
+
+  onModuleDestroy(): void {
+    clearInterval(this.sweeper);
+  }
 
   canActivate(context: ExecutionContext): boolean {
     const rules = this.reflector.getAllAndOverride<RateLimitRule[] | undefined>(
@@ -43,19 +63,15 @@ export class RateLimitGuard implements CanActivate {
 
     const req = context.switchToHttp().getRequest<Request>();
     const now = Date.now();
-    this.sweep(now);
     for (const rule of rules) {
-      const subject =
-        rule.by === 'ip'
-          ? (req.ip ?? 'unknown')
-          : String(req.params?.[rule.by.param] ?? '');
-      const key = `${rule.name}:${subject}`;
+      const key = `${rule.name}:${subjectOf(rule, req)}`;
       const current = this.windows.get(key);
       const window =
         current && current.resetAt > now
           ? current
           : { count: 0, resetAt: now + rule.windowMs };
       window.count += 1;
+      if (!current) this.evictIfFull();
       this.windows.set(key, window);
       if (window.count > rule.limit) {
         throw new HttpException(
@@ -71,11 +87,29 @@ export class RateLimitGuard implements CanActivate {
     return true;
   }
 
-  /** Keeps the map from growing without bound. */
-  private sweep(now: number): void {
-    if (this.windows.size < 5_000) return;
+  /** Drops expired windows; runs on a timer, never on the request path. */
+  sweep(now: number): void {
     for (const [key, w] of this.windows) {
       if (w.resetAt <= now) this.windows.delete(key);
     }
   }
+
+  get size(): number {
+    return this.windows.size;
+  }
+
+  private evictIfFull(): void {
+    if (this.windows.size < this.maxKeys) return;
+    // Maps iterate in insertion order, so the first key is the oldest window.
+    for (const oldest of this.windows.keys()) {
+      this.windows.delete(oldest);
+      return;
+    }
+  }
+}
+
+function subjectOf(rule: RateLimitRule, req: Request): string {
+  if (rule.by === 'ip') return req.ip ?? 'unknown';
+  const value = String(req.params?.[rule.by.param] ?? '');
+  return rule.by.pattern && !rule.by.pattern.test(value) ? '<invalid>' : value;
 }

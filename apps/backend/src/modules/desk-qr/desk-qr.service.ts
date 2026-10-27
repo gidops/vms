@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { DeskQr, Prisma } from '@prisma/client';
+import { Prisma, type DeskQr } from '@prisma/client';
 import type {
   CreateDeskQrInput,
   DeskQrView,
@@ -78,20 +78,31 @@ export class DeskQrService {
     actorUserId: string,
   ): Promise<DeskQrView> {
     if (await this.find()) throw new ConflictException('errors.deskQr.exists');
-    const id = await this.txm.run(async (tx) => {
-      const row = await tx.deskQr.create({
-        data: {
-          key: DESK,
-          token: newDeskToken(),
-          codeEmail: input.codeEmail,
-          createdById: actorUserId,
-        },
+    const id = await this.txm
+      .run(async (tx) => {
+        const row = await tx.deskQr.create({
+          data: {
+            key: DESK,
+            token: newDeskToken(),
+            codeEmail: input.codeEmail,
+            createdById: actorUserId,
+          },
+        });
+        await this.publish(tx, EVENT_TYPES.DeskQrCreated, row.id, actorUserId, {
+          codeEmail: row.codeEmail,
+        });
+        return row.id;
+      })
+      .catch((err: unknown) => {
+        // Two concurrent creates both passed the check above; the unique key decides.
+        if (
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === 'P2002'
+        ) {
+          throw new ConflictException('errors.deskQr.exists');
+        }
+        throw err;
       });
-      await this.publish(tx, EVENT_TYPES.DeskQrCreated, row.id, actorUserId, {
-        codeEmail: row.codeEmail,
-      });
-      return row.id;
-    });
     return this.toView(await this.reload(id));
   }
 

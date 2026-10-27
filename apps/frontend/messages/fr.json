@@ -1159,7 +1159,9 @@
       "choose": "Faites un choix",
       "yesNo": "Choisissez Oui ou Non",
       "chooseType": "Choisissez le type d'aide nécessaire",
-      "describeOther": "Décrivez l'aide nécessaire"
+      "describeOther": "Décrivez l'aide nécessaire",
+      "plainName": "Utilisez uniquement des lettres, sans liens ni symboles",
+      "plainOrganization": "Utilisez uniquement des lettres et des chiffres, sans liens ni symboles"
     },
     "checkAnswers": "{count, plural, one {Vérifiez # réponse ci-dessous.} other {Vérifiez # réponses ci-dessous.}}",
     "submit": "Enregistrer ma visite",
@@ -1581,7 +1583,10 @@
         "visit_updated": "Visite mise à jour",
         "visitor_checked_in": "Visiteur enregistré",
         "visitor_checked_out": "Visiteur sorti",
-        "visitor_rated": "Visite évaluée"
+        "visitor_rated": "Visite évaluée",
+        "desk_qr_honeypot_triggered": "Robot bloqué sur le QR d'accueil",
+        "desk_qr_code_rejected": "Code d'accueil erroné saisi",
+        "desk_qr_registration_locked": "Inscription sur place verrouillée"
       }
     }
   }

@@ -26,8 +26,10 @@ describe('VisitAuthoringService.createVisits', () => {
     };
     const prisma = {
       user: {
-        // host-staff validation queries all named hosts at once.
-        findMany: jest.fn().mockResolvedValue(staff ? [{ id: 'staff1' }] : []),
+        // Host validation counts the active staff among all named hosts at once.
+        count: jest.fn(({ where }: { where: { id: { in: string[] } } }) =>
+          Promise.resolve(staff ? where.id.in.length : 0),
+        ),
         findUnique: jest.fn().mockResolvedValue({ fullName: 'VMC Clerk' }),
       },
     } as unknown as PrismaService;
@@ -37,7 +39,7 @@ describe('VisitAuthoringService.createVisits', () => {
     const publish = jest.fn().mockResolvedValue({});
     const events = { publish } as unknown as EventPublisher;
     const service = new VisitAuthoringService(prisma, txm, events, makeRead());
-    return { service, tx, publish };
+    return { service, tx, publish, prisma };
   }
 
   const HOST = '00000000-0000-4000-8000-000000000002';
@@ -198,6 +200,17 @@ describe('VisitAuthoringService.createVisits', () => {
         data: expect.objectContaining({ hostId: 'host1', status: 'APPROVED' }),
       }),
     );
+  });
+
+  it('only accepts active staff accounts as hosts', async () => {
+    const { service, prisma } = setup(true);
+    await service.createVisits(
+      { type: 'PRE_INVITED', isGroupVisit: false, guests: [inviteGuest()] },
+      'actor',
+    );
+    expect(prisma.user.count).toHaveBeenCalledWith({
+      where: expect.objectContaining({ isActive: true }),
+    });
   });
 
   it('rejects a host that is not a STAFF user', async () => {

@@ -1,6 +1,8 @@
 import {
   PHONE_E164_RE,
   evacuationAssistIssues,
+  isPlainName,
+  isPlainOrganization,
   toE164,
   type EvacuationAssistType,
   type PublicHostOption,
@@ -65,7 +67,10 @@ export function selfFormErrors(
   if (f.phoneNumber.trim() && !PHONE_E164_RE.test(phoneOf(f) ?? ""))
     errors.phone = "phone";
   if (!f.fullName.trim()) errors.fullName = "required";
+  else if (!isPlainName(f.fullName.trim())) errors.fullName = "plainName";
   if (!f.organization.trim()) errors.organization = "required";
+  else if (!isPlainOrganization(f.organization.trim()))
+    errors.organization = "plainOrganization";
   if (!f.purpose) errors.purpose = "choose";
   if (f.needsEvacuationAssist === null) errors.needsEvacuationAssist = "yesNo";
   if (f.commsConsent === null) errors.commsConsent = "yesNo";

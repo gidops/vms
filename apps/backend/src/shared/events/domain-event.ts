@@ -47,6 +47,10 @@ export const EVENT_TYPES = {
   DeskQrDisabled: 'desk_qr.disabled',
   DeskQrEnabled: 'desk_qr.enabled',
   DeskQrCodeSent: 'desk_qr.code_sent',
+  // Security events (no business transaction), recorded via SecurityAuditService.
+  DeskQrHoneypotTriggered: 'desk_qr.honeypot_triggered',
+  DeskQrCodeRejected: 'desk_qr.code_rejected',
+  DeskQrRegistrationLocked: 'desk_qr.registration_locked',
   ConsentWithdrawn: 'consent.withdrawn',
   ConsentGranted: 'consent.granted',
   ConsentExported: 'consent.exported',
