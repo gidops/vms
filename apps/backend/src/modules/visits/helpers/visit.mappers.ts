@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { identityAtVisit, storedVisitorIfDifferent } from './visit-identity';
 import type {
   EvacuationAssistType,
   VisitListItem,
@@ -85,7 +86,8 @@ export function toDetail(visit: VisitDetailRow): VisitRequestDetail {
     source: visit.source,
     createdById: visit.createdById,
     createdByName: visit.createdByName ?? visit.createdBy?.fullName ?? null,
-    visitor: visit.visitor,
+    visitor: { ...visit.visitor, ...identityAtVisit(visit) },
+    storedVisitor: storedVisitorIfDifferent(visit),
     host: toHost(visit.host),
     pass: toPass(visit.pass),
     notes: visit.notes.map((note) => ({
@@ -146,7 +148,7 @@ export function toListItem(
     createdAt: visit.createdAt,
     updatedAt: visit.updatedAt,
     createdByName: visit.createdByName,
-    visitor: visit.visitor,
+    visitor: { ...visit.visitor, ...identityAtVisit(visit) },
     host: toHost(visit.host),
     groupSize,
   };

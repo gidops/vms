@@ -281,6 +281,11 @@ export const VisitRequestDetail = Visit.extend({
   source: z.string().nullable().optional(),
   createdById: z.string().uuid().nullable().optional(),
   createdByName: z.string().nullable().optional(),
+  /** The stored visitor record, when it differs from the name or organisation given at this visit. */
+  storedVisitor: z
+    .object({ fullName: z.string(), organization: z.string().nullable() })
+    .nullable()
+    .optional(),
   /** Data-URL QR of the referenceCode; null for walk-ins. */
   qrCode: z.string().nullable().optional(),
   pass: VisitPass.nullable().optional(),

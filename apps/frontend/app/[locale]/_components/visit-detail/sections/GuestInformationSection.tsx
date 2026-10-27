@@ -47,6 +47,14 @@ export function GuestInformationSection({
               {visitor.email}
               {visitor.phone ? ` · ${visitor.phone}` : ""}
             </span>
+            {/* The walk-in QR can't verify the email, so flag a different stored owner. */}
+            {data.storedVisitor ? (
+              <span role="note" className="mt-1 text-sm text-warning">
+                {t("storedVisitorDiffers", {
+                  name: data.storedVisitor.fullName,
+                })}
+              </span>
+            ) : null}
             {/* Old visits predate the question (null) and show nothing. */}
             {data.needsEvacuationAssist ? (
               <span className="mt-1 flex flex-wrap items-center gap-2">

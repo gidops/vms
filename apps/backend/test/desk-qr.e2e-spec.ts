@@ -236,6 +236,29 @@ describe('Desk QR (e2e)', () => {
       fullName: 'Real Name',
       phone: '+2348000000001',
     });
+
+    // Reception and the evacuation roll see who actually registered (#82).
+    const visit = await prisma.visit.findFirstOrThrow({
+      where: { visitorId: visitor.id },
+      orderBy: { createdAt: 'desc' },
+    });
+    const detail = await as(ROLES.VMC).get(`/visits/${visit.id}`).expect(200);
+    expect(detail.body.visitor.fullName).toBe('Someone Else');
+    expect(detail.body.storedVisitor).toMatchObject({ fullName: 'Real Name' });
+    await prisma.visit.update({
+      where: { id: visit.id },
+      data: {
+        status: 'CHECKED_IN',
+        checkInAt: new Date(),
+        needsEvacuationAssist: true,
+        evacuationAssistTypes: ['MOBILITY'],
+      },
+    });
+    const roll = await as(ROLES.VMC).get('/visits/evacuation-roll').expect(200);
+    const row = (
+      roll.body.rows as { visitId: string; fullName: string }[]
+    ).find((r) => r.visitId === visit.id);
+    expect(row?.fullName).toBe('Someone Else');
   });
 
   it('locks a registration after three wrong codes', async () => {

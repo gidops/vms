@@ -555,7 +555,11 @@ describe('VisitAuthoringService.createSelfRegisteredWalkIn', () => {
     expect(tx.commsConsentEvent.create).not.toHaveBeenCalled();
     expect(tx.visit.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ visitorId: 'existing' }),
+        data: expect.objectContaining({
+          visitorId: 'existing',
+          // The typed details identify who is on site, not the matched record.
+          visitorNameAtVisit: 'Typed Name',
+        }),
       }),
     );
   });

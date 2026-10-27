@@ -5,6 +5,7 @@ import {
   type EvacuationRoll,
 } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
+import { identityAtVisit } from './helpers/visit-identity';
 
 /** Higher floors first (building order in `FLOORS`); unknown or empty floors last. */
 export function floorRank(floor: string | null | undefined): number {
@@ -34,8 +35,7 @@ export class VisitEvacuationService {
     const rows = visits
       .map((v) => ({
         visitId: v.id,
-        fullName: v.visitor.fullName,
-        organization: v.visitor.organization,
+        ...identityAtVisit(v),
         phone: v.visitor.phone,
         floor: v.floor,
         hostName: v.host?.user.fullName ?? null,

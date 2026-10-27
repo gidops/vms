@@ -325,6 +325,11 @@ model Visit {
   createdById  String?
   // Denormalized creator name, preserved if the creator's account is deleted.
   createdByName String?
+  // Name and organisation typed at a walk-in QR self-registration. The public
+  // form can't verify the email, so these (not the matched Visitor record)
+  // identify who is actually on site.
+  visitorNameAtVisit  String?
+  organizationAtVisit String?
   source       String?     @default("VMC_STATION")
   // Intake answers (null = legacy visit created before the questions existed).
   // needsEvacuationAssist feeds the live Evacuation Roll; commsConsent is the

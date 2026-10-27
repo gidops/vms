@@ -137,11 +137,14 @@ export class StaffService {
       select: {
         id: true,
         visitorId: true,
+        visitorNameAtVisit: true,
         visitor: { select: { fullName: true } },
       },
     });
 
-    const visitName = new Map(visits.map((v) => [v.id, v.visitor.fullName]));
+    const visitName = new Map(
+      visits.map((v) => [v.id, v.visitorNameAtVisit ?? v.visitor.fullName]),
+    );
     const visitorIds = [...new Set(visits.map((v) => v.visitorId))];
 
     const alerts = visitorIds.length

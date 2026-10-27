@@ -98,6 +98,11 @@ VMC desk.
 The visit is created as a walk-in for today, so no approval is needed. If the QR
 has been disabled, the phone shows "Please register at the VMC desk".
 
+The visit shows the name and organisation the visitor typed. If their email
+already belongs to someone else in the records, the visit details show a
+warning such as "This email belongs to Ada Obi in our records". Check the
+visitor's ID before checking them in.
+
 ### 2. The Security Manager decides
 
 The Security Manager sees new requests on the admin console (**Pending
