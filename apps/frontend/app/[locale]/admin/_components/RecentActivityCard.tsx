@@ -20,6 +20,7 @@ const TONE_CLASS: Record<Tone, { ring: string; dot: string }> = {
 /** Event tone + i18n key for an inbox item (request status change or alert). */
 function describe(item: InboxItem): { tone: Tone; key: string } {
   if (item.kind === "alert") return { tone: "danger", key: "alert" };
+  if (item.kind === "card") return { tone: "warning", key: "cardOverdue" };
   switch (item.status) {
     case "PENDING":
       return { tone: "info", key: "requested" };
@@ -48,6 +49,7 @@ function describe(item: InboxItem): { tone: Tone; key: string } {
  */
 export function RecentActivityCard({ className }: { className?: string }) {
   const t = useTranslations("admin.overview.activity");
+  const tCard = useTranslations("rfidCard");
   const format = useFormatter();
   const now = useNow({ updateInterval: 60_000 });
   const activity = useRecentActivity();
@@ -57,6 +59,8 @@ export function RecentActivityCard({ className }: { className?: string }) {
 
   const subtitle = (item: InboxItem) => {
     if (item.kind === "alert") return item.visitorName ?? item.reason;
+    if (item.kind === "card")
+      return `${item.visitorName} · ${tCard("badge", { number: item.cardNumber })}`;
     return item.hostName
       ? t("visitorForHost", { visitor: item.visitorName, host: item.hostName })
       : item.visitorName;

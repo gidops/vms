@@ -302,6 +302,11 @@ export class VisitsController {
     @Body(new ZodValidationPipe(CheckOutVisitInput)) input: CheckOutVisitInput,
     @CurrentUser() principal: AuthUser,
   ) {
-    return this.access.checkOut(id, input, principal.userId);
+    return this.access.checkOut(
+      id,
+      input,
+      principal.userId,
+      principal.permissions.includes(PERMISSIONS.RFID_RETURN),
+    );
   }
 }

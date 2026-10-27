@@ -122,7 +122,9 @@
       "visitMismatch": "That visit does not belong to this visitor.",
       "notActive": "This card has already been returned or marked lost.",
       "invalidValidity": "Valid until must be after valid from.",
-      "invalidPhoto": "Upload the photo through the access card form."
+      "invalidPhoto": "Upload the photo through the access card form.",
+      "returnRequired": "This visitor holds an access card. Say whether it was retrieved before checking them out.",
+      "returnNotAllowed": "You can't take back access cards. Ask reception to check this visitor out."
     }
   },
   "validation": {

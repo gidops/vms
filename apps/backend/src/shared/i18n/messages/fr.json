@@ -122,7 +122,9 @@
       "visitMismatch": "Cette visite n'appartient pas à ce visiteur.",
       "notActive": "Cette carte a déjà été rendue ou déclarée perdue.",
       "invalidValidity": "La date de fin doit être postérieure à la date de début.",
-      "invalidPhoto": "Téléversez la photo via le formulaire de carte d'accès."
+      "invalidPhoto": "Téléversez la photo via le formulaire de carte d'accès.",
+      "returnRequired": "Ce visiteur détient une carte d'accès. Indiquez si elle a été récupérée avant de l'enregistrer en sortie.",
+      "returnNotAllowed": "Vous ne pouvez pas récupérer les cartes d'accès. Demandez à l'accueil d'enregistrer la sortie de ce visiteur."
     }
   },
   "validation": {

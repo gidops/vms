@@ -29,6 +29,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
 import { useEvacuationAlertCount } from "@/app/[locale]/_components/EvacuationIndicator";
+import { RfidCardBadge } from "@/app/[locale]/_components/RfidCardBadge";
 import { VisitDetailSheet } from "@/app/[locale]/_components/VisitDetailSheet";
 import { CheckInModal } from "@/app/[locale]/dashboard/_components/checkin/CheckInModal";
 import { CheckOutModal } from "@/app/[locale]/dashboard/_components/checkin/CheckOutModal";
@@ -378,6 +379,11 @@ function Dashboard() {
                               ? (row.groupContact ?? "")
                               : row.visitor.email}
                           </span>
+                          {row.rfidCard ? (
+                            <span className="mt-0.5 flex">
+                              <RfidCardBadge card={row.rfidCard} />
+                            </span>
+                          ) : null}
                         </span>
                       </span>
                     </TableCell>

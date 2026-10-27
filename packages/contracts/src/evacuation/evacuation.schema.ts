@@ -15,6 +15,8 @@ export const EvacuationRollRow = z.object({
   badge: z
     .object({ cardNumber: z.string(), zone: z.string().nullable() })
     .nullable(),
+  /** Personalised RFID card number, if the visitor holds one. */
+  rfidCardNumber: z.string().nullable().optional(),
 });
 export type EvacuationRollRow = z.infer<typeof EvacuationRollRow>;
 

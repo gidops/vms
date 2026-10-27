@@ -34,6 +34,19 @@ describe('Role → permission matrix', () => {
     expect(holds(ROLES.READ_ADMIN, PERMISSIONS.REPORT_EXPORT)).toBe(false);
   });
 
+  it('lets only reception take RFID cards back, and nobody but the System Admin manage them', () => {
+    for (const role of Object.keys(SCOPED_ROLE_DEFS)) {
+      expect([role, holds(role, PERMISSIONS.RFID_RETURN)]).toEqual([
+        role,
+        role === ROLES.VMC || role === ROLES.VMC_ADMIN,
+      ]);
+      expect([role, holds(role, PERMISSIONS.RFID_MANAGE)]).toEqual([
+        role,
+        false,
+      ]);
+    }
+  });
+
   it('keeps Read Admin strictly read-only', () => {
     for (const perm of SCOPED_ROLE_DEFS[ROLES.READ_ADMIN].permissions) {
       expect(perm).toMatch(/:read$/);

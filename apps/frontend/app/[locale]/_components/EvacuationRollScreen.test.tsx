@@ -119,6 +119,26 @@ describe("EvacuationRollScreen", () => {
     expect(printed).toContain("Visitor 12");
   });
 
+  it("shows a held RFID card on screen and on the print copy", () => {
+    rollState.data = {
+      generatedAt: new Date("2026-10-18T22:52:00Z"),
+      count: 1,
+      checkedInTotal: 1,
+      rows: [
+        {
+          ...row("a", "5th Floor", "Chukwuma Eze"),
+          badge: { zone: "Zone A", cardNumber: "B-17" },
+          rfidCardNumber: "0042",
+        },
+      ],
+    } as EvacuationRoll;
+    renderWithIntl(<EvacuationRollScreen />);
+    expect(screen.getAllByText("RFID 0042").length).toBeGreaterThan(0);
+    expect(screen.getByTestId("evacuation-print")).toHaveTextContent(
+      "Zone A · B-17 · RFID 0042",
+    );
+  });
+
   it("shows the green empty state and disables printing", () => {
     rollState.data = {
       generatedAt: new Date("2026-10-18T22:52:00Z"),

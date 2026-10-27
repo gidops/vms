@@ -18,8 +18,10 @@ import type {
   SetRfidCardStatusInput,
   UpdateRfidAssignmentInput,
   AvatarContentType,
+  HeldRfidCard,
 } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
+import { heldRfidCards } from './held-cards';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
 import { EventPublisher } from '../../shared/events/event-publisher';
 import { TransactionManager } from '../../shared/events/transaction.manager';
@@ -357,32 +359,52 @@ export class RfidCardsService {
     input: CloseRfidAssignmentInput,
     actorUserId: string,
   ): Promise<RfidAssignmentDetail> {
-    await this.txm.run(async (tx) => {
-      const row = await this.activeOrThrow(tx, id);
-      await tx.rfidCardAssignment.update({
-        where: { id },
-        data: {
-          status: input.outcome,
-          returnedAt: new Date(),
-          returnedById: actorUserId,
-          closeNote: input.note || null,
-        },
-      });
-      await tx.rfidCard.update({
-        where: { id: row.cardId },
-        data: { status: input.outcome === 'RETURNED' ? 'AVAILABLE' : 'LOST' },
-      });
-      await this.publish(
-        tx,
-        input.outcome === 'RETURNED'
-          ? EVENT_TYPES.RfidCardReturned
-          : EVENT_TYPES.RfidCardLost,
-        id,
-        actorUserId,
-        { cardId: row.cardId, visitorId: row.visitorId, note: input.note },
-      );
-    });
+    await this.txm.run((tx) => this.closeInTx(tx, id, input, actorUserId));
     return this.getAssignment(id);
+  }
+
+  /**
+   * Closes an active assignment inside the caller's transaction. Shared by the
+   * Operations screen and visit check-out, so both free or lose the card and
+   * audit it the same way.
+   */
+  async closeInTx(
+    tx: Tx,
+    id: string,
+    input: CloseRfidAssignmentInput,
+    actorUserId: string,
+  ): Promise<void> {
+    const row = await this.activeOrThrow(tx, id);
+    await tx.rfidCardAssignment.update({
+      where: { id },
+      data: {
+        status: input.outcome,
+        returnedAt: new Date(),
+        returnedById: actorUserId,
+        closeNote: input.note || null,
+      },
+    });
+    await tx.rfidCard.update({
+      where: { id: row.cardId },
+      data: { status: input.outcome === 'RETURNED' ? 'AVAILABLE' : 'LOST' },
+    });
+    await this.publish(
+      tx,
+      input.outcome === 'RETURNED'
+        ? EVENT_TYPES.RfidCardReturned
+        : EVENT_TYPES.RfidCardLost,
+      id,
+      actorUserId,
+      { cardId: row.cardId, visitorId: row.visitorId, note: input.note },
+    );
+  }
+
+  heldCards(
+    visitorIds: string[],
+    now = new Date(),
+    db: Tx | PrismaService = this.prisma,
+  ): Promise<Map<string, HeldRfidCard>> {
+    return heldRfidCards(db, visitorIds, now);
   }
 
   async setCardStatus(

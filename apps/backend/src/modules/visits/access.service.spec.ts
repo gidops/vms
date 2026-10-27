@@ -2,11 +2,13 @@ import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
 import { EventPublisher } from '../../shared/events/event-publisher';
 import { TransactionManager } from '../../shared/events/transaction.manager';
+import { RfidCardsService } from '../rfid-cards/rfid-cards.service';
 import { VisitAccessService } from './access.service';
 import { VisitReadService } from './read.service';
 
@@ -15,10 +17,19 @@ const makeRead = () =>
     getDetail: jest.fn().mockResolvedValue({ id: 'v1' }),
   }) as unknown as VisitReadService;
 
+/** No RFID card held unless a test passes one. */
+const makeRfid = (held: { assignmentId: string } | null = null) => ({
+  heldCards: jest
+    .fn()
+    .mockResolvedValue(new Map(held ? [['visitor1', held]] : [])),
+  closeInTx: jest.fn().mockResolvedValue(undefined),
+});
+
 describe('VisitAccessService check-in / check-out', () => {
   function setup(
     visit: Record<string, unknown> = {
       id: 'v1',
+      visitorId: 'visitor1',
       status: 'APPROVED',
       scheduledAt: new Date(),
     },
@@ -27,6 +38,7 @@ describe('VisitAccessService check-in / check-out', () => {
       isActive: true,
       passId: null,
     },
+    rfid = makeRfid(),
   ) {
     const tx = {
       visit: { update: jest.fn().mockResolvedValue({}) },
@@ -59,8 +71,14 @@ describe('VisitAccessService check-in / check-out', () => {
     } as unknown as TransactionManager;
     const publish = jest.fn().mockResolvedValue({});
     const events = { publish } as unknown as EventPublisher;
-    const service = new VisitAccessService(prisma, txm, events, makeRead());
-    return { service, tx, publish };
+    const service = new VisitAccessService(
+      prisma,
+      txm,
+      events,
+      makeRead(),
+      rfid as unknown as RfidCardsService,
+    );
+    return { service, tx, publish, rfid };
   }
 
   it('checkIn assigns the badge, activates the pass, and emits VisitorCheckedIn', async () => {
@@ -149,6 +167,65 @@ describe('VisitAccessService check-in / check-out', () => {
   });
 });
 
+describe('VisitAccessService.checkOut with an RFID card', () => {
+  const visit = {
+    id: 'v1',
+    visitorId: 'visitor1',
+    status: 'CHECKED_IN',
+    scheduledAt: new Date(),
+  };
+  function setupWithCard() {
+    const rfid = makeRfid({ assignmentId: 'asg1' });
+    const tx = {
+      visit: { update: jest.fn() },
+      pass: { findUnique: jest.fn().mockResolvedValue(null) },
+      gateEvent: { create: jest.fn() },
+    };
+    const service = new VisitAccessService(
+      {
+        visit: { findUnique: jest.fn().mockResolvedValue(visit) },
+      } as unknown as PrismaService,
+      {
+        run: (fn: (t: typeof tx) => unknown) => fn(tx),
+      } as unknown as TransactionManager,
+      { publish: jest.fn() } as unknown as EventPublisher,
+      makeRead(),
+      rfid as unknown as RfidCardsService,
+    );
+    return { service, rfid, tx };
+  }
+
+  it('requires the desk to say what happened to the card', async () => {
+    const { service, tx } = setupWithCard();
+    await expect(service.checkOut('v1', {}, 'vmc', true)).rejects.toThrow(
+      UnprocessableEntityException,
+    );
+    expect(tx.visit.update).not.toHaveBeenCalled();
+  });
+
+  it('refuses users who may not take cards back', async () => {
+    const { service, rfid } = setupWithCard();
+    await expect(
+      service.checkOut('v1', { rfidCard: { outcome: 'RETURNED' } }, 'gate'),
+    ).rejects.toThrow(ForbiddenException);
+    expect(rfid.closeInTx).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [{ outcome: 'RETURNED' as const }],
+    [{ outcome: 'LOST' as const, note: 'Left with the visitor' }],
+  ])('closes the card in the check-out transaction (%j)', async (rfidCard) => {
+    const { service, rfid, tx } = setupWithCard();
+    await service.checkOut('v1', { rfidCard }, 'vmc', true);
+    expect(rfid.closeInTx).toHaveBeenCalledWith(tx, 'asg1', rfidCard, 'vmc');
+    expect(tx.visit.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: 'CHECKED_OUT' }),
+      }),
+    );
+  });
+});
+
 describe('VisitAccessService.rate', () => {
   function make(visit: Record<string, unknown> | null) {
     const tx = {
@@ -162,7 +239,13 @@ describe('VisitAccessService.rate', () => {
     } as unknown as TransactionManager;
     const publish = jest.fn().mockResolvedValue({});
     const events = { publish } as unknown as EventPublisher;
-    const service = new VisitAccessService(prisma, txm, events, makeRead());
+    const service = new VisitAccessService(
+      prisma,
+      txm,
+      events,
+      makeRead(),
+      makeRfid() as unknown as RfidCardsService,
+    );
     return { service, tx, publish };
   }
 

@@ -7,13 +7,111 @@ import {
   DialogContent,
   DialogDescription,
   DialogTitle,
+  Label,
+  SegmentedControl,
   Spinner,
+  Textarea,
 } from "@vms/ui";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
+import { RfidCardBadge } from "@/app/[locale]/_components/RfidCardBadge";
+import { ApiError } from "@/data/http/client";
 import { useCheckOut, useVisitRequest } from "@/data/requests/queries";
+import type { HeldRfidCard } from "@/data/visits/visits.api";
 import { AssignPass } from "./AssignPass";
 import { formatDuration, QrPane, statusText, SummaryRow } from "./modal-shared";
+
+type CardOutcome = "RETURNED" | "LOST";
+
+/** Reception must say what happened to a held RFID card before the guest leaves. */
+function RfidReturnSection({
+  card,
+  outcome,
+  onOutcomeChange,
+  note,
+  onNoteChange,
+  showErrors,
+}: {
+  card: HeldRfidCard;
+  outcome: CardOutcome | null;
+  onOutcomeChange: (o: CardOutcome) => void;
+  note: string;
+  onNoteChange: (n: string) => void;
+  showErrors: boolean;
+}) {
+  const t = useTranslations("checkout.rfid");
+  const tCard = useTranslations("rfidCard");
+  const format = useFormatter();
+  const outcomeInvalid = showErrors && outcome === null;
+  const noteInvalid = showErrors && outcome === "LOST" && !note.trim();
+  return (
+    <section
+      aria-labelledby="rfid-return-title"
+      className="flex flex-col gap-3 rounded-lg border border-border p-4"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 id="rfid-return-title" className="text-sm font-semibold text-fg">
+          {t("title")}
+        </h3>
+        <RfidCardBadge card={card} size="md" />
+      </div>
+      <p
+        className={
+          card.overdue ? "text-sm text-warning" : "text-sm text-fg-muted"
+        }
+      >
+        {tCard("validUntil", {
+          date: format.dateTime(new Date(card.validUntil), {
+            dateStyle: "medium",
+          }),
+        })}
+      </p>
+      <span id="rfid-outcome-label" className="text-sm font-medium text-fg">
+        {t("question")}
+      </span>
+      <SegmentedControl
+        options={[
+          { value: "RETURNED", label: t("returned") },
+          { value: "LOST", label: t("lost") },
+        ]}
+        value={outcome}
+        onValueChange={(v) => onOutcomeChange(v as CardOutcome)}
+        tone="primary"
+        required
+        invalid={outcomeInvalid}
+        aria-labelledby="rfid-outcome-label"
+        aria-describedby={outcomeInvalid ? "rfid-outcome-error" : undefined}
+        fullWidth
+      />
+      {outcomeInvalid ? (
+        <span id="rfid-outcome-error" className="text-sm text-danger">
+          {t("answerRequired")}
+        </span>
+      ) : null}
+      {outcome === "LOST" ? (
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="rfid-note">{t("noteLabel")}</Label>
+          <Textarea
+            id="rfid-note"
+            rows={2}
+            maxLength={1000}
+            required
+            value={note}
+            placeholder={t("notePlaceholder")}
+            onChange={(e) => onNoteChange(e.target.value)}
+            invalid={noteInvalid}
+            aria-describedby={noteInvalid ? "rfid-note-error" : undefined}
+          />
+          {noteInvalid ? (
+            <span id="rfid-note-error" className="text-sm text-danger">
+              {t("noteRequired")}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+    </section>
+  );
+}
 
 export function CheckOutModal({
   visitId,
@@ -28,6 +126,11 @@ export function CheckOutModal({
   const [changing, setChanging] = React.useState(false);
   const [cardId, setCardId] = React.useState("");
   const [now, setNow] = React.useState(() => Date.now());
+  const [cardOutcome, setCardOutcome] = React.useState<CardOutcome | null>(
+    null,
+  );
+  const [cardNote, setCardNote] = React.useState("");
+  const [showErrors, setShowErrors] = React.useState(false);
 
   React.useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -41,9 +144,36 @@ export function CheckOutModal({
       ? formatDuration(now - new Date(visit.checkInAt).getTime())
       : "—";
 
+  const rfidCard = visit?.rfidCard ?? null;
+  const cardAnswered =
+    !rfidCard ||
+    cardOutcome === "RETURNED" ||
+    (cardOutcome === "LOST" && cardNote.trim() !== "");
+
+  // The server's 400/403/422 message (e.g. no rfid:return permission) is actionable.
+  const errorText =
+    checkOut.error instanceof ApiError &&
+    [400, 403, 422].includes(checkOut.error.status)
+      ? checkOut.error.message
+      : t("error");
+
   async function complete() {
+    if (!cardAnswered) {
+      setShowErrors(true);
+      return;
+    }
     try {
-      await checkOut.mutateAsync(cardId ? { accessCardId: cardId } : {});
+      await checkOut.mutateAsync({
+        ...(cardId ? { accessCardId: cardId } : {}),
+        ...(rfidCard && cardOutcome
+          ? {
+              rfidCard:
+                cardOutcome === "LOST"
+                  ? { outcome: "LOST", note: cardNote.trim() }
+                  : { outcome: "RETURNED" },
+            }
+          : {}),
+      });
       onClose();
     } catch {
       /* surfaced below */
@@ -107,8 +237,21 @@ export function CheckOutModal({
         ) : null}
       </div>
 
+      {rfidCard ? (
+        <RfidReturnSection
+          card={rfidCard}
+          outcome={cardOutcome}
+          onOutcomeChange={setCardOutcome}
+          note={cardNote}
+          onNoteChange={setCardNote}
+          showErrors={showErrors}
+        />
+      ) : null}
+
       {checkOut.isError ? (
-        <p className="text-sm text-danger">{t("error")}</p>
+        <p role="alert" className="text-sm text-danger">
+          {errorText}
+        </p>
       ) : null}
 
       <Button

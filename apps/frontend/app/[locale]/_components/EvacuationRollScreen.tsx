@@ -92,6 +92,7 @@ function RollTable({
   floorTotals: Map<string | null, number>;
 }) {
   const t = useTranslations("evacuation");
+  const tCard = useTranslations("rfidCard");
   const assistText = useEvacuationAssistText();
   const locale = useLocale();
   return (
@@ -136,6 +137,11 @@ function RollTable({
                         {r.organization ? (
                           <span className="text-xs text-fg-muted">
                             {r.organization}
+                          </span>
+                        ) : null}
+                        {r.rfidCardNumber ? (
+                          <span className="text-xs text-fg-muted" dir="ltr">
+                            {tCard("badge", { number: r.rfidCardNumber })}
                           </span>
                         ) : null}
                       </span>
@@ -199,6 +205,11 @@ function RollTable({
                         {r.organization}
                       </span>
                     ) : null}
+                    {r.rfidCardNumber ? (
+                      <span className="text-xs text-fg-muted" dir="ltr">
+                        {tCard("badge", { number: r.rfidCardNumber })}
+                      </span>
+                    ) : null}
                     {r.assistTypes.length ? (
                       <span className="text-xs text-fg-muted">
                         {assistText(r.assistTypes, r.assistOther)}
@@ -242,6 +253,7 @@ function PrintRoll({
   groups: FloorGroup[];
 }) {
   const t = useTranslations("evacuation");
+  const tCard = useTranslations("rfidCard");
   const assistText = useEvacuationAssistText();
   const locale = useLocale();
   return (
@@ -292,11 +304,15 @@ function PrintRoll({
                 <td dir="ltr">{r.phone ?? "—"}</td>
                 <td>{formatWatTime(r.checkInAt, locale)}</td>
                 <td>
-                  {r.badge
-                    ? [r.badge.zone, r.badge.cardNumber]
-                        .filter(Boolean)
-                        .join(" · ")
-                    : ""}
+                  {[
+                    r.badge?.zone,
+                    r.badge?.cardNumber,
+                    r.rfidCardNumber
+                      ? tCard("badge", { number: r.rfidCardNumber })
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </td>
               </tr>
             ))}

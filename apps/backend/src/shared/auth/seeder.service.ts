@@ -74,6 +74,7 @@ const ROLE_DEFS: Record<
       // Reception never approves or denies requests.
       PERMISSIONS.VISIT_CHECK_IN,
       PERMISSIONS.VISIT_CHECK_OUT,
+      PERMISSIONS.RFID_RETURN,
       // Notes only: resolving an alert (which unblocks check-in) is the Security Manager's call.
       PERMISSIONS.NOTE_ADD,
       PERMISSIONS.EVACUATION_READ,

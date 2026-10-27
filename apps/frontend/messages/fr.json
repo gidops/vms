@@ -115,7 +115,8 @@
     "tabs": {
       "all": "Tout",
       "requests": "Demandes",
-      "alerts": "Alertes"
+      "alerts": "Alertes",
+      "cards": "Cartes"
     },
     "typeRequest": "Demande de visite",
     "typeAlert": "Alertes",
@@ -295,7 +296,13 @@
       "deskQr": "QR sans rendez-vous (auto-enregistrement)",
       "selfRegistered": "Le visiteur, via le QR sans rendez-vous"
     },
-    "storedVisitorDiffers": "Cette adresse e-mail appartient à {name} dans nos dossiers. Vérifiez la pièce d'identité avant l'enregistrement."
+    "storedVisitorDiffers": "Cette adresse e-mail appartient à {name} dans nos dossiers. Vérifiez la pièce d'identité avant l'enregistrement.",
+    "typeCard": "Carte d'accès",
+    "cardItem": {
+      "title": "Carte d'accès en retard",
+      "desc": "{visitor} détient toujours la carte {number}. Elle devait être rendue le {due}.",
+      "overdue": "Non rendue"
+    }
   },
   "language": {
     "select": "Choisir la langue",
@@ -452,7 +459,17 @@
     "schedule": "Horaire de la visite",
     "status": "Statut de la visite",
     "complete": "Terminer la sortie",
-    "error": "Une erreur s'est produite. Veuillez réessayer."
+    "error": "Une erreur s'est produite. Veuillez réessayer.",
+    "rfid": {
+      "title": "Carte d'accès RFID",
+      "question": "La carte a-t-elle été rendue ?",
+      "returned": "Carte récupérée",
+      "lost": "Non rendue",
+      "noteLabel": "Qu'est-il arrivé à la carte ?",
+      "notePlaceholder": "ex. Le visiteur est parti sans la rendre",
+      "answerRequired": "Indiquez si la carte a été récupérée.",
+      "noteRequired": "Ajoutez une note concernant la carte."
+    }
   },
   "admin": {
     "pendingTitle": "Demandes en attente",
@@ -557,7 +574,8 @@
           "checkedIn": "Visiteur enregistré",
           "checkedOut": "Visiteur sorti",
           "cancelled": "Visite annulée",
-          "expired": "Visite expirée"
+          "expired": "Visite expirée",
+          "cardOverdue": "Carte d'accès en retard"
         }
       },
       "upcoming": {
@@ -1593,5 +1611,10 @@
         "desk_qr_registration_locked": "Inscription sur place verrouillée"
       }
     }
+  },
+  "rfidCard": {
+    "badge": "RFID {number}",
+    "overdue": "En retard",
+    "validUntil": "Valide jusqu'au {date}"
   }
 }

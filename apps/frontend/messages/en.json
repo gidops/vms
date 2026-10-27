@@ -115,7 +115,8 @@
     "tabs": {
       "all": "All",
       "requests": "Requests",
-      "alerts": "Alerts"
+      "alerts": "Alerts",
+      "cards": "Cards"
     },
     "typeRequest": "Visit Request",
     "typeAlert": "Alerts",
@@ -295,7 +296,13 @@
       "deskQr": "Walk-in QR (self-registered)",
       "selfRegistered": "Visitor, via the walk-in QR"
     },
-    "storedVisitorDiffers": "This email belongs to {name} in our records. Check ID before check-in."
+    "storedVisitorDiffers": "This email belongs to {name} in our records. Check ID before check-in.",
+    "typeCard": "Access card",
+    "cardItem": {
+      "title": "Access card overdue",
+      "desc": "{visitor} still has card {number}. It was due {due}.",
+      "overdue": "Not returned"
+    }
   },
   "language": {
     "select": "Select language",
@@ -452,7 +459,17 @@
     "schedule": "Visit Schedule",
     "status": "Visit Status",
     "complete": "Complete Check-Out",
-    "error": "Something went wrong. Please try again."
+    "error": "Something went wrong. Please try again.",
+    "rfid": {
+      "title": "RFID access card",
+      "question": "Was the card handed back?",
+      "returned": "Card retrieved",
+      "lost": "Not returned",
+      "noteLabel": "What happened to the card?",
+      "notePlaceholder": "e.g. The guest left without returning it",
+      "answerRequired": "Say whether the card was retrieved.",
+      "noteRequired": "Add a note about the card."
+    }
   },
   "admin": {
     "pendingTitle": "Pending Requests",
@@ -557,7 +574,8 @@
           "checkedIn": "Visitor checked in",
           "checkedOut": "Visitor checked out",
           "cancelled": "Visit cancelled",
-          "expired": "Visit expired"
+          "expired": "Visit expired",
+          "cardOverdue": "Access card overdue"
         }
       },
       "upcoming": {
@@ -1593,5 +1611,10 @@
         "desk_qr_registration_locked": "Walk-in registration locked"
       }
     }
+  },
+  "rfidCard": {
+    "badge": "RFID {number}",
+    "overdue": "Overdue",
+    "validUntil": "Valid until {date}"
   }
 }

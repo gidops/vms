@@ -7,6 +7,7 @@ import type {
   CheckOutVisitInput,
   CreateVisitsInput,
   FlagVisitInput,
+  HeldRfidCard as HeldRfidCardContract,
   RequestInfoInput,
   RiskLevel,
   VisitStatus,
@@ -21,6 +22,11 @@ export interface Paginated<T> {
   total: number;
   totalPages: number;
 }
+
+/** The visitor's active personalised RFID card (dates arrive as ISO strings). */
+export type HeldRfidCard = Omit<HeldRfidCardContract, "validUntil"> & {
+  validUntil: string;
+};
 
 export interface VisitListItem {
   id: string;
@@ -50,6 +56,7 @@ export interface VisitListItem {
     phone?: string | null;
     organization?: string | null;
   };
+  rfidCard?: HeldRfidCard | null;
   host: {
     id: string;
     department?: string | null;
@@ -130,6 +137,7 @@ export interface VisitRequestDetail {
     user: { id: string; fullName: string; email: string };
   } | null;
   pass?: VisitPass | null;
+  rfidCard?: HeldRfidCard | null;
   checkedInByName?: string | null;
   checkedOutByName?: string | null;
   notes: VisitNote[];

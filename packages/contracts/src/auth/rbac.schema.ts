@@ -57,6 +57,8 @@ export const PERMISSIONS = {
   INSIGHTS_SELF: "insights:self",
   /** System Admin only. */
   RFID_MANAGE: "rfid:manage",
+  /** Take back a visitor's RFID card at check-out (reception). Never grants rfid:manage. */
+  RFID_RETURN: "rfid:return",
   /** System Admin only. */
   AUDIT_READ: "audit:read",
   /** System Admin only. */
