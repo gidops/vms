@@ -144,10 +144,12 @@ function Field({
 /** "Who are you visiting?": search staff by name (names and units only). */
 function HostPicker({
   token,
+  formToken,
   value,
   onChange,
 }: {
   token: string;
+  formToken: string;
   value: SelfForm["host"];
   onChange: (host: SelfForm["host"]) => void;
 }) {
@@ -160,8 +162,9 @@ function HostPicker({
   }, [q]);
   const hosts = useQuery({
     queryKey: ["public-hosts", token, debounced],
-    queryFn: () => publicRegistrationApi.searchHosts(token, debounced),
-    enabled: debounced.length >= 2,
+    queryFn: () =>
+      publicRegistrationApi.searchHosts(token, debounced, formToken),
+    enabled: debounced.length >= 3,
     staleTime: 60_000,
   });
 
@@ -648,6 +651,7 @@ export function SelfRegistrationScreen({ token }: { token: string }) {
             </h3>
             <HostPicker
               token={token}
+              formToken={phase.formToken}
               value={form.host}
               onChange={(host) => patch({ host })}
             />

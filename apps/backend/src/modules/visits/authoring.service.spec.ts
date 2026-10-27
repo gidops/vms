@@ -487,3 +487,63 @@ describe('VisitAuthoringService.resendCode', () => {
     );
   });
 });
+
+describe('VisitAuthoringService.createSelfRegisteredWalkIn', () => {
+  function setup(existingVisitor: { id: string } | null) {
+    const tx = {
+      host: { upsert: jest.fn() },
+      visitor: {
+        findUnique: jest.fn().mockResolvedValue(existingVisitor),
+        create: jest.fn().mockResolvedValue({ id: 'new-visitor' }),
+      },
+      visit: {
+        create: jest.fn().mockResolvedValue({
+          id: 'v1',
+          referenceCode: 'ABCD-123',
+          scheduledAt: new Date('2026-10-27T09:00:00Z'),
+          host: null,
+        }),
+      },
+      commsConsentEvent: { create: jest.fn() },
+    };
+    const txm = {
+      run: (fn: (t: typeof tx) => unknown) => fn(tx),
+    } as unknown as TransactionManager;
+    const service = new VisitAuthoringService(
+      {} as PrismaService,
+      txm,
+      { publish: jest.fn() } as unknown as EventPublisher,
+      makeRead(),
+    );
+    const input = {
+      fullName: 'Typed Name',
+      email: 'known@x.com',
+      purpose: 'Meeting',
+      floor: '3rd Floor',
+      needsEvacuationAssist: false,
+      commsConsent: true,
+    } as Parameters<VisitAuthoringService['createSelfRegisteredWalkIn']>[0];
+    return { service, tx, input };
+  }
+
+  it('records the consent answer for a new visitor', async () => {
+    const { service, tx, input } = setup(null);
+    await service.createSelfRegisteredWalkIn(input, jest.fn());
+    expect(tx.visitor.create).toHaveBeenCalled();
+    expect(tx.commsConsentEvent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ email: 'known@x.com', consent: true }),
+    });
+  });
+
+  it("never changes an existing visitor's consent or details from the public form", async () => {
+    const { service, tx, input } = setup({ id: 'existing' });
+    await service.createSelfRegisteredWalkIn(input, jest.fn());
+    expect(tx.visitor.create).not.toHaveBeenCalled();
+    expect(tx.commsConsentEvent.create).not.toHaveBeenCalled();
+    expect(tx.visit.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ visitorId: 'existing' }),
+      }),
+    );
+  });
+});

@@ -1,14 +1,16 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { AuthUser } from '../../shared/auth/auth.decorators';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
 import { EventPublisher } from '../../shared/events/event-publisher';
 import { TransactionManager } from '../../shared/events/transaction.manager';
-import {
-  VisitDeliveriesService,
-  maskEmail,
-  maskPhone,
-} from './deliveries.service';
+import { maskEmail, maskPhone } from '../../shared/common/mask';
+import { NotificationService } from '../notifications/notification.service';
+import { VisitDeliveriesService } from './deliveries.service';
 
 const VISIT = '00000000-0000-4000-8000-000000000031';
 const notif = (over: Record<string, unknown> = {}) => ({
@@ -29,15 +31,24 @@ const principal = (activeRole: string): AuthUser => ({
   email: 'u@x.com',
   roles: [activeRole],
   activeRole,
-  permissions: [],
+  // Mirrors the seeded grant: only the admin roles may read raw errors.
+  permissions: ['ADMIN', 'SUPER_ADMIN'].includes(activeRole)
+    ? ['notification:read_errors']
+    : [],
 });
 
 describe('VisitDeliveriesService', () => {
-  function setup(opts: { visit?: boolean; rows?: unknown[]; one?: unknown }) {
-    const update = jest.fn().mockImplementation(({ data }) => ({
-      ...notif(),
-      ...data,
-    }));
+  function setup(opts: {
+    visit?: boolean;
+    rows?: unknown[];
+    one?: unknown;
+    lostRace?: boolean;
+  }) {
+    const requeueFailed = jest
+      .fn()
+      .mockResolvedValue(
+        opts.lostRace ? null : { ...notif(), status: 'PENDING', error: null },
+      );
     const prisma = {
       visit: {
         findUnique: jest
@@ -49,15 +60,18 @@ describe('VisitDeliveriesService', () => {
         findFirst: jest.fn().mockResolvedValue(opts.one ?? null),
       },
     } as unknown as PrismaService;
-    const tx = { notification: { update } };
+    const tx = {};
     const txm = {
       run: (fn: (t: unknown) => unknown) => fn(tx),
     } as unknown as TransactionManager;
     const publish = jest.fn().mockResolvedValue({});
-    const service = new VisitDeliveriesService(prisma, txm, {
-      publish,
-    } as unknown as EventPublisher);
-    return { service, prisma, update, publish };
+    const service = new VisitDeliveriesService(
+      prisma,
+      txm,
+      { publish } as unknown as EventPublisher,
+      { requeueFailed } as unknown as NotificationService,
+    );
+    return { service, prisma, requeueFailed, publish };
   }
 
   it('masks recipients', () => {
@@ -98,21 +112,22 @@ describe('VisitDeliveriesService', () => {
   });
 
   it('re-queues a FAILED message and audit-logs the retry', async () => {
-    const { service, update, publish } = setup({ one: notif() });
+    const { service, requeueFailed, publish } = setup({ one: notif() });
     const res = await service.retry(VISIT, 'n1', principal('VMC'));
-    expect(update).toHaveBeenCalledWith({
-      where: { id: 'n1' },
-      data: expect.objectContaining({
-        status: 'PENDING',
-        attempts: 0,
-        error: null,
-      }),
-    });
+    expect(requeueFailed).toHaveBeenCalledWith(expect.anything(), 'n1');
     expect(res.status).toBe('PENDING');
     expect(publish).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ type: EVENT_TYPES.NotificationRetried }),
     );
+  });
+
+  it('rejects the second of two concurrent retries without a second event', async () => {
+    const { service, publish } = setup({ one: notif(), lostRace: true });
+    await expect(
+      service.retry(VISIT, 'n1', principal('VMC')),
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(publish).not.toHaveBeenCalled();
   });
 
   it('refuses to retry a message that has not failed, or one from another visit', async () => {

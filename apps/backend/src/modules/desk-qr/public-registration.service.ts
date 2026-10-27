@@ -96,8 +96,23 @@ export class PublicRegistrationService {
     };
   }
 
-  async searchHosts(token: string, q: string): Promise<PublicHostOption[]> {
-    await this.activeQr(token);
+  private assertFormOpen(qrToken: string, formToken: string, now: Date): void {
+    const form = formTokenValid(this.secret, qrToken, formToken, now);
+    if (!form.ok) {
+      throw form.reason === 'expired'
+        ? new GoneException('errors.deskQr.formExpired')
+        : new UnprocessableEntityException('errors.deskQr.formInvalid');
+    }
+  }
+
+  async searchHosts(
+    token: string,
+    q: string,
+    formToken: string,
+    now = new Date(),
+  ): Promise<PublicHostOption[]> {
+    const qr = await this.activeQr(token);
+    this.assertFormOpen(qr.token, formToken, now);
     return this.users.searchPublicHosts(q);
   }
 
@@ -108,12 +123,7 @@ export class PublicRegistrationService {
     now = new Date(),
   ): Promise<PublicRegistrationPending> {
     const qr = await this.activeQr(token);
-    const form = formTokenValid(this.secret, qr.token, input.formToken, now);
-    if (!form.ok) {
-      throw form.reason === 'expired'
-        ? new GoneException('errors.deskQr.formExpired')
-        : new UnprocessableEntityException('errors.deskQr.formInvalid');
-    }
+    this.assertFormOpen(qr.token, input.formToken, now);
     const codeExpiresAt = new Date(
       now.getTime() + DESK_QR_FORM_MINUTES * 60_000,
     );

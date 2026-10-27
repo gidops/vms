@@ -40,7 +40,7 @@
       "ratingButton": "Rate your visit"
     },
     "deskQrCode": {
-      "subject": "Desk code for {visitorName}: {code}",
+      "subject": "Desk code for {visitorName}",
       "heading": "A visitor is registering at the desk",
       "intro": "{visitorName} ({organization}) scanned the desk QR and is waiting for their code.",
       "readOut": "Read this code to them to finish their registration. It works once and expires at {time}.",

@@ -1,4 +1,5 @@
 import { ROLES } from '@vms/contracts';
+import { maskEmail } from '../src/shared/common/mask';
 import { useRoleApp } from './support/role-app';
 
 /** Comms consent, notification delivery status and retry, and the WAT-bounded visitor export. */
@@ -69,9 +70,10 @@ describe('Consent, deliveries and exports (e2e)', () => {
       expect(visit?.commsConsent).toBe(true);
       const audit = await waitForAudit(
         'consent.withdrawn',
-        (m) => m.email === c.toLowerCase(),
+        (m) => m.email === maskEmail(c.toLowerCase()),
       );
       expect(audit).not.toBeNull();
+      expect(JSON.stringify(audit?.metadata)).not.toContain(c.toLowerCase());
     });
 
     it('lists withdrawn people under "out" and a System Admin can opt them back in', async () => {
@@ -96,7 +98,10 @@ describe('Consent, deliveries and exports (e2e)', () => {
         .expect(200)
         .expect({ affected: true });
       expect(await inList(e)).toBe(true);
-      const audit = await waitForAudit('consent.granted', (m) => m.email === e);
+      const audit = await waitForAudit(
+        'consent.granted',
+        (m) => m.email === maskEmail(e),
+      );
       expect(audit).not.toBeNull();
     });
 

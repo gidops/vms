@@ -152,7 +152,34 @@ Useful outputs: `terraform -chdir=terraform output` lists `app_url`,
 `api_base_url`, `alb_dns_name`, `rds_endpoint`, `app_instance_id` and the
 deployed image tags.
 
-### 6.5 Tear down
+### 6.5 Roll back to an earlier release
+
+1. Take a database snapshot first. Migrations are not undone on rollback, and an
+   older release may change role data on boot:
+   ```bash
+   aws rds create-db-snapshot \
+     --db-instance-identifier "$(terraform -chdir=terraform output -raw rds_endpoint | cut -d. -f1)" \
+     --db-snapshot-identifier "vms-before-rollback-$(date +%Y%m%d%H%M)"
+   ```
+2. Check out the commit you want to go back to and deploy it as usual with
+   `./vms-deploy.sh --deploy both`.
+3. Sign in as an admin and open **Users**. Check that people still hold the
+   roles they had, including the add-on roles **VMC Admin** and **Read Admin**.
+
+What happens to roles and permissions on boot:
+
+- Each release resets every role's permissions to what its code defines. Rolling
+  back removes permissions that only the newer release had; deploying forward
+  again restores them.
+- Roles the running release does not define are **kept**, together with
+  everyone's assignments, unless `SEED_PRUNE_ROLES=true` is set. Leave it false
+  except when deliberately retiring a role.
+- Releases from before this setting existed always delete unknown roles. Rolling
+  back that far removes **VMC Admin** and **Read Admin** and everyone's
+  assignment to them. Restore those assignments from the snapshot, or re-assign
+  them under **Users** after deploying forward again.
+
+### 6.6 Tear down
 
 ```bash
 terraform -chdir=terraform destroy -var="backend_image_tag=x" -var="frontend_image_tag=x"

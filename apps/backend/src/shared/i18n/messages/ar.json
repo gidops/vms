@@ -40,7 +40,7 @@
       "ratingButton": "قيّم زيارتك"
     },
     "deskQrCode": {
-      "subject": "رمز الاستقبال لـ {visitorName}: {code}",
+      "subject": "رمز الاستقبال لـ {visitorName}",
       "heading": "زائر يسجّل عند مكتب الاستقبال",
       "intro": "قام {visitorName} ({organization}) بمسح رمز QR الخاص بالاستقبال وينتظر رمزه.",
       "readOut": "اقرأ له هذا الرمز لإكمال تسجيله. يُستخدم مرة واحدة وتنتهي صلاحيته في {time}.",

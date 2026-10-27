@@ -33,6 +33,7 @@ const ROLE_DEFS: Record<
       PERMISSIONS.REPORT_EXPORT,
       PERMISSIONS.NOTIFICATION_READ,
       PERMISSIONS.NOTIFICATION_RETRY,
+      PERMISSIONS.NOTIFICATION_READ_ERRORS,
     ],
   },
   // Add-ons merge into their base role, so they list only what it lacks.
@@ -186,11 +187,14 @@ export class SeederService implements OnApplicationBootstrap {
       });
     }
 
-    // Drop non-canonical roles; their user assignments cascade away.
-    const canonical = [ROLES.SUPER_ADMIN, ...Object.keys(ROLE_DEFS)];
-    await this.prisma.role.deleteMany({
-      where: { name: { notIn: canonical } },
-    });
+    // Deleting a role also deletes every user's assignment to it, so after a
+    // rollback this would silently strip newer roles. Only prune when asked.
+    if (this.config.get('SEED_PRUNE_ROLES', { infer: true })) {
+      const canonical = [ROLES.SUPER_ADMIN, ...Object.keys(ROLE_DEFS)];
+      await this.prisma.role.deleteMany({
+        where: { name: { notIn: canonical } },
+      });
+    }
   }
 
   /** Sets `zone` only on create so reassigned badges aren't clobbered on reboot. */
