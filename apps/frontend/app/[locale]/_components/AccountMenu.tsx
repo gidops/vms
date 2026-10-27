@@ -15,10 +15,6 @@ import { useAuth } from "@/shared/auth/AuthContext";
 import { roleLabel } from "@/shared/auth/roleLabels";
 import { avatarUrl } from "@/shared/avatarUrl";
 
-/**
- * Avatar + chevron → account dropdown (identity, active role, settings,
- * Insights, Operations for the System Admin, logout).
- */
 export function AccountMenu() {
   const t = useTranslations("nav");
   const tRoles = useTranslations("roles");

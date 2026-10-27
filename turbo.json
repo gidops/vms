@@ -1,6 +1,6 @@
 {
   "$schema": "https://turborepo.com/schema.json",
-  "globalDependencies": [".nvmrc", "tsconfig.base.json", "packages/config/**"],
+  "globalDependencies": [".nvmrc", "packages/config/**"],
   "globalEnv": ["NODE_ENV"],
   "globalPassThroughEnv": ["NEXT_PUBLIC_*", "DATABASE_URL", "PORT"],
   "tasks": {

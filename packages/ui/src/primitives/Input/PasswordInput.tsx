@@ -10,11 +10,7 @@ export interface PasswordInputProps extends Omit<InputProps, "type"> {
   hideLabel?: string;
 }
 
-/**
- * A password field with an eye toggle on the end side to show or hide what
- * was typed. The toggle is a real button (aria-pressed), so it works by
- * keyboard; it never submits the form.
- */
+/** The eye toggle is a real button (aria-pressed) that never submits the form. */
 export const PasswordInput = React.forwardRef<
   HTMLInputElement,
   PasswordInputProps

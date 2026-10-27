@@ -1,14 +1,6 @@
 /**
- * Cutover: keep the QR already printed at the VMC desk working in v2.
- *
- *   npm run desk-qr:import-v1 -w @vms/backend -- <v1-qr-link> <code-email>
- *   (built image: node dist/scripts/import-v1-desk-qr.js <v1-qr-link> <code-email>)
- *
- * <v1-qr-link> is the URL shown under the issuer's QR in V1
- * (https://aatcabuja.com.ng/qr.php?i=<32 hex>) or just the 32-hex token.
- * <code-email> is where verification codes go (V1: that issuer's email).
- * Once aatcabuja.com.ng points at v2, /qr.php?i=… redirects to the v2 form.
- * Safe to re-run: it replaces the desk QR's token and email.
+ * Adopts the already-printed desk QR so it keeps working. Idempotent.
+ *   npm run desk-qr:import-v1 -w @vms/backend -- <qr-link-or-32-hex-token> <code-email>
  */
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';

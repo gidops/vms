@@ -9,18 +9,12 @@ import { useAuth } from "@/shared/auth/AuthContext";
 import { ADMIN_SECTIONS, type AdminSection } from "./adminAccess";
 
 export interface AdminShellProps {
-  /** Highlighted sidebar section. */
   active: AdminSection;
-  /** Optional global search field for the top nav. */
   search?: React.ReactNode;
   filterBar?: React.ReactNode;
   children: React.ReactNode;
 }
 
-/**
- * Admin console frame: brand top nav (search, notifications, role switcher,
- * account) over a permission-filtered section sidebar.
- */
 export function AdminShell({
   active,
   search,

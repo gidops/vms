@@ -50,14 +50,7 @@ function assertPhotoKey(key: string | undefined): void {
   }
 }
 
-/**
- * Personalised RFID access cards (Operations → Access cards, System Admin
- * only). A card is registered the first time its number is assigned and is
- * reused once returned. At most one ACTIVE assignment per card and per visitor:
- * the card is claimed with a conditional update and the visitor row is locked,
- * both inside the assignment transaction. Every change is a domain event, so
- * it lands in the audit trail.
- */
+/** At most one ACTIVE assignment per card and per visitor: the card is claimed conditionally and the visitor row locked, in one transaction. */
 @Injectable()
 export class RfidCardsService {
   constructor(
@@ -293,7 +286,6 @@ export class RfidCardsService {
     return this.getAssignment(id);
   }
 
-  /** Atomically move a card AVAILABLE → ASSIGNED, or say why it can't be. */
   private async claim(tx: Tx, cardId: string, status: string): Promise<void> {
     const claimed = await tx.rfidCard.updateMany({
       where: { id: cardId, status: 'AVAILABLE' },
@@ -341,7 +333,6 @@ export class RfidCardsService {
     return this.getAssignment(id);
   }
 
-  /** Record a print (first print or reprint) for the audit trail. */
   async printed(
     id: string,
     actorUserId: string,
@@ -361,7 +352,6 @@ export class RfidCardsService {
     return this.getAssignment(id);
   }
 
-  /** The card came back (card available again) or is lost (card LOST). */
   async close(
     id: string,
     input: CloseRfidAssignmentInput,
@@ -395,7 +385,6 @@ export class RfidCardsService {
     return this.getAssignment(id);
   }
 
-  /** Mark a lost card found (AVAILABLE) or retire a card that is not out. */
   async setCardStatus(
     cardId: string,
     input: SetRfidCardStatusInput,

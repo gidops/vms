@@ -5,11 +5,7 @@ import { LEVEL_DOT } from "../helpers";
 import { NoteComposer, NoteList } from "./notes";
 import { SheetSection } from "./SheetSection";
 
-/**
- * Alert Summary: risk level, category and flagged-at, the alert reason, and the
- * notes/remarks thread. When shown it replaces the generic Notes section (the
- * conversation lives here). Notes attach to the visit — one thread per visit.
- */
+/** Replaces the generic Notes section when shown; notes attach to the visit, one thread per visit. */
 export function AlertSummarySection({
   data,
   alert,

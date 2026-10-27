@@ -32,10 +32,7 @@ export function templateLabelKey(templateKey: string): string {
   }
 }
 
-/**
- * Chip intent per status. "Sent" means the provider accepted the message —
- * there are no delivery receipts yet, so the app never claims "Delivered".
- */
+/** "Sent" means the provider accepted it; there are no delivery receipts, so never claim "Delivered". */
 export const STATUS_INTENT = {
   SENT: "info",
   PENDING: "neutral",
@@ -115,11 +112,7 @@ function DeliveryRow({
   );
 }
 
-/**
- * Guest Details → Notifications: every email / WhatsApp / SMS message queued
- * for this visit, its status (Sent = accepted by the provider, Queued, Failed)
- * and a Retry for failures. Rendered only for holders of notification:read.
- */
+/** Rendered only for holders of notification:read. */
 export function NotificationsSection({ visitId }: { visitId: string }) {
   const t = useTranslations("delivery");
   const { hasPermission } = useAuth();

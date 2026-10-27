@@ -1,7 +1,3 @@
-// Shared, typed contracts for the VMS platform. Single source of truth for
-// enums, request/response shapes, and validation — consumed by the NestJS
-// backend (DTO validation) and the Next.js frontend (forms, API parsing, mocks).
-
 export * from "./common/enums.js";
 export * from "./common/pagination.js";
 export * from "./common/phone.js";

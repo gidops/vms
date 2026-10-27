@@ -5,17 +5,13 @@ import {
   timingSafeEqual,
 } from 'node:crypto';
 
-/** A fresh printed-URL token: 128 random bits, URL-safe (22 chars). */
 export function newDeskToken(): string {
   return randomBytes(16).toString('base64url');
 }
 
 const V1_TOKEN_RE = /^[0-9a-f]{32}$/i;
 
-/**
- * The token from a V1 issuer QR, given either the bare 32-hex token or the
- * printed URL (`https://aatcabuja.com.ng/qr.php?i=<hex32>`). Null if neither.
- */
+/** Accepts a bare 32-hex issuer token or its printed URL (`https://aatcabuja.com.ng/qr.php?i=<hex32>`). */
 export function parseV1Token(input: string): string | null {
   const raw = input.trim();
   if (V1_TOKEN_RE.test(raw)) return raw.toLowerCase();
@@ -35,10 +31,7 @@ function sameBytes(a: Buffer, b: Buffer): boolean {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-/**
- * Sign "this form was opened for this QR until `expiresAt`". Tied to the
- * current token, so rotating the QR also invalidates forms already open.
- */
+/** Tied to the current token, so rotating the QR also invalidates forms already open. */
 export function signFormToken(
   secret: string,
   deskQrToken: string,
@@ -49,7 +42,6 @@ export function signFormToken(
   return `${exp}.${sig}`;
 }
 
-/** Whether a form token is ours for this QR and still open at `now`. */
 export function formTokenValid(
   secret: string,
   deskQrToken: string,
@@ -66,15 +58,11 @@ export function formTokenValid(
   return exp > now.getTime() ? { ok: true } : { ok: false, reason: 'expired' };
 }
 
-/** A 6-digit verification code, zero-padded. */
 export function newVerificationCode(): string {
   return String(randomInt(0, 1_000_000)).padStart(6, '0');
 }
 
-/**
- * Keyed hash of a code, bound to its registration so a stored hash can't be
- * reused for another one or reversed by trying all million codes offline.
- */
+/** Bound to its registration so a stored hash can't be reused or brute-forced offline. */
 export function hashVerificationCode(
   secret: string,
   registrationId: string,

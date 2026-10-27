@@ -6,10 +6,7 @@ export interface SelectedItem {
   id: string;
 }
 
-/**
- * Context passed when the sheet is opened from an activity feed item — renders a
- * coloured banner describing the update above the sections.
- */
+/** Renders a banner describing the feed update above the sections. */
 export interface NotificationContext {
   category: StaffActivityCategory;
   title: string;

@@ -11,11 +11,7 @@ import { useTranslations } from "next-intl";
 import * as React from "react";
 import { useAvailableCards } from "@/data/access-cards/queries";
 
-/**
- * The "Assign pass" control from the check-in modal: a zone dropdown of available
- * badges glued to the selected badge's number. Selecting a badge lifts its id to
- * the parent (which gates the Complete button on a selection).
- */
+/** Lifts the selected badge id so the parent can gate Complete on a selection. */
 export function AssignPass({
   value,
   onChange,

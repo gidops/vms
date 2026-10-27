@@ -24,11 +24,6 @@ import { evacuationAssistData } from './helpers/evacuation-assist';
 import { generateReferenceCode } from './helpers/visit.codes';
 import { VisitReadService } from './read.service';
 
-/**
- * Authoring side of the visits module: creating visit requests / walk-ins and
- * the pre-approval edits the creator (VMC operator) or host may make — update,
- * resubmit, cancel, and re-sending the invite code.
- */
 @Injectable()
 export class VisitAuthoringService {
   constructor(
@@ -38,23 +33,13 @@ export class VisitAuthoringService {
     private readonly read: VisitReadService,
   ) {}
 
-  /**
-   * VMC creates one or more visits — the "New Invite Request" / "Register Walk-In"
-   * forms. One Visit per guest (each carries its own host/floor/purpose/schedule).
-   * A true group visit (`isGroupVisit`) shares one generated groupId + groupName/
-   * groupContact across all guests so it collapses to one VMC row and checks in as a
-   * group; a bulk submission leaves each visit independent (groupId = null). Walk-ins
-   * are auto-approved and emit VisitApproved (no pass, no QR, no visitor email —
-   * the badge is assigned at check-in). Invites start PENDING, get a referenceCode
-   * + QR for the guest, and emit VisitRequested. All atomic in one transaction.
-   */
+  /** Walk-ins are auto-approved (badge assigned at check-in); invites start PENDING with a reference + QR. */
   async createVisits(
     input: CreateVisitsInput,
     actorUserId: string,
   ): Promise<VisitRequestDetail[]> {
     const isWalkIn = input.type === 'WALK_IN';
 
-    // Every named host must be a user with the STAFF role.
     const hostUserIds = [
       ...new Set(input.guests.map((g) => g.hostUserId).filter(Boolean)),
     ] as string[];
@@ -75,7 +60,6 @@ export class VisitAuthoringService {
       where: { id: actorUserId },
       select: { fullName: true },
     });
-    // A group shares one id + name/email; a bulk submission has no shared group.
     const groupId = input.isGroupVisit ? randomUUID() : null;
     const groupName = input.isGroupVisit ? (input.groupName ?? null) : null;
     const groupContact = input.isGroupVisit
@@ -118,8 +102,7 @@ export class VisitAuthoringService {
             isGroupVisit: input.isGroupVisit,
             groupName,
             groupContact,
-            // Every visit gets a reference, walk-ins included, so reception can
-            // quote it (opt-ins list, export, search). Only invites send it out.
+            // Walk-ins get one too so reception can quote it; only invites send it out.
             referenceCode: generateReferenceCode(),
             type: input.type,
             status: isWalkIn ? 'APPROVED' : 'PENDING',
@@ -137,8 +120,7 @@ export class VisitAuthoringService {
         });
         createdIds.push(visit.id);
 
-        // Every intake answer is a consent event keyed on the normalised email;
-        // the latest event per email is that person's current opt-in status.
+        // Latest consent event per normalised email is that person's current opt-in.
         await tx.commsConsentEvent.create({
           data: {
             email: normalizeConsentEmail(g.email),
@@ -175,14 +157,7 @@ export class VisitAuthoringService {
     return Promise.all(createdIds.map((id) => this.read.getDetail(id)));
   }
 
-  /**
-   * A visitor registered themselves from the desk QR and reception confirmed
-   * them with the emailed code: create today's walk-in (approved, host
-   * optional, source QR, no operator). Unlike the reception form this never
-   * changes an existing visitor's saved name, phone or organisation, since
-   * anyone can type any email into a public form. `onCreated` runs inside the
-   * same transaction so the caller can tie its own record to the visit.
-   */
+  /** Public-form walk-in: never overwrites an existing visitor's saved details, since anyone can type any email. */
   async createSelfRegisteredWalkIn(
     input: Omit<PublicRegistrationInput, 'formToken' | 'website'>,
     onCreated: (tx: Prisma.TransactionClient, visitId: string) => Promise<void>,
@@ -252,7 +227,6 @@ export class VisitAuthoringService {
       await onCreated(tx, visit.id);
       return {
         referenceCode: visit.referenceCode!,
-        // What they typed, so the screen reads back their own entry.
         fullName: input.fullName,
         hostName: visit.host?.user.fullName ?? null,
         visitDate: visit.scheduledAt!,
@@ -260,12 +234,7 @@ export class VisitAuthoringService {
     });
   }
 
-  /**
-   * VMC edit of a not-yet-approved request via the pre-filled invite form —
-   * covers visitor details and that visit's details. Only the creator can edit,
-   * and only while the request is still PENDING/REVIEW_REQUESTED (an approved
-   * request is locked). A named host must still be a STAFF user.
-   */
+  /** Creator-only edit, allowed while PENDING/REVIEW_REQUESTED; approved requests are locked. */
   async update(
     id: string,
     input: UpdateVisitRequestInput,
@@ -347,11 +316,7 @@ export class VisitAuthoringService {
     return this.read.getDetail(id);
   }
 
-  /**
-   * Host edits & resubmits a request the Security Manager bounced back (REVIEW_REQUESTED) —
-   * optionally updating purpose/schedule — moving it back to PENDING for review.
-   * Authorized by host ownership so STAFF needs no global visit:edit permission.
-   */
+  /** Authorized by host ownership so STAFF needs no global `visit:edit`. */
   async resubmit(
     id: string,
     input: ResubmitVisitInput,
@@ -394,7 +359,6 @@ export class VisitAuthoringService {
       select: { createdById: true, host: { select: { userId: true } } },
     });
     if (!visit) throw new NotFoundException('errors.visit.notFound');
-    // The creator (e.g. the VMC operator who logged it) or the host may cancel.
     if (
       visit.createdById !== actorUserId &&
       visit.host?.userId !== actorUserId
@@ -417,10 +381,6 @@ export class VisitAuthoringService {
     return this.read.getDetail(id);
   }
 
-  /**
-   * Re-send the invite code/QR email to the guest. Only the host or creator may
-   * trigger it, and only for an invite that still carries a reference code.
-   */
   async resendCode(
     id: string,
     actorUserId: string,

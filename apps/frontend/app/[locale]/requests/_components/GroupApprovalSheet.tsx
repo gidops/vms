@@ -24,12 +24,7 @@ import type { VisitListItem } from "@/data/visits/visits.api";
 const isActionable = (g: VisitListItem) =>
   g.status === "PENDING" || g.status === "REVIEW_REQUESTED";
 
-/**
- * Group approval sheet — mirrors the group check-in sheet for the admin approval
- * queue. Lists a group invite's guests with per-guest Approve/Reject, multi-select
- * "Approve Selected" / "Reject Selected", and "Approve All". Rejection needs a
- * shared reason. Backed by the bulk approve/deny endpoint.
- */
+/** Rejection needs a shared reason; backed by the bulk approve/deny endpoint. */
 export function GroupApprovalSheet({
   groupId,
   onClose,

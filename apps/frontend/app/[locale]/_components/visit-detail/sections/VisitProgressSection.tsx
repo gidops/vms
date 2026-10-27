@@ -5,10 +5,7 @@ import type { VisitRequestDetail } from "@/data/visits/visits.api";
 import { timelineFor } from "../helpers";
 import { SheetSection } from "./SheetSection";
 
-/**
- * QR + visit reference code + "Send CODE to guest" (staff, pre-check-in only).
- * Walk-ins have a reference but no QR and nothing to send.
- */
+/** Staff only, pre-check-in; walk-ins have a reference but no QR and nothing to send. */
 function QrPanel({
   visitId,
   qrCode,
@@ -53,7 +50,6 @@ function QrPanel({
   );
 }
 
-/** The gold destination card shown once on-site (floor in a square). */
 function DestinationCard({ floor }: { floor?: string | null }) {
   const t = useTranslations("requests");
   if (!floor) return null;
@@ -69,10 +65,6 @@ function DestinationCard({ floor }: { floor?: string | null }) {
   );
 }
 
-/**
- * The track-progress stepper with a role-aware side panel: staff see the QR +
- * send-code before check-in, everyone sees the destination card once on-site.
- */
 export function VisitProgressSection({
   data,
   variant,

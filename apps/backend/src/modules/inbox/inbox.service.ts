@@ -25,14 +25,7 @@ const alertInclude = Prisma.validator<Prisma.AlertInclude>()({
 
 type AlertRow = Prisma.AlertGetPayload<{ include: typeof alertInclude }>;
 
-/**
- * Unified "Requests & Alerts" feed. Reads visit requests and alerts, maps each
- * to an `InboxItem`, merges, sorts by activity recency, and paginates. Each item
- * carries an `unread` flag derived from the user's `lastInboxSeenAt` (a single
- * per-user "last opened" timestamp) so the page behaves like a notification feed.
- * The in-memory merge is fine at current data scale; revisit (DB-level union) if
- * it grows.
- */
+/** Merges visit requests and alerts in memory (fine at current scale); `unread` derives from the user's `lastInboxSeenAt`. */
 @Injectable()
 export class InboxService {
   constructor(private readonly prisma: PrismaService) {}
@@ -40,7 +33,6 @@ export class InboxService {
   async list(
     query: InboxQuery,
     currentUserId: string,
-    /** False for principals without `visit:read` — forces the "mine" scope. */
     canReadAll = true,
   ): Promise<Paginated<InboxItem>> {
     const seenAt = await this.lastSeenAt(currentUserId);
@@ -57,7 +49,6 @@ export class InboxService {
     };
   }
 
-  /** Unread count for the current user, honouring the same scope/kind filters. */
   async unreadCount(
     query: InboxQuery,
     currentUserId: string,
@@ -68,7 +59,6 @@ export class InboxService {
     return { unread: items.filter((i) => i.unread).length };
   }
 
-  /** Mark everything read: stamp the user's "last opened Requests & Alerts" time. */
   async markSeen(currentUserId: string): Promise<{ seenAt: Date }> {
     const seenAt = new Date();
     await this.prisma.user.update({
@@ -86,7 +76,6 @@ export class InboxService {
     return user?.lastInboxSeenAt ?? new Date(0);
   }
 
-  /** Build the full (unpaginated) filtered + sorted feed for a user. */
   private async collect(
     query: InboxQuery,
     currentUserId: string,
@@ -104,8 +93,6 @@ export class InboxService {
         ? (query.status as AlertStatus)
         : undefined;
 
-    // Request-only facets (type/purpose or a request status) exclude alerts; an
-    // alert status excludes requests.
     const requestOnly =
       query.type !== undefined ||
       query.purpose !== undefined ||
@@ -116,9 +103,7 @@ export class InboxService {
     const wantAlerts =
       !requestOnly && (query.kind === 'all' || query.kind === 'alerts');
 
-    // `scope=mine` restricts to the signed-in host: their own visit requests, and
-    // alerts raised against any visitor they host. Principals without
-    // `visit:read` (staff, gate) are always limited to it.
+    // Principals without `visit:read` (staff, gate) are always limited to `scope=mine`.
     const mine = query.scope === 'mine' || !canReadAll;
     const requestWhere: Prisma.VisitWhereInput = {
       ...(mine ? { host: { userId: currentUserId } } : {}),
@@ -172,7 +157,6 @@ export class InboxService {
       items = items.filter((i) => this.matchesSearch(i, search));
     }
 
-    // Newest activity first — a status change or a new note bumps updatedAt.
     items.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
     return items;
   }

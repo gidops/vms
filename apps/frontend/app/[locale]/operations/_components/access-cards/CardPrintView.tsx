@@ -16,13 +16,7 @@ async function imagesReady(root: HTMLElement | null): Promise<void> {
   );
 }
 
-/**
- * Print-only copy of one access card for the DTC card printer: front and back
- * as two portrait CR80 pages (`@page rfidcard` in globals.css), portalled to
- * <body> so printing hides all app chrome. Mount it to print: it waits for the
- * images, opens the print dialog, then calls `onDone` (e.g. to log the print).
- * Set the printer driver to CR80, portrait, and duplex for the back.
- */
+/** Portalled to <body> so printing hides app chrome; set the driver to CR80, portrait, duplex. */
 export function CardPrintView({
   card,
   onDone,

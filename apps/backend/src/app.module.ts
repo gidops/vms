@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AccessCardsModule } from './modules/access-cards/access-cards.module';
 import { AlertsModule } from './modules/alerts/alerts.module';
 import { AuditTrailModule } from './modules/audit-trail/audit-trail.module';
@@ -54,9 +53,6 @@ import { StorageModule } from './shared/storage/storage.module';
   controllers: [AppController],
   // AllExceptionsFilter is registered here (not in main.ts) so it can inject
   // I18nService + ClsService for localized RFC-7807 error responses.
-  providers: [
-    AppService,
-    { provide: APP_FILTER, useClass: AllExceptionsFilter },
-  ],
+  providers: [{ provide: APP_FILTER, useClass: AllExceptionsFilter }],
 })
 export class AppModule {}

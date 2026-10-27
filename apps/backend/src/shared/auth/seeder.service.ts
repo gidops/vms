@@ -4,12 +4,7 @@ import { ACCESS_CARD_ZONES, PERMISSIONS, ROLES } from '@vms/contracts';
 import type { Env } from '../config/env.schema';
 import { PrismaService } from '../../prisma/prisma.service';
 
-/**
- * Scoped roles (SUPER_ADMIN gets every permission and is handled separately).
- * VMC is reception only — it registers visitors, checks them in/out and works the
- * Requests & Alerts notification feed, but does NOT approve or deny requests;
- * approval is an Admin responsibility.
- */
+/** SUPER_ADMIN gets every permission and is handled separately. */
 const ROLE_DEFS: Record<
   string,
   { description: string; permissions: string[] }
@@ -18,13 +13,10 @@ const ROLE_DEFS: Record<
     description:
       'Security Manager — decide/flag visit requests, analytics, bulk exports',
     permissions: [
-      // No user:* / role:read: users and roles are the System Admin's
-      // (the SM's console shows Analytics in place of Users).
+      // No user:* / role:read: users and roles belong to the System Admin.
       PERMISSIONS.VISIT_READ,
       PERMISSIONS.VISIT_APPROVE,
       PERMISSIONS.VISIT_DENY,
-      // The Security Manager raises and resolves security alerts (flag / request more info);
-      // staff/VMC only respond via notes and cannot resolve.
       PERMISSIONS.VISIT_FLAG,
       PERMISSIONS.VISIT_REQUEST_INFO,
       PERMISSIONS.ALERT_RESOLVE,
@@ -34,20 +26,16 @@ const ROLE_DEFS: Record<
       PERMISSIONS.HISTORY_READ,
       PERMISSIONS.VISITOR_READ,
       PERMISSIONS.REPORT_READ,
-      // Email consent is read-only for the Security Manager: reception
-      // (consent:manage) removes it and the System Admin adds it back.
+      // Read-only: reception withdraws consent, the System Admin grants it.
       PERMISSIONS.CONSENT_READ,
-      // Bulk personal-data exports: Security Manager, System Admin and reception
-      // (VMC, V1 parity). Read Admin, Staff and Gate never.
+      // Bulk personal-data exports: never granted to Read Admin, Staff or Gate.
       PERMISSIONS.CONSENT_EXPORT,
       PERMISSIONS.REPORT_EXPORT,
       PERMISSIONS.NOTIFICATION_READ,
       PERMISSIONS.NOTIFICATION_RETRY,
     ],
   },
-  // Add-on roles (contracts ADDON_ROLES): never active on their own — their
-  // permissions are merged in while the user acts as the base role, so they
-  // only list what the base role lacks.
+  // Add-ons merge into their base role, so they list only what it lacks.
   [ROLES.VMC_ADMIN]: {
     description:
       'VMC Admin — add-on for VMC: visitor directory and analytics on Insights',
@@ -67,14 +55,10 @@ const ROLE_DEFS: Record<
   [ROLES.STAFF]: {
     description: 'Staff member — hosts visitors, self-serves invite requests',
     permissions: [
-      // Self-serve host: raise own invite requests, annotate, cancel, and
-      // edit/resubmit a "needs more info" request. Host-ownership is enforced
-      // in the services so these grants never reach another host's visits.
-      // No visit:read — staff only ever see visits they created or host.
+      // Ownership is enforced in the services; no visit:read, so staff see only their own visits.
       PERMISSIONS.INVITATION_CREATE,
       PERMISSIONS.NOTE_ADD,
       PERMISSIONS.VISIT_CANCEL,
-      // Personal Insights (History / Visitors / Analytics of their own visits).
       PERMISSIONS.INSIGHTS_SELF,
     ],
   },
@@ -86,18 +70,13 @@ const ROLE_DEFS: Record<
       PERMISSIONS.INVITATION_CREATE,
       PERMISSIONS.VISIT_CANCEL,
       PERMISSIONS.VISIT_EDIT,
-      // VMC does not approve/deny requests — that is an Admin responsibility.
-      // Check-in/out now happen at the VMC station (badge assigned/released here).
+      // Reception never approves or denies requests.
       PERMISSIONS.VISIT_CHECK_IN,
       PERMISSIONS.VISIT_CHECK_OUT,
-      // VMC responds to security alerts via notes only — it cannot resolve them
-      // (that is the Security Manager/admin's call, and it unblocks check-in).
+      // Notes only: resolving an alert (which unblocks check-in) is the Security Manager's call.
       PERMISSIONS.NOTE_ADD,
       PERMISSIONS.EVACUATION_READ,
-      // Facility-wide visit history on Insights (with export below).
       PERMISSIONS.HISTORY_READ,
-      // Reception views opt-ins, records withdrawals and (V1 parity) keeps
-      // visitor and opt-in export.
       PERMISSIONS.CONSENT_READ,
       PERMISSIONS.CONSENT_MANAGE,
       PERMISSIONS.CONSENT_EXPORT,
@@ -117,7 +96,7 @@ const ROLE_DEFS: Record<
   },
 };
 
-/** Exposed for tests: the scoped role → permission matrix. */
+/** Exposed for tests. */
 export const SCOPED_ROLE_DEFS = ROLE_DEFS;
 
 // Stable IDs so demo seeding is idempotent (upsert by id).
@@ -133,13 +112,6 @@ const ID = {
   audit: (n: number) => `00000000-0000-4000-8000-0000000000${60 + n}`,
 };
 
-/**
- * Idempotent dev seeder: ensures the permission catalogue, the SUPER_ADMIN /
- * ADMIN / STAFF / VMC / GATE roles and the READ_ADMIN / VMC_ADMIN add-ons (in
- * every environment). No admin
- * user is seeded — the first SUPER_ADMIN is created via first-run /signup. Demo
- * requests/alerts are seeded outside production so the screens render with data.
- */
 @Injectable()
 export class SeederService implements OnApplicationBootstrap {
   constructor(
@@ -148,13 +120,9 @@ export class SeederService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
-    // Roles + permissions are reference data — seeded in EVERY environment so
-    // the first-run /signup can assign SUPER_ADMIN. The admin USER is never
-    // seeded; the first one is created through /signup.
+    // Seeded in every environment so first-run /signup can assign SUPER_ADMIN; no admin user is seeded.
     await this.seedRbac();
     await this.seedAccessCards();
-    // Demo requests/alerts are opt-in via SEED_DEMO_DATA (default off) so they can
-    // be controlled per-environment, including production.
     if (this.config.get('SEED_DEMO_DATA', { infer: true })) {
       await this.seedDemoData();
     }
@@ -169,7 +137,6 @@ export class SeederService implements OnApplicationBootstrap {
       });
     }
 
-    // SUPER_ADMIN holds every permission.
     const superAdminRole = await this.prisma.role.upsert({
       where: { name: ROLES.SUPER_ADMIN },
       update: { description: 'System Admin — full system access' },
@@ -193,7 +160,6 @@ export class SeederService implements OnApplicationBootstrap {
       });
     }
 
-    // Scoped roles (Admin, Staff, VMC, Gate) and add-ons.
     const permByKey = new Map(permissions.map((p) => [p.key, p.id]));
     for (const [name, def] of Object.entries(ROLE_DEFS)) {
       const role = await this.prisma.role.upsert({
@@ -214,28 +180,20 @@ export class SeederService implements OnApplicationBootstrap {
           create: { roleId: role.id, permissionId },
         });
       }
-      // Revoke any permission no longer in the role definition (e.g. approve/deny
-      // removed from VMC) so existing databases converge to the current taxonomy.
+      // Revoke stale grants so existing databases converge to the role definitions.
       await this.prisma.rolePermission.deleteMany({
         where: { roleId: role.id, permissionId: { notIn: desiredIds } },
       });
     }
 
-    // Drop legacy roles no longer in the canonical taxonomy (e.g. a deprecated
-    // RECEPTION role) — their user assignments cascade away.
+    // Drop non-canonical roles; their user assignments cascade away.
     const canonical = [ROLES.SUPER_ADMIN, ...Object.keys(ROLE_DEFS)];
     await this.prisma.role.deleteMany({
       where: { name: { notIn: canonical } },
     });
   }
 
-  /**
-   * Seed the physical badge pool (reference data, every environment) so the
-   * check-in "Assign pass" dropdown has inventory. Idempotent by cardNumber:
-   * four sequentially-numbered badges per zone, e.g. zone "5th Floor - left wing"
-   * → cards 0001..0004. Only fills `zone` on create so reassigned badges aren't
-   * clobbered on reboot.
-   */
+  /** Sets `zone` only on create so reassigned badges aren't clobbered on reboot. */
   private async seedAccessCards(): Promise<void> {
     let n = 0;
     for (const zone of ACCESS_CARD_ZONES) {
@@ -251,10 +209,6 @@ export class SeederService implements OnApplicationBootstrap {
     }
   }
 
-  /**
-   * Idempotent demo requests + an alert so the inbox isn't empty in dev. Author
-   * is the seeded host user (Dr Alabi), so demo data needs no admin account.
-   */
   private async seedDemoData(): Promise<void> {
     const hostUser = await this.prisma.user.upsert({
       where: { id: ID.hostUser },
@@ -276,13 +230,12 @@ export class SeederService implements OnApplicationBootstrap {
       },
     });
 
-    // Host users must carry the STAFF role to appear in the invite host picker.
+    // Hosts must carry the STAFF role to be selectable.
     const staffRole = await this.prisma.role.findUnique({
       where: { name: ROLES.STAFF },
     });
     if (staffRole) await this.assignRole(hostUser.id, staffRole.id);
 
-    // A second STAFF host so the host dropdown has options (matches the mockups).
     const sarah = await this.prisma.user.upsert({
       where: { id: ID.sarahUser },
       update: {},
@@ -339,9 +292,6 @@ export class SeederService implements OnApplicationBootstrap {
       );
     }
 
-    // A spread of statuses (all hosted by Dr Alabi) so the staff dashboard's
-    // stats, My Visits filters and the lifecycle stepper all have data. `today`
-    // schedules the visit for now so "Expected Today" / date filters are non-empty.
     const visitSeeds: {
       visitorIdx: number;
       status:
@@ -367,8 +317,6 @@ export class SeederService implements OnApplicationBootstrap {
       { visitorIdx: 3, status: 'DENIED', purpose: 'Client Meeting' },
       { visitorIdx: 0, status: 'CHECKED_IN', purpose: 'Official', today: true },
       { visitorIdx: 1, status: 'CHECKED_OUT', purpose: 'Delivery' },
-      // A flagged visit (idx 6) — carries an open SECURITY_REVIEW alert below so
-      // the flagged flow (stripe + Alert Summary + check-in hold) is demoable.
       { visitorIdx: 3, status: 'FLAGGED', purpose: 'Interview', today: true },
     ];
     for (let i = 0; i < visitSeeds.length; i++) {
@@ -379,8 +327,7 @@ export class SeederService implements OnApplicationBootstrap {
       const checkInAt = seed.status === 'CHECKED_IN' ? new Date() : null;
       await this.prisma.visit.upsert({
         where: { id: ID.visit(i) },
-        // Demo rows are owned by the seeder: refresh their status/schedule on
-        // every boot so taxonomy changes (e.g. NEEDS_MORE_INFO) take effect.
+        // Demo rows are seeder-owned, so refresh them on every boot.
         update: { status: seed.status, scheduledAt, checkInAt },
         create: {
           id: ID.visit(i),
@@ -398,9 +345,6 @@ export class SeederService implements OnApplicationBootstrap {
       });
     }
 
-    // Security alerts, each tied to a visit (every alert is about a visit). The
-    // flagged visit (idx 6) gets an open SECURITY_REVIEW that holds check-in; the
-    // review-requested visit (idx 2) gets an open ADDITIONAL_INFO request.
     const alertSeeds: {
       idx: number;
       visitIdx: number;
@@ -442,8 +386,6 @@ export class SeederService implements OnApplicationBootstrap {
         category: a.category,
         raisedById: hostUser.id,
       };
-      // Demo rows are seeder-owned: refresh on every boot (like the visit seeds)
-      // so shape changes take effect and the flagged flow stays consistent.
       await this.prisma.alert.upsert({
         where: { id: ID.alert(a.idx) },
         update: fields,
@@ -451,8 +393,6 @@ export class SeederService implements OnApplicationBootstrap {
       });
     }
 
-    // Notes on the pending request plus responses on the flagged / review-requested
-    // visits, so the Alert Summary threads aren't empty in dev.
     const noteSeeds: { visitIdx: number; body: string }[] = [
       {
         visitIdx: 0,
@@ -482,9 +422,7 @@ export class SeederService implements OnApplicationBootstrap {
       });
     }
 
-    // Seed audit rows so the staff "Recent Updates" feed (read from AuditLog)
-    // renders in dev. In normal operation these are written by the AuditListener
-    // as events flow; demo data is inserted directly so it needs them explicitly.
+    // Demo data bypasses the outbox, so the AuditListener never writes these rows.
     const auditSeeds: {
       action: string;
       entityType: string;
@@ -527,7 +465,6 @@ export class SeederService implements OnApplicationBootstrap {
     }
   }
 
-  /** Idempotently grant a role to a user (composite-key upsert). */
   private async assignRole(userId: string, roleId: string): Promise<void> {
     await this.prisma.userRole.upsert({
       where: { userId_roleId: { userId, roleId } },

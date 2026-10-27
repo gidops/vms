@@ -48,16 +48,10 @@ function cardType(category: StaffActivityCategory): InboxCardType {
   return "request";
 }
 
-/**
- * The staff "All Updates" page, laid out like the VMC Requests & Alerts page:
- * a filter bar (visitor search, category, day), the inbox card grid and
- * Previous / Next pagination over the host-scoped activity feed. Every filter
- * is applied server-side.
- */
 export function StaffUpdatesScreen() {
   const t = useTranslations("staff.updates");
   const format = useFormatter();
-  // One "now" for every relative timestamp (next-intl warns without it).
+  // next-intl warns about relative times without an explicit "now".
   const now = useNow();
 
   const [searchInput, setSearchInput] = React.useState("");

@@ -15,7 +15,6 @@ import {
   PERMISSIONS_KEY,
 } from './auth.decorators';
 
-/** Global authentication guard; routes opt out with @Public(). */
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
   constructor(private readonly reflector: Reflector) {
@@ -32,10 +31,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 }
 
-/**
- * Global authorization guard; enforces @RequirePermissions(...) (all of) and
- * @RequireAnyPermission(...) (at least one of).
- */
 @Injectable()
 export class PermissionsGuard implements CanActivate {
   constructor(
@@ -66,7 +61,6 @@ export class PermissionsGuard implements CanActivate {
       (anyOf.length === 0 ||
         anyOf.some((permission) => granted.includes(permission)));
     if (!ok) {
-      // Record the denial so attempts to exceed privilege are auditable.
       await this.security.record({
         action: EVENT_TYPES.PermissionDenied,
         entityType: 'Authorization',

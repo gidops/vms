@@ -1,6 +1,7 @@
 "use client";
 
 import { Input } from "@vms/ui";
+import { useTranslations } from "next-intl";
 import * as React from "react";
 
 /** Dialling codes offered in the phone field; +234 (Nigeria) is the default. */
@@ -16,13 +17,7 @@ export interface PhoneInputProps {
   id?: string;
 }
 
-/**
- * Telephone field with a dialling-code selector glued to the number input. The
- * two values are stored separately and assembled into one E.164 string at submit
- * time via `toE164` (@vms/contracts). The number box accepts digits only, so a
- * dial code / `+` / spaces can't be typed into it — the historical source of
- * malformed, doubled-country-code numbers.
- */
+/** The number box accepts digits only, so a dial code can't be typed twice into the E.164 result. */
 export function PhoneInput({
   code,
   number,
@@ -32,6 +27,7 @@ export function PhoneInput({
   invalid,
   id,
 }: PhoneInputProps) {
+  const t = useTranslations("common");
   return (
     // Phone numbers read left to right in every language (no "234+" in Arabic).
     <div
@@ -44,7 +40,7 @@ export function PhoneInput({
       <div className="flex items-center gap-1 border-e border-border bg-surface-muted ps-2 pe-1">
         <span aria-hidden="true">🇳🇬</span>
         <select
-          aria-label="Country dialling code"
+          aria-label={t("countryDialCode")}
           value={code}
           onChange={(e) => onCodeChange(e.target.value)}
           className="bg-transparent py-2 pe-1 text-sm text-fg outline-none"

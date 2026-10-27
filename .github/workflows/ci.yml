@@ -81,7 +81,7 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@v6
         with:
           # Cloud-only setting, kept out of sonar-project.properties so the same
-          # file drives the local SonarQube (docs/sonarqube-local.md).
+          # file drives the local SonarQube (docs/ci-quality.md).
           args: -Dsonar.organization=vmsvms
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

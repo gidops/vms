@@ -13,7 +13,6 @@ import { CurrentUser, type AuthUser } from '../../shared/auth/auth.decorators';
 import { ZodValidationPipe } from '../../shared/common/pipes/zod-validation.pipe';
 import { NotificationService } from './notification.service';
 
-/** In-app (dashboard) notifications for the current user. */
 @Controller('notifications')
 export class NotificationsController {
   constructor(private readonly notifications: NotificationService) {}

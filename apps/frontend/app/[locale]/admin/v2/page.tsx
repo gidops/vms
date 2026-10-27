@@ -17,13 +17,7 @@ import { PendingApprovalsTable } from "./_components/PendingApprovalsTable";
 import { useAdminBand } from "./_components/useAdminBand";
 import { useVisitOverlays } from "./_components/VisitOverlays";
 
-/**
- * Admin console v2 — Overview tab, rebuilt from the VMC and staff dashboards:
- * nav → filter bar → overview band → table beside Recent Activity (the staff
- * dashboard grid). The table follows the console: the Security Manager gets
- * the pending-approvals queue, the System Admin the Visitor Records. Traffic
- * and status charts live on Insights → Analytics.
- */
+/** The Security Manager gets the pending-approvals queue; the System Admin gets Visitor Records. */
 function Overview() {
   const { hasPermission } = useAuth();
   const role = adminConsoleRole(hasPermission);

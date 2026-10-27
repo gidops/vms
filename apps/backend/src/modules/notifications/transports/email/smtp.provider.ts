@@ -5,7 +5,6 @@ import type { Env } from '../../../../shared/config/env.schema';
 import type { RenderedMessage } from '../../notification.types';
 import type { EmailProvider } from './email-provider.interface';
 
-/** Resolved nodemailer connection settings for the active SMTP profile. */
 interface SmtpConfig {
   profile: string;
   host?: string;
@@ -15,13 +14,7 @@ interface SmtpConfig {
   pass?: string;
 }
 
-/**
- * SMTP email provider (nodemailer). Serves the `smtp`, `gmail` and `mailtrap`
- * values of EMAIL_PROVIDER by resolving its connection from the active selector,
- * so every transport's credentials can coexist in env and be switched by flipping
- * that one variable. The transporter is created lazily on first send and reused
- * (the profile is fixed at boot).
- */
+/** Serves smtp, gmail and mailtrap; all credentials coexist in env and EMAIL_PROVIDER picks one at boot. */
 @Injectable()
 export class SmtpProvider implements EmailProvider {
   readonly name = 'smtp';
@@ -30,7 +23,6 @@ export class SmtpProvider implements EmailProvider {
 
   constructor(private readonly config: ConfigService<Env, true>) {}
 
-  /** Connection settings for the transport selected by EMAIL_PROVIDER. */
   private resolveConfig(): SmtpConfig {
     const provider = this.config.get('EMAIL_PROVIDER', { infer: true });
     switch (provider) {

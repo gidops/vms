@@ -1,16 +1,19 @@
-# Notifications & Backend Localization
+# Notifications and backend localisation
 
-A production-grade, channel-pluggable notification system (In-App, Email, SMS, WhatsApp) that
-reacts to visitor-lifecycle domain events and renders **localized** content per recipient. It also
-completes backend localization: API error and validation messages are localized too, so the backend
-is the single source of truth for localized rendering.
+**Who this is for:** backend developers and whoever configures email, SMS or
+WhatsApp. **What you'll learn:** which messages the system sends and when, how
+they are queued and retried, how templates and translations work, and how to set
+up each channel, including WhatsApp.
 
-> Companion docs: [architecture.md](./architecture.md) (events/outbox), [api-inventory.md](./api-inventory.md).
+The notification system sends In-App, Email, SMS and WhatsApp messages in
+reaction to visit events, in the recipient's language. The backend also
+translates its API error messages. Related docs:
+[architecture.md](./architecture.md) (events and outbox), [api.md](./api.md).
 
 ## Architecture
 
 ```
-Domain event (visit.approved / visitor.checked_in / visitor.checked_out)
+Domain event (visit.approved / visit.invite_resent / visitor.checked_in / visitor.checked_out)
    │  OutboxRelay → EventEmitter2          (existing transactional outbox)
    ▼
 NotificationListener (@OnEvent)            resolves recipients + locale + enabled channels
@@ -24,7 +27,7 @@ Notification table  ──poll──▶ NotificationDispatcher ──▶ Templat
 
 Code lives in `apps/backend/src/modules/notifications/` (+ localization in `apps/backend/src/shared/i18n/`).
 
-- **Listener** (`notification.listener.ts`) — `@OnEvent` for the three lifecycle events. Loads the
+- **Listener** (`notification.listener.ts`) — `@OnEvent` for the four lifecycle events. Loads the
   visit/visitor/host, resolves the recipient locale, builds the template data, and enqueues.
 - **Service** (`notification.service.ts`) — `enqueue()` writes one row per channel, skipping disabled
   channels and missing recipients; also serves the in-app API.
@@ -43,14 +46,27 @@ dispatcher delivers and retries with exponential backoff up to `NOTIFICATION_MAX
 
 ## Notification flows
 
-| Event                 | Recipient(s)            | Channels                      | Template          | Contents                                                        |
-| --------------------- | ----------------------- | ----------------------------- | ----------------- | --------------------------------------------------------------- |
-| `visit.approved`      | Visitor (+ host in-app) | Email, SMS, WhatsApp, In-App  | `visit.approved`  | name, host, date/time, purpose, **access code**, **QR** (email) |
-| `visitor.checked_in`  | Host                    | Email, SMS, WhatsApp, In-App  | `visitor.arrived` | guest name, time                                                |
-| `visitor.checked_out` | Visitor (+ host in-app) | Email, (SMS/WhatsApp), In-App | `visit.thank_you` | thank-you + **rating link**                                     |
+| Event                 | Recipient(s)            | Channels                     | Template          | Contents                                                        |
+| --------------------- | ----------------------- | ---------------------------- | ----------------- | --------------------------------------------------------------- |
+| `visit.approved`      | Visitor (+ host in-app) | Email, SMS, WhatsApp, In-App | `visit.approved`  | name, host, date/time, purpose, **invite code**, **QR** (email) |
+| `visit.invite_resent` | Visitor (+ host in-app) | Email, SMS, WhatsApp, In-App | `visit.approved`  | same as above ("Send CODE to guest")                            |
+| `visitor.checked_in`  | Host                    | Email, SMS, WhatsApp, In-App | `visitor.arrived` | guest name, time                                                |
+| `visitor.checked_out` | Visitor (+ host in-app) | Email, SMS, WhatsApp, In-App | `visit.thank_you` | thank-you + rating link                                         |
+| Desk QR registration  | VMC desk inbox          | Email                        | `desk_qr.code`    | the 6-digit code reception reads to a self-registering visitor  |
 
-On approval, `VisitsService.approve()` also mints a `Pass` (access code) atomically, so the email/SMS
-can include the code and an inline QR (generated from the code by `QrService`).
+Walk-ins get no invite email (they are approved at the desk). A walk-in with no
+host produces no "visitor arrived" message. The code in the invite is the visit's
+reference code (or the pass code as a fallback); the QR image is generated from
+it by `QrService`. The desk code is sent directly by
+`desk-qr/public-registration.service.ts`, not by the listener.
+
+> Known gap: the thank-you rating link points to `${APP_PUBLIC_URL}/rating/<visitId>`,
+> but the frontend has no `/rating` page. Rating is done by the host in the
+> visit details (**Rate Guest**).
+
+Each visit's delivery status is visible to roles with `notification:read` in the
+visit details (**Notifications**), where failed messages can be retried
+(`notification:retry`).
 
 ## Email templating — MJML + Handlebars
 
@@ -74,8 +90,8 @@ Render pipeline: `Handlebars(template, data)` → MJML string → `mjml2html()` 
 1. Add `templates/email/<name>.mjml.hbs` (and reuse `layout.mjml.hbs`).
 2. Add the copy to `shared/i18n/messages/{en,fr,ar}.json` under `email.<ns>.*`, `sms.<ns>`,
    `whatsapp.<ns>`, `inapp.<ns>.*`.
-3. Register it in `TEMPLATE_META` (`notification.types.ts`) mapping the template key → `{ emailFile,
-ns, withQr? }`, and add the key to `NOTIFICATION_TEMPLATES`.
+3. Register it in `TEMPLATE_META` (`notification.types.ts`) mapping the template key →
+   `{ emailFile, ns, withQr? }`, and add the key to `NOTIFICATION_TEMPLATES`.
 
 ## Channels, providers & toggles
 
@@ -89,12 +105,7 @@ A channel that's enabled but unconfigured logs the message (dev) instead of cras
 | WhatsApp | `WhatsappTransport` | `WHATSAPP_PROVIDER` selects: `twilio` (`TwilioWhatsappProvider`, reuses the Twilio account/client that backs SMS) or `meta` (`MetaCloudWhatsappProvider`, Meta WhatsApp Cloud API via the Graph API). Falls back to the log provider when unconfigured.                                                |
 | In-App   | (dispatcher)        | the persisted row, read via the notifications API                                                                                                                                                                                                                                                      |
 
-> **WhatsApp templates (HSM).** WhatsApp only allows _business-initiated_ messages (all three VMS
-> notifications) as pre-approved templates outside a 24h user-opened session; free text is silently
-> undelivered. `WHATSAPP_USE_TEMPLATES=false` (default) sends the free-text catalog copy — fine for
-> the Twilio sandbox and 24h sessions. Set `true` and add a `whatsappTemplate` (`name` = Meta template
-> name / Twilio Content SID, plus ordered `vars`) to the entry in `TEMPLATE_META`
-> (`notification.types.ts`) for proactive production sends.
+WhatsApp needs extra setup; see [WhatsApp setup](#whatsapp-setup).
 
 ### Adding a new provider/channel
 
@@ -118,7 +129,7 @@ untouched — swapping Twilio → Meta WhatsApp Cloud API is a transport-only ch
 - **Locale resolution per request**: the frontend sends `x-locale` (from next-intl). The CLS middleware
   stores it; the exception filter localizes API errors/validation; domain events carry `metadata.locale`.
 - **Locale per notification**: the **recipient's** stored `preferredLocale` (`User`/`Visitor`) wins,
-  then `metadata.locale`, then `NOTIFICATIONS_DEFAULT_LOCALE`. So an email/SMS is rendered in the
+  then `metadata.locale`, then English. So an email/SMS is rendered in the
   recipient's language regardless of who triggered the event.
 - **API errors**: `AllExceptionsFilter` translates exception messages that are catalog keys (e.g.
   `errors.visit.notFound`) and zod issues (`validation.<code>`); free-text messages pass through.
@@ -131,7 +142,6 @@ See [`apps/backend/.env.example`](../apps/backend/.env.example). Key vars:
 | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | `EMAIL_ENABLED` / `SMS_ENABLED` / `WHATSAPP_ENABLED` / `INAPP_ENABLED`        | Per-channel toggles                                                          |
 | `NOTIFICATION_POLL_INTERVAL_MS` / `NOTIFICATION_MAX_ATTEMPTS`                 | Dispatcher cadence + retry cap                                               |
-| `NOTIFICATIONS_DEFAULT_LOCALE`                                                | Fallback locale                                                              |
 | `APP_PUBLIC_URL`                                                              | Builds the rating link                                                       |
 | `EMAIL_PROVIDER` (`smtp`\|`gmail`\|`mailtrap`\|`sendgrid`), `EMAIL_FROM`      | Email selection + sender                                                     |
 | `SMTP_HOST/PORT/SECURE/USER/PASS`                                             | Generic/custom SMTP server (`EMAIL_PROVIDER=smtp`)                           |
@@ -148,9 +158,122 @@ See [`apps/backend/.env.example`](../apps/backend/.env.example). Key vars:
 `sendgrid`: `SENDGRID_API_KEY=SG.…`. `EMAIL_FROM` must be a sender the active account is
 authorized to send as (verified single sender / domain), or delivery is rejected.
 
+In AWS, the email and WhatsApp settings come from `terraform/terraform.tfvars`
+(see [operations.md](./operations.md#81-one-time-setup)).
+
 ## Notes & limits
 
-- Two relays now poll Postgres (outbox + notifications) — fine at this scale.
+- Two loops poll Postgres (outbox + notifications); fine at this scale.
 - v1 sends the QR **image** in email only (inline CID). SMS/WhatsApp include the textual code; WhatsApp
   media needs a public URL (future).
 - `Visitor.preferredLocale` defaults to `EN` until captured at registration/invitation time.
+
+## WhatsApp setup
+
+WhatsApp is a channel with two interchangeable providers, chosen with
+`WHATSAPP_PROVIDER` (`twilio` or `meta`), the same way `EMAIL_PROVIDER` picks the
+email provider.
+
+```
+WhatsappTransport (WHATSAPP_ENABLED, WHATSAPP_PROVIDER)
+  ├─ TwilioWhatsappProvider    (reuses the Twilio client that backs SMS)
+  ├─ MetaCloudWhatsappProvider (Meta WhatsApp Cloud API, direct Graph API calls)
+  └─ LogWhatsappProvider       (fallback: logs instead of sending when unconfigured)
+```
+
+### Two things to know first
+
+1. **Recipients need a phone number** in international (E.164) format, e.g.
+   `+2348012345678`. A visitor or host without one gets no WhatsApp message.
+2. **Free text vs approved templates.** WhatsApp only delivers messages a
+   business starts (all VMS notifications) as **pre-approved templates** (also
+   called HSM), unless the person messaged you in the last 24 hours. Free text
+   outside that window is silently dropped.
+   - `WHATSAPP_USE_TEMPLATES=false` (default): free text. Fine for the Twilio
+     sandbox and testing.
+   - `WHATSAPP_USE_TEMPLATES=true`: approved templates, needed in production
+     (see [Approved templates](#approved-templates)).
+
+### Option A: Twilio (quickest to test)
+
+1. In `apps/backend/.env`:
+   ```bash
+   WHATSAPP_ENABLED=true
+   WHATSAPP_PROVIDER=twilio
+   WHATSAPP_USE_TEMPLATES=false
+   TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   TWILIO_AUTH_TOKEN=your_auth_token
+   TWILIO_WHATSAPP_FROM=+14155238886     # Twilio sandbox number
+   ```
+   `TWILIO_WHATSAPP_FROM` can be a bare `+E164` number; the `whatsapp:` prefix is
+   added automatically.
+2. Join the sandbox: in the Twilio Console go to **Messaging → Try it out → Send
+   a WhatsApp message**, note the sandbox number and join code, and send
+   `join <two-words>` from **each** test phone. Without this Twilio rejects
+   sends with error 63007 or 63016.
+3. For production, register a WhatsApp Business sender in Twilio (needs Meta
+   business verification), set `TWILIO_WHATSAPP_FROM` to it and use approved
+   templates.
+
+### Option B: Meta WhatsApp Cloud API
+
+Prerequisites on the Meta side: a Meta Business account, a Meta App with the
+WhatsApp product, a WhatsApp Business Account with a registered number, that
+number's **phone-number ID**, and a **permanent System User access token** with
+`whatsapp_business_messaging` (temporary tokens expire in about 24 hours).
+
+```bash
+WHATSAPP_ENABLED=true
+WHATSAPP_PROVIDER=meta
+WHATSAPP_USE_TEMPLATES=false
+META_WHATSAPP_ACCESS_TOKEN=EAAxxxxxxxx...
+META_WABA_PHONE_NUMBER_ID=1234567890
+META_GRAPH_API_VERSION=v21.0          # optional, default v21.0
+```
+
+For testing, add up to five recipient numbers under WhatsApp → API Setup.
+
+### Test it
+
+1. Start the backend: `npm run start:dev -w @vms/backend`. If it exits with
+   "Invalid environment variables", fix the named variable.
+2. Trigger an event for a visit whose visitor or host phone is your test
+   number: approve a visit (to the visitor), check the visitor in (to the host),
+   or check them out (to the visitor).
+3. The `Notification` row goes from `PENDING` to `SENT`, or to `FAILED` after
+   `NOTIFICATION_MAX_ATTEMPTS` retries.
+
+| Log line                                                     | Meaning                                                     |
+| ------------------------------------------------------------ | ----------------------------------------------------------- |
+| `Sent WhatsApp to <n> via Twilio` / `via Meta Cloud API`     | Handed to the provider                                      |
+| `[whatsapp:log] to=… (… not configured — not actually sent)` | Provider not configured; nothing was sent                   |
+| `Meta WhatsApp send failed (401 …)`                          | Meta rejected it (bad token, unverified recipient); retries |
+
+| Problem                                      | Fix                                                                                       |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Logs show `[whatsapp:log] … not configured`  | Sender number or Meta token / phone-number ID missing. Fill them in and restart.          |
+| Nothing queued at all                        | `WHATSAPP_ENABLED` is not `true`, or the recipient has no phone number.                   |
+| Twilio error 63007 / 63016                   | The phone has not joined the sandbox.                                                     |
+| Works in the sandbox, fails on a real number | Outside the 24-hour window you need approved templates and `WHATSAPP_USE_TEMPLATES=true`. |
+| Meta 401 / 190                               | Token invalid or expired; use a permanent system-user token.                              |
+| Meta 131030 / recipient not allowed          | Recipient not in the test list, or no approved template.                                  |
+
+### Approved templates
+
+Once a template is approved (Twilio Content Template or Meta Message Template):
+
+1. Add a `whatsappTemplate` to the matching entry in `TEMPLATE_META`
+   (`apps/backend/src/modules/notifications/notification.types.ts`):
+   ```ts
+   [NOTIFICATION_TEMPLATES.VISIT_APPROVED]: {
+     emailFile: 'visit-approved',
+     ns: 'visitApproved',
+     withQr: true,
+     whatsappTemplate: {
+       name: 'visit_approved',   // Meta template name, or Twilio Content SID (HX…)
+       languageCode: 'en',       // defaults to the render locale if omitted
+       vars: ['visitorName', 'visitDate', 'time'],  // payload keys, in template order
+     },
+   },
+   ```
+2. Set `WHATSAPP_USE_TEMPLATES=true`.

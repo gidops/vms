@@ -55,11 +55,7 @@ import { visitsApi, type VisitListItem } from "@/data/visits/visits.api";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
 
-/**
- * Live-ticking elapsed time since a visitor checked in, shown under the "Onsite"
- * status pill (HH:MM:SS). Owns its own interval so only this cell re-renders each
- * second rather than the whole table.
- */
+/** Owns its own interval so only this cell re-renders each second. */
 function OnsiteElapsed({ since }: { since: string }) {
   const t = useTranslations("dashboard");
   const [now, setNow] = React.useState(() => Date.now());
@@ -93,9 +89,7 @@ function Dashboard() {
   const [page, setPage] = React.useState(1);
   const [range, setRange] = React.useState<RecordsRange>("all");
   const [dates, setDates] = React.useState<DateRange>({});
-  // Like the staff dashboard: typing searches after a short pause, and
-  // Search / Enter applies it at once. The selects apply at once. Any change
-  // goes back to page 1.
+  // Search applies after a short pause or on Enter; any change resets to page 1.
   const [draft, setDraft] = React.useState("");
   const [filters, setFilters] = React.useState<BoardFilters>(NO_BOARD_FILTERS);
   const applyFilters = (patch: Partial<BoardFilters>) => {
@@ -133,8 +127,7 @@ function Dashboard() {
     queryFn: () =>
       visitsApi.list({
         ...boardListParams(filters),
-        // The VMC board is a records log: filter the date window by when the
-        // request was created and show the most recently created first.
+        // The VMC board is a records log: window and sort by creation date.
         dateField: "createdAt",
         sortBy: "createdAt",
         sortDir: "desc",
@@ -168,25 +161,19 @@ function Dashboard() {
   const hostUnit = (row: VisitListItem) =>
     row.host?.user.fullName ?? row.floor ?? "—";
 
-  // The time shown under the status pill is status-specific: an Expected visit
-  // shows when they're scheduled to arrive, a Checked-Out one shows when they
-  // left. (Onsite renders the live elapsed timer instead — handled in the cell.)
+  // Expected shows the scheduled arrival, Checked-Out the departure; Onsite uses the live timer.
   const underPillTime = (row: VisitListItem): string | null => {
     if (row.status === "APPROVED") return row.scheduledAt ?? null;
     if (row.status === "CHECKED_OUT") return row.checkOutAt ?? null;
     return row.createdAt;
   };
 
-  // A group visit opens the group sheet; a bulk/single visit goes straight to the
-  // check-in modal.
   const startCheckIn = (row: VisitListItem) => {
     if (row.isGroupVisit && row.groupId) setGroupCheckIn(row.groupId);
     else setCheckInId(row.id);
   };
 
-  // Shared size so the ACTION column reads uniformly regardless of which action
-  // a row shows (Check-In / Check-Out / View Details): smaller label + a min width
-  // wide enough for the longest ("View Details") so all three match.
+  // A min width fits the longest label so every action button matches.
   const actionButtonClass = "min-w-28 text-xs";
 
   const rowAction = (row: VisitListItem) => {

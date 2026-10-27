@@ -44,8 +44,7 @@ function Staff() {
   const { user } = useAuth();
 
   const [range, setRange] = React.useState<StaffRange>("today");
-  // The date window the range control derives (Today = today, 7d = rolling week,
-  // Custom = calendar pick). Seeded to "today" so the initial view is bounded.
+  // Seeded to "today" so the initial view is bounded.
   const [dateWindow, setDateWindow] = React.useState<DateRange>(() => {
     const now = new Date();
     const start = new Date(now);
@@ -66,8 +65,7 @@ function Staff() {
   const stats = useStaffStats();
   const activity = useStaffActivityFeed();
 
-  // Search hits the API (guest/host/floor/pass id). Debounce keystrokes so the
-  // table updates as you type; the Search button / Enter flushes immediately.
+  // Debounced as you type; the Search button / Enter flushes immediately.
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
   React.useEffect(() => {
     const id = setTimeout(() => setDebouncedSearch(filters.search.trim()), 300);
@@ -75,15 +73,12 @@ function Staff() {
   }, [filters.search]);
   const runSearch = () => setDebouncedSearch(filters.search.trim());
 
-  // Search takes precedence over the date range: while a term is active the
-  // window is dropped so results span everything in scope (the range control is
-  // disabled to match).
+  // While searching, the date window is dropped so results span everything in scope.
   const searching = debouncedSearch.length > 0;
 
   const visits = useMyVisits({
     ...(searching ? {} : dateWindow),
-    // The staff dashboard tracks recently-submitted requests, so window + sort
-    // both run on createdAt (newest first) rather than the scheduled date.
+    // Tracks recently submitted requests, so window and sort use createdAt.
     dateField: "createdAt",
     sortBy: "createdAt",
     sortDir: "desc",

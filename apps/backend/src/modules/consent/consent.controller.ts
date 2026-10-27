@@ -23,10 +23,6 @@ import { ZodValidationPipe } from '../../shared/common/pipes/zod-validation.pipe
 import { watToday } from '../../shared/common/wat';
 import { ConsentService } from './consent.service';
 
-/**
- * Email consent: the list (by current status), its CSV export of consented
- * people, withdrawal (VMC / Security Manager) and opting back in (System Admin).
- */
 @Controller('consent')
 export class ConsentController {
   constructor(private readonly consent: ConsentService) {}

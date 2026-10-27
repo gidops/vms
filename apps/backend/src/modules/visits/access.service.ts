@@ -18,11 +18,6 @@ import { PASS_TTL_MS, generateAccessCode } from './helpers/visit.codes';
 import { ensureExists } from './helpers/visit.guards';
 import { VisitReadService } from './read.service';
 
-/**
- * On-site side of the visits module — the VMC desk operations: check-in
- * (assign a badge, mark on-site), check-out (release the badge, mark off-site),
- * and the host's post-visit rating.
- */
 @Injectable()
 export class VisitAccessService {
   constructor(
@@ -32,12 +27,7 @@ export class VisitAccessService {
     private readonly read: VisitReadService,
   ) {}
 
-  /**
-   * VMC check-in: assign a physical badge (AccessCard) to an approved visit, mark
-   * it on-site, and log the gate event. The chosen badge must be in service and
-   * not already assigned. Gate validation is recorded here for now (until the gate
-   * scan flow ships) so the visit shows as gate-validated once on-site.
-   */
+  /** Also records gate validation, since there is no separate gate-scan step. */
   async checkIn(
     id: string,
     input: CheckInVisitInput,
@@ -57,9 +47,7 @@ export class VisitAccessService {
       throw new BadRequestException('errors.visit.notCheckInable');
     }
 
-    // Security hold: an open flag / restricted-match alert blocks check-in until the
-    // the Security Manager resolves it (a FLAGGED visit is already blocked by the status check above,
-    // but a system RESTRICTED_MATCH may sit on an otherwise-approved visit).
+    // A RESTRICTED_MATCH alert can sit on an otherwise-approved visit, so check open security alerts too.
     const openSecurityAlert = await this.prisma.alert.findFirst({
       where: {
         visitId: id,
@@ -96,7 +84,6 @@ export class VisitAccessService {
         },
         update: { status: 'ACTIVE', returnedAt: null, expiresAt },
       });
-      // Link the chosen badge to this pass, releasing any badge it held before.
       await tx.accessCard.updateMany({
         where: { passId: pass.id },
         data: { passId: null },
@@ -133,11 +120,7 @@ export class VisitAccessService {
     return this.read.getDetail(id);
   }
 
-  /**
-   * VMC check-out: mark the visitor off-site, return the pass, and release the
-   * badge back to the pool. `accessCardId` lets the operator correct the recorded
-   * badge ("Change Pass ID") before releasing.
-   */
+  /** `accessCardId` lets the operator correct the recorded badge before it is released. */
   async checkOut(
     id: string,
     input: CheckOutVisitInput,
@@ -151,7 +134,6 @@ export class VisitAccessService {
         include: { accessCard: true },
       });
       if (pass) {
-        // "Change Pass ID": move the link to the corrected badge first.
         if (input.accessCardId && pass.accessCard?.id !== input.accessCardId) {
           await tx.accessCard.updateMany({
             where: { passId: pass.id },
@@ -198,10 +180,7 @@ export class VisitAccessService {
     return this.read.getDetail(id);
   }
 
-  /**
-   * Host rates a completed visit (1-5 stars). Only the visit's host or creator
-   * may rate, and only once the visitor has checked out. Idempotent per visit.
-   */
+  /** Host or creator only, after check-out; idempotent per visit. */
   async rate(
     id: string,
     input: RateVisitInput,

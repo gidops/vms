@@ -9,15 +9,11 @@ export interface SideNavItem {
   icon: LucideIcon;
   href?: string;
   active?: boolean;
-  /**
-   * Rendered but not interactive (e.g. a section that isn't built yet). Give
-   * `disabledHint` so the reason is announced and shown on hover.
-   */
+  /** Give `disabledHint` too, so the reason is announced and shown on hover. */
   disabled?: boolean;
   disabledHint?: string;
 }
 
-/** Props a custom link component receives (e.g. a framework router link). */
 export interface SideNavLinkProps {
   href: string;
   className?: string;
@@ -28,23 +24,17 @@ export interface SideNavLinkProps {
 
 export interface SideNavProps {
   items: SideNavItem[];
-  /** Accessible name for the nav landmark. */
   label: string;
-  /** Link component for `href` items; defaults to a plain anchor. */
   linkAs?: React.ElementType<SideNavLinkProps>;
   collapsed?: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
-  /** Accessible labels for the collapse toggle (omit both to hide it). */
+  /** Omit both labels to hide the collapse toggle. */
   collapseLabel?: string;
   expandLabel?: string;
   className?: string;
 }
 
-/**
- * Vertical section navigation for console-style pages (admin). Sits under a
- * `TopNav` via `TopNavShell`'s `sidebar` slot. Items are icon + label; the rail
- * can collapse to icons only.
- */
+/** Vertical section nav for console pages; the rail can collapse to icons only. */
 export function SideNav({
   items,
   label,

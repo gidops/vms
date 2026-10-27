@@ -10,15 +10,10 @@ import { useAuth } from "@/shared/auth/AuthContext";
 type Selected = {
   kind: "request" | "alert";
   id: string;
-  /** Open the sheet with the Deny reason form already expanded. */
   form?: "deny" | null;
 };
 
-/**
- * Detail-sheet state shared by the v2 screens. A pending group visit opens the
- * per-guest `GroupApprovalSheet` for approvers (as the old approval queue did);
- * everything else opens the shared `VisitDetailSheet`.
- */
+/** A pending group visit opens the per-guest `GroupApprovalSheet` for approvers; everything else the `VisitDetailSheet`. */
 export function useVisitOverlays() {
   const { hasPermission } = useAuth();
   const [selected, setSelected] = React.useState<Selected | null>(null);
@@ -35,7 +30,6 @@ export function useVisitOverlays() {
     else setSelected({ kind: "request", id: row.id });
   };
 
-  /** Deny from a row: the visit's sheet with its reason form open. */
   const denyRow = (row: VisitListItem) =>
     setSelected({ kind: "request", id: row.id, form: "deny" });
 

@@ -9,22 +9,16 @@ import {
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 
-/** One limit: at most `limit` requests per `windowMs` for each key. */
 export interface RateLimitRule {
-  /** Short name so different rules on one route count separately. */
   name: string;
   limit: number;
   windowMs: number;
-  /**
-   * What to count by: the caller's IP, or a route param (e.g. the desk QR
-   * token, so one leaked link can't be hammered from many addresses).
-   */
+  /** A param key (e.g. the desk QR token) stops one leaked link being hammered from many IPs. */
   by: 'ip' | { param: string };
 }
 
 export const RATE_LIMIT_KEY = 'rateLimitRules';
 
-/** Apply one or more fixed-window limits to a route (use with RateLimitGuard). */
 export const RateLimit = (...rules: RateLimitRule[]) =>
   SetMetadata(RATE_LIMIT_KEY, rules);
 
@@ -33,13 +27,7 @@ interface Window {
   resetAt: number;
 }
 
-/**
- * Fixed-window rate limiter for the public (no login) routes. Counts live in
- * this process's memory, which is enough for the single demo instance; a
- * multi-instance deployment needs a shared store (e.g. Redis) instead. Behind a
- * proxy, `req.ip` is the proxy's address unless Express `trust proxy` is set,
- * so the per-token rules are the backstop there.
- */
+/** In-memory counts: a multi-instance deployment needs a shared store. */
 @Injectable()
 export class RateLimitGuard implements CanActivate {
   private readonly windows = new Map<string, Window>();
@@ -83,7 +71,7 @@ export class RateLimitGuard implements CanActivate {
     return true;
   }
 
-  /** Drop expired windows now and then so the map can't grow without bound. */
+  /** Keeps the map from growing without bound. */
   private sweep(now: number): void {
     if (this.windows.size < 5_000) return;
     for (const [key, w] of this.windows) {

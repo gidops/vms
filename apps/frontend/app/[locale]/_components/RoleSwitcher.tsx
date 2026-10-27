@@ -8,11 +8,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { roleLabel } from "@/shared/auth/roleLabels";
 
-/**
- * "Switch Account" pill → list of the user's switchable roles (add-ons like
- * Read Admin only extend a role, so they're never listed). Hidden when there
- * is nothing to switch to.
- */
+/** Add-on roles only extend a role, so they're never listed; hidden when there's nothing to switch to. */
 export function RoleSwitcher() {
   const t = useTranslations("nav");
   const tRoles = useTranslations("roles");

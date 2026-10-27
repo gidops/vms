@@ -5,13 +5,10 @@ export interface YesNoControlProps {
   /** `null` = not answered yet. There is deliberately no default answer. */
   value: boolean | null;
   onValueChange: (value: boolean) => void;
-  /** Localised option labels. */
   yesLabel: string;
   noLabel: string;
-  /** Unanswered after a submit attempt: red outline. */
   invalid?: boolean;
   disabled?: boolean;
-  /** Stretch both options across the available width (phone layout). */
   fullWidth?: boolean;
   id?: string;
   "aria-label"?: string;
@@ -20,12 +17,7 @@ export interface YesNoControlProps {
   className?: string;
 }
 
-/**
- * Required Yes/No answer as a two-option segmented control (a radiogroup).
- * Unlike SegmentedControl it starts with nothing selected, so a form can
- * insist on an explicit answer; the selected option fills with the brand
- * colour. Arrow keys move and select, as in a native radio group.
- */
+/** Starts unanswered so a form can insist on an explicit Yes/No. */
 export function YesNoControl({
   value,
   onValueChange,

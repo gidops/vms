@@ -157,11 +157,7 @@ function VisitPicker({
   );
 }
 
-/**
- * "Assign card": pick the visitor (and optionally their visit), log the card
- * number from the configured RFID card, set how long it is valid (WAT), add the
- * photo to print, then save. The card is registered on first use.
- */
+/** The card is registered on first use. */
 export function AssignCardDrawer({
   open,
   onOpenChange,

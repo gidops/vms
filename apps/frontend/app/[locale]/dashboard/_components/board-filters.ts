@@ -8,7 +8,6 @@ export const BOARD_STATUSES = [
 ] as const satisfies readonly VisitStatus[];
 export type BoardStatus = (typeof BOARD_STATUSES)[number];
 
-/** The visit types reception creates (walk-ins and invites). */
 export const BOARD_TYPES = [
   "WALK_IN",
   "PRE_INVITED",
@@ -31,7 +30,6 @@ export const NO_BOARD_FILTERS: BoardFilters = {
   purpose: "all",
 };
 
-/** The list query for the board's filter bar. */
 export function boardListParams(f: BoardFilters): {
   statuses: VisitStatus[];
   type?: VisitType;

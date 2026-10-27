@@ -13,7 +13,6 @@ import { TransactionManager } from '../../shared/events/transaction.manager';
 import { latestConsent } from '../consent/latest-consent';
 import { evacuationAssistLabel } from './helpers/evacuation-assist';
 
-/** Rows fetched per round-trip while streaming an export. */
 const BATCH = 500;
 
 export const EXPORT_COLUMNS = [
@@ -35,17 +34,13 @@ export const EXPORT_COLUMNS = [
   'Badge',
   'Evacuation assist',
   'Evacuation assistance',
-  // The person's current status (latest answer wins), not the answer given
-  // at this visit, so a later opt-out is never mailed from an old export.
+  // Current status (latest answer wins), so a later opt-out is never mailed from an old export.
   'Email consent',
   'Email status',
   'Created by',
 ] as const;
 
-/**
- * The PDF is a printable summary, so it keeps the columns that fit a landscape
- * A4 page (indexes into EXPORT_COLUMNS; widths in points, summing to 770).
- */
+/** Columns that fit landscape A4 (indexes into EXPORT_COLUMNS; widths sum to 770pt). */
 const PDF_COLUMNS: { col: number; width: number }[] = [
   { col: 0, width: 62 }, // Reference code
   { col: 1, width: 100 }, // Visitor
@@ -67,7 +62,6 @@ const TYPE_LABEL: Record<string, string> = {
   APPOINTMENT: 'Appointment',
 };
 
-/** Human channel for a visit's `source` (VMC station / staff / QR). */
 export function channelLabel(source: string | null): string {
   switch (source) {
     case 'VMC_STATION':
@@ -87,7 +81,7 @@ function yesNo(v: boolean | null): string {
   return v ? 'Yes' : 'No';
 }
 
-/** Email status as shown in the app: SENT means accepted by the provider. */
+/** SENT means accepted by the provider. */
 function emailStatusLabel(status: string | undefined): string {
   if (!status) return '';
   if (status === 'SENT') return 'Sent';
@@ -95,7 +89,7 @@ function emailStatusLabel(status: string | undefined): string {
   return 'Queued';
 }
 
-/** A JS Date whose UTC fields read as WAT wall-clock (Excel has no zones). */
+/** UTC fields read as WAT wall-clock, since Excel dates have no zone. */
 function asWatWallClock(d: Date | null): Date | null {
   return d ? new Date(d.getTime() + WAT_OFFSET_MS) : null;
 }
@@ -104,13 +98,7 @@ type ExportVisit = Awaited<
   ReturnType<VisitExportService['fetchBatch']>
 >[number];
 
-/**
- * Visitor export (CSV / Excel / PDF) by visit date. The window is the WAT calendar
- * days `from`..`to` inclusive over `scheduledAt` (walk-ins get `now()` at
- * creation). Rows are streamed in batches. Every export is audit-logged before
- * the first byte goes out, then again (same export id) when it completes or
- * fails, so an aborted or broken download still leaves a trace.
- */
+/** Audited before the first byte and again on completion/failure, so aborted downloads still leave a trace. */
 @Injectable()
 export class VisitExportService {
   constructor(
@@ -148,7 +136,6 @@ export class VisitExportService {
     });
   }
 
-  /** Latest EMAIL notification status per visit (one query per batch). */
   private async emailStatuses(ids: string[]): Promise<Map<string, string>> {
     if (ids.length === 0) return new Map();
     const rows = await this.prisma.notification.findMany({
@@ -163,10 +150,6 @@ export class VisitExportService {
     return out;
   }
 
-  /**
-   * One export row in EXPORT_COLUMNS order. Dates are WAT Date objects.
-   * `consent` is the visitor's current email-consent status (null = never asked).
-   */
   toRow(
     v: ExportVisit,
     emailStatus?: string,
@@ -243,10 +226,7 @@ export class VisitExportService {
     );
   }
 
-  /**
-   * Audit the start, stream the export to `out`, then audit the outcome.
-   * Resolves to the row count. If the start can't be recorded, nothing is sent.
-   */
+  /** If the start can't be audited, nothing is sent. */
   async write(
     q: ExportVisitsQuery,
     out: Writable,
@@ -281,7 +261,6 @@ export class VisitExportService {
     return rowCount;
   }
 
-  /** Write every row to `out`, reporting each batch's size to `add`. */
   private async stream(
     q: ExportVisitsQuery,
     out: Writable,
@@ -298,7 +277,6 @@ export class VisitExportService {
       ws.columns = EXPORT_COLUMNS.map((header, i) => ({
         header,
         width: i >= 9 && i <= 11 ? 18 : 20,
-        // Visit date / check-in / check-out are typed date cells.
         ...(i >= 9 && i <= 11 ? { style: { numFmt: 'yyyy-mm-dd hh:mm' } } : {}),
       }));
       ws.getRow(1).font = { bold: true };
@@ -331,7 +309,6 @@ export class VisitExportService {
     }
   }
 
-  /** Landscape A4 table: a title, a repeated header row, then one row per visit. */
   private async streamPdf(
     q: ExportVisitsQuery,
     out: Writable,

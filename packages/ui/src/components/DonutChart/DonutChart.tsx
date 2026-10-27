@@ -22,7 +22,6 @@ export interface DonutChartProps {
   label: string;
   /** Formats a 0–1 share for the legend; defaults to a rounded percentage. */
   formatShare?: (share: number) => string;
-  /** Diameter of the ring in px. */
   size?: number;
   className?: string;
 }
@@ -39,11 +38,7 @@ const TONE_COLOR: Record<DonutTone, string> = {
 
 const defaultFormat = (share: number) => `${Math.round(share * 100)}%`;
 
-/**
- * Ring chart with a legend (dot · label · share). Segments are drawn clockwise
- * from 12 o'clock with stroke-dash arcs; an all-zero dataset shows an empty
- * neutral ring rather than nothing.
- */
+/** An all-zero dataset shows an empty neutral ring rather than nothing. */
 export function DonutChart({
   segments,
   label,

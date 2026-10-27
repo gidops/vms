@@ -289,13 +289,7 @@ function Charts({ data }: { data: InsightsAnalytics }) {
   );
 }
 
-/**
- * Analytics: visit volumes and trends over the last 7 / 30 / 90 days (WAT).
- * Staff see their own visits (hosted, upcoming, repeat visitors); facility
- * readers see everyone's (daily / weekly volume, peak hours, visit mix, top
- * hosts and organisations, who is on site); the Security Manager and System
- * Admin also get the security trends.
- */
+/** Staff see their own visits; facility readers see everyone's; SM and System Admin also get security trends. */
 export function AnalyticsTab() {
   const t = useTranslations("insights.analytics");
   const [range, setRange] = React.useState<InsightsRange>("30d");

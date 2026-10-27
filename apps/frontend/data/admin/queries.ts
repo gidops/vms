@@ -36,16 +36,12 @@ export function useAdminOverviewStats() {
   });
 }
 
-/**
- * The Security Manager's queue: requests to decide plus those sent back to the
- * host for more information (they return to PENDING when resubmitted).
- */
-export const APPROVAL_QUEUE_STATUSES = [
+/** Includes requests sent back for more info; they return to PENDING when resubmitted. */
+const APPROVAL_QUEUE_STATUSES = [
   "PENDING",
   "REVIEW_REQUESTED",
 ] as const satisfies readonly VisitStatus[];
 
-/** Every open request in the approval queue; the overview sorts and slices. */
 export function useApprovalQueue({
   enabled = true,
 }: { enabled?: boolean } = {}) {
@@ -65,25 +61,10 @@ export function useApprovalQueue({
   });
 }
 
-/** All arrivals in the selected local day, including unscheduled walk-ins. */
-export function useTraffic(dayOffset: 0 | -1 = 0) {
-  const params = {
-    ...dayWindow(dayOffset),
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  };
-  return useQuery({
-    queryKey: ["visits", "admin", "traffic", params] as const,
-    queryFn: () => adminApi.traffic(params),
-    refetchInterval: 30_000,
-  });
-}
-
-/** Today's visitors table (scheduled today; the API orders earliest first), searchable. */
 export function useTodaysVisitors(
   search: string,
   page = 1,
   pageSize = 5,
-  /** Optional status filter (the overview's Onsite / Expected / Out segments). */
   statuses?: VisitStatus[],
 ) {
   const today = dayWindow(0);
@@ -108,26 +89,6 @@ export function useTodaysVisitors(
       }),
     placeholderData: (prev) => prev,
     refetchInterval: 30_000,
-  });
-}
-
-/** Approved/pending visits still to arrive today, soonest first. */
-export function useUpcomingVisits(pageSize = 7) {
-  const { dateTo } = dayWindow(0);
-  // Round "now" to the minute so the key (and request) is stable across renders.
-  const from = new Date();
-  from.setSeconds(0, 0);
-  const dateFrom = from.toISOString();
-  return useQuery({
-    queryKey: ["visits", "admin", "upcoming", dateFrom, pageSize] as const,
-    refetchInterval: 30_000,
-    queryFn: () =>
-      visitsApi.list({
-        statuses: ["APPROVED", "PENDING"],
-        dateFrom,
-        dateTo,
-        pageSize,
-      }),
   });
 }
 
@@ -156,10 +117,6 @@ export interface AdminVisitsParams {
   pageSize?: number;
 }
 
-/**
- * Site-wide visits for the admin console v2 table: the filter bar, range pills
- * and pagination all feed straight into the list query.
- */
 export function useAdminVisits(params: AdminVisitsParams) {
   return useQuery({
     queryKey: ["visits", "admin", "v2", params] as const,

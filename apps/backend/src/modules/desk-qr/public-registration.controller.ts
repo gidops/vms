@@ -28,18 +28,13 @@ import { PublicRegistrationService } from './public-registration.service';
 
 const MINUTE = 60_000;
 
-/**
- * The visitor's self-registration from the desk QR. No login: the printed
- * token is checked on every call, and every route is rate-limited per phone
- * (IP) and per QR.
- */
+/** No login: the printed token is checked on every call, and every route is rate-limited per IP and per QR. */
 @Public()
 @UseGuards(RateLimitGuard)
 @Controller('public/desk-qr/:token')
 export class PublicRegistrationController {
   constructor(private readonly registrations: PublicRegistrationService) {}
 
-  /** Scanned: start the 10-minute form. */
   @Get()
   @RateLimit(
     { name: 'open-ip', limit: 30, windowMs: MINUTE, by: 'ip' },
@@ -49,7 +44,6 @@ export class PublicRegistrationController {
     return this.registrations.open(token);
   }
 
-  /** The "who are you visiting" search: names and departments only. */
   @Get('hosts')
   @RateLimit({ name: 'hosts-ip', limit: 60, windowMs: MINUTE, by: 'ip' })
   hosts(
@@ -60,7 +54,6 @@ export class PublicRegistrationController {
     return this.registrations.searchHosts(token, query.q);
   }
 
-  /** Submit the form; a code is emailed to the desk. */
   @Post('registrations')
   @RateLimit(
     { name: 'submit-ip', limit: 10, windowMs: MINUTE, by: 'ip' },
@@ -74,13 +67,11 @@ export class PublicRegistrationController {
     return this.registrations.submit(token, input);
   }
 
-  /** Enter the code reception read out; creates today's walk-in. */
   @Post('registrations/:id/verify')
   @HttpCode(200)
   @RateLimit(
     { name: 'verify-ip', limit: 10, windowMs: MINUTE, by: 'ip' },
-    // Per QR as well: behind a proxy (or with spoofed addresses) the per-IP
-    // rule alone doesn't bound guesses against one desk.
+    // Per QR too: behind a proxy or with spoofed addresses, per-IP limits alone do not bound guesses.
     { name: 'verify-qr', limit: 60, windowMs: MINUTE, by: { param: 'token' } },
   )
   verify(

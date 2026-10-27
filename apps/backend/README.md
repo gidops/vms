@@ -1,19 +1,28 @@
 # @vms/backend
 
-NestJS modular‑monolith backend for the AATC Visitor Management System.
+**Who this is for:** developers working on the API. **What you'll learn:** where
+things are and the commands you need most.
 
-This app is part of a Turborepo monorepo — **do not run commands from this folder
-in isolation**. See the [root README](../../README.md) for setup, how to run the
-stack, environment variables, and architecture.
-
-Quick reference (from the repo root):
+NestJS modular-monolith backend for the AATC Visitor Management System. It is
+part of a Turborepo monorepo: run commands from the repo root. Setup is in the
+[root README](../../README.md).
 
 ```bash
-npm run start:dev -w @vms/backend      # dev server (http://localhost:4000)
-npm run build      -w @vms/backend
-npm test           -w @vms/backend
-cd apps/backend && npx prisma migrate dev --name <name>
+npm run start:dev -w @vms/backend      # dev server, http://localhost:4000
+npm run build     -w @vms/backend
+npm run test      -w @vms/backend      # unit tests + coverage gate
+npm run test:e2e  -w @vms/backend      # e2e tests (needs a test database)
+cd apps/backend && npx prisma migrate dev --name <name>   # new migration
 ```
 
-Key areas: `src/shared/` (config, logging, crypto, events/outbox, audit, auth,
-common), `src/modules/identity/`, `prisma/` (schema + migrations).
+Key areas:
+
+- `src/modules/`: feature modules (visits, alerts, inbox, insights, desk-qr,
+  rfid-cards, …). See [architecture.md](../../docs/architecture.md#modules).
+- `src/shared/`: config, logging, auth and RBAC, events/outbox, audit, i18n,
+  storage.
+- `prisma/`: database schema and migrations.
+- `src/scripts/` and `scripts/`: one-off imports (see
+  [operations.md](../../docs/operations.md)).
+
+API reference: [api.md](../../docs/api.md).

@@ -9,11 +9,7 @@ import { LogEmailProvider } from './log.provider';
 import { SendgridProvider } from './sendgrid.provider';
 import { SmtpProvider } from './smtp.provider';
 
-/**
- * Email channel. Selects a provider by EMAIL_PROVIDER, falling back to a log
- * provider when the chosen one isn't configured, so enabling EMAIL never breaks
- * boot or the request path.
- */
+/** Falls back to a log provider when the chosen one isn't configured, so enabling EMAIL never breaks boot. */
 @Injectable()
 export class EmailTransport implements NotificationTransport {
   readonly channel = NotificationChannel.EMAIL;
@@ -31,9 +27,7 @@ export class EmailTransport implements NotificationTransport {
 
   private provider(): EmailProvider {
     const chosen = this.config.get('EMAIL_PROVIDER', { infer: true });
-    // SendGrid goes through the HTTP API provider; smtp/gmail/mailtrap all run
-    // through the profile-aware nodemailer provider. Fall back to logging when
-    // the chosen provider isn't configured so enabling EMAIL never breaks boot.
+
     if (chosen === 'sendgrid') {
       return this.sendgrid.isConfigured ? this.sendgrid : this.log;
     }

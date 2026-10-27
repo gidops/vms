@@ -21,11 +21,7 @@ export interface DateRange {
   dateTo?: string;
 }
 
-/**
- * The first pill shows a live clock and just *labels* the default "All" view; it
- * carries no date filter (the VMC board still applies its own status rules). Owns
- * its own interval so only this pill re-renders each tick (mirrors OnsiteElapsed).
- */
+/** Labels the default "All" view (no date filter); owns its interval so only this pill re-renders. */
 function LiveClock() {
   const format = useFormatter();
   const [now, setNow] = React.useState(() => new Date());
@@ -46,7 +42,6 @@ function LiveClock() {
   return <>{`${time}, ${date}`}</>;
 }
 
-/** Local start-of-day / end-of-day ISO for a JS Date (inclusive window bounds). */
 const startOfDayIso = (d: Date) => {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
@@ -58,12 +53,7 @@ const endOfDayIso = (d: Date) => {
   return x.toISOString();
 };
 
-/**
- * Date-range selector above the VMC records table: a live-clock "All" pill (the
- * default, no filter), a rolling "Last 7 days" window, and a "Custom" pill that
- * opens a calendar range picker. Controlled — the parent owns the selected range
- * and the derived `{ dateFrom, dateTo }` window it feeds to the query.
- */
+/** Controlled: the parent owns the range and the derived date window. */
 export function RecordsRangeFilter({
   value,
   onChange,

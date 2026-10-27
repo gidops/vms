@@ -49,18 +49,13 @@ import { FilterPills } from "./FilterPills";
 const PAGE_SIZE = 8;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** A status change the user asked for, waiting on their confirmation. */
 interface PendingChange {
   email: string;
   /** The status being set: false = remove consent, true = add it back. */
   consent: boolean;
 }
 
-/**
- * The row's Email consent checkbox. Unticking (opt out) needs consent:manage;
- * ticking (opt back in) needs consent:grant (System Admin), otherwise the box
- * is disabled with a note saying who can.
- */
+/** Opting out needs consent:manage; opting back in needs consent:grant (System Admin). */
 function ConsentToggle({
   item,
   canRemove,
@@ -94,7 +89,6 @@ function ConsentToggle({
   );
 }
 
-/** Confirm a checkbox change before it's recorded (both directions). */
 function ConfirmConsentDialog({
   change,
   onClose,
@@ -176,12 +170,7 @@ function ConfirmConsentDialog({
 
 type WithdrawResult = { kind: "notFound" } | { kind: "error" } | null;
 
-/**
- * "Withdraw consent" → dialog: enter the email, then confirm against a warning
- * banner. Withdrawal is a new consent event: the email leaves the list now,
- * past visit records stay unchanged. `onWithdrawn` reports a success so the
- * page can confirm it after the dialog closes.
- */
+/** Withdrawal is a new consent event: the email leaves the list, past visit records stay unchanged. */
 export function WithdrawConsentDialog({
   onWithdrawn,
 }: {
@@ -323,13 +312,7 @@ export function WithdrawConsentDialog({
   );
 }
 
-/**
- * Email consent, on the Insights page (Visitors → Email consent): everyone who
- * answered "Get updates on Afreximbank events?", by current status (latest
- * answer per email wins). Staff with consent:manage untick a row (or use
- * Withdraw consent by email) to opt someone out; only consent:grant (System
- * Admin) can tick it again. Export CSV (consent:export) is the consented list.
- */
+/** Current consent per email (latest answer wins); only consent:grant can re-tick a row. */
 export function CommsOptInsScreen() {
   const t = useTranslations("consent");
   const locale = useLocale();

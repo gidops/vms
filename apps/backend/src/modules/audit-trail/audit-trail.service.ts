@@ -38,18 +38,12 @@ const include = {
 
 type AuditRow = Prisma.AuditLogGetPayload<{ include: typeof include }>;
 
-/** Export filters as recorded on the audit row (no paging). */
 type ExportFilters = Omit<
   AuditQuery,
   'page' | 'pageSize' | 'sortBy' | 'sortDir'
 >;
 
-/**
- * Read side of the audit trail (Operations → Audit trail, System Admin only).
- * `shared/audit` stays write-only; this module reads every row — business
- * events from the outbox and security events alike. Times are filtered on WAT
- * calendar days. Exports are themselves audited, start and finish.
- */
+/** Read side of the audit trail (`shared/audit` stays write-only); filtered on WAT calendar days. */
 @Injectable()
 export class AuditTrailService {
   constructor(
@@ -130,10 +124,7 @@ export class AuditTrailService {
     return `aatc-audit_${q.from}_${q.to}.csv`;
   }
 
-  /**
-   * Audit the start, stream the CSV (newest first) to `out`, then audit the
-   * finish with the row count. If the start can't be recorded, nothing is sent.
-   */
+  /** Exports are audited at start and finish; if the start can't be recorded, nothing is sent. */
   async write(
     q: ExportFilters,
     out: Writable,

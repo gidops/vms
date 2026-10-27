@@ -2,7 +2,6 @@
 
 import { cn } from "@vms/ui";
 
-/** Pill look shared by every filter above a table (VMC range, Insights tabs). */
 export const filterPill =
   "rounded-full border bg-surface px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]";
 
@@ -11,7 +10,7 @@ export const filterPillState = (active: boolean) =>
     ? "border-primary text-primary"
     : "border-border text-fg-muted hover:text-fg";
 
-/** Single-choice row of filter pills (a radiogroup), styled like the VMC range filter. */
+/** Single-choice row of filter pills, rendered as a radiogroup. */
 export function FilterPills<T extends string>({
   value,
   onValueChange,

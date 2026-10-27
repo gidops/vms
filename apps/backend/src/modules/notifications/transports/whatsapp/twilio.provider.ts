@@ -6,22 +6,16 @@ import { normalizeE164 } from '../phone';
 import { TwilioClientProvider } from '../twilio.client';
 import type { WhatsappProvider } from './whatsapp-provider.interface';
 
-/** Ensure a number is in Twilio's `whatsapp:+E164` form. */
 function toWhatsApp(value: string): string {
   if (value.startsWith('whatsapp:')) return value;
   return `whatsapp:${normalizeE164(value)}`;
 }
 
-/** Map ordered variables to Twilio Content positional variables ({"1": …}). */
 function toContentVariables(variables: string[]): Record<string, string> {
   return Object.fromEntries(variables.map((v, i) => [String(i + 1), v]));
 }
 
-/**
- * WhatsApp via Twilio (BSP). Reuses the shared Twilio account/client that also
- * powers SMS. Sends an approved Content template when the message carries one,
- * otherwise free-form text. Logs (no-op) when Twilio isn't configured.
- */
+/** Reuses the shared Twilio client that powers SMS; logs (no-op) when Twilio isn't configured. */
 @Injectable()
 export class TwilioWhatsappProvider implements WhatsappProvider {
   readonly name = 'twilio';

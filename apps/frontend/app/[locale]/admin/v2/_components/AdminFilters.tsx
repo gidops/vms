@@ -18,10 +18,6 @@ export const EMPTY_FILTERS: VisitFiltersValue = {
 };
 
 export interface AdminFiltersProps {
-  /**
-   * `full` — the staff `VisitFilters` bar (search + status/type/purpose).
-   * `search` — a search-only `FilterBar` with the VMC Search action.
-   */
   variant?: "full" | "search";
   value: VisitFiltersValue;
   onChange: (patch: Partial<VisitFiltersValue>) => void;
@@ -29,7 +25,6 @@ export interface AdminFiltersProps {
   onSearch: () => void;
 }
 
-/** The admin console's filter bar, pinned under the nav like VMC and staff. */
 export function AdminFilters({
   variant = "full",
   value,
@@ -63,10 +58,7 @@ export function AdminFilters({
   );
 }
 
-/**
- * Filter-bar state with the staff dashboard's search behaviour: keystrokes are
- * debounced into `search`, and the Search button / Enter flushes immediately.
- */
+/** Keystrokes are debounced into `search`; the Search button / Enter flushes immediately. */
 export function useAdminFilters() {
   const [filters, setFilters] =
     React.useState<VisitFiltersValue>(EMPTY_FILTERS);
@@ -81,7 +73,6 @@ export function useAdminFilters() {
     onChange: (patch: Partial<VisitFiltersValue>) =>
       setFilters((f) => ({ ...f, ...patch })),
     onSearch: () => setSearch(filters.search.trim()),
-    /** The debounced term plus the facets, ready for the visits query. */
     query: {
       search: search || undefined,
       status: filters.status === "all" ? undefined : filters.status,

@@ -50,7 +50,6 @@ function OptInBadge({ value }: { value: boolean | null }) {
   );
 }
 
-/** One past visit, styled like the visit sheet's notification rows. */
 function HistoryRow({ visit }: { visit: VisitorDetail["visits"][number] }) {
   const locale = useLocale();
   const when = visit.checkInAt ?? visit.scheduledAt;
@@ -74,10 +73,6 @@ function HistoryRow({ visit }: { visit: VisitorDetail["visits"][number] }) {
   );
 }
 
-/**
- * One visitor's profile and visit history, built from the Visit Details sheet's
- * parts (left-side drawer, collapsible card sections, identity card, field grid).
- */
 function VisitorSheet({
   id,
   onClose,
@@ -305,11 +300,7 @@ function Directory() {
 
 type View = "directory" | "optIns";
 
-/**
- * Visitors: everyone who came (facility-wide with visitor:read, otherwise the
- * people who came to see the caller), each opening their own visit history.
- * Holders of consent:read also get Comms opt-in (withdraw with consent:manage).
- */
+/** Facility-wide with visitor:read, otherwise only the caller's own visitors. */
 export function VisitorsTab() {
   const t = useTranslations("insights.visitors");
   const { hasPermission } = useAuth();

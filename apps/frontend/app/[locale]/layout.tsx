@@ -8,10 +8,8 @@ import { isRtl, routing } from "@/i18n/routing";
 import { AppProviders } from "@/shared/providers/AppProviders";
 import "../globals.css";
 
-// Geist via the npm package (fonts ship in node_modules) instead of
-// next/font/google, which downloads from fonts.gstatic.com AT BUILD TIME and
-// makes every Docker/CI build hostage to that CDN being reachable. Same
-// fonts, same CSS variables (--font-geist-sans / --font-geist-mono).
+// Geist from npm rather than next/font/google, which fetches from a CDN at build time
+// and would make Docker/CI builds depend on it being reachable.
 const geistSans = GeistSans;
 const geistMono = GeistMono;
 

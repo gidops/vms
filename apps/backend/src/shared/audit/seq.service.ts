@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Env } from '../config/env.schema';
 
-/** Structured fields mirrored to Seq for one audit event. */
 export interface SeqAuditEvent {
   action: string;
   entityType: string;
@@ -12,18 +11,11 @@ export interface SeqAuditEvent {
   correlationId?: string;
   ip?: string;
   userAgent?: string;
-  /** Higher level (e.g. 'Warning') for security-relevant failures. */
   level?: 'Information' | 'Warning' | 'Error';
   metadata?: unknown;
 }
 
-/**
- * Mirrors audit events to Seq (https://datalust.co/seq) in CLEF format. Seq is a
- * searchable, queryable view of the audit trail; PostgreSQL (`AuditLog`) remains
- * the system of record. Shipping is best-effort and fire-and-forget — a Seq
- * outage must never break the audit write or the request path. A no-op when
- * SEQ_URL is unset (CI / bare local dev).
- */
+/** Fire-and-forget: a Seq outage must never break the audit write or the request. */
 @Injectable()
 export class SeqService {
   private readonly logger = new Logger(SeqService.name);
@@ -33,7 +25,6 @@ export class SeqService {
   constructor(config: ConfigService<Env, true>) {
     const url = config.get('SEQ_URL', { infer: true });
     this.apiKey = config.get('SEQ_API_KEY', { infer: true });
-    // Seq's raw CLEF ingestion endpoint.
     this.endpoint = url
       ? `${url.replace(/\/$/, '')}/api/events/raw?clef`
       : undefined;
@@ -43,10 +34,6 @@ export class SeqService {
     return Boolean(this.endpoint);
   }
 
-  /**
-   * Send one audit event to Seq. Resolves immediately; the network call runs in
-   * the background and any failure is logged at debug (never thrown).
-   */
   emit(event: SeqAuditEvent): void {
     if (!this.endpoint) return;
     const clef = {

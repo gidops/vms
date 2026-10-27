@@ -1,10 +1,6 @@
 import { PERMISSIONS } from "@vms/contracts";
 
-/**
- * Tabs in display order, each shown with any one of its permissions. History,
- * Visitors and Analytics are facility-wide with the first permission, or the
- * caller's own visits with `insights:self` (staff); the server picks the scope.
- */
+/** Each tab shows with any one of its permissions; `insights:self` scopes it to the caller's own visits. */
 export const INSIGHTS_TABS = [
   { value: "overview", anyOf: [PERMISSIONS.OVERVIEW_READ] },
   { value: "evacuation", anyOf: [PERMISSIONS.EVACUATION_READ] },

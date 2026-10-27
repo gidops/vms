@@ -35,7 +35,6 @@ export class InboxController {
     );
   }
 
-  /** Mark all items read for the current user (called when the page is opened). */
   @Post('seen')
   @HttpCode(200)
   markSeen(@CurrentUser() principal: AuthUser) {

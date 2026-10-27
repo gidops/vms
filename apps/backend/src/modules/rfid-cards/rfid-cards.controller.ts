@@ -27,13 +27,11 @@ import {
 import { ZodValidationPipe } from '../../shared/common/pipes/zod-validation.pipe';
 import { RfidCardsService } from './rfid-cards.service';
 
-/** Operations → Access cards (personalised RFID cards). System Admin only. */
 @Controller('rfid-cards')
 @RequirePermissions(PERMISSIONS.RFID_MANAGE)
 export class RfidCardsController {
   constructor(private readonly cards: RfidCardsService) {}
 
-  /** Card registry: every card ever logged, with its current holder. */
   @Get()
   listCards(
     @Query(new ZodValidationPipe(RfidCardListQuery)) query: RfidCardListQuery,
@@ -84,7 +82,6 @@ export class RfidCardsController {
     return this.cards.update(id, input, principal.userId);
   }
 
-  /** The card was sent to the printer (first print or reprint). */
   @Post('assignments/:id/printed')
   @HttpCode(200)
   printed(
@@ -94,7 +91,6 @@ export class RfidCardsController {
     return this.cards.printed(id, principal.userId);
   }
 
-  /** The card came back, or it is lost. */
   @Post('assignments/:id/close')
   @HttpCode(200)
   close(
@@ -106,7 +102,6 @@ export class RfidCardsController {
     return this.cards.close(id, input, principal.userId);
   }
 
-  /** Presigned PUT for the visitor photo printed on the card. */
   @Post('photos/presign')
   @HttpCode(200)
   presignPhoto(

@@ -4,7 +4,6 @@ import { staffApi } from "./staff.api";
 
 export interface ActivityFeedParams {
   date?: string;
-  /** Visitor name or email. */
   search?: string;
   category?: StaffActivityCategory;
   page?: number;
@@ -25,7 +24,6 @@ const keys = {
     ] as const,
 };
 
-/** Today's Schedule headline counts (host-scoped). */
 export function useStaffStats() {
   return useQuery({
     queryKey: keys.stats,
@@ -33,11 +31,6 @@ export function useStaffStats() {
   });
 }
 
-/**
- * Activity feed (host-scoped). Powers both the dashboard "Recent Updates" card
- * (default page of 8) and the full "All Updates" page (larger page, then filtered
- * by category client-side until the backend gains a category param — see Phase 7).
- */
 export function useStaffActivityFeed(params: ActivityFeedParams = {}) {
   return useQuery({
     queryKey: keys.activity(params),

@@ -1,10 +1,6 @@
 import { z } from "zod";
 
-/**
- * Cross-cutting enums shared by the frontend and backend. These are the single
- * source of truth for status/lifecycle values — the Prisma schema, API DTOs,
- * and UI all derive from these so a value can never drift between layers.
- */
+// Single source of truth: the Prisma enums and backend DTOs mirror these.
 
 export const Locale = z.enum(["EN", "FR", "AR"]);
 export type Locale = z.infer<typeof Locale>;
@@ -17,13 +13,9 @@ export type VisitType = z.infer<typeof VisitType>;
 
 export const VisitStatus = z.enum([
   "PENDING",
-  /**
-   * Security Manager requested more information (raises an ADDITIONAL_INFO security alert); the
-   * host/creator responds via notes and resubmits to PENDING. Formerly
-   * NEEDS_MORE_INFO.
-   */
+  /** Host responds via notes and resubmits to PENDING. */
   "REVIEW_REQUESTED",
-  /** Security Manager flagged the visit — a threat/restricted match; check-in is blocked until resolved. */
+  /** Check-in is blocked until the alert is resolved. */
   "FLAGGED",
   "APPROVED",
   "DENIED",
@@ -63,13 +55,7 @@ export const AlertStatus = z.enum([
 ]);
 export type AlertStatus = z.infer<typeof AlertStatus>;
 
-/**
- * The kind of security alert raised against a visit. Only the Security Manager/admin or the
- * system creates these; staff/VMC respond via notes and cannot resolve them.
- * - SECURITY_REVIEW  — Security Manager flagged the visit (threat identified); blocks check-in.
- * - ADDITIONAL_INFO  — Security Manager wants more detail on a suspicious guest before deciding.
- * - RESTRICTED_MATCH — system-generated: the guest matched a restricted profile.
- */
+/** Raised only by the Security Manager or the system; staff/VMC cannot resolve them. */
 export const AlertType = z.enum([
   "SECURITY_REVIEW",
   "ADDITIONAL_INFO",

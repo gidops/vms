@@ -8,7 +8,7 @@ import {
 } from "@vms/contracts";
 import { ApiError } from "@/data/http/client";
 
-/** The visitor's form on their phone (V1 visit.php fields; email required). */
+/** The visitor's form on their phone; email is required. */
 export interface SelfForm {
   email: string;
   phoneCode: string;
@@ -23,7 +23,6 @@ export interface SelfForm {
   evacuationAssistTypes: EvacuationAssistType[];
   evacuationAssistOther: string;
   commsConsent: boolean | null;
-  /** Honeypot, hidden from people. */
   website: string;
 }
 
@@ -58,7 +57,6 @@ export type SelfFormField =
   | "evacuationAssistOther"
   | "commsConsent";
 
-/** Field → message key (under `selfRegister.errors`) for every problem. */
 export function selfFormErrors(
   f: SelfForm,
 ): Partial<Record<SelfFormField, string>> {

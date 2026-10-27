@@ -67,8 +67,7 @@ export class AuthService {
     try {
       user = await this.local.authenticate(input);
     } catch (err) {
-      // Failed credentials leave no business transaction — audit directly so
-      // brute-force / credential-stuffing attempts are visible in the trail.
+      // Audited directly so brute-force attempts are visible in the trail.
       await this.security.record({
         action: EVENT_TYPES.LoginFailed,
         entityType: 'User',
@@ -80,17 +79,9 @@ export class AuthService {
     return this.startSession(user, ctx);
   }
 
-  /**
-   * First-run bootstrap: creates the initial SUPER_ADMIN and logs in. Locked
-   * the moment ANY user exists — signup mints a SUPER_ADMIN, so an open route
-   * on a public deployment hands full system access to whoever finds it. The
-   * guard lives HERE (not only in signupAvailable) because attackers call the
-   * endpoint directly; the availability check is just the frontend's signpost.
-   */
+  /** Locked once any user exists; enforced here because attackers skip signupAvailable. */
   async signup(input: SignupInput, ctx: LoginContext): Promise<AuthResult> {
     if (!(await this.signupAvailable())) {
-      // No business transaction to ride the outbox — audit directly, like
-      // failed logins, so probing of the bootstrap route is visible.
       await this.security.record({
         action: EVENT_TYPES.SignupBlocked,
         entityType: 'User',
@@ -108,7 +99,6 @@ export class AuthService {
     return this.startSession(user, ctx);
   }
 
-  /** Signup is open only while the system has no users (first-run bootstrap). */
   async signupAvailable(): Promise<boolean> {
     return (await this.prisma.user.count()) === 0;
   }
@@ -120,8 +110,7 @@ export class AuthService {
     if (!user || !user.isActive) {
       throw new UnauthorizedException('Invalid refresh token');
     }
-    // Preserve the session's active role; fall back if it was removed (or is
-    // a legacy add-on role, which can no longer be active).
+    // Fall back if the active role was removed or is an add-on (never active).
     const effectiveRole =
       activeRole && user.roles.includes(activeRole) && !isAddonRole(activeRole)
         ? activeRole
@@ -149,7 +138,6 @@ export class AuthService {
     });
   }
 
-  /** Change password after verifying the current one; revokes all sessions. */
   async changePassword(
     userId: string,
     currentPassword: string,
@@ -177,11 +165,9 @@ export class AuthService {
         metadata: { actorUserId: userId },
       });
     });
-    // Force re-auth everywhere (matches the "logs you out of all sessions" copy).
     await this.refreshTokens.revokeAllForUser(userId);
   }
 
-  /** Switch the active role for the current session and re-mint the token. */
   async switchRole(
     userId: string,
     sessionId: string | undefined,
@@ -223,7 +209,6 @@ export class AuthService {
     };
   }
 
-  /** Create the session, refresh token + login event, then mint a scoped token. */
   private async startSession(
     user: UserWithAccess,
     ctx: LoginContext,

@@ -25,7 +25,6 @@ const pillState = (active: boolean) =>
     ? "border-primary text-primary"
     : "border-border text-fg-muted hover:text-fg";
 
-/** Local start-of-day / end-of-day ISO for a JS Date (inclusive window bounds). */
 const startOfDayIso = (d: Date) => {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
@@ -37,7 +36,6 @@ const endOfDayIso = (d: Date) => {
   return x.toISOString();
 };
 
-/** Bounds for the fixed "today" / "last 7 days" pills. */
 function fixedBounds(range: "today" | "7d"): DateRange {
   const now = new Date();
   const from = new Date();
@@ -45,13 +43,7 @@ function fixedBounds(range: "today" | "7d"): DateRange {
   return { dateFrom: startOfDayIso(from), dateTo: endOfDayIso(now) };
 }
 
-/**
- * Range selector above the staff "Expected Guests" table: Today / Last 7 days
- * pills plus a "Custom" pill that opens a calendar range picker (mirrors the VMC
- * `RecordsRangeFilter`). Controlled — the parent owns the selected range and the
- * derived `{ dateFrom, dateTo }` window it feeds to the query. `disabled` greys
- * the whole control out while a search is active (search overrides the range).
- */
+/** Controlled; `disabled` greys it out while a search overrides the range. */
 export function StaffRangeFilter({
   value,
   onChange,

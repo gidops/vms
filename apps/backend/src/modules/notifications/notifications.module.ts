@@ -20,12 +20,7 @@ import { MetaCloudWhatsappProvider } from './transports/whatsapp/meta.provider';
 import { TwilioWhatsappProvider } from './transports/whatsapp/twilio.provider';
 import { WhatsappTransport } from './transports/whatsapp/whatsapp.transport';
 
-/**
- * Notification system: event listeners enqueue durable Notification rows; a
- * polling dispatcher renders (MJML+Handlebars / i18n text) and delivers them via
- * pluggable, individually-toggleable channel transports (Email/SMS/WhatsApp/
- * In-App). I18nModule, CryptoModule, ConfigModule and EventsModule are global.
- */
+// I18nModule, CryptoModule, ConfigModule and EventsModule are global.
 @Module({
   imports: [PrismaModule],
   controllers: [NotificationsController],
@@ -37,20 +32,16 @@ import { WhatsappTransport } from './transports/whatsapp/whatsapp.transport';
     TemplateService,
     QrService,
     ChannelRegistry,
-    // Email
     EmailTransport,
     SmtpProvider,
     SendgridProvider,
     LogEmailProvider,
-    // SMS (Twilio)
     SmsTransport,
     TwilioClientProvider,
-    // WhatsApp — provider-swappable via WHATSAPP_PROVIDER (twilio | meta)
     WhatsappTransport,
     TwilioWhatsappProvider,
     MetaCloudWhatsappProvider,
     LogWhatsappProvider,
-    // The set of channel transports the dispatcher routes to.
     {
       provide: NOTIFICATION_TRANSPORTS,
       useFactory: (

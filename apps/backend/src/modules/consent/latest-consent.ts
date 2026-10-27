@@ -1,12 +1,7 @@
 import type { PrismaClient } from '@prisma/client';
 import { normalizeConsentEmail } from '@vms/contracts';
 
-/**
- * Current email-consent status per normalised email ("latest answer wins").
- * Emails that never answered are absent from the map. Shared by the visitor
- * directory and the visit export so both report today's status, not the
- * answer given at a past visit.
- */
+/** Current status per normalised email (latest answer wins); emails that never answered are absent. */
 export async function latestConsent(
   prisma: Pick<PrismaClient, 'commsConsentEvent'>,
   emails: string[],

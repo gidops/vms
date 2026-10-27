@@ -8,7 +8,6 @@ import { TERMINAL } from "./helpers";
 const SECURITY_TYPES = ["SECURITY_REVIEW", "RESTRICTED_MATCH"];
 
 export interface VisitDetailModel {
-  /** The active viewer's role bucket, driving layout (QR vs Host card, etc.). */
   isStaff: boolean;
   isVmc: boolean;
   isAdmin: boolean;
@@ -22,7 +21,6 @@ export interface VisitDetailModel {
   activeAlert: VisitAlert | null;
   hasAlert: boolean;
   hasSecurityHold: boolean;
-  /** Footer action gates. */
   canApprove: boolean;
   canDeny: boolean;
   canFlag: boolean;
@@ -34,14 +32,12 @@ export interface VisitDetailModel {
   canCheckIn: boolean;
   canCheckOut: boolean;
   hasActions: boolean;
-  /** Section visibility. */
   showProgress: boolean;
   showQr: boolean;
   showRating: boolean;
   showHostCard: boolean;
 }
 
-/** Derive everything the sheet's sections + footer need from the visit + auth. */
 export function useVisitDetailModel(
   data: VisitRequestDetail,
 ): VisitDetailModel {
@@ -49,8 +45,7 @@ export function useVisitDetailModel(
 
   return React.useMemo(() => {
     const isStaff = activeRole === "STAFF";
-    // Any admin-console role (System Admin, Security Manager, VMC Admin, Read
-    // Admin, Auditor). Display-only: actions stay gated by permissions.
+    // Display-only: actions stay gated by permissions.
     const isAdmin = homeFor(activeRole) === "/admin";
     const isVmc = activeRole === "VMC";
 
@@ -105,8 +100,7 @@ export function useVisitDetailModel(
       canCheckIn ||
       canCheckOut;
 
-    // An open security alert takes over the sheet: the stripe + Alert Summary
-    // replace the progress stepper and the generic notes section.
+    // An open security alert replaces the progress stepper and the notes section.
     const showProgress = !hasAlert;
     const showQr = isStaff && !onsite && !checkedOut && !hasAlert;
     const showRating =

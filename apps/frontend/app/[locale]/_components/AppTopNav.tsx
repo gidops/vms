@@ -21,14 +21,6 @@ function BrandMark() {
 }
 
 export interface AppTopNavProps {
-  /**
-   * Primary view toggle. The VMC dashboard toggles schedule/requests; the staff
-   * dashboard toggles schedule/visits/updates; the admin console toggles
-   * Overview · Recent Activity · Users (System Admin) or Overview · Pending
-   * Approvals · Recent Activity (Security Manager). Analytics, evacuation and
-   * opt-ins live on Insights; the desk QR on Operations. Omit on dashboards
-   * with no toggle.
-   */
   active?:
     | "schedule"
     | "visits"
@@ -37,31 +29,17 @@ export interface AppTopNavProps {
     | "updates"
     | "overview"
     | "users";
-  /** Which app's nav segments + routes to render (default "vmc"). */
   app?: "vmc" | "staff" | "admin";
-  /**
-   * Override the "Requests & Alerts" pill count. Defaults to the live per-user
-   * unread count (scoped to the current app), so callers normally omit this.
-   */
+  /** Overrides the live per-user unread count. */
   requestsCount?: number;
-  /** Static centered pill label (e.g. "Account Settings") when there's no toggle. */
+  /** Centered pill label when there's no toggle. */
   centerLabel?: string;
-  /** Global search field rendered beside the brand (admin console). */
   search?: React.ReactNode;
-  /**
-   * Show a notifications bell (with the unread count) linking here. Used by
-   * consoles without the Requests & Alerts toggle.
-   */
+  /** Bell link for consoles without the Requests & Alerts toggle. */
   notificationsHref?: string;
 }
 
-/**
- * Shared application top bar: brand + an optional primary view toggle + the
- * shared control cluster (role switcher, language, account menu). Used by every
- * dashboard so the nav stays identical and in sync. The `app` prop selects the
- * VMC (schedule/requests), staff (schedule/visits/updates) or admin
- * (overview/requests/users) segment set.
- */
+/** Shared top bar: brand, optional view toggle and the account controls. */
 export function AppTopNav({
   active,
   app = "vmc",
@@ -75,8 +53,7 @@ export function AppTopNav({
   const { activeRole, hasPermission } = useAuth();
   const securityManager = adminConsoleRole(hasPermission) === "securityManager";
 
-  // The nav bubble shows the current user's unread count; staff see their own
-  // scope, the VMC sees all. An explicit `requestsCount` overrides it.
+  // Staff see their own unread scope; the VMC sees all.
   const unreadQ = useInboxUnread("all", app === "staff" ? "mine" : "all");
   const count = requestsCount ?? unreadQ.data?.unread ?? undefined;
 

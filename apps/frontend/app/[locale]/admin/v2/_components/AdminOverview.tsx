@@ -14,24 +14,15 @@ import {
 import { Link } from "@/i18n/navigation";
 
 export interface AdminOverviewProps {
-  /**
-   * `vmc` — `VmcOverview` layout: eyebrow + welcome across the full top row.
-   * `staff` — `StaffOverview` layout: welcome over the stats, plus a trailing
-   * "Pending approvals" cell above the panel (where staff show Office Floor).
-   */
+  /** `vmc`: welcome across the top row; `staff`: welcome over the stats plus a pending-approvals cell. */
   variant?: "vmc" | "staff";
-  /** Eyebrow text, e.g. "ADMIN CONSOLE · Super Admin" (vmc variant). */
   eyebrow: string;
-  /** Icon before the eyebrow: the console's (see `useAdminBand`). */
   eyebrowIcon?: LucideIcon;
   welcome: string;
   /** 3–5 stats; the grid sizes its columns to the count. */
   stats: OverviewStat[];
-  /** Shown in the staff variant's top-right cell; hidden when undefined. */
   pendingCount?: number;
-  /** Green emphasis panel contents (see `AdminActionPanel`). */
   panel: React.ReactNode;
-  /** `alert` tints the panel muted red (people on the Evacuation Roll). */
   panelTone?: "default" | "alert";
 }
 
@@ -44,7 +35,6 @@ function Eyebrow({ text, icon: Icon }: { text: string; icon: LucideIcon }) {
   );
 }
 
-/** Staff "Office Floor" styling, pointing at the approval queue instead. */
 function PendingCell({ count }: { count?: number }) {
   const t = useTranslations("adminV2.overview");
   if (count === undefined) return null;
@@ -66,11 +56,6 @@ function PendingCell({ count }: { count?: number }) {
 const panelClass =
   "relative flex flex-col justify-between gap-4 overflow-hidden bg-emphasis px-6 py-4 text-emphasis-fg transition-colors duration-500";
 
-/**
- * Admin overview band — the VMC/staff unified bar (welcome row, stat cells and
- * the brand-green panel), replacing the admin page header + `StatCard` grid.
- * Mobile mirrors the originals: heading, panel, then the stats.
- */
 export function AdminOverview({
   variant = "vmc",
   eyebrow,
@@ -86,12 +71,10 @@ export function AdminOverview({
   const tinted = cn(panelClass, panelTone === "alert" && PANEL_ALERT_CLASS);
   const t = useTranslations("dashboard");
   const [open, setOpen] = React.useState(true);
-  // Column count follows the stat count (VMC/staff fix it at three).
   const columns = `repeat(${stats.length}, minmax(0, 1fr)) minmax(300px, 1.5fr)`;
 
   return (
     <>
-      {/* ── Desktop: one bar ─────────────────────────────────────────────── */}
       <div
         className="hidden overflow-hidden rounded-t-xl border border-border shadow-xs lg:grid"
         style={{ gridTemplateColumns: columns }}
@@ -139,7 +122,6 @@ export function AdminOverview({
         </div>
       </div>
 
-      {/* ── Mobile: heading, panel, then the stats ───────────────────────── */}
       <div className="flex flex-col gap-4 lg:hidden">
         <div className="flex flex-col gap-1">
           {variant === "vmc" ? (

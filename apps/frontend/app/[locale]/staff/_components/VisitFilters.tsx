@@ -34,14 +34,7 @@ export interface VisitFiltersValue {
   purpose: string;
 }
 
-/**
- * The shared staff filter bar (search + status/type/purpose), used by both the
- * staff dashboard ("Expected Guests") and My Visits so the two stay in sync.
- * Controlled — the parent owns the filter state; `onChange` receives a partial
- * patch. Status/type/purpose narrow the query server-side. When `onSearch` is
- * provided the Search button / Enter flush the search term immediately (the
- * staff dashboard searches server-side); callers without it just filter locally.
- */
+/** Controlled; with `onSearch`, Search / Enter flush the term to the server, otherwise callers filter locally. */
 export function VisitFilters({
   value,
   onChange,
@@ -57,9 +50,7 @@ export function VisitFilters({
 
   return (
     <FilterBar
-      actions={
-        <Button onClick={onSearch}>{tDash("filters.search")}</Button>
-      }
+      actions={<Button onClick={onSearch}>{tDash("filters.search")}</Button>}
     >
       <div className="min-w-56 flex-1">
         <SearchInput

@@ -35,7 +35,6 @@ function Field({
 }: {
   label: string;
   required?: boolean;
-  /** Shown muted after the label for an optional field (e.g. "Optional"). */
   optionalLabel?: string;
   htmlFor?: string;
   children: React.ReactNode;
@@ -58,11 +57,7 @@ function Field({
 /** Sentinel for the walk-in "No host" option (Radix Select disallows ""). */
 const NO_HOST = "__none__";
 
-/**
- * One required Yes/No question: the control goes full width under the question
- * (the form lives in a narrow drawer, so there's no room for one row).
- * Unanswered after a submit attempt shows the red outline and "Choose Yes or No".
- */
+/** Full-width control under the question, since the form lives in a narrow drawer. */
 function YesNoQuestion({
   id,
   label,
@@ -120,26 +115,19 @@ export interface GuestBlockProps {
   index: number;
   mode: VisitFormMode;
   hosts: HostOption[];
-  /** Toggle "Use same visit details" for this guest (handled by the parent). */
   onUseSameChange: (v: boolean) => void;
   showErrors: boolean;
   fixedHostName?: string;
   onChange: (patch: Partial<GuestEntry>) => void;
-  /** Group visit: shared group name/contact fields show and "use same" is forced. */
   isGroupVisit?: boolean;
   groupName?: string;
   groupContact?: string;
   onGroupNameChange?: (v: string) => void;
   onGroupContactChange?: (v: string) => void;
-  /**
-   * Which intake questions to show. Editing an existing visit shows only the
-   * evacuation answer: comms consent is the visitor's recorded choice and is
-   * changed through the opt-ins register, not the visit.
-   */
+  /** Editing shows only the evacuation question; comms consent changes via the opt-ins register. */
   safety?: "full" | "evacuationOnly";
 }
 
-/** One guest's Guest Details + Visit Details. */
 export function GuestBlock({
   value,
   index,
@@ -162,7 +150,6 @@ export function GuestBlock({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Guest Details */}
       <div className="flex flex-col gap-4">
         <SectionHeader>{t("sections.guestDetails")}</SectionHeader>
         <Field label={t("fields.fullName")} required htmlFor={id("name")}>
@@ -208,15 +195,10 @@ export function GuestBlock({
         </Field>
       </div>
 
-      {/* Visit Details */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-2">
           <SectionHeader>{t("sections.visitDetails")}</SectionHeader>
-          {/*
-           * Group visit forces shared details — checked & disabled on every guest.
-           * Otherwise the toggle only appears from the second guest onward (the
-           * first has no previous guest to copy from).
-           */}
+          {/* The first guest has nothing to copy from, so the toggle starts at the second. */}
           {isGroupVisit ? (
             <label className="inline-flex items-center gap-2 text-sm font-medium text-primary underline">
               <Checkbox checked disabled />
@@ -263,9 +245,7 @@ export function GuestBlock({
           </>
         ) : null}
 
-        {/* Host selector — required for invites, optional for walk-ins, and
-            hidden for a staff self-invite (host is pinned to the signed-in
-            staff member). */}
+        {/* Hidden for a staff self-invite: the host is pinned to the signed-in user. */}
         {!fixedHostName ? (
           <Field
             label={t("fields.host")}
@@ -386,7 +366,6 @@ export function GuestBlock({
         </Field>
       </div>
 
-      {/* Safety & consent — required per guest, no default answer */}
       <div className="flex flex-col gap-2">
         <SectionHeader>{t("sections.safetyConsent")}</SectionHeader>
         <div className="flex flex-col gap-4">

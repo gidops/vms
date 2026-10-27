@@ -5,7 +5,6 @@ import * as React from "react";
 import { useAddNote } from "@/data/requests/queries";
 import type { VisitNote } from "@/data/visits/visits.api";
 
-/** The rendered list of notes/remarks on a visit or alert. */
 export function NoteList({
   notes,
   emptyLabel,
@@ -34,10 +33,7 @@ export function NoteList({
   );
 }
 
-/**
- * Inline note composer with a send-icon button — the sole communication channel
- * for visits and alerts. Shows an "Adding note" indicator while in flight.
- */
+/** The sole communication channel for visits and alerts. */
 export function NoteComposer({
   target,
   placeholder,

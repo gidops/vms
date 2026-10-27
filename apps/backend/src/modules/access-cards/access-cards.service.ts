@@ -3,11 +3,6 @@ import { Prisma } from '@prisma/client';
 import type { AccessCardOption, AccessCardQuery } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 
-/**
- * Read access over the physical badge pool (`AccessCard`). Powers the "Assign
- * pass" dropdown at check-in: in-service badges, optionally filtered by zone and
- * to those currently free (not linked to an on-site visit).
- */
 @Injectable()
 export class AccessCardsService {
   constructor(private readonly prisma: PrismaService) {}

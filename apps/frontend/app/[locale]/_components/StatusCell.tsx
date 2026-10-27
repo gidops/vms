@@ -5,11 +5,7 @@ import { StatusBadge } from "@vms/ui";
 import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
 
-/**
- * Live-ticking elapsed time (HH:MM:SS) since a visitor checked in, shown under the
- * "Onsite" pill. Owns its own interval so only this cell re-renders each second.
- * Mirrors the VMC dashboard's `OnsiteElapsed`.
- */
+/** Owns its own interval so only this cell re-renders each second. */
 function OnsiteElapsed({ since }: { since: string }) {
   const t = useTranslations("staff");
   const [now, setNow] = React.useState(() => Date.now());
@@ -38,15 +34,7 @@ export interface StatusCellProps {
   createdAt?: string | null;
 }
 
-/**
- * A status badge with a status-specific subtext line, used across the staff
- * dashboard and My Visits tables:
- *  - PENDING          → "From Security Manager" (awaiting the Security Manager's decision)
- *  - APPROVED         → scheduled arrival time
- *  - CHECKED_IN       → live onsite duration
- *  - CHECKED_OUT      → checkout time
- *  - everything else  → scheduled/created time
- */
+/** Status badge with a status-specific subtext line (arrival, onsite duration, checkout time…). */
 export function StatusCell({
   status,
   scheduledAt,

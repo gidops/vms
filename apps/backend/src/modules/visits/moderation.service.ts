@@ -16,12 +16,6 @@ import { isTerminal } from './helpers/visit.grouping';
 import { ensureAllExist, ensureExists } from './helpers/visit.guards';
 import { VisitReadService } from './read.service';
 
-/**
- * Moderation side of the visits module — the Security Manager/admin approval
- * queue: approve/deny (single + bulk), flag as a security concern, and request
- * more information. Each action is atomic (status change + any alert + events in
- * one transaction).
- */
 @Injectable()
 export class VisitModerationService {
   constructor(
@@ -34,8 +28,7 @@ export class VisitModerationService {
   async approve(id: string, actorUserId: string): Promise<VisitRequestDetail> {
     await ensureExists(this.prisma, id);
 
-    // Approval no longer mints a pass — the physical badge is assigned at check-in
-    // (VMC). The VisitApproved notification carries the invite referenceCode/QR.
+    // No pass is minted here; the physical badge is assigned at check-in.
     await this.txm.run(async (tx) => {
       await tx.visit.update({
         where: { id },
@@ -52,11 +45,7 @@ export class VisitModerationService {
     return this.read.getDetail(id);
   }
 
-  /**
-   * Approve several visits at once — the group approval sheet's "Approve All" /
-   * "Approve Selected". Atomic: all approved in one transaction, with one
-   * VisitApproved event per visit so each guest still gets their own QR email.
-   */
+  /** One VisitApproved event per visit so each guest still gets their own QR email. */
   async bulkApprove(
     visitIds: string[],
     actorUserId: string,
@@ -103,10 +92,6 @@ export class VisitModerationService {
     return this.read.getDetail(id);
   }
 
-  /**
-   * Deny several visits at once with a shared reason — the group approval sheet's
-   * "Reject Selected". Atomic, one VisitDenied event per visit.
-   */
   async bulkDeny(
     visitIds: string[],
     reason: string,
@@ -132,12 +117,7 @@ export class VisitModerationService {
     return Promise.all(ids.map((id) => this.read.getDetail(id)));
   }
 
-  /**
-   * Security Manager/admin flags a visit as a security concern: moves it to FLAGGED and raises a
-   * SECURITY_REVIEW alert (admin-chosen risk level). An open security alert blocks
-   * check-in until the Security Manager resolves it. Atomic — status change + alert + both events
-   * (VisitFlagged, AlertCreated) in one transaction.
-   */
+  /** An open SECURITY_REVIEW alert blocks check-in until the Security Manager resolves it. */
   async flag(
     id: string,
     input: FlagVisitInput,
@@ -183,12 +163,6 @@ export class VisitModerationService {
     return this.read.getDetail(id);
   }
 
-  /**
-   * Security Manager/admin requests more information on a suspicious visit: moves it to
-   * REVIEW_REQUESTED and raises an ADDITIONAL_INFO alert. The host/creator responds
-   * via notes and resubmits. Atomic — status change + alert + both events
-   * (VisitReviewRequested, AlertCreated) in one transaction.
-   */
   async requestInfo(
     id: string,
     input: RequestInfoInput,

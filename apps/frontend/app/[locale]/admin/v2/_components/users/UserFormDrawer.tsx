@@ -15,11 +15,7 @@ type CreateInput = {
   roles: string[];
 };
 
-/**
- * Create / edit-roles form as a leading-edge drawer — the `QuickActionSheet`
- * pattern (white header, scrolling body) — instead of a centred dialog.
- * `editing` null + `creating` true → create; a user → edit their roles.
- */
+/** `editing` null + `creating` true → create; a user → edit their roles. */
 export function UserFormDrawer({
   creating,
   editing,

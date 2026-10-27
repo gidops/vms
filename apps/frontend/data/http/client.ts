@@ -14,8 +14,7 @@ export class ApiError extends Error {
   }
 }
 
-// Registered by the auth layer: attempts a token refresh on 401. Returning true
-// means the original request should be retried with the new access token.
+// Set by the auth layer; returns true when the request should be retried with a refreshed token.
 let unauthorizedHandler: (() => Promise<boolean>) | null = null;
 export function setUnauthorizedHandler(
   handler: (() => Promise<boolean>) | null,
@@ -23,11 +22,7 @@ export function setUnauthorizedHandler(
   unauthorizedHandler = handler;
 }
 
-/**
- * Best-effort current locale for outgoing requests. next-intl persists the
- * active locale in the `NEXT_LOCALE` cookie; we fall back to the first path
- * segment, then to "en". Backend normalizes (en → EN) and defaults to EN.
- */
+/** Locale from the `NEXT_LOCALE` cookie, else the first path segment, else "en". */
 function currentLocale(): string {
   if (typeof document !== "undefined") {
     const cookie = document.cookie
@@ -45,7 +40,6 @@ function currentLocale(): string {
 export interface ApiOptions {
   method?: string;
   body?: unknown;
-  /** Skip attaching the Authorization header (e.g. login/refresh). */
   auth?: boolean;
   _retry?: boolean;
 }
@@ -60,8 +54,7 @@ export async function api<T>(
 ): Promise<T> {
   const headers: Record<string, string> = {
     "x-correlation-id": crypto.randomUUID(),
-    // Tell the backend which language to render server-side content in (API
-    // errors, validation messages, and any notifications it triggers).
+    // The backend renders errors and notifications in this language.
     "x-locale": currentLocale(),
   };
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
@@ -99,8 +92,7 @@ export async function api<T>(
   return json as T;
 }
 
-/** Pull `filename="…"` out of a Content-Disposition header. */
-export function filenameFromDisposition(
+function filenameFromDisposition(
   header: string | null,
   fallback: string,
 ): string {
@@ -108,10 +100,7 @@ export function filenameFromDisposition(
   return match?.[1] ?? fallback;
 }
 
-/**
- * Authenticated binary GET (images, CSV / Excel). Same auth + one-shot refresh
- * as {@link api}; resolves to the body as a Blob with the response headers.
- */
+/** Authenticated binary GET with the same one-shot refresh as {@link api}. */
 export async function apiBlob(
   path: string,
   _retry = false,
@@ -142,10 +131,7 @@ export async function apiBlob(
   return { blob: await response.blob(), headers: response.headers };
 }
 
-/**
- * Authenticated file download (CSV / Excel exports): fetches through
- * {@link apiBlob} and saves it through a temporary object URL.
- */
+/** Saves an {@link apiBlob} download through a temporary object URL. */
 export async function apiDownload(
   path: string,
   fallbackName: string,

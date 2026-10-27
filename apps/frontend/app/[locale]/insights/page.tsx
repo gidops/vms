@@ -16,11 +16,7 @@ import { INSIGHTS_TABS, type InsightsTab } from "./_components/tabs";
 import { OverviewTab } from "./_components/OverviewTab";
 import { VisitorsTab } from "./_components/VisitorsTab";
 
-/**
- * Insights: one page for every role, its tabs and their scope set by the
- * caller's permissions (see `_components/tabs.ts`). The tab lives in `?tab=`
- * so links and the old /help and admin routes land on it.
- */
+/** Tabs and their scope come from the caller's permissions; the tab lives in `?tab=` so links land on it. */
 function Insights() {
   const t = useTranslations("insights");
   const { hasPermission } = useAuth();

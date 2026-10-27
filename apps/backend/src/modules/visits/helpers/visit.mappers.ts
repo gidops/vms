@@ -6,7 +6,6 @@ import type {
   VisitRequestDetail,
 } from '@vms/contracts';
 
-/** Relations loaded for a single visit's detail view. */
 export const detailInclude = Prisma.validator<Prisma.VisitInclude>()({
   visitor: true,
   host: { include: { user: true } },
@@ -20,7 +19,6 @@ export type VisitDetailRow = Prisma.VisitGetPayload<{
   include: typeof detailInclude;
 }>;
 
-/** Relations loaded for each row of the paginated visit list. */
 export const listInclude = Prisma.validator<Prisma.VisitInclude>()({
   visitor: true,
   host: { include: { user: true } },
@@ -30,9 +28,7 @@ export type VisitListRow = Prisma.VisitGetPayload<{
   include: typeof listInclude;
 }>;
 
-export function toHost(
-  host: VisitDetailRow['host'],
-): VisitRequestDetail['host'] {
+function toHost(host: VisitDetailRow['host']): VisitRequestDetail['host'] {
   if (!host) return null;
   return {
     id: host.id,
@@ -49,7 +45,7 @@ export function toHost(
   };
 }
 
-export function toPass(pass: VisitDetailRow['pass']): VisitPass | null {
+function toPass(pass: VisitDetailRow['pass']): VisitPass | null {
   if (!pass?.accessCard) return null;
   return {
     cardNumber: pass.accessCard.cardNumber,

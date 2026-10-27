@@ -66,7 +66,6 @@ function useActionLabel() {
   };
 }
 
-/** Every field of one audit row, with its details as formatted JSON. */
 function AuditRowSheet({
   row,
   onClose,
@@ -140,12 +139,7 @@ function AuditRowSheet({
   );
 }
 
-/**
- * Audit trail: every audit row — business events (visits, users, cards, desk
- * QR, exports…) and security events (sign-ins, failures, permission denials).
- * Filter by WAT day range, category and free text; open a row for all its
- * fields; export the filtered set as CSV (the export is itself audited).
- */
+/** Business and security audit rows; the CSV export is itself audited. */
 export function AuditTrailTab() {
   const t = useTranslations("operations.audit");
   const tCat = useTranslations("operations.audit.categories");
@@ -180,7 +174,6 @@ export function AuditTrailTab() {
 
   return (
     <section className="flex flex-col gap-6">
-      {/* Laid out like Insights → History: range pills, then Export. */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <FilterPills<Range>
           aria-label={t("range")}

@@ -6,10 +6,6 @@ import { VisitRequestForm } from "./VisitRequestForm";
 
 export type QuickActionMode = "walkin" | "invite";
 
-/**
- * Slide-over sheet for the dashboard quick actions. Hosts the multi-step
- * Register Walk-In / New Invite Request form (same Drawer used by Requests).
- */
 export function QuickActionSheet({
   mode,
   onClose,
@@ -20,12 +16,9 @@ export function QuickActionSheet({
 }: {
   mode: QuickActionMode | null;
   onClose: () => void;
-  /** Pin the host (e.g. a staff member inviting visitors to themselves). */
   fixedHostUserId?: string;
   fixedHostName?: string;
-  /** Group walk-in success "Check-In Visitor" → open the group check-in sheet. */
   onRequestCheckIn?: (groupId: string) => void;
-  /** Single walk-in success "Check-In Visitor" → open the single check-in modal. */
   onRequestCheckInSingle?: (visitId: string) => void;
 }) {
   const t = useTranslations("invite");

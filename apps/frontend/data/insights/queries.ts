@@ -7,7 +7,7 @@ import {
 } from "./insights.api";
 
 /** On-site numbers move all day; refresh the overview every minute. */
-export const OVERVIEW_REFRESH_MS = 60_000;
+const OVERVIEW_REFRESH_MS = 60_000;
 
 export function useInsightsOverview() {
   return useQuery({

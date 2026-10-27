@@ -286,11 +286,7 @@ function LoadingDrawer({ onClose }: { onClose: () => void }) {
   );
 }
 
-/**
- * The status-aware Visit Details sheet. Every alert is about a visit, so opening
- * an alert resolves its visit and renders the same sheet (with the alert stripe +
- * Alert Summary). The title is always "Visit Details".
- */
+/** Opening an alert resolves its visit and renders the same sheet with the alert stripe. */
 export function VisitDetailSheet({
   kind,
   id,
@@ -302,10 +298,7 @@ export function VisitDetailSheet({
   id: string;
   onClose: () => void;
   notification?: NotificationContext;
-  /**
-   * Open with the deny form already expanded (the overview's inline Deny).
-   * Approve opens the sheet as-is so the decision is made from the details.
-   */
+  /** Open with the deny form expanded; Approve opens as-is so the decision is made from the details. */
   initialForm?: "deny" | null;
 }) {
   const isAlert = kind === "alert";

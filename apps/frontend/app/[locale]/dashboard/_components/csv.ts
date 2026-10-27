@@ -1,6 +1,5 @@
 import Papa from "papaparse";
 
-/** One guest row parsed from an uploaded CSV. */
 export interface CsvGuest {
   fullName: string;
   email: string;
@@ -28,7 +27,7 @@ function pick(row: Record<string, string>, key: string): string {
   return "";
 }
 
-/** Parse an uploaded guest CSV into rows (client-side; never sent as a file). */
+/** Parsed client-side; the file is never uploaded. */
 export function parseGuestsCsv(file: File): Promise<CsvGuest[]> {
   return new Promise((resolve, reject) => {
     Papa.parse<Record<string, string>>(file, {
@@ -51,7 +50,6 @@ export function parseGuestsCsv(file: File): Promise<CsvGuest[]> {
   });
 }
 
-/** Trigger a download of the blank guest CSV template (with one example row). */
 export function downloadGuestTemplate(): void {
   const example =
     "Daniel Nwosu,danny@example.com,Protis Studios,+234 9035 5824,sarah.lee@aatc.org";

@@ -16,8 +16,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  // Returned value is attached as request.user. Roles/permissions ride in the
-  // token, so authorization needs no per-request DB lookup.
+  // Roles/permissions ride in the token, so authorization needs no DB lookup.
   validate(payload: AccessTokenClaims): AuthUser {
     return {
       userId: payload.sub,

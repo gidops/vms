@@ -28,7 +28,7 @@ interface OptInRow {
   organization: string | null;
 }
 
-export const OPT_IN_CSV_COLUMNS = [
+const OPT_IN_CSV_COLUMNS = [
   'Email',
   'Full name',
   'Organization',
@@ -41,12 +41,7 @@ function likePattern(search: string): string {
   return `%${search.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
 }
 
-/**
- * Communication consent. Every intake answer and every withdrawal is an
- * append-only event keyed on the normalised email; a person's current status
- * is their latest event ("latest answer wins"). Visit records are never
- * rewritten, so what was originally agreed stays on file (NDPR).
- */
+/** Consent is an append-only event log keyed on normalised email (latest answer wins); visit records are never rewritten (NDPR). */
 @Injectable()
 export class ConsentService {
   constructor(
@@ -55,12 +50,7 @@ export class ConsentService {
     private readonly events: EventPublisher,
   ) {}
 
-  /**
-   * Everyone who has answered, by current status (`in` = consented, `out` =
-   * not consented, `all`), with an optional email/name search. The name comes
-   * from the visitor record for that email, so withdrawn and admin-recorded
-   * answers (no visit) still show who it is.
-   */
+  // Names come from the visitor record, so withdrawn and admin-recorded answers (no visit) still resolve.
   private optInSql(
     search?: string,
     status: ConsentStatusFilter = 'in',
@@ -118,7 +108,6 @@ export class ConsentService {
     };
   }
 
-  /** Full opted-in list as CSV (UTF-8 BOM, formula-escaped, no phones). */
   async exportCsv(actorUserId: string): Promise<string> {
     const rows = await this.prisma.$queryRaw<OptInRow[]>`
       ${this.optInSql()}
@@ -145,10 +134,7 @@ export class ConsentService {
     return csv;
   }
 
-  /**
-   * Record a withdrawal for an email. Writes nothing when the email has never
-   * answered (the UI shows "No records for this email").
-   */
+  /** No-op when the email has never answered. */
   async withdraw(
     rawEmail: string,
     actorUserId: string,
@@ -174,10 +160,7 @@ export class ConsentService {
     return { affected: true };
   }
 
-  /**
-   * Record consent on a visitor's behalf (System Admin opting someone back in).
-   * Only for emails that have answered before; otherwise nothing is written.
-   */
+  /** Only for emails that have answered before; otherwise nothing is written. */
   async grant(
     rawEmail: string,
     actorUserId: string,

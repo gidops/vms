@@ -29,19 +29,15 @@ const accessInclude = Prisma.validator<Prisma.UserInclude>()({
       role: { include: { rolePermissions: { include: { permission: true } } } },
     },
   },
-  // The user's Host row (when they receive visitors) surfaces office/department
-  // on the self-profile for the staff dashboard's "Office Floor" panel.
+
   host: { select: { department: true, office: true } },
 });
 
 type UserWithRoles = Prisma.UserGetPayload<{ include: typeof accessInclude }>;
 
 export interface UserWithAccess extends UserWithRoles {
-  /** Role names, ordered by assignment (earliest first). */
   roles: string[];
-  /** Union of every role's permissions (kept for reference/back-compat). */
   permissions: string[];
-  /** Permission keys per role name (used to scope the active role). */
   rolePermissions: Record<string, string[]>;
 }
 
@@ -70,15 +66,11 @@ export class UsersService {
     return user ? this.withAccess(user) : null;
   }
 
-  /** The user's default active role: the earliest-assigned non-add-on one. */
   defaultRole(user: UserWithAccess): string | null {
     return user.roles.find((r) => !isAddonRole(r)) ?? null;
   }
 
-  /**
-   * Permissions for the active role (active-role scoping), plus those of any
-   * add-on the user holds that extends it (READ_ADMIN on STAFF, VMC_ADMIN on VMC).
-   */
+  // Add-ons extend their base role: READ_ADMIN on STAFF, VMC_ADMIN on VMC.
   permissionsForRole(user: UserWithAccess, role: string | null): string[] {
     if (!role) return [];
     const addons = user.roles.filter((r) => ADDON_ROLES[r] === role);
@@ -97,7 +89,6 @@ export class UsersService {
     return count > 0;
   }
 
-  /** Paginated user list for the admin User Management screen. */
   async list(query: PaginationQuery): Promise<Paginated<UserListItem>> {
     const [rows, total] = await Promise.all([
       this.prisma.user.findMany({
@@ -124,10 +115,6 @@ export class UsersService {
     };
   }
 
-  /**
-   * Selectable hosts for the invite/walk-in forms — users with the STAFF role,
-   * joined to their Host record (department/office may be null until set).
-   */
   async listHosts(): Promise<HostOption[]> {
     const users = await this.prisma.user.findMany({
       where: {
@@ -151,10 +138,7 @@ export class UsersService {
     }));
   }
 
-  /**
-   * Hosts matching a name, for the visitor's self-registration form. Only the
-   * name and department leave the building: no email or other contact details.
-   */
+  // Public endpoint: return name and department only, never contact details.
   async searchPublicHosts(
     query: string,
     take = 8,
@@ -180,7 +164,6 @@ export class UsersService {
     }));
   }
 
-  /** Whether `userId` is an active user with the STAFF role (a valid host). */
   async isActiveHost(userId: string): Promise<boolean> {
     const n = await this.prisma.user.count({
       where: {
@@ -192,7 +175,6 @@ export class UsersService {
     return n > 0;
   }
 
-  /** All role names (for the create/edit role multi-select). */
   async listRoleNames(): Promise<string[]> {
     const roles = await this.prisma.role.findMany({
       orderBy: { name: 'asc' },
@@ -201,7 +183,6 @@ export class UsersService {
     return roles.map((r) => r.name);
   }
 
-  /** Create a user with one or more roles (hashes the password). */
   async create(
     input: CreateUserInput,
     actorUserId?: string,
@@ -242,7 +223,6 @@ export class UsersService {
     return created;
   }
 
-  /** Replace a user's role set. */
   async updateRoles(
     id: string,
     roles: string[],
@@ -276,7 +256,6 @@ export class UsersService {
     return updated;
   }
 
-  /** Self-service profile + preferences update (Account Settings). */
   async updateMe(
     userId: string,
     input: UpdateMeInput,
@@ -294,7 +273,6 @@ export class UsersService {
     if (input.assignedDesk !== undefined)
       data.assignedDesk = input.assignedDesk;
 
-    // Keep fullName in sync when either name part changes.
     if (input.firstName !== undefined || input.lastName !== undefined) {
       const first = input.firstName ?? user.firstName ?? '';
       const last = input.lastName ?? user.lastName ?? '';
@@ -302,7 +280,6 @@ export class UsersService {
       if (full) data.fullName = full;
     }
 
-    // Merge notification prefs over the existing object.
     if (input.notificationPrefs !== undefined) {
       const existing =
         (user.notificationPrefs as Record<string, boolean> | null) ?? {};
@@ -328,7 +305,6 @@ export class UsersService {
     return fresh;
   }
 
-  /** Persist a freshly-uploaded avatar's S3 object key. */
   async setAvatar(userId: string, avatarKey: string): Promise<UserWithAccess> {
     await this.txm.run(async (tx) => {
       await tx.user.update({ where: { id: userId }, data: { avatarKey } });
@@ -345,7 +321,6 @@ export class UsersService {
     return fresh;
   }
 
-  /** Active sessions for the "Login Activity" list (most recent first). */
   async listSessions(
     userId: string,
     currentSessionId: string | undefined,
@@ -367,11 +342,7 @@ export class UsersService {
     });
   }
 
-  /**
-   * Hard-delete a user. Records they created are preserved (FK SetNull /
-   * plain-UUID actor columns + denormalized author/creator names). Blocked for
-   * self, the last Super Admin, and users who are hosts (would erase visits).
-   */
+  /** Authored records survive (SetNull FKs, denormalized names); blocked for self, the last Super Admin, and hosts. */
   async deleteUser(id: string, actorUserId: string): Promise<void> {
     if (id === actorUserId) {
       throw new BadRequestException('You cannot delete your own account');

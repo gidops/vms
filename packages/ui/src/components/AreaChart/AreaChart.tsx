@@ -2,7 +2,6 @@ import * as React from "react";
 import { cn } from "../../foundations/cn";
 
 export interface AreaChartPoint {
-  /** X-axis tick label (e.g. "08" for 08:00). */
   label: string;
   value: number;
 }
@@ -13,7 +12,6 @@ export interface AreaChartProps {
   label: string;
   /** Plot height in px (excluding the x-axis labels). */
   height?: number;
-  /** Number of horizontal grid lines. */
   gridLines?: number;
   className?: string;
 }
@@ -21,10 +19,7 @@ export interface AreaChartProps {
 const PAD_Y = 8;
 const DOT_R = 5;
 
-/**
- * Smooth (Catmull-Rom) path through the points. Control points are clamped to
- * the plot so the curve never overshoots below zero or above the max.
- */
+/** Catmull-Rom path; control points are clamped so the curve never overshoots the plot. */
 function smoothPath(
   pts: { x: number; y: number }[],
   minY: number,
@@ -65,12 +60,7 @@ function useWidth<T extends HTMLElement>() {
   return [ref, width] as const;
 }
 
-/**
- * Single-series line chart on a soft gradient plot background, with
- * horizontal grid lines and x-axis labels. Coloured from semantic tokens
- * (`primary` line, `success` tint) so it follows the theme. The values are also
- * exposed as a visually hidden list for screen readers.
- */
+/** Single-series line chart; the values are also exposed as a visually hidden list for screen readers. */
 export function AreaChart({
   data,
   label,

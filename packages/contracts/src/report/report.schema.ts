@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-/** Longest export window, inclusive of both ends. */
 export const EXPORT_MAX_RANGE_DAYS = 366;
 
 const IsoDay = z
@@ -8,16 +7,12 @@ const IsoDay = z
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD")
   .refine((s) => !Number.isNaN(Date.parse(`${s}T00:00:00Z`)), "Invalid date");
 
-/** Whole days from `from` to `to`, inclusive (both YYYY-MM-DD). */
 export function inclusiveDaySpan(from: string, to: string): number {
   const ms = Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`);
   return Math.round(ms / 86_400_000) + 1;
 }
 
-/**
- * Visitor export: every visit whose visit date (scheduledAt, read on the
- * Africa/Lagos calendar) falls in [from, to] inclusive. Max 366 days.
- */
+/** Filters on scheduledAt read on the Africa/Lagos calendar, inclusive. */
 export const ExportVisitsQuery = z
   .object({
     from: IsoDay,
