@@ -1,14 +1,12 @@
 "use client";
 
+import { PrintSheet } from "@vms/ui";
 import * as React from "react";
-import { createPortal } from "react-dom";
 import { CardBack, CardFront, type CardContent } from "./CardFaces";
-
-const subscribeNoop = () => () => {};
+import styles from "./CardPrintView.module.css";
 
 /** Wait for the card's images (logo, photo) so they aren't printed blank. */
-async function imagesReady(root: HTMLElement | null): Promise<void> {
-  if (!root) return;
+async function imagesReady(root: HTMLElement): Promise<void> {
   await Promise.all(
     Array.from(root.querySelectorAll("img")).map((img) =>
       img.complete ? Promise.resolve() : img.decode().catch(() => undefined),
@@ -16,7 +14,7 @@ async function imagesReady(root: HTMLElement | null): Promise<void> {
   );
 }
 
-/** Portalled to <body> so printing hides app chrome; set the driver to CR80, portrait, duplex. */
+/** Prints the card once when it appears; set the driver to CR80, portrait, duplex. */
 export function CardPrintView({
   card,
   onDone,
@@ -24,38 +22,33 @@ export function CardPrintView({
   card: CardContent;
   onDone: () => void;
 }) {
-  const root = React.useRef<HTMLDivElement>(null);
-  const mounted = React.useSyncExternalStore(
-    subscribeNoop,
-    () => true,
-    () => false,
-  );
+  const [sheet, setSheet] = React.useState<HTMLDivElement | null>(null);
+  const done = React.useRef(onDone);
+  React.useEffect(() => {
+    done.current = onDone;
+  });
 
   React.useEffect(() => {
-    if (!mounted) return;
+    if (!sheet) return;
     let cancelled = false;
-    void imagesReady(root.current).then(() => {
+    void imagesReady(sheet).then(() => {
       if (cancelled) return;
       window.print();
-      onDone();
+      done.current();
     });
     return () => {
       cancelled = true;
     };
-    // Print once per mount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mounted]);
+  }, [sheet]);
 
-  if (!mounted) return null;
-  return createPortal(
-    <div ref={root} className="rfidcard-print-root" data-testid="card-print">
-      <div className="rfidcard-page">
+  return (
+    <PrintSheet ref={setSheet} data-testid="card-print">
+      <div className={styles.page}>
         <CardFront card={card} />
       </div>
-      <div className="rfidcard-page">
+      <div className={styles.page}>
         <CardBack card={card} />
       </div>
-    </div>,
-    document.body,
+    </PrintSheet>
   );
 }

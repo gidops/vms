@@ -1,0 +1,44 @@
+/* A4 poster for the VMC desk; black on white for any printer. */
+.poster {
+  display: flex;
+  min-height: 260mm;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6mm;
+  text-align: center;
+  font-size: 14pt;
+}
+.poster h1 {
+  font-size: 30pt;
+  font-weight: 700;
+  margin: 0;
+}
+.poster p {
+  margin: 0;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 4mm;
+  font-size: 11pt;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.brand img {
+  height: 16mm;
+}
+.sub {
+  font-size: 13pt;
+}
+.qr {
+  width: 120mm;
+  height: 120mm;
+}
+.langs {
+  font-size: 11pt;
+}
+.poster .foot {
+  font-size: 9pt;
+  margin-top: 6mm;
+}

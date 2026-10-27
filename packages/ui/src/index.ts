@@ -38,13 +38,13 @@ export * from "./components/StatusBadge/index";
 export * from "./components/Table/index";
 export * from "./components/Timeline/index";
 export * from "./components/Toast/index";
-export * from "./components/YesNoControl/index";
 
 // Patterns (tier 3)
 export * from "./patterns/AlertModal/index";
 export * from "./patterns/AuthLayout/index";
 export * from "./patterns/DetailDrawer/index";
 export * from "./patterns/FilterBar/index";
+export * from "./patterns/PrintSheet/index";
 export * from "./patterns/RecordTable/index";
 export * from "./patterns/SideNav/index";
 export * from "./patterns/TopNav/index";

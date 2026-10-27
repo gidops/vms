@@ -1,0 +1,8 @@
+/* Front and back print as two portrait CR80 pages (see `@page cr80` in @vms/ui/print.css). */
+.page {
+  page: cr80;
+  break-after: page;
+}
+.page:last-child {
+  break-after: auto;
+}

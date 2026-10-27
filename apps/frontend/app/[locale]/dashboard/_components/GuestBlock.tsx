@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
   Textarea,
-  YesNoControl,
+  SegmentedControl,
 } from "@vms/ui";
 import { useTranslations } from "next-intl";
 import * as React from "react";
@@ -84,16 +84,19 @@ function YesNoQuestion({
         {label} <span className="text-danger">*</span>
       </span>
       <div className="flex flex-col gap-1.5">
-        <YesNoControl
+        <SegmentedControl
           id={id}
-          value={value}
-          onValueChange={onChange}
-          yesLabel={yesLabel}
-          noLabel={noLabel}
+          options={[
+            { value: "yes", label: yesLabel },
+            { value: "no", label: noLabel },
+          ]}
+          value={value === null ? null : value ? "yes" : "no"}
+          onValueChange={(v) => onChange(v === "yes")}
+          tone="primary"
+          required
           invalid={invalid}
           aria-labelledby={`${id}-label`}
           aria-describedby={invalid ? `${id}-error` : undefined}
-          className="w-full"
           fullWidth
         />
         {invalid ? (

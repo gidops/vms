@@ -1,0 +1,33 @@
+/* Shared print behaviour for <PrintSheet>. On screen the sheet is hidden; when
+ * printing it is the only thing on the page, so app chrome, drawers and toasts
+ * never reach the paper. */
+.vms-print-sheet {
+  display: none;
+}
+.vms-print-sheet[data-preview] {
+  display: block;
+  background: var(--color-print-paper);
+  color: var(--color-print-ink);
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+  /* CR80 card printers: give a page `page: cr80` to print it card-sized. */
+  @page cr80 {
+    size: 54mm 85.6mm;
+    margin: 0;
+  }
+  body:has(> .vms-print-sheet) > *:not(.vms-print-sheet) {
+    display: none !important;
+  }
+  body:has(> .vms-print-sheet) {
+    background: var(--color-print-paper) !important;
+  }
+  .vms-print-sheet {
+    display: block !important;
+    color: var(--color-print-ink);
+  }
+}

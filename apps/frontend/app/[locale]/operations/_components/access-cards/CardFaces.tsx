@@ -33,7 +33,7 @@ function Face({
       aria-label={label}
       data-theme="light"
       className={cn(
-        "rfidcard-face relative flex h-[85.6mm] w-[54mm] shrink-0 flex-col overflow-hidden rounded-[3mm] border border-border bg-surface text-fg",
+        "relative flex h-[85.6mm] w-[54mm] shrink-0 flex-col overflow-hidden rounded-[3mm] border border-border bg-surface text-fg print:rounded-none print:border-0 [print-color-adjust:exact]",
         className,
       )}
     >
