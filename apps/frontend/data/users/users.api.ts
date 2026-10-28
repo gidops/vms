@@ -1,31 +1,14 @@
+import type {
+  AdminUpdateUserInput,
+  UserDetail as ContractUserDetail,
+  UserListItem as ContractUserListItem,
+} from "@vms/contracts";
 import { api } from "@/data/http/client";
 import type { Paginated } from "@/data/inbox/inbox.api";
+import type { Wire } from "@/data/insights/insights.api";
 
-export interface UserListItem {
-  id: string;
-  email: string;
-  fullName: string;
-  isActive: boolean;
-  roles: string[];
-  createdAt: string;
-}
-
-export interface UserDetail {
-  id: string;
-  email: string;
-  fullName: string;
-  firstName: string | null;
-  lastName: string | null;
-  phone: string | null;
-  authProvider: string;
-  isActive: boolean;
-  roles: string[];
-  lastLoginAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  hostDepartment: string | null;
-  hostOffice: string | null;
-}
+export type UserListItem = Wire<ContractUserListItem>;
+export type UserDetail = Wire<ContractUserDetail>;
 
 export interface UserListParams {
   page: number;
@@ -61,10 +44,7 @@ export const usersApi = {
   }): Promise<{ id: string; email: string; roles: string[] }> {
     return api("/users", { method: "POST", body: input });
   },
-  update(
-    id: string,
-    input: { firstName?: string; lastName?: string; phone?: string | null },
-  ): Promise<UserDetail> {
+  update(id: string, input: AdminUpdateUserInput): Promise<UserDetail> {
     return api<UserDetail>(`/users/${id}`, { method: "PATCH", body: input });
   },
   setStatus(id: string, isActive: boolean): Promise<UserDetail> {

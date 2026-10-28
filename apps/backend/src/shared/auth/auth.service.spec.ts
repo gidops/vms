@@ -202,19 +202,21 @@ describe('AuthService', () => {
       passwords.hash.mockResolvedValue('newhash');
       const tx = {
         user: { update: jest.fn() },
-        passwordResetToken: { update: jest.fn() },
+        passwordResetToken: {
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+        },
       };
       txm.run = jest.fn(async (cb: (t: unknown) => unknown) => cb(tx));
 
       await svc.completePasswordReset('raw-token', 'new-password');
 
+      expect(tx.passwordResetToken.updateMany).toHaveBeenCalledWith({
+        where: { id: 'prt1', usedAt: null },
+        data: { usedAt: expect.any(Date) },
+      });
       expect(tx.user.update).toHaveBeenCalledWith({
         where: { id: 'u1' },
         data: { passwordHash: 'newhash' },
-      });
-      expect(tx.passwordResetToken.update).toHaveBeenCalledWith({
-        where: { id: 'prt1' },
-        data: { usedAt: expect.any(Date) },
       });
       expect(events.publish).toHaveBeenCalledWith(
         tx,
@@ -224,6 +226,32 @@ describe('AuthService', () => {
         }),
       );
       expect(refreshTokens.revokeAllForUser).toHaveBeenCalledWith('u1');
+    });
+
+    it('rejects the loser of two concurrent submits of the same link', async () => {
+      prisma.passwordResetToken.findUnique.mockResolvedValue(tokenRow());
+      passwords.hash.mockResolvedValue('newhash');
+      // Another request claimed the token between the read and the update.
+      const tx = {
+        user: { update: jest.fn() },
+        passwordResetToken: {
+          updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+        },
+      };
+      txm.run = jest.fn(async (cb: (t: unknown) => unknown) => cb(tx));
+
+      await expect(
+        svc.completePasswordReset('raw-token', 'new-password'),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+      expect(tx.user.update).not.toHaveBeenCalled();
+      expect(events.publish).not.toHaveBeenCalled();
+      expect(refreshTokens.revokeAllForUser).not.toHaveBeenCalled();
+      expect(security.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: EVENT_TYPES.PasswordResetRejected,
+          entityId: 'u1',
+        }),
+      );
     });
 
     it('rejects an unknown token and records auth.password_reset_rejected', async () => {

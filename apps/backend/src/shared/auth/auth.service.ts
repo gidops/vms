@@ -191,27 +191,19 @@ export class AuthService {
     });
     const valid =
       row && !row.usedAt && row.expiresAt > new Date() && row.user.isActive;
-    if (!valid) {
-      // Audited directly so guessing/replaying links is visible in the trail.
-      await this.security.record({
-        action: EVENT_TYPES.PasswordResetRejected,
-        entityType: 'User',
-        entityId: row?.userId,
-        level: 'Warning',
-      });
-      throw new UnauthorizedException(
-        'This reset link is invalid or has expired',
-      );
-    }
+    if (!valid) return this.rejectReset(row?.userId);
     const passwordHash = await this.passwords.hash(newPassword);
-    await this.txm.run(async (tx) => {
+    const claimed = await this.txm.run(async (tx) => {
+      // The used-check is part of the update, so of two concurrent submits of
+      // the same link only one claims it; the loser is rejected below.
+      const { count } = await tx.passwordResetToken.updateMany({
+        where: { id: row.id, usedAt: null },
+        data: { usedAt: new Date() },
+      });
+      if (count === 0) return false;
       await tx.user.update({
         where: { id: row.userId },
         data: { passwordHash },
-      });
-      await tx.passwordResetToken.update({
-        where: { id: row.id },
-        data: { usedAt: new Date() },
       });
       await this.events.publish(tx, {
         type: EVENT_TYPES.PasswordResetCompleted,
@@ -220,9 +212,24 @@ export class AuthService {
         payload: {},
         metadata: { actorUserId: row.userId },
       });
+      return true;
     });
+    if (!claimed) return this.rejectReset(row.userId);
     // A reset implies the old credential may be compromised: end every session.
     await this.refreshTokens.revokeAllForUser(row.userId);
+  }
+
+  /** Audited directly so guessing/replaying links is visible in the trail. */
+  private async rejectReset(userId: string | undefined): Promise<never> {
+    await this.security.record({
+      action: EVENT_TYPES.PasswordResetRejected,
+      entityType: 'User',
+      entityId: userId,
+      level: 'Warning',
+    });
+    throw new UnauthorizedException(
+      'This reset link is invalid or has expired',
+    );
   }
 
   async switchRole(

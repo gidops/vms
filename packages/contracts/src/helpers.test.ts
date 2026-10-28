@@ -10,6 +10,7 @@ import { normalizeE164, parsePhone, toE164 } from "./common/phone";
 import { normalizeConsentEmail } from "./consent/consent.schema";
 import { isPlainName, isPlainOrganization } from "./desk-qr/desk-qr.schema";
 import { ExportVisitsQuery, inclusiveDaySpan } from "./report/report.schema";
+import { nameParts } from "./user/user.schema";
 import { evacuationAssistIssues } from "./visit/visit.schema";
 
 describe("phone helpers", () => {
@@ -159,4 +160,23 @@ describe("self-registration plain-text rules", () => {
     "rejects the organisation %j",
     (org) => expect(isPlainOrganization(org)).toBe(false),
   );
+});
+
+describe("nameParts", () => {
+  it("keeps stored first/last names as they are", () => {
+    expect(
+      nameParts({ fullName: "Ada L", firstName: "Ada", lastName: null }),
+    ).toEqual({ firstName: "Ada", lastName: "" });
+  });
+
+  it("splits a full-name-only account into first word and the rest", () => {
+    expect(nameParts({ fullName: "  Insights  ins gate " })).toEqual({
+      firstName: "Insights",
+      lastName: "ins gate",
+    });
+    expect(nameParts({ fullName: "Mononym" })).toEqual({
+      firstName: "Mononym",
+      lastName: "",
+    });
+  });
 });

@@ -1,3 +1,4 @@
+import type { AdminUpdateUserInput } from "@vms/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usersApi, type UserListParams } from "./users.api";
 
@@ -50,13 +51,8 @@ export function useUpdateUserRoles() {
 export function useAdminUpdateUser() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      id,
-      input,
-    }: {
-      id: string;
-      input: { firstName?: string; lastName?: string; phone?: string | null };
-    }) => usersApi.update(id, input),
+    mutationFn: ({ id, input }: { id: string; input: AdminUpdateUserInput }) =>
+      usersApi.update(id, input),
     onSuccess: (_data, { id }) => {
       void qc.invalidateQueries({ queryKey: ["users"] });
       void qc.invalidateQueries({ queryKey: ["user", id] });

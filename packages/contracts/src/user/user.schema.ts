@@ -115,6 +115,23 @@ export const UserDetail = z.object({
 });
 export type UserDetail = z.infer<typeof UserDetail>;
 
+/**
+ * A user's first/last name for editing. Older accounts hold only `fullName`,
+ * so when both parts are empty it is split (first word / the rest) rather than
+ * shown blank — an edit to one half must not silently drop the other.
+ */
+export function nameParts(user: {
+  fullName: string;
+  firstName?: string | null;
+  lastName?: string | null;
+}): { firstName: string; lastName: string } {
+  if (user.firstName || user.lastName) {
+    return { firstName: user.firstName ?? "", lastName: user.lastName ?? "" };
+  }
+  const [first = "", ...rest] = user.fullName.trim().split(/\s+/);
+  return { firstName: first, lastName: rest.join(" ") };
+}
+
 /** Admin edit of another user's profile; self-service fields stay in UpdateMeInput. */
 export const AdminUpdateUserInput = z.object({
   firstName: z.string().min(1).optional(),

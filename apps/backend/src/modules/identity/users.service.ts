@@ -7,6 +7,7 @@ import { Prisma } from '@prisma/client';
 import {
   ADDON_ROLES,
   isAddonRole,
+  nameParts,
   ROLES,
   type AdminUpdateUserInput,
   type CreateUserInput,
@@ -358,12 +359,15 @@ export class UsersService {
     if (!user) throw new NotFoundException('User not found');
 
     const data: Prisma.UserUpdateInput = {};
-    if (input.firstName !== undefined) data.firstName = input.firstName;
-    if (input.lastName !== undefined) data.lastName = input.lastName;
     if (input.phone !== undefined) data.phone = input.phone;
     if (input.firstName !== undefined || input.lastName !== undefined) {
-      const first = input.firstName ?? user.firstName ?? '';
-      const last = input.lastName ?? user.lastName ?? '';
+      // Older accounts hold only fullName; the untouched half comes from it so
+      // editing one name never drops the other.
+      const current = nameParts(user);
+      const first = input.firstName ?? current.firstName;
+      const last = input.lastName ?? current.lastName;
+      data.firstName = first || null;
+      data.lastName = last || null;
       const full = `${first} ${last}`.trim();
       if (full) data.fullName = full;
     }
