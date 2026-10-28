@@ -135,8 +135,8 @@ export function SegmentedControl({
               fullWidth && "flex-1",
               onEmphasis
                 ? active
-                  ? "border border-accent text-emphasis-fg"
-                  : "border border-transparent text-emphasis-fg/70 hover:text-emphasis-fg"
+                  ? "border-2 border-accent text-emphasis-fg"
+                  : "border-2 border-transparent text-emphasis-fg/70 hover:text-emphasis-fg"
                 : active
                   ? primary
                     ? "bg-primary text-primary-fg shadow-xs"

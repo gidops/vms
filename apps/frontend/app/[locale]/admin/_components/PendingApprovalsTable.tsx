@@ -18,6 +18,7 @@ import { CircleUser } from "lucide-react";
 import { useLocale, useNow, useTranslations } from "next-intl";
 import * as React from "react";
 import { FilterPills } from "@/app/[locale]/_components/FilterPills";
+import { PageHeaderBar } from "@/app/[locale]/_components/PageHeaderBar";
 import { StatusCell } from "@/app/[locale]/_components/StatusCell";
 import { useAdminVisits, type AdminVisitsParams } from "@/data/admin/queries";
 import type { VisitListItem } from "@/data/visits/visits.api";
@@ -227,7 +228,10 @@ export function PendingApprovalsTable({
 
   const table = (
     <Table>
-      <TableHeader>
+      {/* The page header row already closes off the top, except in the vmc card. */}
+      <TableHeader
+        className={variant === "vmc" ? undefined : "[&_tr]:border-t-0"}
+      >
         <TableRow>
           <TableHead>{tDash("columns.visitor")}</TableHead>
           <TableHead>
@@ -333,14 +337,7 @@ export function PendingApprovalsTable({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-stretch justify-between overflow-hidden rounded-xl border-x border-b border-border bg-surface">
-        <h1 className="flex items-center px-6 py-4 text-3xl font-semibold text-fg">
-          {t("title")}
-        </h1>
-        <div className="flex items-center bg-primary-subtle px-6 py-3">
-          {pills}
-        </div>
-      </div>
+      <PageHeaderBar title={t("title")} actions={pills} />
       <RecordTable frameless pagination={pagination}>
         {table}
       </RecordTable>

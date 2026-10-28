@@ -20,6 +20,7 @@ import { useFormatter, useNow, useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
 import { InboxPagination } from "@/app/[locale]/_components/InboxPagination";
+import { PageHeaderBar } from "@/app/[locale]/_components/PageHeaderBar";
 import {
   VisitDetailSheet,
   type NotificationContext,
@@ -144,7 +145,7 @@ export function StaffUpdatesScreen() {
       }
     >
       <div className="flex flex-col gap-6">
-        <h1 className="text-3xl font-semibold text-primary">{t("allTitle")}</h1>
+        <PageHeaderBar title={t("allTitle")} />
 
         {feed.isLoading ? (
           <div className="flex justify-center py-16">

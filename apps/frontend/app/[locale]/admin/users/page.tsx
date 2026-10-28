@@ -29,6 +29,10 @@ import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
 import {
+  headerActionButton,
+  PageHeaderBar,
+} from "@/app/[locale]/_components/PageHeaderBar";
+import {
   CreateUserDialog,
   DeleteUserDialog,
   EditRolesDialog,
@@ -152,18 +156,20 @@ function UsersTab() {
       }
     >
       <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-stretch justify-between overflow-hidden rounded-xl border-x border-b border-border bg-surface">
-          <h1 className="flex items-center px-6 py-4 text-3xl font-semibold text-fg">
-            {t("title")}
-          </h1>
-          {canCreate ? (
-            <div className="flex items-center bg-primary-subtle px-6 py-3">
-              <Button onClick={() => setCreateOpen(true)}>
+        <PageHeaderBar
+          title={t("title")}
+          actions={
+            canCreate ? (
+              <Button
+                size="sm"
+                className={headerActionButton}
+                onClick={() => setCreateOpen(true)}
+              >
                 {t("newUser")}
               </Button>
-            </div>
-          ) : null}
-        </div>
+            ) : undefined
+          }
+        />
 
         {isLoading ? (
           <div className="flex justify-center py-16">
@@ -185,7 +191,7 @@ function UsersTab() {
             }
           >
             <Table>
-              <TableHeader>
+              <TableHeader className="[&_tr]:border-t-0">
                 <TableRow>
                   <TableHead>{t("columns.user")}</TableHead>
                   <TableHead>{t("columns.roles")}</TableHead>

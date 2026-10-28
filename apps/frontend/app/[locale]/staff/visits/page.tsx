@@ -18,6 +18,7 @@ import { CircleUser } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
+import { PageHeaderBar } from "@/app/[locale]/_components/PageHeaderBar";
 import { StatusCell } from "@/app/[locale]/_components/StatusCell";
 import {
   RequestDrawer,
@@ -88,12 +89,10 @@ function MyVisits() {
       filterBar={<VisitFilters value={filters} onChange={onFilters} />}
     >
       <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-stretch justify-between overflow-hidden rounded-xl border-x border-b border-border bg-surface">
-          <h1 className="flex items-center px-6 py-4 text-3xl font-semibold text-fg">
-            {t("myVisits.title")}
-          </h1>
-          <MyVisitsRangeFilter value={tab} onChange={onRange} />
-        </div>
+        <PageHeaderBar
+          title={t("myVisits.title")}
+          actions={<MyVisitsRangeFilter value={tab} onChange={onRange} />}
+        />
 
         <RecordTable
           frameless
@@ -113,7 +112,7 @@ function MyVisits() {
             </div>
           ) : (
             <Table>
-              <TableHeader>
+              <TableHeader className="[&_tr]:border-t-0">
                 <TableRow>
                   <TableHead>{t("columns.visitor")}</TableHead>
                   <TableHead>{t("columns.purpose")}</TableHead>

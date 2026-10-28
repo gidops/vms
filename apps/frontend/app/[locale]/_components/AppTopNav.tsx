@@ -155,7 +155,7 @@ export function AppTopNav({
             }))}
           />
         ) : centerLabel ? (
-          <span className="inline-flex items-center rounded-full border border-accent px-4 py-1.5 text-sm font-medium text-emphasis-fg">
+          <span className="inline-flex items-center rounded-full border-2 border-accent px-4 py-1.5 text-sm font-medium text-emphasis-fg">
             {centerLabel}
           </span>
         ) : undefined
