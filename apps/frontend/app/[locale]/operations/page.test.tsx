@@ -44,13 +44,18 @@ describe("Operations page", () => {
     replace.mockReset();
   });
 
-  it("gives the System Admin all three tabs, opening on Access cards", () => {
+  it("gives the System Admin all four tabs, opening on Access cards", () => {
     Object.values(PERMISSIONS).forEach((p) => perms.add(p));
     renderWithIntl(<OperationsPage />);
     expect(
       screen.getByRole("heading", { level: 1, name: "Operations" }),
     ).toBeInTheDocument();
-    expect(tabNames()).toEqual(["Access cards", "Walk-in QR", "Audit trail"]);
+    expect(tabNames()).toEqual([
+      "Access cards",
+      "Walk-in QR",
+      "Gate kiosk",
+      "Audit trail",
+    ]);
     expect(screen.getByText("access cards tab")).toBeInTheDocument();
   });
 

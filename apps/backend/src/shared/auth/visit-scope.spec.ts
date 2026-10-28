@@ -31,12 +31,9 @@ describe('canReadAllVisits', () => {
     expect(canReadAllVisits(principal({ roles: ['ADMIN'] }))).toBe(true);
   });
 
-  it('limits staff and gate', () => {
+  it('limits staff', () => {
     expect(
       canReadAllVisits(principal({ roles: ['STAFF'], activeRole: 'STAFF' })),
-    ).toBe(false);
-    expect(
-      canReadAllVisits(principal({ roles: ['GATE'], activeRole: 'GATE' })),
     ).toBe(false);
   });
 

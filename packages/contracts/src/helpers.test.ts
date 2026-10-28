@@ -9,6 +9,7 @@ import {
 import { normalizeE164, parsePhone, toE164 } from "./common/phone";
 import { normalizeConsentEmail } from "./consent/consent.schema";
 import { isPlainName, isPlainOrganization } from "./desk-qr/desk-qr.schema";
+import { GateVerifyInput, normalizeReferenceCode } from "./gate/gate.schema";
 import { ExportVisitsQuery, inclusiveDaySpan } from "./report/report.schema";
 import { nameParts } from "./user/user.schema";
 import { evacuationAssistIssues } from "./visit/visit.schema";
@@ -88,7 +89,6 @@ describe("role helpers", () => {
   it("sends each role to its home page, defaulting to the dashboard", () => {
     expect(homeFor(ROLES.SUPER_ADMIN)).toBe("/admin");
     expect(homeFor(ROLES.STAFF)).toBe("/staff");
-    expect(homeFor(ROLES.GATE)).toBe("/gate");
     expect(homeFor(null)).toBe("/dashboard");
     expect(homeFor("UNKNOWN")).toBe("/dashboard");
   });
@@ -178,5 +178,30 @@ describe("nameParts", () => {
       firstName: "Mononym",
       lastName: "",
     });
+  });
+});
+
+describe("gate reference codes", () => {
+  it.each([
+    ["ABCD-123", "ABCD-123"],
+    ["abcd-123", "ABCD-123"],
+    [" abcd 123 ", "ABCD-123"],
+    ["ABCD123", "ABCD-123"],
+    ["ab cd–12 3", "ABCD-123"],
+  ])("normalises %j to %j", (raw, code) =>
+    expect(normalizeReferenceCode(raw)).toBe(code),
+  );
+
+  it("leaves non-code input uppercased for a clean not-found", () => {
+    expect(normalizeReferenceCode(" https://x.y/a ")).toBe("HTTPS://X.Y/A");
+  });
+
+  it("normalises the code in the verify input", () => {
+    expect(
+      GateVerifyInput.parse({ code: "wxyz 789", source: "manual" }).code,
+    ).toBe("WXYZ-789");
+    expect(() =>
+      GateVerifyInput.parse({ code: " ", source: "scan" }),
+    ).toThrow();
   });
 });

@@ -16,6 +16,7 @@ export const AUDIT_CATEGORIES = [
   "report",
   "consent",
   "desk_qr",
+  "gate",
   "notification",
   "rfid_card",
   "audit",

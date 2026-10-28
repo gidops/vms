@@ -40,10 +40,15 @@ export function useInbox(
   });
 }
 
-export function useInboxUnread(kind: InboxKind, scope: InboxScope = "all") {
+export function useInboxUnread(
+  kind: InboxKind,
+  scope: InboxScope = "all",
+  enabled = true,
+) {
   return useQuery({
     queryKey: keys.inboxUnread(kind, scope),
     queryFn: () => inboxApi.unreadCount(kind, { scope }),
+    enabled,
   });
 }
 

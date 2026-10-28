@@ -74,7 +74,6 @@ describe('Visit intake and evacuation (e2e)', () => {
         ),
       ).toBe(false);
       await as(ROLES.STAFF).get(`/visits/${other.id}`).expect(404);
-      await as(ROLES.GATE).get(`/visits/${other.id}`).expect(404);
 
       // Staff still see the visit they host.
       const hosted = await as(ROLES.VMC)
@@ -137,7 +136,7 @@ describe('Visit intake and evacuation (e2e)', () => {
         },
       });
 
-      const roll = await as(ROLES.GATE)
+      const roll = await as(ROLES.ADMIN)
         .get('/visits/evacuation-roll')
         .expect(200);
       const ids = (roll.body.rows as { visitId: string }[]).map(
@@ -157,7 +156,7 @@ describe('Visit intake and evacuation (e2e)', () => {
         where: { id: yes.id },
         data: { status: 'CHECKED_OUT', checkOutAt: new Date() },
       });
-      const after = await as(ROLES.GATE).get('/visits/evacuation-roll');
+      const after = await as(ROLES.ADMIN).get('/visits/evacuation-roll');
       expect(
         (after.body.rows as { visitId: string }[]).map((r) => r.visitId),
       ).not.toContain(yes.id);

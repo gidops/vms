@@ -117,6 +117,11 @@
       "codeWrong": "That code doesn't match. Check it with reception and try again.",
       "tooManyTries": "Too many wrong codes. Please scan the QR code again."
     },
+    "gateKiosk": {
+      "notActive": "This gate kiosk link is not active.",
+      "notFound": "There is no gate kiosk link yet.",
+      "exists": "The gate kiosk link already exists."
+    },
     "visitor": {
       "notFound": "Visitor not found"
     },

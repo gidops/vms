@@ -4,6 +4,7 @@ import { PERMISSIONS } from "@vms/contracts";
 export const OPERATIONS_TABS = [
   { value: "accessCards", permission: PERMISSIONS.RFID_MANAGE },
   { value: "deskQr", permission: PERMISSIONS.ISSUER_READ },
+  { value: "gateKiosk", permission: PERMISSIONS.GATE_MANAGE },
   { value: "audit", permission: PERMISSIONS.AUDIT_READ },
 ] as const;
 

@@ -17,9 +17,11 @@ export const SelectTrigger = React.forwardRef<
       className={cn(
         "flex h-10 w-full items-center justify-between gap-2 rounded-md border border-border bg-surface px-3 text-sm text-fg",
         "data-[placeholder]:text-fg-subtle",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]",
-        "focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--color-canvas)]",
+        // Same as text fields: a coloured border, kept while the list is open.
+        "transition-colors focus:border-[var(--color-ring)] focus:outline-none",
+        "data-[state=open]:border-[var(--color-ring)]",
         "disabled:cursor-not-allowed disabled:opacity-50",
+        "aria-[invalid=true]:border-danger aria-[invalid=true]:focus:border-danger",
         className,
       )}
       {...props}

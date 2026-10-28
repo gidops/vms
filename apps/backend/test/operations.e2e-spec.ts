@@ -28,7 +28,6 @@ describe('Operations (e2e)', () => {
     ROLES.READ_ADMIN,
     ROLES.VMC,
     ROLES.STAFF,
-    ROLES.GATE,
   ];
   const cardNumber = `RF-${run}`;
   const today = new Date().toISOString().slice(0, 10);

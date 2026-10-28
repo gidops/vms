@@ -36,8 +36,11 @@ export function PhoneInput({
     <div
       dir="ltr"
       className={
-        "flex h-10 items-stretch overflow-hidden rounded-md border " +
-        (invalid ? "border-danger" : "border-border")
+        "flex h-10 items-stretch overflow-hidden rounded-md border transition-colors " +
+        // The box, not the inner field, carries the focus border.
+        (invalid
+          ? "border-danger"
+          : "border-border focus-within:border-[var(--color-ring)]")
       }
     >
       <div className="flex items-center gap-1 border-e border-border bg-surface-muted ps-2 pe-1">
@@ -64,7 +67,7 @@ export function PhoneInput({
         placeholder={placeholder}
         // Digits only — the country code comes from the selector, never the box.
         onChange={(e) => onNumberChange(e.target.value.replace(/\D/g, ""))}
-        className="flex-1 border-0 focus-visible:ring-0"
+        className="flex-1 border-0"
       />
     </div>
   );
