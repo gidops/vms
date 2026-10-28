@@ -45,6 +45,14 @@
       "intro": "{visitorName} ({organization}) a scanné le QR de l'accueil et attend son code.",
       "readOut": "Lisez-lui ce code pour terminer son enregistrement. Il ne sert qu'une fois et expire à {time}.",
       "notHere": "Si personne de ce nom n'est à l'accueil VMC, ignorez cet e-mail."
+    },
+    "passwordReset": {
+      "subject": "Définissez un nouveau mot de passe pour votre compte AATC VMS",
+      "heading": "Réinitialisez votre mot de passe",
+      "intro": "Un administrateur a réinitialisé votre mot de passe AATC VMS. Utilisez le bouton ci-dessous pour en choisir un nouveau.",
+      "cta": "Définir un nouveau mot de passe",
+      "expiry": "Ce lien ne fonctionne qu'une seule fois et expire dans {minutes} minutes. S'il a expiré, demandez à votre administrateur d'en envoyer un nouveau.",
+      "ignore": "Si vous n'attendiez pas cet e-mail, vous pouvez l'ignorer ; votre mot de passe actuel reste valide."
     }
   },
   "sms": {

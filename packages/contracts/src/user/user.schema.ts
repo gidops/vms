@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AuthProvider, Locale } from "../common/enums.js";
+import { PaginationQuery } from "../common/pagination.js";
 import { normalizeE164 } from "../common/phone.js";
 
 export const User = z.object({
@@ -86,3 +87,44 @@ export const UserListItem = z.object({
   createdAt: z.coerce.date(),
 });
 export type UserListItem = z.infer<typeof UserListItem>;
+
+/** Server-side search/filter for the admin users table. */
+export const UserListQuery = PaginationQuery.extend({
+  /** Matches name or email, case-insensitive. */
+  search: z.string().trim().min(1).max(200).optional(),
+  role: z.string().min(1).optional(),
+  status: z.enum(["active", "inactive"]).optional(),
+});
+export type UserListQuery = z.infer<typeof UserListQuery>;
+
+export const UserDetail = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  fullName: z.string().min(1),
+  firstName: z.string().nullable().optional(),
+  lastName: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  authProvider: AuthProvider,
+  isActive: z.boolean(),
+  roles: z.array(z.string()).default([]),
+  lastLoginAt: z.coerce.date().nullable(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+  hostDepartment: z.string().nullable().optional(),
+  hostOffice: z.string().nullable().optional(),
+});
+export type UserDetail = z.infer<typeof UserDetail>;
+
+/** Admin edit of another user's profile; self-service fields stay in UpdateMeInput. */
+export const AdminUpdateUserInput = z.object({
+  firstName: z.string().min(1).optional(),
+  lastName: z.string().min(1).optional(),
+  phone: z.string().max(32).transform(normalizeE164).nullable().optional(),
+});
+export type AdminUpdateUserInput = z.infer<typeof AdminUpdateUserInput>;
+
+/** Deactivating also revokes the user's sessions. */
+export const UpdateUserStatusInput = z.object({
+  isActive: z.boolean(),
+});
+export type UpdateUserStatusInput = z.infer<typeof UpdateUserStatusInput>;

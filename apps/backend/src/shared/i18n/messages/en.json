@@ -45,6 +45,14 @@
       "intro": "{visitorName} ({organization}) scanned the desk QR and is waiting for their code.",
       "readOut": "Read this code to them to finish their registration. It works once and expires at {time}.",
       "notHere": "If nobody by this name is at the VMC desk, ignore this email."
+    },
+    "passwordReset": {
+      "subject": "Set a new password for your AATC VMS account",
+      "heading": "Reset your password",
+      "intro": "An administrator has reset your AATC VMS password. Use the button below to choose a new one.",
+      "cta": "Set a new password",
+      "expiry": "This link works once and expires in {minutes} minutes. If it has expired, ask your administrator to send a new one.",
+      "ignore": "If you did not expect this email, you can ignore it; your current password still works."
     }
   },
   "sms": {

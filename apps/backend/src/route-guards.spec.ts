@@ -112,6 +112,10 @@ const PUBLIC_ROUTES = [
   'POST /auth/signup',
   'GET /auth/signup-available',
   'POST /auth/refresh',
+  // Admin-issued reset links: the emailed single-use token is the credential;
+  // both routes are rate-limited and the completion revokes every session.
+  'POST /auth/reset-password/validate',
+  'POST /auth/reset-password',
 ];
 
 describe('route guards', () => {

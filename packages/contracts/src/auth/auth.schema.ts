@@ -30,3 +30,18 @@ export const ChangePasswordInput = z.object({
   newPassword: z.string().min(8),
 });
 export type ChangePasswordInput = z.infer<typeof ChangePasswordInput>;
+
+/** Checks an emailed reset link before showing the set-password form. */
+export const ValidateResetTokenInput = z.object({
+  token: z.string().min(1),
+});
+export type ValidateResetTokenInput = z.infer<typeof ValidateResetTokenInput>;
+
+/** Completes an admin-issued reset; the token is single-use and short-lived. */
+export const CompletePasswordResetInput = z.object({
+  token: z.string().min(1),
+  newPassword: z.string().min(8),
+});
+export type CompletePasswordResetInput = z.infer<
+  typeof CompletePasswordResetInput
+>;

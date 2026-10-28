@@ -96,4 +96,20 @@ export const authApi = {
   me(): Promise<MeResponse> {
     return api<MeResponse>("/users/me");
   },
+  /** Checks an emailed reset link before showing the set-password form. */
+  validateResetToken(token: string): Promise<{ valid: boolean }> {
+    return api<{ valid: boolean }>("/auth/reset-password/validate", {
+      method: "POST",
+      body: { token },
+      auth: false,
+    });
+  },
+  /** Completes an admin-issued reset; the server revokes every session. */
+  resetPassword(token: string, newPassword: string): Promise<void> {
+    return api<void>("/auth/reset-password", {
+      method: "POST",
+      body: { token, newPassword },
+      auth: false,
+    });
+  },
 };

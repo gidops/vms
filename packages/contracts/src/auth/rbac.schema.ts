@@ -38,6 +38,8 @@ export const PERMISSIONS = {
   USER_CREATE: "user:create",
   USER_UPDATE: "user:update",
   USER_DELETE: "user:delete",
+  /** System Admin only: send a user an expiring password-reset link. */
+  USER_RESET_PASSWORD: "user:reset_password",
   ROLE_READ: "role:read",
   /** Without it, reads are limited to visits the user created or hosts. */
   VISIT_READ: "visit:read",

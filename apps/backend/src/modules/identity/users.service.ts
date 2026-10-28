@@ -8,14 +8,16 @@ import {
   ADDON_ROLES,
   isAddonRole,
   ROLES,
+  type AdminUpdateUserInput,
   type CreateUserInput,
   type HostOption,
   type PublicHostOption,
   type LoginActivityItem,
   type Paginated,
-  type PaginationQuery,
   type UpdateMeInput,
+  type UserDetail,
   type UserListItem,
+  type UserListQuery,
 } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
@@ -89,15 +91,29 @@ export class UsersService {
     return count > 0;
   }
 
-  async list(query: PaginationQuery): Promise<Paginated<UserListItem>> {
+  async list(query: UserListQuery): Promise<Paginated<UserListItem>> {
+    const where: Prisma.UserWhereInput = {};
+    if (query.search) {
+      where.OR = [
+        { fullName: { contains: query.search, mode: 'insensitive' } },
+        { email: { contains: query.search, mode: 'insensitive' } },
+      ];
+    }
+    if (query.role) {
+      where.userRoles = { some: { role: { name: query.role } } };
+    }
+    if (query.status) {
+      where.isActive = query.status === 'active';
+    }
     const [rows, total] = await Promise.all([
       this.prisma.user.findMany({
+        where,
         orderBy: { createdAt: 'desc' },
         skip: (query.page - 1) * query.pageSize,
         take: query.pageSize,
         include: { userRoles: { include: { role: true } } },
       }),
-      this.prisma.user.count(),
+      this.prisma.user.count({ where }),
     ]);
     return {
       items: rows.map((u) => ({
@@ -112,6 +128,33 @@ export class UsersService {
       pageSize: query.pageSize,
       total,
       totalPages: Math.max(1, Math.ceil(total / query.pageSize)),
+    };
+  }
+
+  async getDetail(id: string): Promise<UserDetail> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        userRoles: { include: { role: true } },
+        host: { select: { department: true, office: true } },
+      },
+    });
+    if (!user) throw new NotFoundException('User not found');
+    return {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phone,
+      authProvider: user.authProvider,
+      isActive: user.isActive,
+      roles: user.userRoles.map((ur) => ur.role.name),
+      lastLoginAt: user.lastLoginAt,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      hostDepartment: user.host?.department ?? null,
+      hostOffice: user.host?.office ?? null,
     };
   }
 
@@ -303,6 +346,105 @@ export class UsersService {
     const fresh = await this.findByIdWithAccess(userId);
     if (!fresh) throw new NotFoundException('User not found');
     return fresh;
+  }
+
+  /** Admin edit of another user's profile; names/phone only, roles stay in updateRoles. */
+  async adminUpdate(
+    id: string,
+    input: AdminUpdateUserInput,
+    actorUserId: string,
+  ): Promise<UserDetail> {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const data: Prisma.UserUpdateInput = {};
+    if (input.firstName !== undefined) data.firstName = input.firstName;
+    if (input.lastName !== undefined) data.lastName = input.lastName;
+    if (input.phone !== undefined) data.phone = input.phone;
+    if (input.firstName !== undefined || input.lastName !== undefined) {
+      const first = input.firstName ?? user.firstName ?? '';
+      const last = input.lastName ?? user.lastName ?? '';
+      const full = `${first} ${last}`.trim();
+      if (full) data.fullName = full;
+    }
+    if (Object.keys(data).length === 0) {
+      throw new BadRequestException('Nothing to update');
+    }
+
+    await this.txm.run(async (tx) => {
+      await tx.user.update({ where: { id }, data });
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.UserProfileUpdated,
+        aggregateType: 'User',
+        aggregateId: id,
+        payload: { fields: Object.keys(data) },
+        metadata: { actorUserId },
+      });
+    });
+    return this.getDetail(id);
+  }
+
+  /** Blocked for self and for the last active Super Admin; deactivation revokes sessions. */
+  async setStatus(
+    id: string,
+    isActive: boolean,
+    actorUserId: string,
+  ): Promise<UserDetail> {
+    if (id === actorUserId && !isActive) {
+      throw new BadRequestException('You cannot deactivate your own account');
+    }
+    const target = await this.prisma.user.findUnique({
+      where: { id },
+      include: { userRoles: { include: { role: true } } },
+    });
+    if (!target) throw new NotFoundException('User not found');
+
+    if (!isActive) {
+      const isSuperAdmin = target.userRoles.some(
+        (ur) => ur.role.name === ROLES.SUPER_ADMIN,
+      );
+      if (isSuperAdmin) {
+        const activeSuperAdmins = await this.prisma.userRole.count({
+          where: {
+            role: { name: ROLES.SUPER_ADMIN },
+            user: { isActive: true },
+          },
+        });
+        if (activeSuperAdmins <= 1) {
+          throw new BadRequestException(
+            'Cannot deactivate the last active Super Admin',
+          );
+        }
+      }
+    }
+
+    if (target.isActive !== isActive) {
+      await this.txm.run(async (tx) => {
+        await tx.user.update({ where: { id }, data: { isActive } });
+        if (!isActive) {
+          // Mirror RefreshTokenService.revokeAllForUser inside this transaction:
+          // a deactivated user must not keep refreshing (the JWT itself lapses
+          // within its own short TTL).
+          const now = new Date();
+          await tx.refreshToken.updateMany({
+            where: { userId: id, revokedAt: null },
+            data: { revokedAt: now },
+          });
+          await tx.session.updateMany({
+            where: { userId: id, revokedAt: null },
+            data: { revokedAt: now },
+          });
+        }
+        await this.events.publish(tx, {
+          type: EVENT_TYPES.UserStatusChanged,
+          aggregateType: 'User',
+          aggregateId: id,
+          payload: { isActive },
+          metadata: { actorUserId },
+        });
+      });
+    }
+    return this.getDetail(id);
   }
 
   async setAvatar(userId: string, avatarKey: string): Promise<UserWithAccess> {
