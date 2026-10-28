@@ -829,6 +829,48 @@
       "save": "Save changes",
       "cancel": "Cancel",
       "addonHint": "Add-on for {base}"
+    },
+    "detail": {
+      "title": "User details",
+      "profile": "Profile",
+      "access": "Access",
+      "activity": "Activity",
+      "fullName": "Full name",
+      "email": "Email",
+      "phone": "Phone",
+      "roles": "Roles",
+      "status": "Status",
+      "department": "Department",
+      "office": "Office",
+      "lastLogin": "Last login",
+      "never": "Never",
+      "created": "Created",
+      "updated": "Updated",
+      "editProfile": "Edit profile",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "save": "Save changes",
+      "saved": "Profile updated.",
+      "saveError": "Could not update this user.",
+      "loadError": "Could not load this user.",
+      "sso": "This account signs in through SSO and has no local password."
+    },
+    "reset": {
+      "action": "Send password-reset link",
+      "sent": "Reset link sent. It works once and expires in 15 minutes.",
+      "error": "Could not send the reset link."
+    },
+    "statusAction": {
+      "deactivate": "Deactivate account",
+      "activate": "Activate account",
+      "confirmDeactivateTitle": "Deactivate user",
+      "confirmDeactivateBody": "Deactivate {name}? They are signed out everywhere and cannot sign in until reactivated.",
+      "confirmActivateTitle": "Activate user",
+      "confirmActivateBody": "Activate {name}? They will be able to sign in again.",
+      "error": "Could not change this user's status."
+    },
+    "filters": {
+      "allStatuses": "All statuses"
     }
   },
   "settings": {
@@ -1616,5 +1658,20 @@
     "badge": "RFID {number}",
     "overdue": "Overdue",
     "validUntil": "Valid until {date}"
+  },
+  "resetPassword": {
+    "title": "Set a new password",
+    "body": "Choose a new password for your account.",
+    "invalidTitle": "Link expired",
+    "invalidBody": "This reset link is invalid or has already been used. Ask your administrator to send a new one.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "mismatch": "Passwords do not match.",
+    "minLength": "Use at least 8 characters.",
+    "submit": "Set password",
+    "error": "Could not set the password. The link may have expired — ask your administrator for a new one.",
+    "successTitle": "Password updated",
+    "successBody": "Your password has been changed. Sign in with your new password.",
+    "toLogin": "Go to sign in"
   }
 }

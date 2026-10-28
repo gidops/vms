@@ -16,6 +16,7 @@ import { EventPublisher } from '../events/event-publisher';
 import { TransactionManager } from '../events/transaction.manager';
 import { LocalAuthProvider } from './local-auth.provider';
 import { PasswordService } from './password.service';
+import { hashResetToken } from './reset-token.util';
 import { RefreshTokenService } from './refresh.service';
 import { type AccessTokenClaims, TokenService } from './token.service';
 
@@ -168,6 +169,69 @@ export class AuthService {
     await this.refreshTokens.revokeAllForUser(userId);
   }
 
+  /** Lets the reset page show "link expired" before asking for a password. */
+  async validateResetToken(rawToken: string): Promise<boolean> {
+    const row = await this.prisma.passwordResetToken.findUnique({
+      where: { tokenHash: hashResetToken(rawToken) },
+      include: { user: { select: { isActive: true } } },
+    });
+    return Boolean(
+      row && !row.usedAt && row.expiresAt > new Date() && row.user.isActive,
+    );
+  }
+
+  /** Public completion of an admin-issued reset; mirrors changePassword minus the current-password check. */
+  async completePasswordReset(
+    rawToken: string,
+    newPassword: string,
+  ): Promise<void> {
+    const row = await this.prisma.passwordResetToken.findUnique({
+      where: { tokenHash: hashResetToken(rawToken) },
+      include: { user: { select: { isActive: true } } },
+    });
+    const valid =
+      row && !row.usedAt && row.expiresAt > new Date() && row.user.isActive;
+    if (!valid) return this.rejectReset(row?.userId);
+    const passwordHash = await this.passwords.hash(newPassword);
+    const claimed = await this.txm.run(async (tx) => {
+      // The used-check is part of the update, so of two concurrent submits of
+      // the same link only one claims it; the loser is rejected below.
+      const { count } = await tx.passwordResetToken.updateMany({
+        where: { id: row.id, usedAt: null },
+        data: { usedAt: new Date() },
+      });
+      if (count === 0) return false;
+      await tx.user.update({
+        where: { id: row.userId },
+        data: { passwordHash },
+      });
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.PasswordResetCompleted,
+        aggregateType: 'User',
+        aggregateId: row.userId,
+        payload: {},
+        metadata: { actorUserId: row.userId },
+      });
+      return true;
+    });
+    if (!claimed) return this.rejectReset(row.userId);
+    // A reset implies the old credential may be compromised: end every session.
+    await this.refreshTokens.revokeAllForUser(row.userId);
+  }
+
+  /** Audited directly so guessing/replaying links is visible in the trail. */
+  private async rejectReset(userId: string | undefined): Promise<never> {
+    await this.security.record({
+      action: EVENT_TYPES.PasswordResetRejected,
+      entityType: 'User',
+      entityId: userId,
+      level: 'Warning',
+    });
+    throw new UnauthorizedException(
+      'This reset link is invalid or has expired',
+    );
+  }
+
   async switchRole(
     userId: string,
     sessionId: string | undefined,
@@ -218,6 +282,10 @@ export class AuthService {
       const issued = await this.refreshTokens.issueForNewSession(tx, user.id, {
         ...ctx,
         activeRole,
+      });
+      await tx.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() },
       });
       await this.events.publish(tx, {
         type: EVENT_TYPES.UserLoggedIn,

@@ -78,6 +78,183 @@ describe('UsersService — add-on roles', () => {
   });
 });
 
+describe('UsersService.setStatus', () => {
+  let prisma: any;
+  let tx: any;
+  let txm: any;
+  let publish: jest.Mock;
+  let svc: UsersService;
+
+  const target = (roles: string[], isActive = true) => ({
+    id: 'u2',
+    isActive,
+    userRoles: roles.map((name) => ({ role: { name } })),
+  });
+
+  beforeEach(() => {
+    tx = {
+      user: { update: jest.fn() },
+      refreshToken: { updateMany: jest.fn() },
+      session: { updateMany: jest.fn() },
+    };
+    prisma = {
+      user: { findUnique: jest.fn() },
+      userRole: { count: jest.fn() },
+    };
+    txm = { run: jest.fn(async (cb: (t: unknown) => unknown) => cb(tx)) };
+    publish = jest.fn();
+    svc = new UsersService(prisma, {} as never, txm, { publish } as never);
+    jest.spyOn(svc, 'getDetail').mockResolvedValue({ id: 'u2' } as never);
+  });
+
+  it('blocks deactivating your own account', async () => {
+    await expect(svc.setStatus('u2', false, 'u2')).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    expect(txm.run).not.toHaveBeenCalled();
+  });
+
+  it('blocks deactivating the last active Super Admin', async () => {
+    prisma.user.findUnique.mockResolvedValue(target(['SUPER_ADMIN']));
+    prisma.userRole.count.mockResolvedValue(1);
+    await expect(svc.setStatus('u2', false, 'admin1')).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+  });
+
+  it('deactivation revokes sessions and publishes user.status_changed', async () => {
+    prisma.user.findUnique.mockResolvedValue(target(['STAFF']));
+    await svc.setStatus('u2', false, 'admin1');
+    expect(tx.user.update).toHaveBeenCalledWith({
+      where: { id: 'u2' },
+      data: { isActive: false },
+    });
+    expect(tx.refreshToken.updateMany).toHaveBeenCalled();
+    expect(tx.session.updateMany).toHaveBeenCalled();
+    expect(publish).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({
+        type: 'user.status_changed',
+        aggregateId: 'u2',
+        payload: { isActive: false },
+        metadata: { actorUserId: 'admin1' },
+      }),
+    );
+  });
+
+  it('reactivation keeps sessions untouched and is a no-op when already active', async () => {
+    prisma.user.findUnique.mockResolvedValue(target(['STAFF'], false));
+    await svc.setStatus('u2', true, 'admin1');
+    expect(tx.refreshToken.updateMany).not.toHaveBeenCalled();
+    expect(tx.session.updateMany).not.toHaveBeenCalled();
+
+    prisma.user.findUnique.mockResolvedValue(target(['STAFF'], true));
+    txm.run.mockClear();
+    await svc.setStatus('u2', true, 'admin1');
+    expect(txm.run).not.toHaveBeenCalled();
+  });
+});
+
+describe('UsersService.adminUpdate', () => {
+  let prisma: any;
+  let tx: any;
+  let publish: jest.Mock;
+  let svc: UsersService;
+
+  beforeEach(() => {
+    tx = { user: { update: jest.fn() } };
+    prisma = { user: { findUnique: jest.fn() } };
+    const txm = { run: jest.fn(async (cb: (t: unknown) => unknown) => cb(tx)) };
+    publish = jest.fn();
+    svc = new UsersService(
+      prisma,
+      {} as never,
+      txm as never,
+      {
+        publish,
+      } as never,
+    );
+    jest.spyOn(svc, 'getDetail').mockResolvedValue({ id: 'u2' } as never);
+  });
+
+  it('keeps the surname of a full-name-only account when only the first name changes', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u2',
+      fullName: 'Insights ins-gate',
+      firstName: null,
+      lastName: null,
+    });
+    await svc.adminUpdate('u2', { firstName: 'Gate' }, 'admin1');
+    expect(tx.user.update).toHaveBeenCalledWith({
+      where: { id: 'u2' },
+      data: {
+        firstName: 'Gate',
+        lastName: 'ins-gate',
+        fullName: 'Gate ins-gate',
+      },
+    });
+  });
+
+  it('updates phone alone without touching names', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u2',
+      fullName: 'Ada Lovelace',
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+    });
+    await svc.adminUpdate('u2', { phone: '+2348031234567' }, 'admin1');
+    expect(tx.user.update).toHaveBeenCalledWith({
+      where: { id: 'u2' },
+      data: { phone: '+2348031234567' },
+    });
+    expect(publish).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({ payload: { fields: ['phone'] } }),
+    );
+  });
+
+  it('rejects an empty update', async () => {
+    prisma.user.findUnique.mockResolvedValue({ id: 'u2', fullName: 'A' });
+    await expect(svc.adminUpdate('u2', {}, 'admin1')).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+  });
+});
+
+describe('UsersService.list filters', () => {
+  it('builds the where clause from search, role and status', async () => {
+    const prisma = {
+      user: {
+        findMany: jest.fn().mockResolvedValue([]),
+        count: jest.fn().mockResolvedValue(0),
+      },
+    };
+    const svc = new UsersService(
+      prisma as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
+    await svc.list({
+      page: 1,
+      pageSize: 10,
+      sortDir: 'desc',
+      search: 'gideon',
+      role: 'STAFF',
+      status: 'inactive',
+    });
+    const where = prisma.user.findMany.mock.calls[0][0].where;
+    expect(where.OR).toEqual([
+      { fullName: { contains: 'gideon', mode: 'insensitive' } },
+      { email: { contains: 'gideon', mode: 'insensitive' } },
+    ]);
+    expect(where.userRoles).toEqual({ some: { role: { name: 'STAFF' } } });
+    expect(where.isActive).toBe(false);
+    // The count must apply the same filter or totals lie.
+    expect(prisma.user.count).toHaveBeenCalledWith({ where });
+  });
+});
+
 describe('UsersService.setAvatar', () => {
   it('saves the key and publishes a profile-updated event in one transaction', async () => {
     const tx = { user: { update: jest.fn() } };

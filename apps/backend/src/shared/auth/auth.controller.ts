@@ -1,15 +1,28 @@
-import { Body, Controller, Get, HttpCode, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ChangePasswordInput,
+  CompletePasswordResetInput,
   LoginInput,
   RefreshInput,
   SignupInput,
   SwitchRoleInput,
+  ValidateResetTokenInput,
 } from '@vms/contracts';
 import type { Request } from 'express';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import { RateLimit, RateLimitGuard } from '../rate-limit/rate-limit.guard';
 import { CurrentUser, Public, type AuthUser } from './auth.decorators';
 import { AuthService } from './auth.service';
+
+const MINUTE = 60_000;
 
 @Controller('auth')
 export class AuthController {
@@ -68,6 +81,37 @@ export class AuthController {
       body.currentPassword,
       body.newPassword,
     );
+  }
+
+  /** Lets the reset page distinguish a live link from an expired one. */
+  @Public()
+  @UseGuards(RateLimitGuard)
+  @RateLimit({ name: 'reset-validate', limit: 30, windowMs: MINUTE, by: 'ip' })
+  @Post('reset-password/validate')
+  @HttpCode(200)
+  async validateResetToken(
+    @Body(new ZodValidationPipe(ValidateResetTokenInput))
+    body: ValidateResetTokenInput,
+  ) {
+    return { valid: await this.auth.validateResetToken(body.token) };
+  }
+
+  /** Completes an admin-issued reset; rate-limited because the token is the only credential. */
+  @Public()
+  @UseGuards(RateLimitGuard)
+  @RateLimit({
+    name: 'reset-complete',
+    limit: 10,
+    windowMs: 15 * MINUTE,
+    by: 'ip',
+  })
+  @Post('reset-password')
+  @HttpCode(204)
+  async resetPassword(
+    @Body(new ZodValidationPipe(CompletePasswordResetInput))
+    body: CompletePasswordResetInput,
+  ) {
+    await this.auth.completePasswordReset(body.token, body.newPassword);
   }
 
   @Public()

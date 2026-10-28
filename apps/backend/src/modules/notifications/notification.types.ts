@@ -7,6 +7,8 @@ export const NOTIFICATION_TEMPLATES = {
   VISIT_THANK_YOU: 'visit.thank_you',
   /** The 6-digit code reception reads to a self-registering visitor. */
   DESK_QR_CODE: 'desk_qr.code',
+  /** Admin-issued set-password link; single-use, expires in minutes. */
+  PASSWORD_RESET: 'user.password_reset',
 } as const;
 
 export type NotificationTemplateKey =
@@ -45,6 +47,10 @@ export const TEMPLATE_META: Record<
   [NOTIFICATION_TEMPLATES.DESK_QR_CODE]: {
     emailFile: 'desk-qr-code',
     ns: 'deskQrCode',
+  },
+  [NOTIFICATION_TEMPLATES.PASSWORD_RESET]: {
+    emailFile: 'password-reset',
+    ns: 'passwordReset',
   },
 };
 

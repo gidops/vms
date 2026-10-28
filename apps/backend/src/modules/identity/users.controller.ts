@@ -13,13 +13,15 @@ import {
   Query,
 } from '@nestjs/common';
 import {
+  AdminUpdateUserInput,
   CreateUserInput,
-  PaginationQuery,
   PERMISSIONS,
   PresignAvatarInput,
   UpdateAvatarInput,
   UpdateMeInput,
   UpdateUserRolesInput,
+  UpdateUserStatusInput,
+  UserListQuery,
 } from '@vms/contracts';
 import {
   CurrentUser,
@@ -28,12 +30,14 @@ import {
 } from '../../shared/auth/auth.decorators';
 import { ZodValidationPipe } from '../../shared/common/pipes/zod-validation.pipe';
 import { S3Service } from '../../shared/storage/s3.service';
+import { PasswordResetService } from './password-reset.service';
 import { UsersService, type UserWithAccess } from './users.service';
 
 @Controller()
 export class UsersController {
   constructor(
     private readonly users: UsersService,
+    private readonly resets: PasswordResetService,
     private readonly s3: S3Service,
   ) {}
 
@@ -78,8 +82,15 @@ export class UsersController {
 
   @Get('users')
   @RequirePermissions(PERMISSIONS.USER_READ)
-  list(@Query(new ZodValidationPipe(PaginationQuery)) query: PaginationQuery) {
+  list(@Query(new ZodValidationPipe(UserListQuery)) query: UserListQuery) {
     return this.users.list(query);
+  }
+
+  // Declared after the users/me routes so 'me' never reaches the :id matcher.
+  @Get('users/:id')
+  @RequirePermissions(PERMISSIONS.USER_READ)
+  detail(@Param('id', ParseUUIDPipe) id: string) {
+    return this.users.getDetail(id);
   }
 
   @Post('users')
@@ -106,6 +117,39 @@ export class UsersController {
       principal.userId,
     );
     return { id: user.id, email: user.email, roles: user.roles };
+  }
+
+  @Patch('users/:id')
+  @RequirePermissions(PERMISSIONS.USER_UPDATE)
+  adminUpdate(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(AdminUpdateUserInput))
+    input: AdminUpdateUserInput,
+    @CurrentUser() principal: AuthUser,
+  ) {
+    return this.users.adminUpdate(id, input, principal.userId);
+  }
+
+  @Patch('users/:id/status')
+  @RequirePermissions(PERMISSIONS.USER_UPDATE)
+  setStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(UpdateUserStatusInput))
+    input: UpdateUserStatusInput,
+    @CurrentUser() principal: AuthUser,
+  ) {
+    return this.users.setStatus(id, input.isActive, principal.userId);
+  }
+
+  /** Emails the user a single-use, short-lived set-password link. */
+  @Post('users/:id/password-reset')
+  @HttpCode(202)
+  @RequirePermissions(PERMISSIONS.USER_RESET_PASSWORD)
+  requestPasswordReset(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() principal: AuthUser,
+  ) {
+    return this.resets.requestReset(id, principal.userId);
   }
 
   @Delete('users/:id')

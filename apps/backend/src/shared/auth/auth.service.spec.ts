@@ -182,6 +182,129 @@ describe('AuthService', () => {
     expect(refreshTokens.revokeAllForUser).not.toHaveBeenCalled();
   });
 
+  describe('password reset completion', () => {
+    const tokenRow = (over: Record<string, unknown> = {}) => ({
+      id: 'prt1',
+      userId: 'u1',
+      usedAt: null,
+      expiresAt: new Date(Date.now() + 60_000),
+      user: { isActive: true },
+      ...over,
+    });
+
+    beforeEach(() => {
+      prisma.passwordResetToken = { findUnique: jest.fn() };
+    });
+
+    it('completePasswordReset hashes, marks the token used, and revokes all sessions', async () => {
+      const row = tokenRow();
+      prisma.passwordResetToken.findUnique.mockResolvedValue(row);
+      passwords.hash.mockResolvedValue('newhash');
+      const tx = {
+        user: { update: jest.fn() },
+        passwordResetToken: {
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+        },
+      };
+      txm.run = jest.fn(async (cb: (t: unknown) => unknown) => cb(tx));
+
+      await svc.completePasswordReset('raw-token', 'new-password');
+
+      expect(tx.passwordResetToken.updateMany).toHaveBeenCalledWith({
+        where: { id: 'prt1', usedAt: null },
+        data: { usedAt: expect.any(Date) },
+      });
+      expect(tx.user.update).toHaveBeenCalledWith({
+        where: { id: 'u1' },
+        data: { passwordHash: 'newhash' },
+      });
+      expect(events.publish).toHaveBeenCalledWith(
+        tx,
+        expect.objectContaining({
+          type: EVENT_TYPES.PasswordResetCompleted,
+          aggregateId: 'u1',
+        }),
+      );
+      expect(refreshTokens.revokeAllForUser).toHaveBeenCalledWith('u1');
+    });
+
+    it('rejects the loser of two concurrent submits of the same link', async () => {
+      prisma.passwordResetToken.findUnique.mockResolvedValue(tokenRow());
+      passwords.hash.mockResolvedValue('newhash');
+      // Another request claimed the token between the read and the update.
+      const tx = {
+        user: { update: jest.fn() },
+        passwordResetToken: {
+          updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+        },
+      };
+      txm.run = jest.fn(async (cb: (t: unknown) => unknown) => cb(tx));
+
+      await expect(
+        svc.completePasswordReset('raw-token', 'new-password'),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+      expect(tx.user.update).not.toHaveBeenCalled();
+      expect(events.publish).not.toHaveBeenCalled();
+      expect(refreshTokens.revokeAllForUser).not.toHaveBeenCalled();
+      expect(security.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: EVENT_TYPES.PasswordResetRejected,
+          entityId: 'u1',
+        }),
+      );
+    });
+
+    it('rejects an unknown token and records auth.password_reset_rejected', async () => {
+      prisma.passwordResetToken.findUnique.mockResolvedValue(null);
+      await expect(
+        svc.completePasswordReset('bogus', 'new-password'),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+      expect(security.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: EVENT_TYPES.PasswordResetRejected,
+        }),
+      );
+      expect(refreshTokens.revokeAllForUser).not.toHaveBeenCalled();
+    });
+
+    it('rejects an expired token', async () => {
+      prisma.passwordResetToken.findUnique.mockResolvedValue(
+        tokenRow({ expiresAt: new Date(Date.now() - 1) }),
+      );
+      await expect(
+        svc.completePasswordReset('raw-token', 'new-password'),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+    });
+
+    it('rejects an already-used token', async () => {
+      prisma.passwordResetToken.findUnique.mockResolvedValue(
+        tokenRow({ usedAt: new Date() }),
+      );
+      await expect(
+        svc.completePasswordReset('raw-token', 'new-password'),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+    });
+
+    it('rejects a token for a deactivated user', async () => {
+      prisma.passwordResetToken.findUnique.mockResolvedValue(
+        tokenRow({ user: { isActive: false } }),
+      );
+      await expect(
+        svc.completePasswordReset('raw-token', 'new-password'),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+    });
+
+    it('validateResetToken answers live vs dead links without side effects', async () => {
+      prisma.passwordResetToken.findUnique.mockResolvedValue(tokenRow());
+      await expect(svc.validateResetToken('raw-token')).resolves.toBe(true);
+      prisma.passwordResetToken.findUnique.mockResolvedValue(
+        tokenRow({ usedAt: new Date() }),
+      );
+      await expect(svc.validateResetToken('raw-token')).resolves.toBe(false);
+      expect(security.record).not.toHaveBeenCalled();
+    });
+  });
+
   it('switchRole rejects a role the user does not hold', async () => {
     users.findByIdWithAccess.mockResolvedValue(user);
     await expect(

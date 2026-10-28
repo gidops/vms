@@ -70,6 +70,12 @@ export const EVENT_TYPES = {
   UserRolesUpdated: 'user.roles_updated',
   UserProfileUpdated: 'user.profile_updated',
   UserPasswordChanged: 'user.password_changed',
+  /** An admin activated or deactivated the account. */
+  UserStatusChanged: 'user.status_changed',
+  /** An admin sent the user an expiring password-reset link. */
+  PasswordResetRequested: 'user.password_reset_requested',
+  /** The user set a new password through the emailed link. */
+  PasswordResetCompleted: 'user.password_reset_completed',
   UserDeleted: 'user.deleted',
   // No business transaction to ride the outbox; recorded via SecurityAuditService.
   LoginFailed: 'auth.login_failed',
@@ -77,6 +83,8 @@ export const EVENT_TYPES = {
   Logout: 'auth.logout',
   TokenRefreshed: 'auth.token_refreshed',
   RefreshReuseDetected: 'auth.refresh_reuse_detected',
+  /** Invalid, expired or re-used reset link presented. */
+  PasswordResetRejected: 'auth.password_reset_rejected',
   RoleSwitched: 'auth.role_switched',
   PermissionDenied: 'authz.permission_denied',
 } as const;

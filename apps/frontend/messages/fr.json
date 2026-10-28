@@ -829,6 +829,48 @@
       "save": "Enregistrer",
       "cancel": "Annuler",
       "addonHint": "Complément du rôle {base}"
+    },
+    "detail": {
+      "title": "Détails de l'utilisateur",
+      "profile": "Profil",
+      "access": "Accès",
+      "activity": "Activité",
+      "fullName": "Nom complet",
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "roles": "Rôles",
+      "status": "Statut",
+      "department": "Département",
+      "office": "Bureau",
+      "lastLogin": "Dernière connexion",
+      "never": "Jamais",
+      "created": "Créé",
+      "updated": "Mis à jour",
+      "editProfile": "Modifier le profil",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "save": "Enregistrer les modifications",
+      "saved": "Profil mis à jour.",
+      "saveError": "Impossible de mettre à jour cet utilisateur.",
+      "loadError": "Impossible de charger cet utilisateur.",
+      "sso": "Ce compte se connecte via SSO et n'a pas de mot de passe local."
+    },
+    "reset": {
+      "action": "Envoyer le lien de réinitialisation",
+      "sent": "Lien envoyé. Il fonctionne une seule fois et expire dans 15 minutes.",
+      "error": "Impossible d'envoyer le lien de réinitialisation."
+    },
+    "statusAction": {
+      "deactivate": "Désactiver le compte",
+      "activate": "Activer le compte",
+      "confirmDeactivateTitle": "Désactiver l'utilisateur",
+      "confirmDeactivateBody": "Désactiver {name} ? Il sera déconnecté partout et ne pourra plus se connecter jusqu'à sa réactivation.",
+      "confirmActivateTitle": "Activer l'utilisateur",
+      "confirmActivateBody": "Activer {name} ? Il pourra de nouveau se connecter.",
+      "error": "Impossible de modifier le statut de cet utilisateur."
+    },
+    "filters": {
+      "allStatuses": "Tous les statuts"
     }
   },
   "settings": {
@@ -1616,5 +1658,20 @@
     "badge": "RFID {number}",
     "overdue": "En retard",
     "validUntil": "Valide jusqu'au {date}"
+  },
+  "resetPassword": {
+    "title": "Définir un nouveau mot de passe",
+    "body": "Choisissez un nouveau mot de passe pour votre compte.",
+    "invalidTitle": "Lien expiré",
+    "invalidBody": "Ce lien de réinitialisation est invalide ou a déjà été utilisé. Demandez à votre administrateur d'en envoyer un nouveau.",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "mismatch": "Les mots de passe ne correspondent pas.",
+    "minLength": "Utilisez au moins 8 caractères.",
+    "submit": "Définir le mot de passe",
+    "error": "Impossible de définir le mot de passe. Le lien a peut-être expiré — demandez-en un nouveau à votre administrateur.",
+    "successTitle": "Mot de passe mis à jour",
+    "successBody": "Votre mot de passe a été modifié. Connectez-vous avec votre nouveau mot de passe.",
+    "toLogin": "Aller à la connexion"
   }
 }

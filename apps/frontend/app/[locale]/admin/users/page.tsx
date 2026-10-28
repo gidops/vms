@@ -43,6 +43,8 @@ import type { UserListItem } from "@/data/users/users.api";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
 import { roleLabel } from "@/shared/auth/roleLabels";
+import { useDebounced } from "@/shared/useDebounced";
+import { UserDetailDrawer } from "../_components/users/UserDetailDrawer";
 import { UserFormDrawer } from "../_components/users/UserFormDrawer";
 
 const ALL = "all";
@@ -59,33 +61,33 @@ function UsersTab() {
   const canCreate = hasPermission(PERMISSIONS.USER_CREATE);
   const canUpdate = hasPermission(PERMISSIONS.USER_UPDATE);
   const canDelete = hasPermission(PERMISSIONS.USER_DELETE);
+  const canResetPassword = hasPermission(PERMISSIONS.USER_RESET_PASSWORD);
   const hasActions = canUpdate || canDelete;
-
-  const { data, isLoading } = useUsers();
-  const { data: roles = [] } = useRoles();
-  const createUser = useCreateUser();
-  const updateRoles = useUpdateUserRoles();
 
   const [search, setSearch] = React.useState("");
   const [role, setRole] = React.useState(ALL);
+  const [status, setStatus] = React.useState(ALL);
   const [page, setPage] = React.useState(1);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<UserListItem | null>(null);
   const [deleting, setDeleting] = React.useState<UserListItem | null>(null);
+  const [viewingId, setViewingId] = React.useState<string | null>(null);
 
-  // The users API returns a single page (≤100), so filter + page client-side.
-  const filtered = React.useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return (data?.items ?? []).filter(
-      (u) =>
-        (role === ALL || u.roles.includes(role)) &&
-        (!term ||
-          u.fullName.toLowerCase().includes(term) ||
-          u.email.toLowerCase().includes(term)),
-    );
-  }, [data, search, role]);
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // Search, filters and paging run server-side; debounce keeps typing cheap.
+  const debouncedSearch = useDebounced(search.trim());
+  const { data, isLoading } = useUsers({
+    page,
+    pageSize: PAGE_SIZE,
+    search: debouncedSearch || undefined,
+    role: role === ALL ? undefined : role,
+    status: status === ALL ? undefined : (status as "active" | "inactive"),
+  });
+  const { data: roles = [] } = useRoles();
+  const createUser = useCreateUser();
+  const updateRoles = useUpdateUserRoles();
+
+  const rows = data?.items ?? [];
+  const totalPages = data?.totalPages ?? 1;
 
   const onCreate = (input: Parameters<typeof createUser.mutate>[0]) =>
     createUser.mutate(input, { onSuccess: () => setCreateOpen(false) });
@@ -130,6 +132,22 @@ function UsersTab() {
               ))}
             </SelectContent>
           </Select>
+          <Select
+            value={status}
+            onValueChange={(v) => {
+              setStatus(v);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>{t("filters.allStatuses")}</SelectItem>
+              <SelectItem value="active">{t("active")}</SelectItem>
+              <SelectItem value="inactive">{t("inactive")}</SelectItem>
+            </SelectContent>
+          </Select>
         </FilterBar>
       }
     >
@@ -151,7 +169,7 @@ function UsersTab() {
           <div className="flex justify-center py-16">
             <Spinner />
           </div>
-        ) : filtered.length === 0 ? (
+        ) : rows.length === 0 ? (
           <EmptyState icon={Users} title={t("empty")} />
         ) : (
           <RecordTable
@@ -180,7 +198,11 @@ function UsersTab() {
               </TableHeader>
               <TableBody striped>
                 {rows.map((u) => (
-                  <TableRow key={u.id}>
+                  <TableRow
+                    key={u.id}
+                    className="cursor-pointer"
+                    onClick={() => setViewingId(u.id)}
+                  >
                     <TableCell>
                       <span className="flex flex-col">
                         <span className="font-medium text-fg">
@@ -212,7 +234,7 @@ function UsersTab() {
                       })}
                     </TableCell>
                     {hasActions ? (
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <span className="flex items-center gap-2">
                           {canUpdate ? (
                             <Button
@@ -283,6 +305,13 @@ function UsersTab() {
         user={deleting}
         onOpenChange={(open) => !open && setDeleting(null)}
         onDeleted={() => setDeleting(null)}
+      />
+      <UserDetailDrawer
+        userId={viewingId}
+        onClose={() => setViewingId(null)}
+        canUpdate={canUpdate}
+        canResetPassword={canResetPassword}
+        selfId={user?.id}
       />
     </TopNavShell>
   );

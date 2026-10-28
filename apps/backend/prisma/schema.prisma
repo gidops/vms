@@ -137,13 +137,16 @@ model User {
   // When the user last opened Requests & Alerts. An inbox item is "unread" for
   // them if its updatedAt is newer than this; opening the page bumps it to now.
   lastInboxSeenAt   DateTime?
+  // Set on every successful login (session start), shown on the admin user detail.
+  lastLoginAt       DateTime?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
-  userRoles     UserRole[]
-  sessions      Session[]
-  refreshTokens RefreshToken[]
-  auditLogs     AuditLog[]
+  userRoles           UserRole[]
+  sessions            Session[]
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  auditLogs           AuditLog[]
   host          Host?
   createdVisits Visit[]        @relation("VisitCreatedBy")
   authoredNotes Note[]
@@ -208,6 +211,24 @@ model Session {
 
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   refreshTokens RefreshToken[]
+
+  @@index([userId])
+}
+
+/// Admin-issued password-reset link. The raw token travels only inside the
+/// emailed link; at rest it is kept as a sha256 hash. Single-use, short expiry,
+/// and a new request supersedes any outstanding one for the same user.
+model PasswordResetToken {
+  id          String    @id @default(uuid())
+  userId      String
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  /// Admin who triggered the reset (plain id, no FK: admins may be deleted later).
+  createdById String?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
