@@ -39,13 +39,6 @@
       "ratingPrompt": "We would love your feedback. Please take a moment to rate your visit:",
       "ratingButton": "Rate your visit"
     },
-    "deskQrCode": {
-      "subject": "Desk code for {visitorName}",
-      "heading": "A visitor is registering at the desk",
-      "intro": "{visitorName} ({organization}) scanned the desk QR and is waiting for their code.",
-      "readOut": "Read this code to them to finish their registration. It works once and expires at {time}.",
-      "notHere": "If nobody by this name is at the VMC desk, ignore this email."
-    },
     "passwordReset": {
       "subject": "Set a new password for your AATC VMS account",
       "heading": "Reset your password",
@@ -110,12 +103,7 @@
       "badV1Token": "That is not a V1 QR link or token.",
       "notActive": "This QR code isn't active. Please register at the VMC desk.",
       "formInvalid": "This form is not valid. Please scan the QR code again.",
-      "formExpired": "This form has expired. Please scan the QR code again.",
-      "codeNotSent": "We couldn't send a code to reception. Please register at the VMC desk.",
-      "registrationNotFound": "This registration was not found. Please scan the QR code again.",
-      "codeExpired": "This code has expired. Please scan the QR code again.",
-      "codeWrong": "That code doesn't match. Check it with reception and try again.",
-      "tooManyTries": "Too many wrong codes. Please scan the QR code again."
+      "formExpired": "This form has expired. Please scan the QR code again."
     },
     "visitor": {
       "notFound": "Visitor not found"

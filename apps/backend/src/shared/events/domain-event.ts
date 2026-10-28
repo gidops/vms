@@ -41,16 +41,12 @@ export const EVENT_TYPES = {
   DeskQrCreated: 'desk_qr.created',
   /** A printed legacy issuer QR was adopted as the desk QR. */
   DeskQrImported: 'desk_qr.imported',
-  DeskQrUpdated: 'desk_qr.updated',
   /** The printed poster stops working. */
   DeskQrRotated: 'desk_qr.rotated',
   DeskQrDisabled: 'desk_qr.disabled',
   DeskQrEnabled: 'desk_qr.enabled',
-  DeskQrCodeSent: 'desk_qr.code_sent',
-  // Security events (no business transaction), recorded via SecurityAuditService.
+  // Security event (no business transaction), recorded via SecurityAuditService.
   DeskQrHoneypotTriggered: 'desk_qr.honeypot_triggered',
-  DeskQrCodeRejected: 'desk_qr.code_rejected',
-  DeskQrRegistrationLocked: 'desk_qr.registration_locked',
   ConsentWithdrawn: 'consent.withdrawn',
   ConsentGranted: 'consent.granted',
   ConsentExported: 'consent.exported',

@@ -107,7 +107,6 @@ const PUBLIC_ROUTES = [
   'GET /public/desk-qr/:token',
   'GET /public/desk-qr/:token/hosts',
   'POST /public/desk-qr/:token/registrations',
-  'POST /public/desk-qr/:token/registrations/:id/verify',
   'POST /auth/login',
   'POST /auth/signup',
   'GET /auth/signup-available',

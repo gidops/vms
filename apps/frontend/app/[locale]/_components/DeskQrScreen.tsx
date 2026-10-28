@@ -15,8 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
   EmptyState,
-  Input,
-  Label,
   Spinner,
   cn,
 } from "@vms/ui";
@@ -29,7 +27,6 @@ import {
   useDisableDeskQr,
   useEnableDeskQr,
   useRotateDeskQr,
-  useUpdateDeskQr,
   useDeskQrImage,
   useDownloadDeskQr,
 } from "@/data/desk-qr/queries";
@@ -37,99 +34,7 @@ import { useAuth } from "@/shared/auth/AuthContext";
 import { formatWatDateTime, formatWatTime } from "@/shared/wat";
 import { DeskQrPoster } from "./DeskQrPoster";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 type Confirm = "rotate" | "disable" | null;
-
-/** Where verification codes go: asked when creating, and from "Change". */
-function CodeEmailDialog({
-  open,
-  initial,
-  title,
-  submitLabel,
-  pending,
-  error,
-  onSubmit,
-  onOpenChange,
-}: {
-  open: boolean;
-  initial: string;
-  title: string;
-  submitLabel: string;
-  pending: boolean;
-  error: string | null;
-  onSubmit: (email: string) => void;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const t = useTranslations("deskQr");
-  const [email, setEmail] = React.useState(initial);
-  const [touched, setTouched] = React.useState(false);
-  const invalid = touched && !EMAIL_RE.test(email.trim());
-  return (
-    <Dialog open={open} onOpenChange={(o) => !pending && onOpenChange(o)}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{t("codeEmail.help")}</DialogDescription>
-        </DialogHeader>
-        <form
-          noValidate
-          className="flex flex-col gap-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setTouched(true);
-            if (EMAIL_RE.test(email.trim())) onSubmit(email.trim());
-          }}
-        >
-          {error ? (
-            <Alert intent="danger">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          ) : null}
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="desk-qr-code-email">{t("codeEmail.label")}</Label>
-            <Input
-              id="desk-qr-code-email"
-              type="email"
-              value={email}
-              invalid={invalid}
-              aria-describedby={
-                invalid ? "desk-qr-code-email-error" : undefined
-              }
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            {invalid ? (
-              <span
-                id="desk-qr-code-email-error"
-                className="text-xs text-danger"
-              >
-                {t("codeEmail.invalid")}
-              </span>
-            ) : null}
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              intent="neutral"
-              tone="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={pending}
-            >
-              {t("cancel")}
-            </Button>
-            <Button
-              type="submit"
-              disabled={pending}
-              aria-busy={pending || undefined}
-            >
-              {submitLabel}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function ConfirmDialog({
   kind,
@@ -213,13 +118,9 @@ export function DeskQrScreen({
   const image = useDeskQrImage(view?.url);
   const download = useDownloadDeskQr();
   const create = useCreateDeskQr();
-  const update = useUpdateDeskQr();
   const rotate = useRotateDeskQr();
   const disable = useDisableDeskQr();
   const enable = useEnableDeskQr();
-  const [emailDialog, setEmailDialog] = React.useState<
-    "create" | "change" | null
-  >(null);
   const [confirm, setConfirm] = React.useState<Confirm>(null);
   const [copied, setCopied] = React.useState(false);
 
@@ -303,36 +204,30 @@ export function DeskQrScreen({
     return (
       <div className="flex flex-col gap-6">
         {header()}
+        {create.isError ? (
+          <Alert intent="danger">
+            <AlertDescription>
+              {errorText(create.error, t("errors.create"))}
+            </AlertDescription>
+          </Alert>
+        ) : null}
         <EmptyState
           icon={QrCode}
           title={t("empty.title")}
           description={canManage ? t("empty.body") : t("empty.readOnly")}
           action={
             canManage ? (
-              <Button intent="primary" onClick={() => setEmailDialog("create")}>
+              <Button
+                intent="primary"
+                onClick={() => create.mutate(undefined)}
+                disabled={create.isPending}
+                aria-busy={create.isPending || undefined}
+              >
                 {t("empty.create")}
               </Button>
             ) : null
           }
         />
-        {emailDialog === "create" ? (
-          <CodeEmailDialog
-            open
-            initial=""
-            title={t("codeEmail.createTitle")}
-            submitLabel={t("empty.create")}
-            pending={create.isPending}
-            error={
-              create.isError
-                ? errorText(create.error, t("errors.create"))
-                : null
-            }
-            onSubmit={(email) =>
-              create.mutate(email, { onSuccess: () => setEmailDialog(null) })
-            }
-            onOpenChange={(o) => !o && setEmailDialog(null)}
-          />
-        ) : null}
       </div>
     );
   }
@@ -494,46 +389,8 @@ export function DeskQrScreen({
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-border bg-surface-muted px-5 py-4">
-          <h3 className="text-base font-semibold text-fg">
-            {t("codes.title")}
-          </h3>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-            <span className="text-fg-muted">{t("codes.emailedTo")}</span>
-            <span className="font-medium text-fg" dir="ltr">
-              {view.codeEmail}
-            </span>
-            {canManage ? (
-              <Button
-                size="sm"
-                intent="primary"
-                tone="ghost"
-                onClick={() => setEmailDialog("change")}
-              >
-                {t("codes.change")}
-              </Button>
-            ) : null}
-          </div>
-          <p className="max-w-prose text-sm text-fg-muted">{t("codes.help")}</p>
-        </div>
       </Card>
 
-      {emailDialog === "change" ? (
-        <CodeEmailDialog
-          open
-          initial={view.codeEmail}
-          title={t("codeEmail.changeTitle")}
-          submitLabel={t("codeEmail.save")}
-          pending={update.isPending}
-          error={
-            update.isError ? errorText(update.error, t("errors.update")) : null
-          }
-          onSubmit={(email) =>
-            update.mutate(email, { onSuccess: () => setEmailDialog(null) })
-          }
-          onOpenChange={(o) => !o && setEmailDialog(null)}
-        />
-      ) : null}
       <ConfirmDialog
         kind={confirm}
         pending={rotate.isPending || disable.isPending}

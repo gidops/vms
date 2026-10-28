@@ -1126,20 +1126,6 @@
     "rotateHelp": "New QR replaces the code. The printed poster stops working at once, so print the new one before you press it.",
     "enableHelp": "Scanning shows \"Please register at the VMC desk\". Enable brings back the same code, so the poster on the desk works again.",
     "disabledOverlay": "Scanning shows \"Please register at the VMC desk\"",
-    "codes": {
-      "title": "Verification codes",
-      "emailedTo": "Codes are emailed to",
-      "change": "Change",
-      "help": "After a visitor fills in the form, a 6-digit code goes to this inbox. Read it to the visitor at the desk to finish their registration. Codes work once and expire after 10 minutes."
-    },
-    "codeEmail": {
-      "createTitle": "Set up the walk-in QR",
-      "changeTitle": "Change where codes go",
-      "help": "Verification codes for visitors are emailed here. Use an inbox someone at the VMC desk is reading.",
-      "label": "Email for verification codes",
-      "invalid": "Enter an email address, like reception@aatc.org",
-      "save": "Save"
-    },
     "empty": {
       "title": "No walk-in QR yet",
       "body": "Create the QR, print the poster and put it on the VMC desk.",
@@ -1153,7 +1139,6 @@
     "retry": "Try again",
     "errors": {
       "create": "The walk-in QR wasn't created. Try again in a moment.",
-      "update": "The email wasn't changed. Try again in a moment.",
       "rotate": "New QR wasn't created. The current QR still works. Try again in a moment.",
       "disable": "The QR wasn't disabled. It still works. Try again in a moment.",
       "enable": "The QR wasn't enabled. Try again in a moment.",
@@ -1229,16 +1214,7 @@
     },
     "checkAnswers": "{count, plural, one {Check # answer below.} other {Check # answers below.}}",
     "submit": "Register my visit",
-    "submitHelp": "Reception will read you a code to finish.",
-    "code": {
-      "heading": "Almost done",
-      "title": "Ask reception for your code",
-      "body": "We've sent a 6-digit code to reception. Tell them your name and they'll read it to you.",
-      "label": "6-digit code",
-      "confirm": "Confirm",
-      "expires": "Code expires in {countdown}"
-    },
-    "codeWrong": "{left, plural, =0 {That code doesn't match.} one {That code doesn't match. Check it with reception and try again. # try left.} other {That code doesn't match. Check it with reception and try again. # tries left.}}",
+    "submitHelp": "Submitting registers your visit for today.",
     "done": {
       "title": "You're registered",
       "body": "Show this reference at the VMC desk to get your visitor badge.",
@@ -1253,10 +1229,6 @@
     "expired": {
       "title": "This form has expired",
       "body": "Please scan the QR code again."
-    },
-    "locked": {
-      "title": "Too many wrong codes",
-      "body": "Please scan the QR code again, or register at the VMC desk."
     },
     "startAgain": "Start again",
     "problems": {

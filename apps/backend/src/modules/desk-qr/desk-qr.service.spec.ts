@@ -12,7 +12,6 @@ const row = (over: Record<string, unknown> = {}) => ({
   token: 'k7Qm2xVb9TfLw4Rz8cPd00',
   isActive: true,
   disabledAt: null,
-  codeEmail: 'desk@aatc.org',
   tokenRotatedAt: new Date('2026-10-02T08:15:00Z'),
   scanDay: '2026-10-19',
   scansToday: 37,
@@ -77,15 +76,15 @@ describe('DeskQrService', () => {
 
   it('returns null before the QR exists, and refuses a second one', async () => {
     expect(await setup(null).service.get()).toBeNull();
-    await expect(
-      setup().service.create({ codeEmail: 'x@y.com' }, 'u1'),
-    ).rejects.toMatchObject({ status: 409 });
+    await expect(setup().service.create('u1')).rejects.toMatchObject({
+      status: 409,
+    });
   });
 
   it('creates it with a fresh token and audits without the token', async () => {
     const s = setup(null);
     s.tx.deskQr.create.mockResolvedValue(row());
-    await s.service.create({ codeEmail: 'desk@aatc.org' }, 'u1');
+    await s.service.create('u1');
     const data = s.tx.deskQr.create.mock.calls[0][0].data;
     expect(data.token).toMatch(/^[\w-]{22}$/);
     const event = s.publish.mock.calls[0][1];
@@ -117,17 +116,15 @@ describe('DeskQrService', () => {
     const s = setup();
     await s.service.importV1(
       'https://aatcabuja.com.ng/qr.php?i=0b8320ca0b0b12f1a9d0628dd18a9d48',
-      'nengi@example.org',
     );
     const args = s.tx.deskQr.upsert.mock.calls[0][0];
     expect(args.update).toMatchObject({
       token: '0b8320ca0b0b12f1a9d0628dd18a9d48',
-      codeEmail: 'nengi@example.org',
       isActive: true,
     });
     expect(s.publish.mock.calls[0][1].type).toBe(EVENT_TYPES.DeskQrImported);
     await expect(
-      s.service.importV1('https://example.org/nope', 'x@y.com'),
+      s.service.importV1('https://example.org/nope'),
     ).rejects.toMatchObject({ status: 400 });
   });
 

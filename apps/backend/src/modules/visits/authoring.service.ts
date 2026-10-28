@@ -152,7 +152,10 @@ export class VisitAuthoringService {
   /** Public-form walk-in: never overwrites an existing visitor's saved details, since anyone can type any email. */
   async createSelfRegisteredWalkIn(
     input: Omit<PublicRegistrationInput, 'formToken' | 'website'>,
-    onCreated: (tx: Prisma.TransactionClient, visitId: string) => Promise<void>,
+    onCreated?: (
+      tx: Prisma.TransactionClient,
+      visitId: string,
+    ) => Promise<void>,
   ): Promise<PublicRegistrationResult> {
     if (input.hostUserId) await this.assertActiveHosts([input.hostUserId]);
 
@@ -216,7 +219,7 @@ export class VisitAuthoringService {
         aggregateId: visit.id,
         payload: { visitId: visit.id, source: VISIT_SOURCE_DESK_QR },
       });
-      await onCreated(tx, visit.id);
+      await onCreated?.(tx, visit.id);
       return {
         referenceCode: visit.referenceCode!,
         fullName: input.fullName,

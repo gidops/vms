@@ -22,14 +22,12 @@ const api = {
   open: vi.fn(),
   searchHosts: vi.fn(),
   submit: vi.fn(),
-  verify: vi.fn(),
 };
 vi.mock("@/data/desk-qr/desk-qr.api", () => ({
   publicRegistrationApi: {
     open: (...a: unknown[]) => api.open(...a),
     searchHosts: (...a: unknown[]) => api.searchHosts(...a),
     submit: (...a: unknown[]) => api.submit(...a),
-    verify: (...a: unknown[]) => api.verify(...a),
   },
 }));
 
@@ -106,8 +104,7 @@ describe("self-registration form rules", () => {
   it("maps API answers to what the visitor sees", () => {
     expect(problemOf(new ApiError(404, "x"))).toBe("inactive");
     expect(problemOf(new ApiError(410, "x"))).toBe("expired");
-    expect(problemOf(new ApiError(422, "x"))).toBe("codeWrong");
-    expect(problemOf(new ApiError(423, "x"))).toBe("tooManyTries");
+    expect(problemOf(new ApiError(422, "x"))).toBe("rejected");
     expect(problemOf(new ApiError(429, "x"))).toBe("rateLimited");
     expect(problemOf(new TypeError("Failed to fetch"))).toBe("offline");
   });
@@ -123,7 +120,7 @@ describe("phaseOf", () => {
   const open = { loading: false, problem: null, data };
 
   it("waits while the form opens, whatever the step", () => {
-    expect(phaseOf({ ...open, loading: true }, { kind: "locked" })).toEqual({
+    expect(phaseOf({ ...open, loading: true }, { kind: "expired" })).toEqual({
       kind: "opening",
     });
   });
@@ -145,7 +142,7 @@ describe("phaseOf", () => {
     expect(phaseOf({ ...open, data: undefined }, { kind: "form" })).toEqual({
       kind: "opening",
     });
-    expect(phaseOf(open, { kind: "locked" })).toEqual({ kind: "locked" });
+    expect(phaseOf(open, { kind: "expired" })).toEqual({ kind: "expired" });
   });
 
   it("counts down from the server's seconds, not the expiry timestamp", () => {
@@ -226,58 +223,33 @@ describe("SelfRegistrationScreen", { timeout: 15_000 }, () => {
     );
   });
 
-  it("sends the form, asks for the desk code and shows the reference", async () => {
+  it("sends the form and shows the reference straight away", async () => {
     api.submit.mockResolvedValue({
-      registrationId: "r1",
-      codeExpiresAt: inTen(),
-      secondsLeft: 600,
+      referenceCode: "7C42-318",
+      fullName: "Ifeoma Chukwu",
+      hostName: null,
+      visitDate: new Date().toISOString(),
     });
-    api.verify
-      .mockRejectedValueOnce(new ApiError(422, "Wrong"))
-      .mockResolvedValueOnce({
-        referenceCode: "7C42-318",
-        fullName: "Ifeoma Chukwu",
-        hostName: null,
-        visitDate: new Date().toISOString(),
-      });
     renderWithIntl(<SelfRegistrationScreen token="tok" />);
     await fillAndSubmit();
 
-    expect(
-      await screen.findByText("Ask reception for your code"),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("You're registered")).toBeInTheDocument();
+    expect(screen.getByText("7C42-318")).toBeInTheDocument();
     expect(api.submit.mock.calls[0][1]).toMatchObject({
       formToken: "ft",
       email: "ifeoma@gtbank.com",
       needsEvacuationAssist: false,
       commsConsent: true,
     });
-
-    const codeInput = screen.getByLabelText("6-digit code");
-    fireEvent.change(codeInput, { target: { value: "12a3456" } });
-    expect(codeInput).toHaveValue("123456");
-    fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("2 tries left");
-
-    fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
-    expect(await screen.findByText("You're registered")).toBeInTheDocument();
-    expect(screen.getByText("7C42-318")).toBeInTheDocument();
   });
 
-  it("sends people back to the start after too many wrong codes", async () => {
-    api.submit.mockResolvedValue({
-      registrationId: "r1",
-      codeExpiresAt: inTen(),
-      secondsLeft: 600,
-    });
-    api.verify.mockRejectedValue(new ApiError(423, "Locked"));
+  it("sends people back to the start when the form token is rejected", async () => {
+    api.submit.mockRejectedValue(new ApiError(422, "Rejected"));
     renderWithIntl(<SelfRegistrationScreen token="tok" />);
     await fillAndSubmit();
-    fireEvent.change(await screen.findByLabelText("6-digit code"), {
-      target: { value: "000000" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
-    expect(await screen.findByText("Too many wrong codes")).toBeInTheDocument();
+    expect(
+      await screen.findByText("This form has expired"),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Start again" }));
     await waitFor(() => expect(api.open).toHaveBeenCalledTimes(2));
   });

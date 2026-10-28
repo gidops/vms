@@ -1,20 +1,6 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  Patch,
-  Post,
-  Query,
-  Res,
-} from '@nestjs/common';
+import { Controller, Get, HttpCode, Post, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
-import {
-  CreateDeskQrInput,
-  PERMISSIONS,
-  UpdateDeskQrInput,
-  type DeskQrView,
-} from '@vms/contracts';
+import { PERMISSIONS, type DeskQrView } from '@vms/contracts';
 import { z } from 'zod';
 import {
   CurrentUser,
@@ -40,20 +26,8 @@ export class DeskQrController {
 
   @Post()
   @RequirePermissions(PERMISSIONS.ISSUER_MANAGE)
-  create(
-    @Body(new ZodValidationPipe(CreateDeskQrInput)) input: CreateDeskQrInput,
-    @CurrentUser() principal: AuthUser,
-  ): Promise<DeskQrView> {
-    return this.deskQr.create(input, principal.userId);
-  }
-
-  @Patch()
-  @RequirePermissions(PERMISSIONS.ISSUER_MANAGE)
-  update(
-    @Body(new ZodValidationPipe(UpdateDeskQrInput)) input: UpdateDeskQrInput,
-    @CurrentUser() principal: AuthUser,
-  ): Promise<DeskQrView> {
-    return this.deskQr.update(input, principal.userId);
+  create(@CurrentUser() principal: AuthUser): Promise<DeskQrView> {
+    return this.deskQr.create(principal.userId);
   }
 
   @Post('rotate')

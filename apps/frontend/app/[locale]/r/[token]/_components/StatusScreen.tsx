@@ -48,9 +48,9 @@ export function Centered({
   );
 }
 
-export type StatusKind = "opening" | "inactive" | "expired" | "locked";
+export type StatusKind = "opening" | "inactive" | "expired";
 
-/** Every screen that is not the form, the code or the reference. */
+/** Every screen that is not the form or the reference. */
 export function StatusScreen({
   kind,
   message,
@@ -58,7 +58,7 @@ export function StatusScreen({
   onStartAgain,
 }: {
   kind: StatusKind;
-  /** Overrides the default explanation on the expired and locked screens. */
+  /** Overrides the default explanation on the expired screen. */
   message?: string | null;
   focusTitle?: boolean;
   onStartAgain: () => void;
