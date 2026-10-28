@@ -64,10 +64,10 @@ describe('VisitEvacuationService', () => {
   it('orders floors top-down, unknown floors last, check-in order within a floor', async () => {
     const { service } = setup([
       visit('a', 'Ground Floor', '2026-10-18T08:00:00Z'),
-      visit('b', '5th Floor', '2026-10-18T09:00:00Z'),
+      visit('b', '5th Floor - Left Wing', '2026-10-18T09:00:00Z'),
       visit('c', null, '2026-10-18T07:00:00Z'),
-      visit('d', '5th Floor', '2026-10-18T10:00:00Z'),
-      visit('e', 'Floor Mezzanine', '2026-10-18T06:00:00Z'),
+      visit('d', '5th Floor - Left Wing', '2026-10-18T10:00:00Z'),
+      visit('e', 'Mezzanine', '2026-10-18T06:00:00Z'),
     ]);
     const roll = await service.roll(new Date('2026-10-18T22:52:00Z'));
     expect(roll.rows.map((r) => r.visitId)).toEqual(['b', 'd', 'e', 'a', 'c']);
@@ -93,8 +93,11 @@ describe('VisitEvacuationService', () => {
   });
 
   it('ranks known floors by building order', () => {
-    expect(floorRank('Rooftop')).toBeGreaterThan(floorRank('5th Floor'));
+    expect(floorRank('Rooftop')).toBeGreaterThan(
+      floorRank('9th Floor - Right Wing'),
+    );
     expect(floorRank('Ground Floor')).toBeGreaterThan(floorRank(null));
     expect(floorRank('Somewhere else')).toBe(-1);
+    expect(floorRank('3rd Floor - LW')).toBe(-1);
   });
 });
