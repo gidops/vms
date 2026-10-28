@@ -28,7 +28,7 @@ const ROLE_DEFS: Record<
       PERMISSIONS.REPORT_READ,
       // Read-only: reception withdraws consent, the System Admin grants it.
       PERMISSIONS.CONSENT_READ,
-      // Bulk personal-data exports: never granted to Read Admin, Staff or Gate.
+      // Bulk personal-data exports: never granted to Read Admin or Staff.
       PERMISSIONS.CONSENT_EXPORT,
       PERMISSIONS.REPORT_EXPORT,
       PERMISSIONS.NOTIFICATION_READ,
@@ -85,15 +85,6 @@ const ROLE_DEFS: Record<
       PERMISSIONS.REPORT_EXPORT,
       PERMISSIONS.NOTIFICATION_READ,
       PERMISSIONS.NOTIFICATION_RETRY,
-    ],
-  },
-  [ROLES.GATE]: {
-    description: 'Gate operative — checks visitors in and out',
-    permissions: [
-      PERMISSIONS.VISIT_CHECK_IN,
-      PERMISSIONS.VISIT_CHECK_OUT,
-      // Gate staff may be first responders in an evacuation.
-      PERMISSIONS.EVACUATION_READ,
     ],
   },
 };

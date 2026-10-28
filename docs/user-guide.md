@@ -1,7 +1,7 @@
 # User guide
 
 **Who this is for:** anyone who uses the Visitor Management System (VMS) day to
-day, or needs to explain it to others: reception, security, staff, gate officers
+day, or needs to explain it to others: reception, security, staff, gate security
 and administrators. No technical knowledge is needed. **What you'll learn:** who
 does what, how a visit moves from request to check-out, and where each screen is.
 
@@ -31,11 +31,10 @@ by the System Admin under **Users**.
 
 | Role             | Home screen  | What they do                                                                                                                                                                |
 | ---------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| System Admin     | `/admin`     | Everything. Manages users and roles, runs **Operations** (access cards, walk-in QR, audit trail), can add a person back to the email list.                                  |
+| System Admin     | `/admin`     | Everything. Manages users and roles, runs **Operations** (access cards, walk-in QR, gate kiosk, audit trail), can add a person back to the email list.                      |
 | Security Manager | `/admin`     | Approves or denies visit requests, flags visits for security review, asks for more information, resolves alerts. Sees analytics and can export visitor data. No user admin. |
 | VMC Reception    | `/dashboard` | Works the Visitor Management Centre (VMC) desk: registers walk-ins, creates invites, checks visitors in and out, hands out badges, records email opt-outs, exports data.    |
 | Staff            | `/staff`     | Hosts visitors: creates invite requests for their own guests, follows their progress, answers the Security Manager, cancels, and rates guests after the visit.              |
-| Gate             | `/gate`      | Gate officers. Can view the evacuation roll. (The gate home screen is a placeholder for now.)                                                                               |
 
 **Add-on roles** are extra rights given on top of a main role. They never
 appear in the role switcher.
@@ -206,9 +205,29 @@ To export visitor data, open **Insights → History** and choose **Export**.
 **Users** (System Admin): **New user**, **Edit roles** and **Delete**. Add-on
 roles are labelled "Add-on for …" in the role picker.
 
-### Gate (`/gate`)
+### Gate kiosk (`/gate`)
 
-A placeholder home screen and an **Evacuation Roll** button.
+Not a role and no sign-in: a tablet at the gate runs the kiosk page. Security
+scans the QR from a pre-invited visitor's invitation email (or types the code
+printed under it) and the screen says whether the visit is **today**:
+
+| Result                     | Colour | Tell the visitor                                                  |
+| -------------------------- | ------ | ----------------------------------------------------------------- |
+| Visit confirmed for today  | green  | Go to the VMC to check in.                                        |
+| Already checked in         | blue   | They are already checked in.                                      |
+| No visit today             | orange | The day their visit is actually on; the VMC can help.             |
+| Visit not confirmed yet    | orange | The invitation still awaits approval; the VMC can help.           |
+| Invitation no longer valid | red    | Cancelled, declined or ended; the VMC can help.                   |
+| No invitation found        | red    | The code matches no invitation (walk-ins have none); try the VMC. |
+
+The gate never stops anyone or checks anyone in. A green scan marks the visit
+**gate verified** for reception; every scan is in the audit trail.
+
+**Setting up the tablet** (System Admin): **Operations → Gate kiosk → Create
+kiosk link**, then scan its QR with the tablet camera (or open the copied
+link). The tablet remembers the link and from then on just opens `/gate`.
+**New link** cuts off every device using the old one; **Turn off** stops the
+kiosk until it is turned on again.
 
 ## Insights (`/insights`)
 
@@ -217,7 +236,7 @@ Open from the account menu. Each tab appears only if your role allows it.
 | Tab                 | What it shows                                                                                                                                            | Who sees it                                                                                              |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | **Overview**        | Today at a glance: on site now, visitors today, still expected, checked out.                                                                             | System Admin, Read Admin                                                                                 |
-| **Evacuation Roll** | See below.                                                                                                                                               | System Admin, Security Manager, VMC, Gate                                                                |
+| **Evacuation Roll** | See below.                                                                                                                                               | System Admin, Security Manager, VMC                                                                      |
 | **History**         | Every visit in a date range, searchable, with **Export**.                                                                                                | Facility-wide: System Admin, Security Manager, VMC, Read Admin. Staff see their own visits.              |
 | **Visitors**        | Visitor directory and visit history per person. The **Email consent** view lists who agreed to event updates.                                            | Facility-wide: System Admin, Security Manager, VMC Admin, Read Admin. Staff see people who visited them. |
 | **Analytics**       | Visitor volume by day, week and hour, outcomes, walk-ins vs invited, repeat visitors, busiest hosts, and (for security roles) flags, alerts and denials. | Facility-wide: System Admin, Security Manager, VMC Admin, Read Admin. Staff see their own visits.        |
@@ -233,7 +252,7 @@ would need help evacuating in an emergency, with the help needed (mobility,
 visual, hearing, medical, other), floor, host, phone and badge.
 
 - Open it from **Insights → Evacuation Roll**, from **View roll** on the
-  dashboards, or from the Gate screen.
+  dashboards.
 - Press **Refresh** for the latest list and **Print** for a paper copy.
 
 ## Email consent (opt-ins)

@@ -20,7 +20,7 @@ export const searchInputVariants = tv({
       onEmphasis: {
         icon: "text-emphasis-muted",
         input:
-          "h-10 rounded-lg border-transparent bg-emphasis-fg/10 text-emphasis-fg placeholder:text-emphasis-muted focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-0",
+          "h-10 rounded-lg border-transparent bg-emphasis-fg/10 text-emphasis-fg placeholder:text-emphasis-muted focus:border-[var(--color-accent)]",
         clear: "text-emphasis-muted hover:text-emphasis-fg",
       },
     },

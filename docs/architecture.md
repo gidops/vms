@@ -218,8 +218,9 @@ apps/frontend/
 Routes: `/` (sign-in), `/signup`, `/forgot-password`, `/dashboard` and
 `/requests` (VMC), `/staff` (+ `/visits`, `/updates`), `/admin` (+ `/approvals`,
 `/requests`, `/users`),
-`/gate` (+ `/evacuation`), `/insights`, `/operations`, `/settings`, and the
-public self-registration form `/r/[token]`. See the
+`/insights`, `/operations`, `/settings`, and the
+public self-registration form `/r/[token]` and the no-login gate kiosk
+`/gate` (opened once via `/gate/[token]`, the System Admin's kiosk link). See the
 [user guide](./user-guide.md) for what each screen does and
 [development.md](./development.md#unfinished-work) for the admin layout variants.
 

@@ -16,7 +16,6 @@ const ROLE_NAMES = [
   ROLES.READ_ADMIN,
   ROLES.VMC,
   ROLES.STAFF,
-  ROLES.GATE,
 ];
 
 export interface RoleApp {

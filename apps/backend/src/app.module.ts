@@ -6,6 +6,7 @@ import { AlertsModule } from './modules/alerts/alerts.module';
 import { AuditTrailModule } from './modules/audit-trail/audit-trail.module';
 import { ConsentModule } from './modules/consent/consent.module';
 import { DeskQrModule } from './modules/desk-qr/desk-qr.module';
+import { GateModule } from './modules/gate/gate.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { InboxModule } from './modules/inbox/inbox.module';
 import { InsightsModule } from './modules/insights/insights.module';
@@ -42,6 +43,7 @@ import { StorageModule } from './shared/storage/storage.module';
     InsightsModule,
     ConsentModule,
     DeskQrModule,
+    GateModule,
     AccessCardsModule,
     RfidCardsModule,
     AuditTrailModule,

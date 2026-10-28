@@ -26,7 +26,6 @@ describe('Insights (e2e)', () => {
     ROLES.READ_ADMIN,
     ROLES.VMC,
     ROLES.STAFF,
-    ROLES.GATE,
   ];
 
   const http = () => request(app.getHttpServer());
@@ -122,7 +121,6 @@ describe('Insights (e2e)', () => {
           VMC_ADMIN: 403,
           VMC: 403,
           STAFF: 403,
-          GATE: 403,
         },
       ],
       [
@@ -132,7 +130,6 @@ describe('Insights (e2e)', () => {
           ADMIN: 200,
           VMC_ADMIN: 200,
           VMC: 200,
-          GATE: 200,
           READ_ADMIN: 403,
           STAFF: 403,
         },
@@ -146,7 +143,6 @@ describe('Insights (e2e)', () => {
           VMC_ADMIN: 200,
           VMC: 200,
           STAFF: 200,
-          GATE: 403,
         },
       ],
       [
@@ -158,7 +154,6 @@ describe('Insights (e2e)', () => {
           VMC_ADMIN: 200,
           STAFF: 200,
           VMC: 403,
-          GATE: 403,
         },
       ],
       [
@@ -170,7 +165,6 @@ describe('Insights (e2e)', () => {
           VMC_ADMIN: 200,
           STAFF: 200,
           VMC: 403,
-          GATE: 403,
         },
       ],
     ];

@@ -31,7 +31,6 @@ describe('Desk QR (e2e)', () => {
     ROLES.READ_ADMIN,
     ROLES.VMC,
     ROLES.STAFF,
-    ROLES.GATE,
   ];
 
   const http = () => request(app.getHttpServer());

@@ -25,9 +25,10 @@ export function AssignPass({
   const selected = list.find((c) => c.id === value);
 
   return (
-    <div className="flex items-stretch overflow-hidden rounded-lg border border-primary">
+    // The box carries the focus border (as for text fields), also while the list is open.
+    <div className="flex items-stretch overflow-hidden rounded-lg border border-primary transition-colors focus-within:border-[var(--color-ring)] has-[[data-state=open]]:border-[var(--color-ring)]">
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="flex-1 rounded-none border-0 font-semibold text-primary focus-visible:ring-0">
+        <SelectTrigger className="flex-1 rounded-none border-0 font-semibold text-primary">
           <SelectValue placeholder={t("assignPass")} />
         </SelectTrigger>
         <SelectContent>

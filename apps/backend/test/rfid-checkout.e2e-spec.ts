@@ -52,8 +52,8 @@ describe('RFID cards at check-out (e2e)', () => {
       .post(`/visits/${visitId}/check-out`)
       .send({})
       .expect(422);
-    // Gate may check people out, but may not take cards back.
-    await as(ROLES.GATE)
+    // Only reception takes cards back.
+    await as(ROLES.STAFF)
       .post(`/visits/${visitId}/check-out`)
       .send({ rfidCard: { outcome: 'RETURNED' } })
       .expect(403);

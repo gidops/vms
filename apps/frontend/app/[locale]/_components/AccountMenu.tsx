@@ -1,16 +1,19 @@
 "use client";
 
-import { Avatar, Popover, PopoverContent, PopoverTrigger } from "@vms/ui";
+import { Avatar, cn, Popover, PopoverContent, PopoverTrigger } from "@vms/ui";
 import {
   ChartColumn,
   ChevronDown,
   LogOut,
+  RefreshCw,
   Settings,
   Wrench,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import * as React from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { OPERATIONS_TABS } from "@/app/[locale]/operations/_components/tabs";
+import { RoleOptions, useRoleSwitch } from "./RoleSwitcher";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { roleLabel } from "@/shared/auth/roleLabels";
 import { avatarUrl } from "@/shared/avatarUrl";
@@ -24,6 +27,8 @@ export function AccountMenu() {
     hasPermission(tab.permission),
   );
   const router = useRouter();
+  const { canSwitch } = useRoleSwitch();
+  const [switching, setSwitching] = React.useState(false);
 
   async function onLogout() {
     await logout();
@@ -74,6 +79,34 @@ export function AccountMenu() {
               <Wrench className="size-4 text-fg-muted" aria-hidden="true" />
               {t("operations")}
             </Link>
+          ) : null}
+          {/* Small screens only: the navbar shows a Switch account pill from md up. */}
+          {canSwitch ? (
+            <div className="md:hidden">
+              <button
+                type="button"
+                aria-expanded={switching}
+                aria-controls="account-menu-roles"
+                onClick={() => setSwitching((open) => !open)}
+                className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-sm text-fg transition-colors hover:bg-surface-muted"
+              >
+                <RefreshCw
+                  className="size-4 text-fg-muted"
+                  aria-hidden="true"
+                />
+                <span className="flex-1 text-start">{t("switchAccount")}</span>
+                <ChevronDown
+                  className={cn(
+                    "size-4 text-fg-muted transition-transform",
+                    switching && "rotate-180",
+                  )}
+                  aria-hidden="true"
+                />
+              </button>
+              {switching ? (
+                <RoleOptions id="account-menu-roles" className="ps-7" />
+              ) : null}
+            </div>
           ) : null}
         </div>
         <div className="border-t border-border p-2">

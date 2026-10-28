@@ -12,6 +12,7 @@ import { useAuth } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
 import { AccessCardsTab } from "./_components/access-cards/AccessCardsTab";
 import { AuditTrailTab } from "./_components/AuditTrailTab";
+import { GateKioskTab } from "./_components/GateKioskTab";
 import { OPERATIONS_TABS, type OperationsTab } from "./_components/tabs";
 
 /** Each tab shows with its permission; the tab lives in `?tab=` so links land on it. */
@@ -55,6 +56,7 @@ function Operations() {
         {tab === "deskQr" ? (
           <DeskQrScreen headingLevel={2} showHeading={false} />
         ) : null}
+        {tab === "gateKiosk" ? <GateKioskTab /> : null}
         {tab === "audit" ? <AuditTrailTab /> : null}
       </div>
     </TopNavShell>

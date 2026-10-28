@@ -147,12 +147,13 @@ model User {
   refreshTokens       RefreshToken[]
   passwordResetTokens PasswordResetToken[]
   auditLogs           AuditLog[]
-  host          Host?
-  createdVisits Visit[]        @relation("VisitCreatedBy")
-  authoredNotes Note[]
-  deskQrsCreated DeskQr[]
-  rfidCardsIssued   RfidCardAssignment[] @relation("RfidIssuedBy")
-  rfidCardsReturned RfidCardAssignment[] @relation("RfidReturnedBy")
+  host                Host?
+  createdVisits       Visit[]              @relation("VisitCreatedBy")
+  authoredNotes       Note[]
+  deskQrsCreated      DeskQr[]
+  gateKiosksCreated   GateKiosk[]
+  rfidCardsIssued     RfidCardAssignment[] @relation("RfidIssuedBy")
+  rfidCardsReturned   RfidCardAssignment[] @relation("RfidReturnedBy")
 
   @@index([tenantId])
 }
@@ -278,18 +279,18 @@ model AuditLog {
 // Domain
 // ---------------------------------------------------------------------------
 model Visitor {
-  id           String   @id @default(uuid())
-  fullName     String
-  email        String   @unique
-  phone        String? // encrypted at rest (application layer)
-  nationalId   String? // encrypted at rest (application layer)
-  organization String?
-  photoUrl     String?
+  id              String   @id @default(uuid())
+  fullName        String
+  email           String   @unique
+  phone           String? // encrypted at rest (application layer)
+  nationalId      String? // encrypted at rest (application layer)
+  organization    String?
+  photoUrl        String?
   // Preferred language for visitor-facing notifications. Defaults to EN until
   // captured (e.g. at invitation/registration time).
-  preferredLocale Locale @default(EN)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  preferredLocale Locale   @default(EN)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   visits    Visit[]
   ratings   Rating[]
@@ -311,65 +312,65 @@ model Host {
 }
 
 model Visit {
-  id           String      @id @default(uuid())
-  visitorId    String
+  id                    String              @id @default(uuid())
+  visitorId             String
   // Optional: walk-ins may not be visiting a named staff host.
-  hostId       String?
-  invitationId String?     @unique
+  hostId                String?
+  invitationId          String?             @unique
   // Set ONLY for a true group visit — every guest of that group shares one
   // groupId so the group collapses to one VMC row and checks in together. Bulk
   // invites/walk-ins and lone guests are independent visits with groupId = null.
-  groupId      String?
+  groupId               String?
   // True when this visit belongs to a group visit (the group signal). groupName
   // and groupContact are the shared group display name and optional contact
   // (a free-text email or phone number).
-  isGroupVisit Boolean    @default(false)
-  groupName    String?
-  groupContact String?
+  isGroupVisit          Boolean             @default(false)
+  groupName             String?
+  groupContact          String?
   // Human-friendly invite code (e.g. "5A19-795") generated for invites at
   // creation and encoded in the guest's QR. Null for walk-ins.
-  referenceCode String?    @unique
-  type         VisitType
-  status       VisitStatus @default(PENDING)
-  purpose      String
+  referenceCode         String?             @unique
+  type                  VisitType
+  status                VisitStatus         @default(PENDING)
+  purpose               String
   // Per-visit floor/department selected at request time (distinct from Host.office).
-  floor        String?
-  riskLevel    RiskLevel?
-  scheduledAt  DateTime?
+  floor                 String?
+  riskLevel             RiskLevel?
+  scheduledAt           DateTime?
   // Set when the visit's QR is validated at the gate (or auto-set at VMC check-in).
-  gateValidatedAt DateTime?
-  checkInAt    DateTime?
-  checkOutAt   DateTime?
-  approvedById String?
-  deniedReason String?
+  gateValidatedAt       DateTime?
+  checkInAt             DateTime?
+  checkOutAt            DateTime?
+  approvedById          String?
+  deniedReason          String?
   // Origin of the request: who logged it and from which station/channel.
-  createdById  String?
+  createdById           String?
   // Denormalized creator name, preserved if the creator's account is deleted.
-  createdByName String?
+  createdByName         String?
   // Name and organisation typed at a walk-in QR self-registration. The public
   // form can't verify the email, so these (not the matched Visitor record)
   // identify who is actually on site.
-  visitorNameAtVisit  String?
-  organizationAtVisit String?
-  source       String?     @default("VMC_STATION")
+  visitorNameAtVisit    String?
+  organizationAtVisit   String?
+  source                String?             @default("VMC_STATION")
   // Intake answers (null = legacy visit created before the questions existed).
   // needsEvacuationAssist feeds the live Evacuation Roll; commsConsent is the
   // answer given at THIS visit (current opt-in status lives in CommsConsentEvent).
   needsEvacuationAssist Boolean?
   // When the answer is Yes: MOBILITY | VISUAL | HEARING | MEDICAL | OTHER
   // (contracts EVACUATION_ASSIST_TYPES), plus free text for OTHER.
-  evacuationAssistTypes String[] @default([])
+  evacuationAssistTypes String[]            @default([])
   evacuationAssistOther String?
   commsConsent          Boolean?
   // Set when the visit came from the desk QR self-registration.
-  deskQrRegistration DeskQrRegistration?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  deskQrRegistration    DeskQrRegistration?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
 
-  visitor    Visitor     @relation(fields: [visitorId], references: [id], onDelete: Cascade)
-  host       Host?       @relation(fields: [hostId], references: [id], onDelete: Cascade)
-  invitation Invitation? @relation(fields: [invitationId], references: [id])
-  createdBy  User?       @relation("VisitCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  visitor    Visitor              @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  host       Host?                @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  invitation Invitation?          @relation(fields: [invitationId], references: [id])
+  createdBy  User?                @relation("VisitCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   pass       Pass?
   rating     Rating?
   alerts     Alert[]
@@ -470,9 +471,9 @@ model Alert {
 // Freeform remarks attached to a visit request or an alert (the "Remarks/notes"
 // and "Add Note" affordance). Polymorphic via nullable visit/alert FKs.
 model Note {
-  id      String  @id @default(uuid())
-  visitId String?
-  alertId String?
+  id         String   @id @default(uuid())
+  visitId    String?
+  alertId    String?
   // Author link is SetNull on user deletion; authorName is denormalized so the
   // note keeps its attribution even after the author's account is removed.
   authorId   String?
@@ -616,6 +617,24 @@ model DeskQr {
   registrations DeskQrRegistration[]
 }
 
+/// The gate kiosk link: a no-login device page (`/gate/<token>`) that checks
+/// invitation codes. A singleton, managed by the System Admin like the Desk QR.
+model GateKiosk {
+  id             String    @id @default(uuid())
+  key            String    @unique @default("gate")
+  /// In the kiosk URL; kept readable so the System Admin can copy it again.
+  token          String    @unique
+  isActive       Boolean   @default(true)
+  disabledAt     DateTime?
+  tokenRotatedAt DateTime  @default(now())
+  lastScanAt     DateTime?
+  createdById    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+}
+
 /// A submitted self-registration waiting for its desk code. The form is kept
 /// encrypted (it holds personal data) and the code only as a keyed hash. The
 /// visit is created when the right code is entered.
@@ -631,7 +650,7 @@ model DeskQrRegistration {
   createdAt DateTime @default(now())
 
   deskQr DeskQr @relation(fields: [deskQrId], references: [id], onDelete: Cascade)
-  visit  Visit?  @relation(fields: [visitId], references: [id], onDelete: SetNull)
+  visit  Visit? @relation(fields: [visitId], references: [id], onDelete: SetNull)
 
   @@index([deskQrId, createdAt])
 }

@@ -315,7 +315,6 @@
     "ADMIN": "Responsable de la sécurité",
     "STAFF": "Personnel",
     "VMC": "Réception VMC",
-    "GATE": "Portail",
     "VMC_ADMIN": "Administrateur VMC",
     "READ_ADMIN": "Administrateur (lecture seule)"
   },
@@ -795,11 +794,69 @@
     }
   },
   "gate": {
-    "welcome": "Bienvenue {name}",
-    "subtitle": "Opérations de portail",
-    "placeholderTitle": "Tableau de bord du portail",
-    "placeholderBody": "Ce tableau de bord est provisoire et sera développé bientôt.",
-    "evacuationRoll": "Liste d'évacuation"
+    "title": "Contrôle à l'entrée",
+    "heading": "Scanner l'invitation",
+    "subtitle": "Demandez au visiteur de présenter le code QR de son e-mail d'invitation.",
+    "checking": "Vérification…",
+    "error": "Impossible de vérifier ce code. Réessayez.",
+    "scanner": {
+      "label": "Viseur de la caméra",
+      "starting": "Démarrage de la caméra…",
+      "hint": "Placez le code QR dans le cadre.",
+      "denied": "L'accès à la caméra est bloqué. Autorisez la caméra dans les réglages du navigateur, ou saisissez le code.",
+      "unavailable": "Aucune caméra disponible. Saisissez plutôt le code de l'invitation.",
+      "insecure": "La caméra ne fonctionne qu'avec une connexion sécurisée (HTTPS). Saisissez le code."
+    },
+    "manual": {
+      "title": "Saisir le code",
+      "body": "La caméra ne fonctionne pas ? Saisissez le code imprimé dans l'e-mail d'invitation.",
+      "label": "Code d'invitation",
+      "submit": "Vérifier le code",
+      "invalid": "Les codes ont la forme ABCD-123."
+    },
+    "result": {
+      "VALID_TODAY": {
+        "title": "Visite confirmée pour aujourd'hui",
+        "body": "Orientez le visiteur vers le VMC pour l'enregistrement."
+      },
+      "ALREADY_CHECKED_IN": {
+        "title": "Déjà enregistré",
+        "body": "Ce visiteur s'est déjà enregistré au VMC."
+      },
+      "WRONG_DAY": {
+        "title": "Pas de visite aujourd'hui",
+        "past": "Sa visite était prévue le {date}.",
+        "future": "Sa visite est prévue le {date}.",
+        "body": "Informez le visiteur. S'il pense qu'il s'agit d'une erreur ou doit reprogrammer, il peut se rendre au VMC pour obtenir de l'aide."
+      },
+      "NOT_CONFIRMED": {
+        "title": "Visite pas encore confirmée",
+        "body": "Cette invitation est toujours en attente d'approbation. Le visiteur peut se rendre au VMC pour obtenir de l'aide."
+      },
+      "CLOSED": {
+        "title": "Invitation plus valide",
+        "body": "Cette visite a été annulée, refusée ou est déjà terminée. Le visiteur peut se rendre au VMC pour obtenir de l'aide."
+      },
+      "NOT_FOUND": {
+        "title": "Aucune invitation trouvée",
+        "body": "Ce code ne correspond à aucune invitation. Vérifiez le code ou orientez le visiteur vers le VMC."
+      },
+      "visitDate": "Date de la visite",
+      "host": "Hôte",
+      "scanNext": "Scanner le suivant",
+      "autoReturn": "Retour au scanner dans {seconds} s"
+    },
+    "kiosk": {
+      "checking": "Ouverture de la borne d'entrée…",
+      "notSetUp": {
+        "title": "Cet appareil n'est pas configuré comme borne d'entrée",
+        "body": "Demandez à l'administrateur système d'ouvrir le lien de la borne d'entrée sur cet appareil."
+      },
+      "inactive": {
+        "title": "Ce lien de borne n'est plus actif",
+        "body": "Le lien a été remplacé ou désactivé. Demandez à l'administrateur système d'ouvrir le lien actuel sur cet appareil."
+      }
+    }
   },
   "users": {
     "title": "Gestion des utilisateurs",
@@ -1180,6 +1237,61 @@
       "footer": "Accueil VMC · QR créé le {date}"
     }
   },
+  "gateKiosk": {
+    "title": "Lien de la borne d'entrée",
+    "status": {
+      "active": "Actif",
+      "disabled": "Désactivé"
+    },
+    "qrAlt": "Code QR du lien de la borne d'entrée",
+    "copyLink": "Copier le lien",
+    "copied": "Copié",
+    "disabledOverlay": "Désactivé",
+    "setup": {
+      "step1": "Sur la tablette de l'entrée, scannez ce QR avec l'appareil photo ou ouvrez le lien copié dans le navigateur.",
+      "step2": "La page de l'entrée s'ouvre sans connexion et mémorise cet appareil.",
+      "step3": "Ensuite, la tablette ouvre simplement /gate."
+    },
+    "lastScan": "Dernier scan",
+    "noScans": "Aucun scan pour l'instant",
+    "linkSince": "Lien actuel depuis",
+    "disabledSince": "Désactivé depuis",
+    "created": "Créé",
+    "createdBy": "{time} par {name}",
+    "rotate": "Nouveau lien",
+    "disable": "Désactiver",
+    "enable": "Activer",
+    "rotateHelp": "Un nouveau lien désactive aussitôt l'ancien : chaque appareil doit ouvrir le nouveau lien.",
+    "enableHelp": "Tant qu'il est désactivé, la page de l'entrée indique que le lien n'est plus actif.",
+    "confirmRotate": {
+      "title": "Créer un nouveau lien de borne ?",
+      "body": "Le lien actuel cesse de fonctionner immédiatement. La tablette de l'entrée aura besoin du nouveau lien.",
+      "confirm": "Créer un nouveau lien"
+    },
+    "confirmDisable": {
+      "title": "Désactiver le lien de la borne ?",
+      "body": "La page de l'entrée cesse de vérifier les codes jusqu'à ce que vous réactiviez le lien.",
+      "confirm": "Désactiver"
+    },
+    "cancel": "Annuler",
+    "retry": "Réessayer",
+    "empty": {
+      "title": "Pas encore de lien de borne d'entrée",
+      "body": "Créez le lien, puis ouvrez-le une fois sur la tablette de l'entrée. Personne ne se connecte à l'entrée.",
+      "create": "Créer le lien de borne"
+    },
+    "loadError": {
+      "title": "Impossible de charger le lien de la borne",
+      "body": "Vérifiez votre connexion et réessayez."
+    },
+    "errors": {
+      "create": "Impossible de créer le lien de borne.",
+      "rotate": "Impossible de créer un nouveau lien.",
+      "disable": "Impossible de désactiver le lien.",
+      "enable": "Impossible d'activer le lien.",
+      "image": "Impossible de charger le code QR."
+    }
+  },
   "selfRegister": {
     "brand": "AATC · Accueil VMC",
     "title": "Enregistrez votre visite",
@@ -1419,7 +1531,8 @@
     "tabs": {
       "accessCards": "Cartes d'accès",
       "deskQr": "QR sans rendez-vous",
-      "audit": "Journal d'audit"
+      "audit": "Journal d'audit",
+      "gateKiosk": "Borne d'entrée"
     },
     "accessCards": {
       "title": "Cartes d'accès",
@@ -1596,7 +1709,8 @@
         "desk_qr": "QR sans rendez-vous",
         "notification": "Notifications",
         "rfid_card": "Cartes d'accès",
-        "audit": "Journal d'audit"
+        "audit": "Journal d'audit",
+        "gate": "Entrée"
       },
       "actions": {
         "alert_created": "Alerte émise",
@@ -1650,7 +1764,12 @@
         "visitor_rated": "Visite évaluée",
         "desk_qr_honeypot_triggered": "Robot bloqué sur le QR d'accueil",
         "desk_qr_code_rejected": "Code d'accueil erroné saisi",
-        "desk_qr_registration_locked": "Inscription sur place verrouillée"
+        "desk_qr_registration_locked": "Inscription sur place verrouillée",
+        "gate_code_checked": "Code vérifié à l'entrée",
+        "gate_kiosk_created": "Lien de borne d'entrée créé",
+        "gate_kiosk_rotated": "Lien de borne d'entrée remplacé",
+        "gate_kiosk_disabled": "Lien de borne d'entrée désactivé",
+        "gate_kiosk_enabled": "Lien de borne d'entrée activé"
       }
     }
   },

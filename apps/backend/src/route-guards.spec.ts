@@ -8,6 +8,8 @@ import { AuditTrailController } from './modules/audit-trail/audit-trail.controll
 import { ConsentController } from './modules/consent/consent.controller';
 import { DeskQrController } from './modules/desk-qr/desk-qr.controller';
 import { PublicRegistrationController } from './modules/desk-qr/public-registration.controller';
+import { GateKioskController } from './modules/gate/gate-kiosk.controller';
+import { GateController } from './modules/gate/gate.controller';
 import { UsersController } from './modules/identity/users.controller';
 import { InboxController } from './modules/inbox/inbox.controller';
 import { InsightsController } from './modules/insights/insights.controller';
@@ -31,6 +33,8 @@ const CONTROLLERS: Type[] = [
   ConsentController,
   DeskQrController,
   PublicRegistrationController,
+  GateController,
+  GateKioskController,
   UsersController,
   InboxController,
   InsightsController,
@@ -108,6 +112,10 @@ const PUBLIC_ROUTES = [
   'GET /public/desk-qr/:token/hosts',
   'POST /public/desk-qr/:token/registrations',
   'POST /public/desk-qr/:token/registrations/:id/verify',
+  // Gate kiosk device: the kiosk link token is the credential, checked and
+  // rate-limited (per IP and per link) on every call.
+  'GET /public/gate/:token',
+  'POST /public/gate/:token/verify',
   'POST /auth/login',
   'POST /auth/signup',
   'GET /auth/signup-available',

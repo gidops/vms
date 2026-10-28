@@ -53,8 +53,13 @@ export function AppTopNav({
   const { activeRole, hasPermission } = useAuth();
   const securityManager = adminConsoleRole(hasPermission) === "securityManager";
 
-  // Staff see their own unread scope; the VMC sees all.
-  const unreadQ = useInboxUnread("all", app === "staff" ? "mine" : "all");
+  // Staff see their own unread scope; the VMC sees all. Only fetched when a
+  // tab or the bell shows it.
+  const unreadQ = useInboxUnread(
+    "all",
+    app === "staff" ? "mine" : "all",
+    requestsCount === undefined && (!!active || !!notificationsHref),
+  );
   const count = requestsCount ?? unreadQ.data?.unread ?? undefined;
 
   const options: {

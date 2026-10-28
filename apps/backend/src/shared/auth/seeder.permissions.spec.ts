@@ -53,8 +53,8 @@ describe('Role → permission matrix', () => {
     }
   });
 
-  it('grants the Evacuation Roll to reception, the Security Manager and the gate — not staff or Read Admin', () => {
-    for (const role of [ROLES.VMC, ROLES.ADMIN, ROLES.VMC_ADMIN, ROLES.GATE]) {
+  it('grants the Evacuation Roll to reception and the Security Manager — not staff or Read Admin', () => {
+    for (const role of [ROLES.VMC, ROLES.ADMIN, ROLES.VMC_ADMIN]) {
       expect([role, holds(role, PERMISSIONS.EVACUATION_READ)]).toEqual([
         role,
         true,
@@ -64,8 +64,18 @@ describe('Role → permission matrix', () => {
     expect(holds(ROLES.READ_ADMIN, PERMISSIONS.EVACUATION_READ)).toBe(false);
   });
 
-  it('withholds visit:read from staff, Read Admin and gate so their visit reads stay scoped', () => {
-    for (const role of [ROLES.STAFF, ROLES.READ_ADMIN, ROLES.GATE]) {
+  it('has no gate role: the gate is a no-login kiosk, and only the System Admin manages its link', () => {
+    expect(SCOPED_ROLE_DEFS).not.toHaveProperty('GATE');
+    for (const role of Object.keys(SCOPED_ROLE_DEFS)) {
+      expect([role, holds(role, PERMISSIONS.GATE_MANAGE)]).toEqual([
+        role,
+        false,
+      ]);
+    }
+  });
+
+  it('withholds visit:read from staff and Read Admin so their visit reads stay scoped', () => {
+    for (const role of [ROLES.STAFF, ROLES.READ_ADMIN]) {
       expect([role, holds(role, PERMISSIONS.VISIT_READ)]).toEqual([
         role,
         false,
@@ -140,7 +150,6 @@ describe('Role → permission matrix', () => {
       'visitors',
       'analytics',
     ]);
-    expect(tabsFor(ROLES.GATE)).toEqual(['evacuation']);
     expect(tabsFor(ROLES.ADMIN)).toEqual([
       'evacuation',
       'history',

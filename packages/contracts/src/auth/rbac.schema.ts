@@ -46,6 +46,8 @@ export const PERMISSIONS = {
   ISSUER_READ: "issuer:read",
   ISSUER_MANAGE: "issuer:manage",
   EVACUATION_READ: "evacuation:read",
+  /** System Admin only: create, rotate and disable the gate kiosk link. */
+  GATE_MANAGE: "gate:manage",
   CONSENT_READ: "consent:read",
   CONSENT_EXPORT: "consent:export",
   CONSENT_MANAGE: "consent:manage",
@@ -83,7 +85,6 @@ export const ROLES = {
   READ_ADMIN: "READ_ADMIN",
   STAFF: "STAFF",
   VMC: "VMC",
-  GATE: "GATE",
 } as const;
 export type RoleName = (typeof ROLES)[keyof typeof ROLES];
 
@@ -92,7 +93,6 @@ export const ROLE_HOME: Record<string, string> = {
   [ROLES.ADMIN]: "/admin",
   [ROLES.VMC]: "/dashboard",
   [ROLES.STAFF]: "/staff",
-  [ROLES.GATE]: "/gate",
 };
 
 export function homeFor(role: string | null | undefined): string {
