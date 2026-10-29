@@ -12,7 +12,11 @@ import { isPlainName, isPlainOrganization } from "./desk-qr/desk-qr.schema";
 import { GateVerifyInput, normalizeReferenceCode } from "./gate/gate.schema";
 import { ExportVisitsQuery, inclusiveDaySpan } from "./report/report.schema";
 import { nameParts } from "./user/user.schema";
-import { evacuationAssistIssues } from "./visit/visit.schema";
+import {
+  evacuationAssistIssues,
+  FLOOR_OPTIONS,
+  floorCode,
+} from "./visit/visit.schema";
 
 describe("phone helpers", () => {
   it.each([
@@ -203,5 +207,22 @@ describe("gate reference codes", () => {
     expect(() =>
       GateVerifyInput.parse({ code: " ", source: "scan" }),
     ).toThrow();
+  });
+});
+
+describe("floors", () => {
+  it("lists the building bottom to top with unique codes", () => {
+    expect(FLOOR_OPTIONS).toHaveLength(20);
+    expect(FLOOR_OPTIONS[0]).toEqual({ code: "GF", name: "Ground Floor" });
+    expect(FLOOR_OPTIONS.at(-1)).toEqual({ code: "RT", name: "Rooftop" });
+    const codes = FLOOR_OPTIONS.map((f) => f.code);
+    expect(new Set(codes).size).toBe(codes.length);
+  });
+
+  it("looks up a code by name; old or unknown names have none", () => {
+    expect(floorCode("2nd Floor - Left Wing")).toBe("2F-LW");
+    expect(floorCode("9th Floor - Right Wing")).toBe("9F-RW");
+    expect(floorCode("3rd Floor - LW")).toBeNull();
+    expect(floorCode(null)).toBeNull();
   });
 });
