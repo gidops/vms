@@ -44,7 +44,8 @@ import {
 import { useAuth } from "@/shared/auth/AuthContext";
 import { useDebounced } from "@/shared/useDebounced";
 import { formatWatDateTime } from "@/shared/wat";
-import { FilterPills } from "./FilterPills";
+import { FilterPills, SCROLLING_PILLS } from "./FilterPills";
+import { RecordCard } from "./RecordCard";
 
 const PAGE_SIZE = 8;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -373,7 +374,7 @@ export function CommsOptInsScreen() {
         frameless
         toolbar={
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex min-w-0 flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
               <h2
                 className="text-xl font-semibold text-primary"
                 aria-live="polite"
@@ -385,6 +386,7 @@ export function CommsOptInsScreen() {
               </h2>
               <FilterPills<ConsentStatusFilter>
                 aria-label={t("filterLabel")}
+                className={SCROLLING_PILLS}
                 value={status}
                 onValueChange={(next) => {
                   setStatus(next);
@@ -476,34 +478,25 @@ export function CommsOptInsScreen() {
               </Table>
             </div>
 
-            <ul className="flex flex-col overflow-hidden rounded-lg border border-border md:hidden">
+            <div className="flex flex-col gap-4 md:hidden">
               {data.items.map((item) => (
-                <li
+                <RecordCard
                   key={item.email}
-                  className="flex items-start justify-between gap-3 border-b border-border-subtle px-4 py-3 last:border-b-0"
-                >
-                  <div className="flex min-w-0 flex-col gap-0.5">
-                    <span className="truncate font-medium text-fg">
-                      {item.email}
-                    </span>
-                    <span className="text-sm text-fg-muted">
-                      {[
-                        item.fullName,
-                        formatWatDateTime(item.answeredAt, locale),
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </span>
-                  </div>
-                  <ConsentToggle
-                    item={item}
-                    canRemove={canManage}
-                    canAdd={canGrant}
-                    onRequest={setPending}
-                  />
-                </li>
+                  eyebrow={`${t("columns.lastAnswered")}: ${formatWatDateTime(item.answeredAt, locale)}`}
+                  title={item.fullName ?? item.email}
+                  subtitle={item.fullName ? item.email : undefined}
+                  status={
+                    <ConsentToggle
+                      item={item}
+                      canRemove={canManage}
+                      canAdd={canGrant}
+                      onRequest={setPending}
+                    />
+                  }
+                  footer={item.consent ? t("filters.in") : t("filters.out")}
+                />
               ))}
-            </ul>
+            </div>
           </>
         ) : null}
       </RecordTable>

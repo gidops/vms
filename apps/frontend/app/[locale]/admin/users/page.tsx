@@ -28,6 +28,7 @@ import { useSearchParams } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
+import { RecordCard } from "@/app/[locale]/_components/RecordCard";
 import {
   headerActionButton,
   PageHeaderBar,
@@ -59,6 +60,7 @@ function UsersTab() {
   const t = useTranslations("users");
   const tV2 = useTranslations("adminV2.users");
   const tRoles = useTranslations("roles");
+  const tCommon = useTranslations("common");
   const format = useFormatter();
   const drawer = useSearchParams().get("layout") === "drawer";
   const { user, hasPermission } = useAuth();
@@ -105,8 +107,8 @@ function UsersTab() {
     <TopNavShell
       nav={<AppTopNav app="admin" active="users" />}
       filterBar={
-        <FilterBar>
-          <div className="min-w-56 flex-1">
+        <FilterBar
+          search={
             <SearchInput
               placeholder={tV2("searchPlaceholder")}
               value={search}
@@ -116,7 +118,9 @@ function UsersTab() {
               }}
               onClear={() => setSearch("")}
             />
-          </div>
+          }
+          filtersLabel={tCommon("filters")}
+        >
           <Select
             value={role}
             onValueChange={(v) => {
@@ -190,88 +194,147 @@ function UsersTab() {
               ) : undefined
             }
           >
-            <Table>
-              <TableHeader className="[&_tr]:border-t-0">
-                <TableRow>
-                  <TableHead>{t("columns.user")}</TableHead>
-                  <TableHead>{t("columns.roles")}</TableHead>
-                  <TableHead>{t("columns.status")}</TableHead>
-                  <TableHead>{t("columns.created")}</TableHead>
-                  {hasActions ? (
-                    <TableHead>{t("columns.actions")}</TableHead>
-                  ) : null}
-                </TableRow>
-              </TableHeader>
-              <TableBody striped>
-                {rows.map((u) => (
-                  <TableRow
-                    key={u.id}
-                    className="cursor-pointer"
-                    onClick={() => setViewingId(u.id)}
-                  >
-                    <TableCell>
-                      <span className="flex flex-col">
-                        <span className="font-medium text-fg">
-                          {u.fullName}
-                        </span>
-                        <span className="text-xs text-fg-muted">{u.email}</span>
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="flex flex-wrap gap-1">
-                        {u.roles.map((r) => (
-                          <Badge key={r} intent="primary" tone="soft">
-                            {roleLabel(tRoles, r)}
-                          </Badge>
-                        ))}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        intent={u.isActive ? "success" : "neutral"}
-                        tone="soft"
-                      >
-                        {u.isActive ? t("active") : t("inactive")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-fg-muted">
-                      {format.dateTime(new Date(u.createdAt), {
-                        dateStyle: "medium",
-                      })}
-                    </TableCell>
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader className="[&_tr]:border-t-0">
+                  <TableRow>
+                    <TableHead>{t("columns.user")}</TableHead>
+                    <TableHead>{t("columns.roles")}</TableHead>
+                    <TableHead>{t("columns.status")}</TableHead>
+                    <TableHead>{t("columns.created")}</TableHead>
                     {hasActions ? (
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <span className="flex items-center gap-2">
-                          {canUpdate ? (
-                            <Button
-                              intent="neutral"
-                              tone="outline"
-                              size="sm"
-                              className="min-w-28 text-xs"
-                              onClick={() => setEditing(u)}
-                            >
-                              {t("editRoles")}
-                            </Button>
-                          ) : null}
-                          {canDelete ? (
-                            <Button
-                              intent="danger"
-                              tone="outline"
-                              size="sm"
-                              className="min-w-28 text-xs"
-                              disabled={u.id === user?.id}
-                              onClick={() => setDeleting(u)}
-                            >
-                              {t("delete")}
-                            </Button>
-                          ) : null}
-                        </span>
-                      </TableCell>
+                      <TableHead>{t("columns.actions")}</TableHead>
                     ) : null}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody striped>
+                  {rows.map((u) => (
+                    <TableRow
+                      key={u.id}
+                      className="cursor-pointer"
+                      onClick={() => setViewingId(u.id)}
+                    >
+                      <TableCell>
+                        <span className="flex flex-col">
+                          <span className="font-medium text-fg">
+                            {u.fullName}
+                          </span>
+                          <span className="text-xs text-fg-muted">
+                            {u.email}
+                          </span>
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="flex flex-wrap gap-1">
+                          {u.roles.map((r) => (
+                            <Badge key={r} intent="primary" tone="soft">
+                              {roleLabel(tRoles, r)}
+                            </Badge>
+                          ))}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          intent={u.isActive ? "success" : "neutral"}
+                          tone="soft"
+                        >
+                          {u.isActive ? t("active") : t("inactive")}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-fg-muted">
+                        {format.dateTime(new Date(u.createdAt), {
+                          dateStyle: "medium",
+                        })}
+                      </TableCell>
+                      {hasActions ? (
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <span className="flex items-center gap-2">
+                            {canUpdate ? (
+                              <Button
+                                intent="neutral"
+                                tone="outline"
+                                size="sm"
+                                className="min-w-28 text-xs"
+                                onClick={() => setEditing(u)}
+                              >
+                                {t("editRoles")}
+                              </Button>
+                            ) : null}
+                            {canDelete ? (
+                              <Button
+                                intent="danger"
+                                tone="outline"
+                                size="sm"
+                                className="min-w-28 text-xs"
+                                disabled={u.id === user?.id}
+                                onClick={() => setDeleting(u)}
+                              >
+                                {t("delete")}
+                              </Button>
+                            ) : null}
+                          </span>
+                        </TableCell>
+                      ) : null}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Small screens: each user as a tappable card. */}
+            <div className="flex flex-col gap-4 md:hidden">
+              {rows.map((u) => (
+                <RecordCard
+                  key={u.id}
+                  eyebrow={u.roles.map((r) => roleLabel(tRoles, r)).join(" · ")}
+                  title={u.fullName}
+                  subtitle={u.email}
+                  status={
+                    <Badge
+                      intent={u.isActive ? "success" : "neutral"}
+                      tone="soft"
+                    >
+                      {u.isActive ? t("active") : t("inactive")}
+                    </Badge>
+                  }
+                  footer={`${t("columns.created")} ${format.dateTime(
+                    new Date(u.createdAt),
+                    { dateStyle: "medium" },
+                  )}`}
+                  action={
+                    hasActions ? (
+                      <>
+                        {canUpdate ? (
+                          <Button
+                            intent="neutral"
+                            tone="outline"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => setEditing(u)}
+                          >
+                            {t("editRoles")}
+                          </Button>
+                        ) : null}
+                        {canDelete ? (
+                          <Button
+                            intent="danger"
+                            tone="outline"
+                            size="sm"
+                            className="bg-surface text-xs"
+                            disabled={u.id === user?.id}
+                            onClick={() => setDeleting(u)}
+                          >
+                            {t("delete")}
+                          </Button>
+                        ) : null}
+                      </>
+                    ) : undefined
+                  }
+                  onOpen={() => setViewingId(u.id)}
+                  openLabel={tV2("openFor", { name: u.fullName })}
+                />
+              ))}
+            </div>
           </RecordTable>
         )}
       </div>

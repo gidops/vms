@@ -2,8 +2,10 @@
 
 import {
   Avatar,
+  cn,
   RecordTable,
   Spinner,
+  StatusBadge,
   Table,
   TableBody,
   TableCell,
@@ -12,10 +14,11 @@ import {
   TableRow,
   TopNavShell,
 } from "@vms/ui";
-import { CircleUser } from "lucide-react";
+import { ChevronDown, CircleUser } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
+import { RecordCard } from "@/app/[locale]/_components/RecordCard";
 import { StatusCell } from "@/app/[locale]/_components/StatusCell";
 import { QuickActionSheet } from "@/app/[locale]/dashboard/_components/QuickActionSheet";
 import {
@@ -35,9 +38,83 @@ import {
 } from "./_components/VisitFilters";
 import { useMyVisits } from "@/data/requests/queries";
 import { useStaffActivityFeed, useStaffStats } from "@/data/staff/queries";
+import type { VisitListItem } from "@/data/visits/visits.api";
 import type { StaffActivityItem } from "@/data/staff/staff.api";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
+
+/** Cards shown before Show more: enough to scan without pushing Recent Updates far down. */
+const CARDS_BEFORE_MORE = 4;
+
+/** Small screens: the Expected Guests rows as cards, the rest behind Show more. */
+function ExpectedGuestCards({
+  rows,
+  onOpen,
+}: {
+  rows: VisitListItem[];
+  onOpen: (id: string) => void;
+}) {
+  const t = useTranslations("staff");
+  const [expanded, setExpanded] = React.useState(false);
+  if (rows.length === 0) {
+    return (
+      <p className="py-10 text-center text-fg-subtle md:hidden">
+        {t("noVisits")}
+      </p>
+    );
+  }
+  const shown = expanded ? rows : rows.slice(0, CARDS_BEFORE_MORE);
+  return (
+    <div className="flex flex-col gap-4 md:hidden">
+      {shown.map((row) => {
+        const name =
+          row.isGroupVisit && row.groupName
+            ? row.groupName
+            : row.visitor.fullName;
+        return (
+          <RecordCard
+            key={row.id}
+            eyebrow={row.purpose}
+            title={name}
+            subtitle={
+              row.isGroupVisit
+                ? (row.groupContact ?? undefined)
+                : row.visitor.email
+            }
+            status={<StatusBadge status={row.status} />}
+            footer={
+              <span className="flex items-center gap-1.5">
+                <CircleUser className="size-4" aria-hidden="true" />
+                {t("guestCount", { count: row.groupSize })}
+              </span>
+            }
+            onOpen={() => onOpen(row.id)}
+            openLabel={t("card.openFor", { name })}
+          />
+        );
+      })}
+      {rows.length > CARDS_BEFORE_MORE ? (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((e) => !e)}
+          className="flex items-center justify-center gap-1 border-y border-surface-muted py-3 text-sm font-semibold text-primary outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+        >
+          <span className="underline underline-offset-4">
+            {expanded ? t("showLess") : t("showMore")}
+          </span>
+          <ChevronDown
+            className={cn(
+              "size-4 transition-transform",
+              expanded && "rotate-180",
+            )}
+            aria-hidden="true"
+          />
+        </button>
+      ) : null}
+    </div>
+  );
+}
 
 function Staff() {
   const t = useTranslations("staff");
@@ -131,13 +208,15 @@ function Staff() {
           <RecordTable
             frameless
             toolbar={
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              // Small screens stack the range under the title on one row that scrolls sideways.
+              <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:justify-between">
                 <h2 className="text-xl font-semibold text-primary">
                   {t("expectedGuests")}
                 </h2>
                 <StaffRangeFilter
                   value={range}
                   disabled={searching}
+                  className="max-w-full overflow-x-auto md:overflow-visible"
                   onChange={(next, window) => {
                     setRange(next);
                     if (window) setDateWindow(window);
@@ -151,88 +230,98 @@ function Staff() {
                 <Spinner />
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("columns.visitor")}</TableHead>
-                    <TableHead>{t("columns.purpose")}</TableHead>
-                    <TableHead>{t("columns.noOfGuest")}</TableHead>
-                    <TableHead>{t("columns.status")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody striped>
-                  {rows.length === 0 ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={4}
-                        className="py-10 text-center text-fg-subtle"
-                      >
-                        {t("noVisits")}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    rows.map((row) => {
-                      const isGroup = row.isGroupVisit && row.groupName;
-                      return (
-                        <TableRow
-                          key={row.id}
-                          className="cursor-pointer"
-                          onClick={() =>
-                            setSelected({ kind: "request", id: row.id })
-                          }
-                        >
-                          <TableCell>
-                            <span className="flex items-center gap-3">
-                              <Avatar
-                                name={
-                                  isGroup
-                                    ? row.groupName!
-                                    : row.visitor.fullName
-                                }
-                                size="md"
-                                accent={row.isGroupVisit ? "group" : "single"}
-                              />
-                              <span className="flex flex-col">
-                                <span className="font-medium text-fg">
-                                  {isGroup
-                                    ? row.groupName
-                                    : row.visitor.fullName}
-                                </span>
-                                <span className="text-xs text-fg-muted">
-                                  {isGroup
-                                    ? (row.groupContact ?? "")
-                                    : row.visitor.email}
-                                </span>
-                              </span>
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-fg-muted">
-                            {row.purpose}
-                          </TableCell>
-                          <TableCell className="text-fg-muted">
-                            <span className="flex items-center gap-1.5">
-                              <CircleUser
-                                className="size-4"
-                                aria-hidden="true"
-                              />
-                              {t("guestCount", { count: row.groupSize })}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <StatusCell
-                              status={row.status}
-                              scheduledAt={row.scheduledAt}
-                              checkInAt={row.checkInAt}
-                              checkOutAt={row.checkOutAt}
-                              createdAt={row.createdAt}
-                            />
+              <>
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t("columns.visitor")}</TableHead>
+                        <TableHead>{t("columns.purpose")}</TableHead>
+                        <TableHead>{t("columns.noOfGuest")}</TableHead>
+                        <TableHead>{t("columns.status")}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody striped>
+                      {rows.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={4}
+                            className="py-10 text-center text-fg-subtle"
+                          >
+                            {t("noVisits")}
                           </TableCell>
                         </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
+                      ) : (
+                        rows.map((row) => {
+                          const isGroup = row.isGroupVisit && row.groupName;
+                          return (
+                            <TableRow
+                              key={row.id}
+                              className="cursor-pointer"
+                              onClick={() =>
+                                setSelected({ kind: "request", id: row.id })
+                              }
+                            >
+                              <TableCell>
+                                <span className="flex items-center gap-3">
+                                  <Avatar
+                                    name={
+                                      isGroup
+                                        ? row.groupName!
+                                        : row.visitor.fullName
+                                    }
+                                    size="md"
+                                    accent={
+                                      row.isGroupVisit ? "group" : "single"
+                                    }
+                                  />
+                                  <span className="flex flex-col">
+                                    <span className="font-medium text-fg">
+                                      {isGroup
+                                        ? row.groupName
+                                        : row.visitor.fullName}
+                                    </span>
+                                    <span className="text-xs text-fg-muted">
+                                      {isGroup
+                                        ? (row.groupContact ?? "")
+                                        : row.visitor.email}
+                                    </span>
+                                  </span>
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-fg-muted">
+                                {row.purpose}
+                              </TableCell>
+                              <TableCell className="text-fg-muted">
+                                <span className="flex items-center gap-1.5">
+                                  <CircleUser
+                                    className="size-4"
+                                    aria-hidden="true"
+                                  />
+                                  {t("guestCount", { count: row.groupSize })}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <StatusCell
+                                  status={row.status}
+                                  scheduledAt={row.scheduledAt}
+                                  checkInAt={row.checkInAt}
+                                  checkOutAt={row.checkOutAt}
+                                  createdAt={row.createdAt}
+                                />
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+                <ExpectedGuestCards
+                  rows={rows}
+                  onOpen={(id) => setSelected({ kind: "request", id })}
+                />
+              </>
             )}
           </RecordTable>
 

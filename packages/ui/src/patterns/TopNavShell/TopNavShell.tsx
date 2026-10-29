@@ -35,7 +35,7 @@ export function TopNavShell({
   return (
     <div
       className={cn(
-        "flex h-screen w-full flex-col bg-canvas text-fg",
+        "flex h-dvh w-full flex-col bg-canvas text-fg",
         className,
       )}
     >

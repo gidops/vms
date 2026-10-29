@@ -7,6 +7,7 @@ import {
   Pagination,
   RecordTable,
   Spinner,
+  StatusBadge,
   Table,
   TableBody,
   TableCell,
@@ -17,7 +18,11 @@ import {
 import { CircleUser } from "lucide-react";
 import { useLocale, useNow, useTranslations } from "next-intl";
 import * as React from "react";
-import { FilterPills } from "@/app/[locale]/_components/FilterPills";
+import {
+  FilterPills,
+  SCROLLING_PILLS,
+} from "@/app/[locale]/_components/FilterPills";
+import { RecordCard } from "@/app/[locale]/_components/RecordCard";
 import { PageHeaderBar } from "@/app/[locale]/_components/PageHeaderBar";
 import { StatusCell } from "@/app/[locale]/_components/StatusCell";
 import { useAdminVisits, type AdminVisitsParams } from "@/data/admin/queries";
@@ -132,8 +137,9 @@ function RowActions({
     );
   }
   if (canApprove && row.status === "PENDING") {
+    // A fragment so each button sits directly in the cell's or card's action row.
     return (
-      <span className="flex items-center gap-2">
+      <>
         {canDeny ? (
           <Button
             intent="danger"
@@ -154,7 +160,7 @@ function RowActions({
         >
           {t("approve")}
         </Button>
-      </span>
+      </>
     );
   }
   return (
@@ -218,6 +224,7 @@ export function PendingApprovalsTable({
         setPage(1);
       }}
       options={BUCKETS.map((b) => ({ value: b, label: t(`bucket.${b}`) }))}
+      className={variant === "vmc" ? SCROLLING_PILLS : undefined}
     />
   );
 
@@ -226,96 +233,151 @@ export function PendingApprovalsTable({
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
     ) : undefined;
 
+  const action = (row: VisitListItem) =>
+    actions === "review" ? (
+      <ReviewButton row={row} onOpen={onOpen} />
+    ) : (
+      <RowActions
+        row={row}
+        canApprove={canApprove}
+        canDeny={canDeny && !!onDeny}
+        onOpen={onOpen}
+        onDeny={(r) => onDeny?.(r)}
+        reviewLabel={t("review")}
+        updateLabel={tStaff("actions.update")}
+      />
+    );
+
   const table = (
-    <Table>
-      {/* The page header row already closes off the top, except in the vmc card. */}
-      <TableHeader
-        className={variant === "vmc" ? undefined : "[&_tr]:border-t-0"}
-      >
-        <TableRow>
-          <TableHead>{tDash("columns.visitor")}</TableHead>
-          <TableHead>
-            {compact ? t("columns.hostFloor") : tDash("columns.hostUnit")}
-          </TableHead>
-          <TableHead>{tDash("columns.purpose")}</TableHead>
-          <TableHead>{tDash("columns.guestCount")}</TableHead>
-          <TableHead>{tDash("columns.status")}</TableHead>
-          {showWaiting ? (
-            <TableHead>{tCard("columns.waiting")}</TableHead>
-          ) : null}
-          <TableHead>{tDash("columns.action")}</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody striped>
-        {visits.isLoading ? (
+    <div className="hidden md:block">
+      <Table>
+        {/* The page header row already closes off the top, except in the vmc card. */}
+        <TableHeader
+          className={variant === "vmc" ? undefined : "[&_tr]:border-t-0"}
+        >
           <TableRow>
-            <TableCell colSpan={columns}>
-              <div className="flex justify-center py-10">
-                <Spinner />
-              </div>
-            </TableCell>
+            <TableHead>{tDash("columns.visitor")}</TableHead>
+            <TableHead>
+              {compact ? t("columns.hostFloor") : tDash("columns.hostUnit")}
+            </TableHead>
+            <TableHead>{tDash("columns.purpose")}</TableHead>
+            <TableHead>{tDash("columns.guestCount")}</TableHead>
+            <TableHead>{tDash("columns.status")}</TableHead>
+            {showWaiting ? (
+              <TableHead>{tCard("columns.waiting")}</TableHead>
+            ) : null}
+            <TableHead>{tDash("columns.action")}</TableHead>
           </TableRow>
-        ) : rows.length === 0 ? (
-          <TableRow>
-            <TableCell
-              colSpan={columns}
-              className="py-10 text-center text-fg-subtle"
-            >
-              {t("empty")}
-            </TableCell>
-          </TableRow>
-        ) : (
-          rows.map((row) => (
-            <TableRow key={row.id}>
-              <TableCell>
-                <VisitorCell row={row} />
-              </TableCell>
-              <TableCell className="text-fg-muted">
-                {row.host?.user.fullName ?? row.floor ?? "—"}
-              </TableCell>
-              <TableCell className="text-fg-muted">{row.purpose}</TableCell>
-              <TableCell className="text-fg-muted">
-                {showWaiting ? (
-                  <span className="flex items-center gap-1.5">
-                    <CircleUser className="size-4" aria-hidden="true" />
-                    {tDash("guestCount", { count: row.groupSize })}
-                  </span>
-                ) : (
-                  nf.format(row.groupSize)
-                )}
-              </TableCell>
-              <TableCell>
-                <StatusCell
-                  status={row.status}
-                  scheduledAt={row.scheduledAt}
-                  createdAt={row.createdAt}
-                />
-              </TableCell>
-              {showWaiting ? (
-                <TableCell>
-                  <Waiting row={row} now={now} />
-                </TableCell>
-              ) : null}
-              <TableCell>
-                {actions === "review" ? (
-                  <ReviewButton row={row} onOpen={onOpen} />
-                ) : (
-                  <RowActions
-                    row={row}
-                    canApprove={canApprove}
-                    canDeny={canDeny && !!onDeny}
-                    onOpen={onOpen}
-                    onDeny={(r) => onDeny?.(r)}
-                    reviewLabel={t("review")}
-                    updateLabel={tStaff("actions.update")}
-                  />
-                )}
+        </TableHeader>
+        <TableBody striped>
+          {visits.isLoading ? (
+            <TableRow>
+              <TableCell colSpan={columns}>
+                <div className="flex justify-center py-10">
+                  <Spinner />
+                </div>
               </TableCell>
             </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
+          ) : rows.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={columns}
+                className="py-10 text-center text-fg-subtle"
+              >
+                {t("empty")}
+              </TableCell>
+            </TableRow>
+          ) : (
+            rows.map((row) => (
+              <TableRow key={row.id}>
+                <TableCell>
+                  <VisitorCell row={row} />
+                </TableCell>
+                <TableCell className="text-fg-muted">
+                  {row.host?.user.fullName ?? row.floor ?? "—"}
+                </TableCell>
+                <TableCell className="text-fg-muted">{row.purpose}</TableCell>
+                <TableCell className="text-fg-muted">
+                  {showWaiting ? (
+                    <span className="flex items-center gap-1.5">
+                      <CircleUser className="size-4" aria-hidden="true" />
+                      {tDash("guestCount", { count: row.groupSize })}
+                    </span>
+                  ) : (
+                    nf.format(row.groupSize)
+                  )}
+                </TableCell>
+                <TableCell>
+                  <StatusCell
+                    status={row.status}
+                    scheduledAt={row.scheduledAt}
+                    createdAt={row.createdAt}
+                  />
+                </TableCell>
+                {showWaiting ? (
+                  <TableCell>
+                    <Waiting row={row} now={now} />
+                  </TableCell>
+                ) : null}
+                <TableCell>
+                  <span className="flex items-center gap-2">{action(row)}</span>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+
+  // Small screens: each request as a tappable card.
+  const cards = (
+    <div className="flex flex-col gap-4 md:hidden">
+      {visits.isLoading ? (
+        <div className="flex justify-center py-10">
+          <Spinner />
+        </div>
+      ) : rows.length === 0 ? (
+        <p className="py-10 text-center text-fg-subtle">{t("empty")}</p>
+      ) : (
+        rows.map((row) => {
+          const name = nameOf(row);
+          const host = row.host?.user.fullName ?? row.floor;
+          return (
+            <RecordCard
+              key={row.id}
+              eyebrow={row.purpose}
+              title={name}
+              subtitle={
+                row.isGroupVisit
+                  ? (row.groupContact ?? undefined)
+                  : row.visitor.email
+              }
+              extra={
+                host || showWaiting ? (
+                  <>
+                    {host ? (
+                      <span className="text-sm text-fg-muted">{host}</span>
+                    ) : null}
+                    {showWaiting ? <Waiting row={row} now={now} /> : null}
+                  </>
+                ) : undefined
+              }
+              status={<StatusBadge status={row.status} />}
+              footer={
+                <span className="flex items-center gap-1.5">
+                  <CircleUser className="size-4" aria-hidden="true" />
+                  {tDash("guestCount", { count: row.groupSize })}
+                </span>
+              }
+              action={action(row)}
+              onOpen={() => onOpen(row)}
+              openLabel={tStaff("card.openFor", { name })}
+            />
+          );
+        })
+      )}
+    </div>
   );
 
   if (variant === "vmc") {
@@ -323,7 +385,8 @@ export function PendingApprovalsTable({
       <RecordTable
         frameless
         toolbar={
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          // Small screens stack the pills under the title on one row that scrolls sideways.
+          <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:justify-between">
             <h2 className="text-xl font-semibold text-primary">{t("title")}</h2>
             {pills}
           </div>
@@ -331,6 +394,7 @@ export function PendingApprovalsTable({
         pagination={pagination}
       >
         {table}
+        {cards}
       </RecordTable>
     );
   }
@@ -340,6 +404,7 @@ export function PendingApprovalsTable({
       <PageHeaderBar title={t("title")} actions={pills} />
       <RecordTable frameless pagination={pagination}>
         {table}
+        {cards}
       </RecordTable>
     </div>
   );

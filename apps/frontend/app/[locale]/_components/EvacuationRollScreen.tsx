@@ -20,12 +20,19 @@ import {
   TableRow,
   cn,
 } from "@vms/ui";
-import { CheckCircle2, LifeBuoy, Printer, RefreshCw } from "lucide-react";
+import {
+  CheckCircle2,
+  LifeBuoy,
+  Phone,
+  Printer,
+  RefreshCw,
+} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { useEvacuationRoll } from "@/data/evacuation/queries";
 import { formatWatDateTime, formatWatTime } from "@/shared/wat";
 import { useEvacuationAssistText } from "./EvacuationAssist";
+import { RecordCard } from "./RecordCard";
 import print from "./EvacuationRollPrint.module.css";
 
 export interface FloorGroup {
@@ -171,69 +178,62 @@ function RollTable({
         </Table>
       </div>
 
-      {/* Phone: grouped cards for wardens on the move. */}
-      <ul
-        className="flex flex-col overflow-hidden rounded-lg border border-border md:hidden"
-        aria-label={t("title")}
-      >
+      {/* Phone: floor by floor, a card per visitor for wardens on the move. */}
+      <ul className="flex flex-col gap-6 md:hidden" aria-label={t("title")}>
         {groups.map((g) => (
-          <li key={g.floor ?? "none"}>
-            <p className="border-b border-border-subtle px-4 py-2 text-sm font-semibold text-fg">
+          <li key={g.floor ?? "none"} className="flex flex-col gap-3">
+            <p className="text-sm font-semibold text-fg">
               <FloorLabel floor={g.floor} />
               <span className="ms-2 font-normal text-fg-muted">
                 · {floorTotals.get(g.floor) ?? g.rows.length}
               </span>
             </p>
-            <ul>
+            <ul className="flex flex-col gap-4">
               {g.rows.map((r) => (
-                <li
-                  key={r.visitId}
-                  className="flex items-start gap-3 border-b border-border-subtle px-4 py-3"
-                >
-                  <Avatar name={r.fullName} size="md" accent="single" />
-                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className="truncate font-medium text-fg">
-                        {r.fullName}
-                      </span>
-                      <span className="shrink-0 text-sm text-fg-muted">
-                        {formatWatTime(r.checkInAt, locale)}
-                      </span>
-                    </div>
-                    {r.organization ? (
-                      <span className="truncate text-xs text-fg-muted">
-                        {r.organization}
-                      </span>
-                    ) : null}
-                    {r.rfidCardNumber ? (
-                      <span className="text-xs text-fg-muted" dir="ltr">
-                        {tCard("badge", { number: r.rfidCardNumber })}
-                      </span>
-                    ) : null}
-                    {r.assistTypes.length ? (
-                      <span className="text-xs text-fg-muted">
-                        {assistText(r.assistTypes, r.assistOther)}
-                      </span>
-                    ) : null}
-                    <span className="text-sm text-fg">
-                      <FloorLabel floor={r.floor} />
-                      {r.hostName ? (
-                        <span className="text-fg-muted">
-                          {" · "}
-                          {r.hostName}
+                <li key={r.visitId}>
+                  <RecordCard
+                    eyebrow={`${t("columns.checkedIn")} ${formatWatTime(r.checkInAt, locale)}`}
+                    title={r.fullName}
+                    subtitle={r.organization ?? undefined}
+                    extra={
+                      r.rfidCardNumber || r.assistTypes.length ? (
+                        <span className="flex flex-col gap-0.5 text-sm text-fg-muted">
+                          {r.assistTypes.length ? (
+                            <span className="font-medium text-fg">
+                              {assistText(r.assistTypes, r.assistOther)}
+                            </span>
+                          ) : null}
+                          {r.rfidCardNumber ? (
+                            <span dir="ltr">
+                              {tCard("badge", { number: r.rfidCardNumber })}
+                            </span>
+                          ) : null}
                         </span>
-                      ) : null}
-                    </span>
-                    {r.phone ? (
-                      <a
-                        href={`tel:${r.phone}`}
-                        className="rounded-sm text-sm font-medium text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
-                        dir="ltr"
-                      >
-                        {r.phone}
-                      </a>
-                    ) : null}
-                  </div>
+                      ) : undefined
+                    }
+                    footer={
+                      <>
+                        <FloorLabel floor={r.floor} />
+                        {r.hostName ? ` · ${r.hostName}` : null}
+                      </>
+                    }
+                    action={
+                      r.phone ? (
+                        <Button
+                          asChild
+                          intent="neutral"
+                          tone="outline"
+                          size="sm"
+                          className="text-xs"
+                        >
+                          <a href={`tel:${r.phone}`} dir="ltr">
+                            <Phone className="size-3.5" aria-hidden="true" />
+                            {r.phone}
+                          </a>
+                        </Button>
+                      ) : undefined
+                    }
+                  />
                 </li>
               ))}
             </ul>

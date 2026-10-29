@@ -10,6 +10,10 @@ export const filterPillState = (active: boolean) =>
     ? "border-primary text-primary"
     : "border-border text-fg-muted hover:text-fg";
 
+/** Pills keep one row on small screens and scroll sideways; they wrap from `md` up. */
+export const SCROLLING_PILLS =
+  "max-w-full flex-nowrap overflow-x-auto md:flex-wrap md:overflow-visible";
+
 /** Single-choice row of filter pills, rendered as a radiogroup. */
 export function FilterPills<T extends string>({
   value,

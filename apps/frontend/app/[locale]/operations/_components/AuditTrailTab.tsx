@@ -31,7 +31,11 @@ import {
 import { Download, ScrollText } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
-import { FilterPills } from "@/app/[locale]/_components/FilterPills";
+import {
+  FilterPills,
+  SCROLLING_PILLS,
+} from "@/app/[locale]/_components/FilterPills";
+import { RecordCard } from "@/app/[locale]/_components/RecordCard";
 import { Field } from "@/app/[locale]/_components/visit-detail/helpers";
 import { SheetSection } from "@/app/[locale]/_components/visit-detail/sections/SheetSection";
 import type { AuditParams, AuditRow } from "@/data/audit/audit.api";
@@ -174,9 +178,10 @@ export function AuditTrailTab() {
 
   return (
     <section className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:justify-between">
         <FilterPills<Range>
           aria-label={t("range")}
+          className={SCROLLING_PILLS}
           value={range}
           onValueChange={(v) => {
             setRange(v);
@@ -189,6 +194,7 @@ export function AuditTrailTab() {
         />
         {canExport ? (
           <Button
+            className="self-start"
             onClick={() => exporter.mutate(params)}
             disabled={exporter.isPending || customInvalid}
             aria-busy={exporter.isPending || undefined}
@@ -248,7 +254,7 @@ export function AuditTrailTab() {
               {data ? new Intl.NumberFormat(locale).format(data.total) : "—"}{" "}
               <span className="font-normal text-fg-muted">{t("events")}</span>
             </h3>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:flex-wrap md:items-center">
               <Select
                 value={category}
                 onValueChange={(v) => {
@@ -256,7 +262,10 @@ export function AuditTrailTab() {
                   reset();
                 }}
               >
-                <SelectTrigger aria-label={t("category")} className="w-48">
+                <SelectTrigger
+                  aria-label={t("category")}
+                  className="w-full md:w-48"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -310,45 +319,84 @@ export function AuditTrailTab() {
             <AlertDescription>{t("error")}</AlertDescription>
           </Alert>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("columns.time")}</TableHead>
-                <TableHead>{t("columns.user")}</TableHead>
-                <TableHead>{t("columns.action")}</TableHead>
-                <TableHead>{t("columns.entity")}</TableHead>
-                <TableHead>{t("columns.ip")}</TableHead>
-                <TableHead>
-                  <span className="sr-only">{t("columns.open")}</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody striped>
+          <>
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("columns.time")}</TableHead>
+                    <TableHead>{t("columns.user")}</TableHead>
+                    <TableHead>{t("columns.action")}</TableHead>
+                    <TableHead>{t("columns.entity")}</TableHead>
+                    <TableHead>{t("columns.ip")}</TableHead>
+                    <TableHead>
+                      <span className="sr-only">{t("columns.open")}</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody striped>
+                  {(data?.items ?? []).map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell className="whitespace-nowrap text-fg-muted">
+                        {formatWatDateTime(row.createdAt, locale)}
+                      </TableCell>
+                      <TableCell>
+                        {row.actor ? (
+                          <span className="flex flex-col">
+                            <span className="text-fg">
+                              {row.actor.fullName}
+                            </span>
+                            <span className="text-xs text-fg-muted">
+                              {row.actor.email}
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-fg-subtle">{t("system")}</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-fg">
+                        {label(row.action)}
+                      </TableCell>
+                      <TableCell className="text-fg-muted">
+                        {row.entityType}
+                      </TableCell>
+                      <TableCell className="text-fg-muted" dir="ltr">
+                        {row.ip ?? "—"}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          intent="neutral"
+                          tone="outline"
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => setOpenRow(row)}
+                        >
+                          {t("open")}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Small screens: each event as a tappable card. */}
+            <div className="flex flex-col gap-4 md:hidden">
               {(data?.items ?? []).map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="whitespace-nowrap text-fg-muted">
-                    {formatWatDateTime(row.createdAt, locale)}
-                  </TableCell>
-                  <TableCell>
-                    {row.actor ? (
-                      <span className="flex flex-col">
-                        <span className="text-fg">{row.actor.fullName}</span>
-                        <span className="text-xs text-fg-muted">
-                          {row.actor.email}
-                        </span>
-                      </span>
-                    ) : (
-                      <span className="text-fg-subtle">{t("system")}</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-fg">{label(row.action)}</TableCell>
-                  <TableCell className="text-fg-muted">
-                    {row.entityType}
-                  </TableCell>
-                  <TableCell className="text-fg-muted" dir="ltr">
-                    {row.ip ?? "—"}
-                  </TableCell>
-                  <TableCell>
+                <RecordCard
+                  key={row.id}
+                  eyebrow={
+                    tCat.has(row.category) ? tCat(row.category) : row.category
+                  }
+                  title={label(row.action)}
+                  subtitle={row.actor ? row.actor.fullName : t("system")}
+                  extra={
+                    <span className="text-sm text-fg-muted">
+                      {row.entityType}
+                    </span>
+                  }
+                  footer={formatWatDateTime(row.createdAt, locale)}
+                  action={
                     <Button
                       intent="neutral"
                       tone="outline"
@@ -358,11 +406,13 @@ export function AuditTrailTab() {
                     >
                       {t("open")}
                     </Button>
-                  </TableCell>
-                </TableRow>
+                  }
+                  onOpen={() => setOpenRow(row)}
+                  openLabel={t("openFor", { action: label(row.action) })}
+                />
               ))}
-            </TableBody>
-          </Table>
+            </div>
+          </>
         )}
       </RecordTable>
 

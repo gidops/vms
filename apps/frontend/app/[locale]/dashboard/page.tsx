@@ -29,6 +29,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
 import { useEvacuationAlertCount } from "@/app/[locale]/_components/EvacuationIndicator";
+import { RecordCard } from "@/app/[locale]/_components/RecordCard";
 import { RfidCardBadge } from "@/app/[locale]/_components/RfidCardBadge";
 import { VisitDetailSheet } from "@/app/[locale]/_components/VisitDetailSheet";
 import { CheckInModal } from "@/app/[locale]/dashboard/_components/checkin/CheckInModal";
@@ -202,13 +203,7 @@ function Dashboard() {
       nav={<AppTopNav active="schedule" />}
       filterBar={
         <FilterBar
-          actions={
-            <Button onClick={() => applyFilters({ search: draft.trim() })}>
-              {t("filters.search")}
-            </Button>
-          }
-        >
-          <div className="min-w-56 flex-1">
+          search={
             <SearchInput
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
@@ -222,7 +217,14 @@ function Dashboard() {
               placeholder={t("filters.searchPlaceholder")}
               aria-label={t("filters.searchPlaceholder")}
             />
-          </div>
+          }
+          filtersLabel={tCommon("filters")}
+          actions={
+            <Button onClick={() => applyFilters({ search: draft.trim() })}>
+              {t("filters.search")}
+            </Button>
+          }
+        >
           <Select
             value={filters.status}
             onValueChange={(v) =>
@@ -309,11 +311,16 @@ function Dashboard() {
         <RecordTable
           frameless
           toolbar={
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            // Small screens stack the range under the title on one row that scrolls sideways.
+            <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:justify-between">
               <h2 className="text-xl font-semibold text-primary">
                 {t("records")}
               </h2>
-              <RecordsRangeFilter value={range} onChange={onRangeChange} />
+              <RecordsRangeFilter
+                value={range}
+                onChange={onRangeChange}
+                className="max-w-full overflow-x-auto md:overflow-visible"
+              />
             </div>
           }
           pagination={
@@ -324,116 +331,176 @@ function Dashboard() {
             />
           }
         >
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("columns.visitor")}</TableHead>
-                <TableHead>{t("columns.channel")}</TableHead>
-                <TableHead>{t("columns.hostUnit")}</TableHead>
-                <TableHead>{t("columns.purpose")}</TableHead>
-                <TableHead>{t("columns.guestCount")}</TableHead>
-                <TableHead>{t("columns.status")}</TableHead>
-                <TableHead>{t("columns.action")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody striped>
-              {visitsQ.isLoading ? (
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7}>
-                    <div className="flex justify-center py-10">
-                      <Spinner />
-                    </div>
-                  </TableCell>
+                  <TableHead>{t("columns.visitor")}</TableHead>
+                  <TableHead>{t("columns.channel")}</TableHead>
+                  <TableHead>{t("columns.hostUnit")}</TableHead>
+                  <TableHead>{t("columns.purpose")}</TableHead>
+                  <TableHead>{t("columns.guestCount")}</TableHead>
+                  <TableHead>{t("columns.status")}</TableHead>
+                  <TableHead>{t("columns.action")}</TableHead>
                 </TableRow>
-              ) : rows.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    className="py-10 text-center text-fg-subtle"
-                  >
-                    {filtered ? t("noMatches") : t("noVisits")}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                rows.map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell>
-                      <span className="flex items-center gap-3">
-                        <Avatar
-                          name={
-                            row.isGroupVisit && row.groupName
-                              ? row.groupName
-                              : row.visitor.fullName
-                          }
-                          size="md"
-                          accent={row.isGroupVisit ? "group" : "single"}
-                        />
-                        <span className="flex flex-col">
-                          <span className="font-medium text-fg">
-                            {row.isGroupVisit && row.groupName
-                              ? row.groupName
-                              : row.visitor.fullName}
-                          </span>
-                          <span className="text-xs text-fg-muted">
-                            {row.isGroupVisit
-                              ? (row.groupContact ?? "")
-                              : row.visitor.email}
-                          </span>
-                          {row.rfidCard ? (
-                            <span className="mt-0.5 flex">
-                              <RfidCardBadge card={row.rfidCard} />
+              </TableHeader>
+              <TableBody striped>
+                {visitsQ.isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7}>
+                      <div className="flex justify-center py-10">
+                        <Spinner />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : rows.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="py-10 text-center text-fg-subtle"
+                    >
+                      {filtered ? t("noMatches") : t("noVisits")}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  rows.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell>
+                        <span className="flex items-center gap-3">
+                          <Avatar
+                            name={
+                              row.isGroupVisit && row.groupName
+                                ? row.groupName
+                                : row.visitor.fullName
+                            }
+                            size="md"
+                            accent={row.isGroupVisit ? "group" : "single"}
+                          />
+                          <span className="flex flex-col">
+                            <span className="font-medium text-fg">
+                              {row.isGroupVisit && row.groupName
+                                ? row.groupName
+                                : row.visitor.fullName}
                             </span>
+                            <span className="text-xs text-fg-muted">
+                              {row.isGroupVisit
+                                ? (row.groupContact ?? "")
+                                : row.visitor.email}
+                            </span>
+                            {row.rfidCard ? (
+                              <span className="mt-0.5 flex">
+                                <RfidCardBadge card={row.rfidCard} />
+                              </span>
+                            ) : null}
+                          </span>
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-fg-muted">
+                        <span className="flex items-center gap-1.5">
+                          {channelLabel(row.type)}
+                          {row.source === VISIT_SOURCE_DESK_QR ? (
+                            <Badge intent="primary" tone="soft" size="sm">
+                              {t("channel.qr")}
+                            </Badge>
                           ) : null}
                         </span>
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-fg-muted">
-                      <span className="flex items-center gap-1.5">
-                        {channelLabel(row.type)}
+                      </TableCell>
+                      <TableCell className="text-fg-muted">
+                        {hostUnit(row)}
+                      </TableCell>
+                      <TableCell className="text-fg-muted">
+                        {row.purpose}
+                      </TableCell>
+                      <TableCell className="text-fg-muted">
+                        <span className="flex items-center gap-1.5">
+                          <CircleUser className="size-4" aria-hidden="true" />
+                          {t("guestCount", { count: row.groupSize })}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="flex flex-col items-start gap-1">
+                          <StatusBadge status={row.status} />
+                          {row.status === "CHECKED_IN" && row.checkInAt ? (
+                            <OnsiteElapsed since={row.checkInAt} />
+                          ) : (
+                            (() => {
+                              const ts = underPillTime(row);
+                              return ts ? (
+                                <span className="text-xs text-fg-muted">
+                                  {format.dateTime(new Date(ts), {
+                                    timeStyle: "short",
+                                  })}
+                                </span>
+                              ) : null;
+                            })()
+                          )}
+                        </span>
+                      </TableCell>
+                      <TableCell>{rowAction(row)}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Small screens: each row as a tappable card, no sideways scrolling. */}
+          <div className="flex flex-col gap-4 md:hidden">
+            {visitsQ.isLoading ? (
+              <div className="flex justify-center py-10">
+                <Spinner />
+              </div>
+            ) : rows.length === 0 ? (
+              <p className="py-10 text-center text-fg-subtle">
+                {filtered ? t("noMatches") : t("noVisits")}
+              </p>
+            ) : (
+              rows.map((row) => {
+                const name =
+                  row.isGroupVisit && row.groupName
+                    ? row.groupName
+                    : row.visitor.fullName;
+                return (
+                  <RecordCard
+                    key={row.id}
+                    eyebrow={
+                      <>
+                        {row.type === "WALK_IN"
+                          ? t("card.walkInGuest")
+                          : t("card.invitedGuest")}
                         {row.source === VISIT_SOURCE_DESK_QR ? (
                           <Badge intent="primary" tone="soft" size="sm">
                             {t("channel.qr")}
                           </Badge>
                         ) : null}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-fg-muted">
-                      {hostUnit(row)}
-                    </TableCell>
-                    <TableCell className="text-fg-muted">
-                      {row.purpose}
-                    </TableCell>
-                    <TableCell className="text-fg-muted">
+                      </>
+                    }
+                    title={name}
+                    subtitle={
+                      row.isGroupVisit
+                        ? (row.groupContact ?? undefined)
+                        : row.visitor.email
+                    }
+                    extra={
+                      row.rfidCard ? (
+                        <RfidCardBadge card={row.rfidCard} />
+                      ) : undefined
+                    }
+                    status={<StatusBadge status={row.status} />}
+                    footer={
                       <span className="flex items-center gap-1.5">
                         <CircleUser className="size-4" aria-hidden="true" />
                         {t("guestCount", { count: row.groupSize })}
                       </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="flex flex-col items-start gap-1">
-                        <StatusBadge status={row.status} />
-                        {row.status === "CHECKED_IN" && row.checkInAt ? (
-                          <OnsiteElapsed since={row.checkInAt} />
-                        ) : (
-                          (() => {
-                            const ts = underPillTime(row);
-                            return ts ? (
-                              <span className="text-xs text-fg-muted">
-                                {format.dateTime(new Date(ts), {
-                                  timeStyle: "short",
-                                })}
-                              </span>
-                            ) : null;
-                          })()
-                        )}
-                      </span>
-                    </TableCell>
-                    <TableCell>{rowAction(row)}</TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                    }
+                    action={rowAction(row)}
+                    onOpen={() => setDetailId(row.id)}
+                    openLabel={t("card.openFor", { name })}
+                  />
+                );
+              })
+            )}
+          </div>
         </RecordTable>
       </div>
 

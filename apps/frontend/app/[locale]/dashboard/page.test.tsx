@@ -110,7 +110,45 @@ describe("VMC dashboard", () => {
       totalPages: 1,
     });
     renderWithIntl(<DashboardPage />);
-    expect(await screen.findByText("No visits to show.")).toBeInTheDocument();
+    // Desktop table and mobile card list both render in jsdom.
+    expect(await screen.findAllByText("No visits to show.")).toHaveLength(2);
+  });
+
+  it("shows each visit as a mobile card that opens it and keeps the row action", async () => {
+    list.mockResolvedValue({
+      items: [
+        {
+          id: "v1",
+          type: "PRE_INVITED",
+          status: "APPROVED",
+          purpose: "Official",
+          groupSize: 5,
+          isGroupVisit: false,
+          visitor: { fullName: "Emily Carter", email: "emily@example.com" },
+          host: null,
+          floor: null,
+          createdAt: "2026-05-01T09:00:00.000Z",
+          scheduledAt: "2026-05-01T10:00:00.000Z",
+        },
+      ],
+      page: 1,
+      pageSize: 10,
+      total: 1,
+      totalPages: 1,
+    });
+    renderWithIntl(<DashboardPage />);
+    const card = (
+      await screen.findByRole("button", {
+        name: "View details for Emily Carter",
+      })
+    ).closest("article")!;
+    expect(within(card).getByText("Invited Guest")).toBeInTheDocument();
+    expect(within(card).getByText("emily@example.com")).toBeInTheDocument();
+    expect(within(card).getByText("Expected")).toBeInTheDocument();
+    expect(within(card).getByText("5 Guests")).toBeInTheDocument();
+    expect(
+      within(card).getByRole("button", { name: "Check-In" }),
+    ).toBeInTheDocument();
   });
 
   it("searches on Search and on Enter, and clears back to everything", async () => {

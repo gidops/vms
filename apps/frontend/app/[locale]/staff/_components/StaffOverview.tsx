@@ -5,6 +5,10 @@ import { CalendarCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   OverviewBar,
+  OverviewEyebrow,
+  PANEL_ACTION,
+  PANEL_ACTIONS,
+  PanelActionLabel,
   type OverviewStat,
 } from "@/app/[locale]/_components/OverviewBar";
 
@@ -47,12 +51,34 @@ function BookPanel({ onNewInvite }: Pick<StaffOverviewProps, "onNewInvite">) {
           {t("overview.bookTitle")}
         </h3>
       </div>
-      <div className="relative flex flex-wrap items-center gap-3">
-        <Button intent="accent" onClick={onNewInvite}>
-          {t("overview.newInvite")}
+      <div className={PANEL_ACTIONS}>
+        <Button
+          intent="accent"
+          className={PANEL_ACTION}
+          aria-label={t("overview.newInvite")}
+          onClick={onNewInvite}
+        >
+          <PanelActionLabel
+            label={t("overview.newInvite")}
+            short={t("overview.newInviteShort")}
+          />
         </Button>
       </div>
     </>
+  );
+}
+
+/** Mobile eyebrow: just the floor, which is what a host checks at a glance. */
+function OfficeFloorValue({ office }: { office?: string | null }) {
+  const t = useTranslations("staff");
+  return office ? (
+    <span className="text-base font-bold uppercase tracking-tight text-[#FF6900]">
+      {office}
+    </span>
+  ) : (
+    <span className="text-base text-fg-muted">
+      {t("overview.officeFloor")}: {t("overview.officeFloorUnset")}
+    </span>
   );
 }
 
@@ -66,17 +92,11 @@ export function StaffOverview({
   const t = useTranslations("staff");
   return (
     <OverviewBar
-      heading={
-        <div className="flex flex-col gap-1">
-          <span className="flex items-center gap-1.5 text-base font-semibold uppercase tracking-tight text-success">
-            <CalendarCheck className="size-4" aria-hidden="true" />
-            {t("hub")}
-          </span>
-          <h1 className="text-[2rem] font-medium leading-tight text-[#344054]">
-            {welcome}
-          </h1>
-        </div>
+      eyebrow={
+        <OverviewEyebrow icon={CalendarCheck}>{t("hub")}</OverviewEyebrow>
       }
+      mobileEyebrow={<OfficeFloorValue office={office} />}
+      welcome={welcome}
       aside={<OfficeFloor office={office} />}
       stats={stats}
       panel={<BookPanel onNewInvite={onNewInvite} />}

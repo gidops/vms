@@ -20,12 +20,17 @@ import {
 import { IdCard, Plus } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
-import { FilterPills } from "@/app/[locale]/_components/FilterPills";
+import {
+  FilterPills,
+  SCROLLING_PILLS,
+} from "@/app/[locale]/_components/FilterPills";
+import { RecordCard } from "@/app/[locale]/_components/RecordCard";
 import {
   useRfidAssignments,
   useRfidCards,
   useSetRfidCardStatus,
 } from "@/data/rfid-cards/queries";
+import type { CardItem } from "@/data/rfid-cards/rfid-cards.api";
 import { useDebounced } from "@/shared/useDebounced";
 import { formatWatDateTime } from "@/shared/wat";
 import { AssignCardDrawer } from "./AssignCardDrawer";
@@ -143,57 +148,96 @@ function Assignments({
           <Spinner />
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("columns.visitor")}</TableHead>
-              <TableHead>{t("columns.card")}</TableHead>
-              <TableHead>{t("columns.validUntil")}</TableHead>
-              <TableHead>
-                {view === "active" ? t("columns.status") : t("columns.closed")}
-              </TableHead>
-              <TableHead>
-                <span className="sr-only">{t("columns.action")}</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody striped>
+        <>
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("columns.visitor")}</TableHead>
+                  <TableHead>{t("columns.card")}</TableHead>
+                  <TableHead>{t("columns.validUntil")}</TableHead>
+                  <TableHead>
+                    {view === "active"
+                      ? t("columns.status")
+                      : t("columns.closed")}
+                  </TableHead>
+                  <TableHead>
+                    <span className="sr-only">{t("columns.action")}</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody striped>
+                {(data?.items ?? []).map((a) => (
+                  <TableRow key={a.id}>
+                    <TableCell>
+                      <span className="flex items-center gap-3">
+                        <Avatar
+                          name={a.visitor.fullName}
+                          size="md"
+                          accent="single"
+                        />
+                        <span className="flex min-w-0 flex-col">
+                          <span className="truncate font-medium text-fg">
+                            {a.visitor.fullName}
+                          </span>
+                          <span className="truncate text-xs text-fg-muted">
+                            {a.visitor.organization ?? a.visitor.email}
+                          </span>
+                        </span>
+                      </span>
+                    </TableCell>
+                    <TableCell className="font-mono text-fg">
+                      {a.card.cardNumber}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-fg-muted">
+                      {formatWatDateTime(a.validUntil, locale)}
+                    </TableCell>
+                    <TableCell>
+                      <span className="flex flex-col gap-1">
+                        <AssignmentBadge item={a} />
+                        {a.returnedAt ? (
+                          <span className="text-xs text-fg-muted">
+                            {formatWatDateTime(a.returnedAt, locale)}
+                          </span>
+                        ) : null}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        intent="neutral"
+                        tone="outline"
+                        size="sm"
+                        className="min-w-28 text-xs"
+                        onClick={() => onOpen(a.id)}
+                      >
+                        {t("view")}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Small screens: each card issue as a tappable card. */}
+          <div className="flex flex-col gap-4 md:hidden">
             {(data?.items ?? []).map((a) => (
-              <TableRow key={a.id}>
-                <TableCell>
-                  <span className="flex items-center gap-3">
-                    <Avatar
-                      name={a.visitor.fullName}
-                      size="md"
-                      accent="single"
-                    />
-                    <span className="flex min-w-0 flex-col">
-                      <span className="truncate font-medium text-fg">
-                        {a.visitor.fullName}
-                      </span>
-                      <span className="truncate text-xs text-fg-muted">
-                        {a.visitor.organization ?? a.visitor.email}
-                      </span>
-                    </span>
+              <RecordCard
+                key={a.id}
+                eyebrow={
+                  <span dir="ltr" className="font-mono">
+                    {a.card.cardNumber}
                   </span>
-                </TableCell>
-                <TableCell className="font-mono text-fg">
-                  {a.card.cardNumber}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-fg-muted">
-                  {formatWatDateTime(a.validUntil, locale)}
-                </TableCell>
-                <TableCell>
-                  <span className="flex flex-col gap-1">
-                    <AssignmentBadge item={a} />
-                    {a.returnedAt ? (
-                      <span className="text-xs text-fg-muted">
-                        {formatWatDateTime(a.returnedAt, locale)}
-                      </span>
-                    ) : null}
-                  </span>
-                </TableCell>
-                <TableCell>
+                }
+                title={a.visitor.fullName}
+                subtitle={a.visitor.organization ?? a.visitor.email}
+                status={<AssignmentBadge item={a} />}
+                footer={
+                  a.returnedAt
+                    ? `${t("columns.closed")}: ${formatWatDateTime(a.returnedAt, locale)}`
+                    : `${t("columns.validUntil")}: ${formatWatDateTime(a.validUntil, locale)}`
+                }
+                action={
                   <Button
                     intent="neutral"
                     tone="outline"
@@ -203,11 +247,13 @@ function Assignments({
                   >
                     {t("view")}
                   </Button>
-                </TableCell>
-              </TableRow>
+                }
+                onOpen={() => onOpen(a.id)}
+                openLabel={t("openFor", { name: a.visitor.fullName })}
+              />
             ))}
-          </TableBody>
-        </Table>
+          </div>
+        </>
       )}
     </RecordTable>
   );
@@ -228,6 +274,46 @@ function Registry({ onOpen }: { onOpen: (id: string) => void }) {
   });
   const setStatus = useSetRfidCardStatus();
   const data = list.data;
+
+  const actions = (c: CardItem) => (
+    <>
+      {c.current ? (
+        <Button
+          intent="neutral"
+          tone="outline"
+          size="sm"
+          className="text-xs"
+          onClick={() => onOpen(c.current!.assignmentId)}
+        >
+          {t("view")}
+        </Button>
+      ) : null}
+      {c.status === "LOST" || c.status === "RETIRED" ? (
+        <Button
+          intent="neutral"
+          tone="outline"
+          size="sm"
+          className="text-xs"
+          disabled={setStatus.isPending}
+          onClick={() => setStatus.mutate({ id: c.id, status: "AVAILABLE" })}
+        >
+          {c.status === "LOST" ? t("markFound") : t("reinstate")}
+        </Button>
+      ) : null}
+      {c.status === "AVAILABLE" ? (
+        <Button
+          intent="neutral"
+          tone="ghost"
+          size="sm"
+          className="text-xs"
+          disabled={setStatus.isPending}
+          onClick={() => setStatus.mutate({ id: c.id, status: "RETIRED" })}
+        >
+          {t("retire")}
+        </Button>
+      ) : null}
+    </>
+  );
 
   return (
     <RecordTable
@@ -266,91 +352,90 @@ function Registry({ onOpen }: { onOpen: (id: string) => void }) {
           <Spinner />
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("columns.card")}</TableHead>
-              <TableHead>{t("columns.cardStatus")}</TableHead>
-              <TableHead>{t("columns.holder")}</TableHead>
-              <TableHead>{t("columns.timesIssued")}</TableHead>
-              <TableHead>
-                <span className="sr-only">{t("columns.action")}</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody striped>
+        <>
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("columns.card")}</TableHead>
+                  <TableHead>{t("columns.cardStatus")}</TableHead>
+                  <TableHead>{t("columns.holder")}</TableHead>
+                  <TableHead>{t("columns.timesIssued")}</TableHead>
+                  <TableHead>
+                    <span className="sr-only">{t("columns.action")}</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody striped>
+                {(data?.items ?? []).map((c) => (
+                  <TableRow key={c.id}>
+                    <TableCell className="font-mono text-fg">
+                      {c.cardNumber}
+                    </TableCell>
+                    <TableCell>
+                      <Badge intent={CARD_STATUS_INTENT[c.status]}>
+                        {tStatus(c.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-fg-muted">
+                      {c.current ? (
+                        <span className="flex flex-col">
+                          <span className="text-fg">
+                            {c.current.visitorName}
+                          </span>
+                          <span className="text-xs">
+                            {t("until", {
+                              when: formatWatDateTime(
+                                c.current.validUntil,
+                                locale,
+                              ),
+                            })}
+                          </span>
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                    <TableCell className="text-fg-muted">
+                      {c.timesIssued}
+                    </TableCell>
+                    <TableCell>
+                      <span className="flex flex-wrap gap-2">{actions(c)}</span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Small screens: each card in the registry as a card. */}
+          <div className="flex flex-col gap-4 md:hidden">
             {(data?.items ?? []).map((c) => (
-              <TableRow key={c.id}>
-                <TableCell className="font-mono text-fg">
-                  {c.cardNumber}
-                </TableCell>
-                <TableCell>
+              <RecordCard
+                key={c.id}
+                eyebrow={`${t("columns.timesIssued")}: ${c.timesIssued}`}
+                title={
+                  <span dir="ltr" className="font-mono">
+                    {c.cardNumber}
+                  </span>
+                }
+                subtitle={
+                  c.current
+                    ? `${c.current.visitorName} · ${t("until", {
+                        when: formatWatDateTime(c.current.validUntil, locale),
+                      })}`
+                    : undefined
+                }
+                status={
                   <Badge intent={CARD_STATUS_INTENT[c.status]}>
                     {tStatus(c.status)}
                   </Badge>
-                </TableCell>
-                <TableCell className="text-fg-muted">
-                  {c.current ? (
-                    <span className="flex flex-col">
-                      <span className="text-fg">{c.current.visitorName}</span>
-                      <span className="text-xs">
-                        {t("until", {
-                          when: formatWatDateTime(c.current.validUntil, locale),
-                        })}
-                      </span>
-                    </span>
-                  ) : (
-                    "—"
-                  )}
-                </TableCell>
-                <TableCell className="text-fg-muted">{c.timesIssued}</TableCell>
-                <TableCell>
-                  <span className="flex flex-wrap gap-2">
-                    {c.current ? (
-                      <Button
-                        intent="neutral"
-                        tone="outline"
-                        size="sm"
-                        className="text-xs"
-                        onClick={() => onOpen(c.current!.assignmentId)}
-                      >
-                        {t("view")}
-                      </Button>
-                    ) : null}
-                    {c.status === "LOST" || c.status === "RETIRED" ? (
-                      <Button
-                        intent="neutral"
-                        tone="outline"
-                        size="sm"
-                        className="text-xs"
-                        disabled={setStatus.isPending}
-                        onClick={() =>
-                          setStatus.mutate({ id: c.id, status: "AVAILABLE" })
-                        }
-                      >
-                        {c.status === "LOST" ? t("markFound") : t("reinstate")}
-                      </Button>
-                    ) : null}
-                    {c.status === "AVAILABLE" ? (
-                      <Button
-                        intent="neutral"
-                        tone="ghost"
-                        size="sm"
-                        className="text-xs"
-                        disabled={setStatus.isPending}
-                        onClick={() =>
-                          setStatus.mutate({ id: c.id, status: "RETIRED" })
-                        }
-                      >
-                        {t("retire")}
-                      </Button>
-                    ) : null}
-                  </span>
-                </TableCell>
-              </TableRow>
+                }
+                action={actions(c)}
+              />
             ))}
-          </TableBody>
-        </Table>
+          </div>
+        </>
       )}
     </RecordTable>
   );
@@ -365,9 +450,10 @@ export function AccessCardsTab() {
 
   return (
     <section className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:justify-between">
         <FilterPills<View>
           aria-label={t("title")}
+          className={SCROLLING_PILLS}
           value={view}
           onValueChange={setView}
           options={[
@@ -376,7 +462,7 @@ export function AccessCardsTab() {
             { value: "registry", label: t("views.registry") },
           ]}
         />
-        <Button onClick={() => setAssignOpen(true)}>
+        <Button className="self-start" onClick={() => setAssignOpen(true)}>
           <Plus className="size-4" aria-hidden="true" />
           {t("assignCard")}
         </Button>
