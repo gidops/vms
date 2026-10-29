@@ -5,6 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 import { useRecentActivity } from "@/data/admin/queries";
 import type { InboxItem } from "@/data/inbox/inbox.api";
+import { FeedItemCard } from "@/app/[locale]/_components/FeedItemCard";
 import { FeedCard } from "./FeedCard";
 
 type Intent = "info" | "warning" | "success" | "danger" | "neutral";
@@ -104,41 +105,64 @@ export function AdminActivityFeed({
           })}
         </div>
       ) : (
-        <ul className="flex flex-col divide-y divide-border">
-          {items.map((item) => {
-            const event = eventOf(item);
-            return (
-              <li
-                key={item.id}
-                className="flex flex-col gap-1.5 py-3 first:pt-0"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <Badge intent={event.intent} tone="soft">
-                    {t(`events.${event.key}`)}
-                  </Badge>
-                  <span className="text-xs text-fg-subtle">
-                    {format.relativeTime(new Date(item.updatedAt), now)}
-                  </span>
-                </div>
-                <p className="text-sm font-semibold text-fg">
-                  {item.visitorName ?? "—"}
-                </p>
-                <p className="text-sm text-fg-muted">{subtitle(item)}</p>
-                <button
-                  type="button"
-                  onClick={() => select(item)}
-                  className="flex items-center gap-1 self-start text-sm font-medium text-primary underline"
-                >
-                  {tV2("viewDetails")}
-                  <ChevronRight
-                    className="size-4 rtl:rotate-180"
-                    aria-hidden="true"
+        <>
+          <ul className="flex flex-col gap-4 md:hidden">
+            {items.map((item) => {
+              const event = eventOf(item);
+              return (
+                <li key={item.id}>
+                  <FeedItemCard
+                    badge={
+                      <Badge intent={event.intent} tone="soft">
+                        {t(`events.${event.key}`)}
+                      </Badge>
+                    }
+                    time={format.relativeTime(new Date(item.updatedAt), now)}
+                    title={item.visitorName ?? "—"}
+                    body={subtitle(item)}
+                    actionLabel={tV2("viewDetails")}
+                    onOpen={() => select(item)}
                   />
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+                </li>
+              );
+            })}
+          </ul>
+          <ul className="hidden flex-col divide-y divide-border md:flex">
+            {items.map((item) => {
+              const event = eventOf(item);
+              return (
+                <li
+                  key={item.id}
+                  className="flex flex-col gap-1.5 py-3 first:pt-0"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <Badge intent={event.intent} tone="soft">
+                      {t(`events.${event.key}`)}
+                    </Badge>
+                    <span className="text-xs text-fg-subtle">
+                      {format.relativeTime(new Date(item.updatedAt), now)}
+                    </span>
+                  </div>
+                  <p className="text-sm font-semibold text-fg">
+                    {item.visitorName ?? "—"}
+                  </p>
+                  <p className="text-sm text-fg-muted">{subtitle(item)}</p>
+                  <button
+                    type="button"
+                    onClick={() => select(item)}
+                    className="flex items-center gap-1 self-start text-sm font-medium text-primary underline"
+                  >
+                    {tV2("viewDetails")}
+                    <ChevronRight
+                      className="size-4 rtl:rotate-180"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </>
       )}
     </FeedCard>
   );

@@ -366,7 +366,7 @@ export function DeskQrScreen({
         aria-label={t("title")}
         className="flex flex-col overflow-hidden"
       >
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-4 sm:px-5">
           <Badge intent={active ? "success" : "neutral"} tone="soft" dot>
             {active ? t("status.active") : t("status.disabled")}
           </Badge>
@@ -375,9 +375,10 @@ export function DeskQrScreen({
           </Badge>
         </div>
 
-        <div className="grid gap-6 p-5 sm:grid-cols-[auto_minmax(0,1fr)]">
-          <div className="flex flex-col gap-2.5">
-            <div className="relative grid size-52 max-w-full place-items-center rounded-xl border border-border bg-surface p-4">
+        <div className="grid gap-6 p-4 sm:grid-cols-[auto_minmax(0,1fr)] sm:p-5">
+          {/* Phones centre the code so it's easy to show or scan. */}
+          <div className="flex flex-col items-center gap-2.5 sm:items-start">
+            <div className="relative grid size-52 max-w-full place-items-center bg-surface">
               {image.data ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -457,7 +458,7 @@ export function DeskQrScreen({
             ) : null}
 
             {canManage ? (
-              <div className="flex flex-wrap gap-2.5">
+              <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
                 {active ? null : (
                   <Button
                     intent="primary"
@@ -494,7 +495,7 @@ export function DeskQrScreen({
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-border bg-surface-muted px-5 py-4">
+        <div className="flex flex-col gap-2 border-t border-border bg-surface-muted px-4 py-4 sm:px-5">
           <h3 className="text-base font-semibold text-fg">
             {t("codes.title")}
           </h3>

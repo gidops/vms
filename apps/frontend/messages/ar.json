@@ -23,7 +23,11 @@
     "optIns": "الاشتراكات",
     "deskQr": "رمز QR للحضور المباشر",
     "insights": "الرؤى",
-    "operations": "العمليات"
+    "operations": "العمليات",
+    "accountMenu": "قائمة الحساب",
+    "approvalsShort": "الموافقات",
+    "activityShort": "النشاط",
+    "sections": "الأقسام"
   },
   "login": {
     "showPassword": "إظهار كلمة المرور",
@@ -64,7 +68,9 @@
     "quickActions": {
       "title": "إجراءات سريعة",
       "registerWalkIn": "تسجيل زائر بدون موعد",
-      "newInvite": "طلب دعوة جديد"
+      "newInvite": "طلب دعوة جديد",
+      "registerWalkInShort": "بدون موعد",
+      "newInviteShort": "دعوة جديدة"
     },
     "activity": {
       "title": "عرض نشاطك"
@@ -97,7 +103,12 @@
     "guestCount": "{count, plural, zero {# ضيف} one {# ضيف} two {# ضيفان} few {# ضيوف} many {# ضيفًا} other {# ضيف}}",
     "onsiteElapsed": "{time} س",
     "noVisits": "لا توجد زيارات لعرضها.",
-    "noMatches": "لا توجد زيارات تطابق البحث أو عوامل التصفية."
+    "noMatches": "لا توجد زيارات تطابق البحث أو عوامل التصفية.",
+    "card": {
+      "invitedGuest": "ضيف مدعو",
+      "walkInGuest": "ضيف بدون موعد",
+      "openFor": "عرض تفاصيل {name}"
+    }
   },
   "common": {
     "notifications": "الإشعارات",
@@ -108,7 +119,8 @@
     "previousGuest": "الضيف السابق",
     "nextGuest": "الضيف التالي",
     "previousVisitor": "الزائر السابق",
-    "nextVisitor": "الزائر التالي"
+    "nextVisitor": "الزائر التالي",
+    "filters": "عوامل التصفية"
   },
   "requests": {
     "title": "الطلبات والتنبيهات",
@@ -216,11 +228,6 @@
     "alertNeedsAttention": "يتطلب الانتباه",
     "alertDefaultCategory": "تطابق ضيف مُعلَّم",
     "respondPlaceholder": "الرد على التنبيه…",
-    "pagination": {
-      "prev": "السابق",
-      "next": "التالي",
-      "pageOf": "صفحة {page} من {total}"
-    },
     "card": {
       "flaggedTitle": "تطابق ضيف مُعلَّم",
       "title": {
@@ -308,7 +315,8 @@
     "select": "اختر اللغة",
     "en": "الإنجليزية",
     "fr": "الفرنسية",
-    "ar": "العربية"
+    "ar": "العربية",
+    "label": "اللغة"
   },
   "roles": {
     "SUPER_ADMIN": "مسؤول النظام",
@@ -555,7 +563,8 @@
       "quickActions": {
         "title": "إجراءات سريعة",
         "addVisitor": "إضافة زائر",
-        "comingSoon": "قريبًا"
+        "comingSoon": "قريبًا",
+        "addVisitorShort": "إضافة زائر"
       },
       "activity": {
         "empty": "لا يوجد نشاط حديث بعد.",
@@ -672,7 +681,9 @@
       "reviewCta": "مراجعة الطلبات",
       "historyCta": "سجل الزيارات",
       "activityTitle": "نشاط اليوم\nفي لمحة",
-      "activityCta": "عرض النشاط"
+      "activityCta": "عرض النشاط",
+      "reviewCtaShort": "مراجعة",
+      "historyCtaShort": "السجل"
     },
     "table": {
       "title": "سجل الزوار",
@@ -707,7 +718,8 @@
       "noAccess": "يمكن لمسؤول النظام فقط إدارة المستخدمين.",
       "searchPlaceholder": "ابحث بالاسم أو البريد الإلكتروني…",
       "allRoles": "جميع الأدوار",
-      "createSubtitle": "أنشئ حسابًا وعيّن أدواره."
+      "createSubtitle": "أنشئ حسابًا وعيّن أدواره.",
+      "openFor": "عرض {name}"
     }
   },
   "staff": {
@@ -727,7 +739,8 @@
       "officeFloor": "طابق المكتب",
       "officeFloorUnset": "غير محدد",
       "bookTitle": "احجز الضيوف في منشآت\nAATC بأبوجا",
-      "newInvite": "طلب دعوة جديد"
+      "newInvite": "طلب دعوة جديد",
+      "newInviteShort": "دعوة جديدة"
     },
     "stats": {
       "expectedToday": "متوقعون اليوم",
@@ -790,7 +803,14 @@
         "REQUEST_UPDATE": "تحديث الطلب",
         "VISIT_STATUS": "حالة الزيارة",
         "SECURITY_ALERT": "تنبيهات أمنية"
-      }
+      },
+      "all": "الكل",
+      "updateRequest": "تحديث الطلب"
+    },
+    "showMore": "عرض المزيد",
+    "showLess": "عرض أقل",
+    "card": {
+      "openFor": "عرض تفاصيل {name}"
     }
   },
   "gate": {
@@ -1407,7 +1427,8 @@
       "expected": "ما زالوا متوقعين",
       "expectedHint": "تمت الموافقة ولم يصلوا بعد",
       "checkedOut": "غادروا",
-      "checkedInHint": "{count, plural, other {# سجّلوا الدخول اليوم}}"
+      "checkedInHint": "{count, plural, other {# سجّلوا الدخول اليوم}}",
+      "viewStats": "عرض أرقام اليوم"
     },
     "history": {
       "range": "نطاق السجل",
@@ -1464,7 +1485,8 @@
         "lastVisit": "آخر زيارة",
         "comms": "الموافقة على البريد",
         "action": "إجراء"
-      }
+      },
+      "openFor": "عرض سجل زيارات {name}"
     },
     "analytics": {
       "title": "تحليلات المنشأة",
@@ -1505,8 +1527,10 @@
         "alertsRaised": "التنبيهات المُصدرة",
         "alertsOpen": "تنبيهات ما زالت مفتوحة",
         "denied": "الطلبات المرفوضة",
-        "deniedDaily": "الطلبات المرفوضة يوميًا"
-      }
+        "deniedDaily": "الطلبات المرفوضة يوميًا",
+        "viewStats": "عرض أرقام الأمن"
+      },
+      "viewStats": "عرض الأرقام الرئيسية"
     },
     "status": {
       "PENDING": "بانتظار الموافقة",
@@ -1647,7 +1671,8 @@
         "submit": "تخصيص البطاقة",
         "saving": "جارٍ التخصيص…",
         "error": "تعذّر تخصيص البطاقة. يُرجى المحاولة مرة أخرى."
-      }
+      },
+      "openFor": "عرض البطاقة المسلّمة إلى {name}"
     },
     "card": {
       "visitorAccess": "دخول زائر",
@@ -1770,7 +1795,8 @@
         "gate_kiosk_rotated": "تم استبدال رابط جهاز البوابة",
         "gate_kiosk_disabled": "تم إيقاف رابط جهاز البوابة",
         "gate_kiosk_enabled": "تم تشغيل رابط جهاز البوابة"
-      }
+      },
+      "openFor": "فتح الحدث: {action}"
     }
   },
   "rfidCard": {

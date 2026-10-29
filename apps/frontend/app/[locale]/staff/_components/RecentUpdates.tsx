@@ -3,21 +3,9 @@
 import { Badge, Spinner } from "@vms/ui";
 import { ChevronRight } from "lucide-react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
-import type {
-  StaffActivityCategory,
-  StaffActivityItem,
-} from "@/data/staff/staff.api";
+import type { StaffActivityItem } from "@/data/staff/staff.api";
 import { Link } from "@/i18n/navigation";
-
-type Intent = "info" | "warning" | "success" | "danger" | "neutral";
-
-const CATEGORY_INTENT: Record<StaffActivityCategory, Intent> = {
-  ARRIVAL_UPDATE: "info",
-  SM_FEEDBACK: "warning",
-  REQUEST_UPDATE: "success",
-  VISIT_STATUS: "info",
-  SECURITY_ALERT: "danger",
-};
+import { CATEGORY_INTENT, UpdateCard } from "./UpdateCard";
 
 export interface RecentUpdatesProps {
   items: StaffActivityItem[];
@@ -37,7 +25,8 @@ export function RecentUpdates({
   const now = useNow({ updateInterval: 60_000 });
 
   return (
-    <section className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 shadow-xs">
+    // Small screens drop the panel frame: the updates stand as their own cards.
+    <section className="flex flex-col gap-4 md:rounded-xl md:border md:border-border md:bg-surface md:p-5 md:shadow-xs">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-fg">{t("updates.title")}</h2>
         <Link
@@ -57,32 +46,44 @@ export function RecentUpdates({
           {t("updates.empty")}
         </p>
       ) : (
-        <ul className="flex flex-col divide-y divide-border">
-          {items.map((item) => (
-            <li key={item.id} className="flex flex-col gap-1.5 py-3 first:pt-0">
-              <div className="flex items-center justify-between gap-2">
-                <Badge intent={CATEGORY_INTENT[item.category]} tone="soft">
-                  {t(`updates.category.${item.category}`)}
-                </Badge>
-                <span className="text-xs text-fg-subtle">
-                  {format.relativeTime(new Date(item.createdAt), now)}
-                </span>
-              </div>
-              <p className="text-sm font-semibold text-fg">{item.title}</p>
-              <p className="text-sm text-fg-muted">{item.body}</p>
-              <button
-                type="button"
-                onClick={() => onSelect(item)}
-                className="flex items-center gap-1 self-start text-sm font-medium text-primary underline"
+        <>
+          <ul className="flex flex-col gap-4 md:hidden">
+            {items.map((item) => (
+              <li key={item.id}>
+                <UpdateCard item={item} onOpen={() => onSelect(item)} />
+              </li>
+            ))}
+          </ul>
+          <ul className="hidden flex-col divide-y divide-border md:flex">
+            {items.map((item) => (
+              <li
+                key={item.id}
+                className="flex flex-col gap-1.5 py-3 first:pt-0"
               >
-                {item.alertId
-                  ? t("updates.viewDetails")
-                  : t("updates.viewUpdate")}
-                <ChevronRight className="size-4" aria-hidden="true" />
-              </button>
-            </li>
-          ))}
-        </ul>
+                <div className="flex items-center justify-between gap-2">
+                  <Badge intent={CATEGORY_INTENT[item.category]} tone="soft">
+                    {t(`updates.category.${item.category}`)}
+                  </Badge>
+                  <span className="text-xs text-fg-subtle">
+                    {format.relativeTime(new Date(item.createdAt), now)}
+                  </span>
+                </div>
+                <p className="text-sm font-semibold text-fg">{item.title}</p>
+                <p className="text-sm text-fg-muted">{item.body}</p>
+                <button
+                  type="button"
+                  onClick={() => onSelect(item)}
+                  className="flex items-center gap-1 self-start text-sm font-medium text-primary underline"
+                >
+                  {item.alertId
+                    ? t("updates.viewDetails")
+                    : t("updates.viewUpdate")}
+                  <ChevronRight className="size-4" aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </section>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { PERMISSIONS } from "@vms/contracts";
-import { ServerCog, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { useNow, useTranslations } from "next-intl";
 import type { OverviewStat } from "@/app/[locale]/_components/OverviewBar";
 import { countOverdue } from "@/app/[locale]/admin/_components/pendingApprovals";
@@ -108,7 +108,8 @@ export function useAdminBand() {
     stats,
     pendingCount: awaiting,
     eyebrow,
-    eyebrowIcon: sm ? ShieldCheck : ServerCog,
+    // Both consoles share the shield; the eyebrow text tells them apart.
+    eyebrowIcon: ShieldCheck,
     welcome: tV2("welcome", { name: user?.fullName ?? "" }),
   };
 }

@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { PERMISSIONS } from "@vms/contracts";
 import type * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -69,5 +69,18 @@ describe("AppTopNav — admin console tabs", () => {
     ]);
     fireEvent.click(screen.getByRole("radio", { name: "Pending Approvals" }));
     expect(push).toHaveBeenCalledWith("/admin/approvals");
+  });
+
+  it("mirrors the tabs as bottom-bar links with short labels", () => {
+    perms.add(PERMISSIONS.VISIT_APPROVE);
+    renderWithIntl(<AppTopNav app="admin" active="approvals" />);
+    const bar = screen.getByRole("navigation", { name: "Sections" });
+    const links = within(bar).getAllByRole("link");
+    expect(links.map((l) => [l.textContent, l.getAttribute("href")])).toEqual([
+      ["Overview", "/admin"],
+      ["Approvals", "/admin/approvals"],
+      ["Activity", "/admin/requests"],
+    ]);
+    expect(links[1]).toHaveAttribute("aria-current", "page");
   });
 });

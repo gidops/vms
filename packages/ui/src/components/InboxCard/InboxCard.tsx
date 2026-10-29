@@ -44,10 +44,11 @@ export function InboxCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "group relative flex w-full flex-col gap-4 rounded-xl border p-5 pe-10 text-start shadow-xs transition-colors duration-500",
+        // Tighter padding and corners on small screens, where cards fill the width.
+        "group relative flex w-full flex-col gap-4 rounded-md border p-3 pe-9 text-start shadow-xs transition-colors duration-500 md:rounded-xl md:p-5 md:pe-10",
         unread
           ? "border-primary/30 bg-primary-subtle/50"
-          : "border-border bg-surface",
+          : "border-surface-muted bg-surface",
         "hover:border-border-strong hover:bg-surface-muted/40",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]",
         className,

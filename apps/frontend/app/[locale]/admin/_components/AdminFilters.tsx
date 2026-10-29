@@ -41,9 +41,7 @@ export function AdminFilters({
 
   return (
     <FilterBar
-      actions={<Button onClick={onSearch}>{tDash("filters.search")}</Button>}
-    >
-      <div className="min-w-56 flex-1">
+      search={
         <SearchInput
           placeholder={tDash("filters.searchPlaceholder")}
           value={value.search}
@@ -53,8 +51,9 @@ export function AdminFilters({
             if (e.key === "Enter") onSearch();
           }}
         />
-      </div>
-    </FilterBar>
+      }
+      actions={<Button onClick={onSearch}>{tDash("filters.search")}</Button>}
+    ></FilterBar>
   );
 }
 

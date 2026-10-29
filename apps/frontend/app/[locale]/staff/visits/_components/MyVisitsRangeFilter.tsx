@@ -9,6 +9,10 @@ import {
 } from "@vms/ui";
 import { useTranslations } from "next-intl";
 import * as React from "react";
+import {
+  filterPill,
+  filterPillState,
+} from "@/app/[locale]/_components/FilterPills";
 import type { DateValue, RangeValue } from "react-aria-components";
 
 export type MyVisitsTab = "today" | "upcoming" | "yesterday" | "pick";
@@ -18,16 +22,6 @@ export interface DateRange {
 }
 
 type FixedTab = "today" | "upcoming" | "yesterday";
-
-const container = "flex items-center gap-2 bg-primary-subtle px-6";
-
-const pill =
-  "rounded-full border bg-surface px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]";
-
-const pillState = (active: boolean) =>
-  active
-    ? "border-primary text-primary"
-    : "border-border text-fg-muted hover:text-fg";
 
 const startOfDayIso = (d: Date) => {
   const x = new Date(d);
@@ -89,7 +83,7 @@ export function MyVisitsRangeFilter({
     <div
       role="radiogroup"
       aria-label={t("myVisits.title")}
-      className={cn(container, className)}
+      className={cn("flex flex-wrap items-center gap-2", className)}
     >
       {(["today", "upcoming", "yesterday"] as const).map((tab) => (
         <button
@@ -98,7 +92,7 @@ export function MyVisitsRangeFilter({
           role="radio"
           aria-checked={value === tab}
           onClick={() => fixed(tab)}
-          className={cn(pill, pillState(value === tab))}
+          className={cn(filterPill, filterPillState(value === tab))}
         >
           {t(`range.${tab}`)}
         </button>
@@ -107,7 +101,7 @@ export function MyVisitsRangeFilter({
         <PopoverTrigger
           role="radio"
           aria-checked={value === "pick"}
-          className={cn(pill, pillState(value === "pick"))}
+          className={cn(filterPill, filterPillState(value === "pick"))}
         >
           {t("range.pickDate")}
         </PopoverTrigger>

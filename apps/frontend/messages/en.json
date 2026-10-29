@@ -23,7 +23,11 @@
     "optIns": "Opt-ins",
     "deskQr": "Walk-in QR",
     "insights": "Insights",
-    "operations": "Operations"
+    "operations": "Operations",
+    "accountMenu": "Account menu",
+    "approvalsShort": "Approvals",
+    "activityShort": "Activity",
+    "sections": "Sections"
   },
   "login": {
     "showPassword": "Show password",
@@ -64,7 +68,9 @@
     "quickActions": {
       "title": "Quick actions",
       "registerWalkIn": "Register Walk-In",
-      "newInvite": "New Invite Request"
+      "newInvite": "New Invite Request",
+      "registerWalkInShort": "Walk-in",
+      "newInviteShort": "New Invite"
     },
     "activity": {
       "title": "View your activity"
@@ -97,7 +103,12 @@
     "guestCount": "{count, plural, one {# Guest} other {# Guests}}",
     "onsiteElapsed": "{time} hr",
     "noVisits": "No visits to show.",
-    "noMatches": "No visits match your search or filters."
+    "noMatches": "No visits match your search or filters.",
+    "card": {
+      "invitedGuest": "Invited Guest",
+      "walkInGuest": "Walk-in Guest",
+      "openFor": "View details for {name}"
+    }
   },
   "common": {
     "notifications": "Notifications",
@@ -108,7 +119,8 @@
     "previousGuest": "Previous guest",
     "nextGuest": "Next guest",
     "previousVisitor": "Previous visitor",
-    "nextVisitor": "Next visitor"
+    "nextVisitor": "Next visitor",
+    "filters": "Filters"
   },
   "requests": {
     "title": "Requests & Alerts",
@@ -216,11 +228,6 @@
     "alertNeedsAttention": "Needs Attention",
     "alertDefaultCategory": "Flagged Guest Match",
     "respondPlaceholder": "Respond to alert…",
-    "pagination": {
-      "prev": "Previous",
-      "next": "Next",
-      "pageOf": "Page {page} of {total}"
-    },
     "card": {
       "flaggedTitle": "Flagged Guest Match",
       "title": {
@@ -308,7 +315,8 @@
     "select": "Select language",
     "en": "English",
     "fr": "French",
-    "ar": "Arabic"
+    "ar": "Arabic",
+    "label": "Language"
   },
   "roles": {
     "SUPER_ADMIN": "System Admin",
@@ -555,7 +563,8 @@
       "quickActions": {
         "title": "Quick Actions",
         "addVisitor": "Add Visitor",
-        "comingSoon": "Coming soon"
+        "comingSoon": "Coming soon",
+        "addVisitorShort": "Add Visitor"
       },
       "activity": {
         "empty": "No recent activity yet.",
@@ -672,7 +681,9 @@
       "reviewCta": "Review Requests",
       "historyCta": "Visit History",
       "activityTitle": "Today's activity\nat a glance",
-      "activityCta": "View Activity"
+      "activityCta": "View Activity",
+      "reviewCtaShort": "Review",
+      "historyCtaShort": "History"
     },
     "table": {
       "title": "Visitor Records",
@@ -707,7 +718,8 @@
       "noAccess": "Only a System Admin can manage users.",
       "searchPlaceholder": "Search users by name or email…",
       "allRoles": "All Roles",
-      "createSubtitle": "Create an account and assign its roles."
+      "createSubtitle": "Create an account and assign its roles.",
+      "openFor": "View {name}"
     }
   },
   "staff": {
@@ -727,7 +739,8 @@
       "officeFloor": "Office Floor",
       "officeFloorUnset": "Not set",
       "bookTitle": "Book Guests into Abuja\nAATC facilities",
-      "newInvite": "New Invite Request"
+      "newInvite": "New Invite Request",
+      "newInviteShort": "New Invite"
     },
     "stats": {
       "expectedToday": "Expected Today",
@@ -790,7 +803,14 @@
         "REQUEST_UPDATE": "Request Update",
         "VISIT_STATUS": "Visit Status",
         "SECURITY_ALERT": "Security Alerts"
-      }
+      },
+      "all": "All",
+      "updateRequest": "Update Request"
+    },
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "card": {
+      "openFor": "View details for {name}"
     }
   },
   "gate": {
@@ -1407,7 +1427,8 @@
       "expected": "Still expected",
       "expectedHint": "Approved, not arrived yet",
       "checkedOut": "Checked out",
-      "checkedInHint": "{count, plural, one {# checked in today} other {# checked in today}}"
+      "checkedInHint": "{count, plural, one {# checked in today} other {# checked in today}}",
+      "viewStats": "View today's figures"
     },
     "history": {
       "range": "History range",
@@ -1464,7 +1485,8 @@
         "lastVisit": "Last visit",
         "comms": "Email consent",
         "action": "Action"
-      }
+      },
+      "openFor": "View visit history for {name}"
     },
     "analytics": {
       "title": "Facility analytics",
@@ -1505,8 +1527,10 @@
         "alertsRaised": "Alerts raised",
         "alertsOpen": "Alerts still open",
         "denied": "Requests denied",
-        "deniedDaily": "Denied requests per day"
-      }
+        "deniedDaily": "Denied requests per day",
+        "viewStats": "View security figures"
+      },
+      "viewStats": "View key figures"
     },
     "status": {
       "PENDING": "Awaiting approval",
@@ -1647,7 +1671,8 @@
         "submit": "Assign card",
         "saving": "Assigning…",
         "error": "The card couldn't be assigned. Please try again."
-      }
+      },
+      "openFor": "View card issued to {name}"
     },
     "card": {
       "visitorAccess": "VISITOR ACCESS",
@@ -1770,7 +1795,8 @@
         "gate_kiosk_rotated": "Gate kiosk link replaced",
         "gate_kiosk_disabled": "Gate kiosk link turned off",
         "gate_kiosk_enabled": "Gate kiosk link turned on"
-      }
+      },
+      "openFor": "Open event: {action}"
     }
   },
   "rfidCard": {

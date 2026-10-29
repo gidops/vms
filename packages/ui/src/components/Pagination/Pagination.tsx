@@ -49,7 +49,38 @@ export function Pagination({
   className,
 }: PaginationProps) {
   if (totalPages <= 1) return null;
-  const items = buildItems(page, totalPages, siblingCount);
+
+  const renderItems = (items: Item[]) =>
+    items.map((item) =>
+      typeof item === "number" ? (
+        <Button
+          key={item}
+          intent="neutral"
+          tone={item === page ? "solid" : "ghost"}
+          size="sm"
+          aria-current={item === page ? "page" : undefined}
+          onClick={() => onPageChange(item)}
+          className={cn(
+            "size-9 rounded-full p-0",
+            item !== page && "border border-border",
+          )}
+        >
+          {item}
+        </Button>
+      ) : (
+        <span
+          key={item}
+          className="px-1 text-sm text-fg-subtle md:px-2"
+          aria-hidden="true"
+        >
+          …
+        </span>
+      ),
+    );
+
+  // Plain chevrons on small screens; outlined circles from md up.
+  const arrow =
+    "size-9 rounded-full border border-transparent p-0 md:border-border";
 
   return (
     <nav
@@ -63,37 +94,21 @@ export function Pagination({
         aria-label="Previous page"
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
-        className="size-9 rounded-full border border-border p-0"
+        className={arrow}
       >
-        <ChevronLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
+        <ChevronLeft
+          className="size-5 rtl:rotate-180 md:size-4"
+          aria-hidden="true"
+        />
       </Button>
 
-      {items.map((item) =>
-        typeof item === "number" ? (
-          <Button
-            key={item}
-            intent="neutral"
-            tone={item === page ? "solid" : "ghost"}
-            size="sm"
-            aria-current={item === page ? "page" : undefined}
-            onClick={() => onPageChange(item)}
-            className={cn(
-              "size-9 rounded-full p-0",
-              item !== page && "border border-border",
-            )}
-          >
-            {item}
-          </Button>
-        ) : (
-          <span
-            key={item}
-            className="px-2 text-sm text-fg-subtle"
-            aria-hidden="true"
-          >
-            …
-          </span>
-        ),
-      )}
+      {/* Small screens drop the neighbouring pages so the row fits a phone. */}
+      <div className="flex items-center gap-2 md:hidden">
+        {renderItems(buildItems(page, totalPages, 0))}
+      </div>
+      <div className="hidden items-center gap-2 md:flex">
+        {renderItems(buildItems(page, totalPages, siblingCount))}
+      </div>
 
       <Button
         intent="neutral"
@@ -102,9 +117,12 @@ export function Pagination({
         aria-label="Next page"
         disabled={page >= totalPages}
         onClick={() => onPageChange(page + 1)}
-        className="size-9 rounded-full border border-border p-0"
+        className={arrow}
       >
-        <ChevronRight className="size-4 rtl:rotate-180" aria-hidden="true" />
+        <ChevronRight
+          className="size-5 rtl:rotate-180 md:size-4"
+          aria-hidden="true"
+        />
       </Button>
     </nav>
   );

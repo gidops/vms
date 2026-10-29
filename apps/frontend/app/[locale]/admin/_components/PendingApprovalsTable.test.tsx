@@ -60,8 +60,11 @@ function setup() {
   return { onOpen, onDeny };
 }
 
+// jsdom renders both the desktop table and the mobile cards; scope to one.
+const table = () => screen.getByRole("table");
+const cards = () => screen.getAllByRole("article");
 const rowOf = (name: string) =>
-  screen.getByText(name).closest("tr") as HTMLElement;
+  within(table()).getByText(name).closest("tr") as HTMLElement;
 
 describe("PendingApprovalsTable", () => {
   beforeEach(() => {
@@ -87,10 +90,12 @@ describe("PendingApprovalsTable", () => {
     perms.add(PERMISSIONS.VISIT_APPROVE);
     perms.add(PERMISSIONS.VISIT_DENY);
     const { onOpen, onDeny } = setup();
-    fireEvent.click(screen.getByRole("button", { name: "Deny Chidi Okonkwo" }));
+    fireEvent.click(
+      within(table()).getByRole("button", { name: "Deny Chidi Okonkwo" }),
+    );
     expect(onDeny).toHaveBeenCalledWith(expect.objectContaining({ id: "1" }));
     fireEvent.click(
-      screen.getByRole("button", { name: "Approve Fatima Nwosu" }),
+      within(table()).getByRole("button", { name: "Approve Fatima Nwosu" }),
     );
     expect(onOpen).toHaveBeenCalledWith(expect.objectContaining({ id: "2" }));
   });
@@ -99,11 +104,31 @@ describe("PendingApprovalsTable", () => {
     perms.add(PERMISSIONS.VISIT_APPROVE);
     setup();
     expect(
-      screen.getByRole("button", { name: "Approve Chidi Okonkwo" }),
+      within(table()).getByRole("button", { name: "Approve Chidi Okonkwo" }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Deny Chidi Okonkwo" }),
     ).toBeNull();
+  });
+
+  it("shows each request as a card on small screens, with its waiting time and actions", () => {
+    perms.add(PERMISSIONS.VISIT_APPROVE);
+    perms.add(PERMISSIONS.VISIT_DENY);
+    const { onOpen, onDeny } = setup();
+    const [first, , third] = cards();
+    expect(first).toHaveTextContent("Chidi Okonkwo");
+    expect(within(first).getByText("1h 12m")).toBeInTheDocument();
+    expect(third).toHaveTextContent("More info asked");
+    fireEvent.click(
+      within(first).getByRole("button", { name: "Deny Chidi Okonkwo" }),
+    );
+    expect(onDeny).toHaveBeenCalledWith(expect.objectContaining({ id: "1" }));
+    fireEvent.click(
+      within(first).getByRole("button", {
+        name: "View details for Chidi Okonkwo",
+      }),
+    );
+    expect(onOpen).toHaveBeenCalledWith(expect.objectContaining({ id: "1" }));
   });
 
   it("gives read-only roles a single Review button", () => {
@@ -163,15 +188,16 @@ describe("PendingApprovalsTable — dashboard (vmc) variant", () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
     expect(screen.getByRole("radio", { name: "All" })).toBeChecked();
-    expect(screen.getByText("Chidi Okonkwo")).toBeInTheDocument();
+    expect(within(table()).getByText("Chidi Okonkwo")).toBeInTheDocument();
     expect(
       screen.getByRole("columnheader", { name: "Host / Floor" }),
     ).toBeInTheDocument();
     // No Waiting column on the dashboard.
     expect(screen.queryByRole("columnheader", { name: "Waiting" })).toBeNull();
     expect(screen.queryByText("1h 12m")).toBeNull();
+    // The mobile card drops the dashboard's waiting time too.
     // Guest count as the bare number.
-    const row = screen.getByText("Chidi Okonkwo").closest("tr") as HTMLElement;
+    const row = rowOf("Chidi Okonkwo");
     expect(within(row).getByText("1")).toBeInTheDocument();
     expect(within(row).queryByText(/guest/i)).toBeNull();
   });
@@ -197,7 +223,7 @@ describe("PendingApprovalsTable — dashboard (vmc) variant", () => {
     }
     expect(screen.queryByRole("button", { name: /Approve|Deny/ })).toBeNull();
     fireEvent.click(
-      screen.getByRole("button", { name: "Review Chidi Okonkwo" }),
+      within(table()).getByRole("button", { name: "Review Chidi Okonkwo" }),
     );
     expect(onOpen).toHaveBeenCalledWith(rows[0]);
     expect(

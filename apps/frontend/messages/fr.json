@@ -23,7 +23,11 @@
     "optIns": "Abonnements",
     "deskQr": "QR sans rendez-vous",
     "insights": "Aperçus",
-    "operations": "Opérations"
+    "operations": "Opérations",
+    "accountMenu": "Menu du compte",
+    "approvalsShort": "Approbations",
+    "activityShort": "Activité",
+    "sections": "Sections"
   },
   "login": {
     "showPassword": "Afficher le mot de passe",
@@ -64,7 +68,9 @@
     "quickActions": {
       "title": "Actions rapides",
       "registerWalkIn": "Enregistrer une arrivée",
-      "newInvite": "Nouvelle invitation"
+      "newInvite": "Nouvelle invitation",
+      "registerWalkInShort": "Sans RDV",
+      "newInviteShort": "Invitation"
     },
     "activity": {
       "title": "Voir votre activité"
@@ -97,7 +103,12 @@
     "guestCount": "{count, plural, one {# invité} other {# invités}}",
     "onsiteElapsed": "{time} h",
     "noVisits": "Aucune visite à afficher.",
-    "noMatches": "Aucune visite ne correspond à votre recherche ou à vos filtres."
+    "noMatches": "Aucune visite ne correspond à votre recherche ou à vos filtres.",
+    "card": {
+      "invitedGuest": "Visiteur invité",
+      "walkInGuest": "Visiteur sans rendez-vous",
+      "openFor": "Voir les détails de {name}"
+    }
   },
   "common": {
     "notifications": "Notifications",
@@ -108,7 +119,8 @@
     "previousGuest": "Invité précédent",
     "nextGuest": "Invité suivant",
     "previousVisitor": "Visiteur précédent",
-    "nextVisitor": "Visiteur suivant"
+    "nextVisitor": "Visiteur suivant",
+    "filters": "Filtres"
   },
   "requests": {
     "title": "Demandes et alertes",
@@ -216,11 +228,6 @@
     "alertNeedsAttention": "Attention requise",
     "alertDefaultCategory": "Correspondance de visiteur signalé",
     "respondPlaceholder": "Répondre à l'alerte…",
-    "pagination": {
-      "prev": "Précédent",
-      "next": "Suivant",
-      "pageOf": "Page {page} sur {total}"
-    },
     "card": {
       "flaggedTitle": "Correspondance de visiteur signalé",
       "title": {
@@ -308,7 +315,8 @@
     "select": "Choisir la langue",
     "en": "Anglais",
     "fr": "Français",
-    "ar": "Arabe"
+    "ar": "Arabe",
+    "label": "Langue"
   },
   "roles": {
     "SUPER_ADMIN": "Administrateur système",
@@ -555,7 +563,8 @@
       "quickActions": {
         "title": "Actions rapides",
         "addVisitor": "Ajouter un visiteur",
-        "comingSoon": "Bientôt disponible"
+        "comingSoon": "Bientôt disponible",
+        "addVisitorShort": "Ajouter"
       },
       "activity": {
         "empty": "Aucune activité récente pour l'instant.",
@@ -672,7 +681,9 @@
       "reviewCta": "Examiner les demandes",
       "historyCta": "Historique des visites",
       "activityTitle": "L'activité du jour\nen un coup d'œil",
-      "activityCta": "Voir l'activité"
+      "activityCta": "Voir l'activité",
+      "reviewCtaShort": "Examiner",
+      "historyCtaShort": "Historique"
     },
     "table": {
       "title": "Registre des visiteurs",
@@ -707,7 +718,8 @@
       "noAccess": "Seul un administrateur système peut gérer les utilisateurs.",
       "searchPlaceholder": "Rechercher par nom ou e-mail…",
       "allRoles": "Tous les rôles",
-      "createSubtitle": "Créez un compte et attribuez-lui des rôles."
+      "createSubtitle": "Créez un compte et attribuez-lui des rôles.",
+      "openFor": "Voir {name}"
     }
   },
   "staff": {
@@ -727,7 +739,8 @@
       "officeFloor": "Étage du bureau",
       "officeFloorUnset": "Non défini",
       "bookTitle": "Réservez des invités dans les installations\nAATC d'Abuja",
-      "newInvite": "Nouvelle demande d'invitation"
+      "newInvite": "Nouvelle demande d'invitation",
+      "newInviteShort": "Invitation"
     },
     "stats": {
       "expectedToday": "Attendus aujourd'hui",
@@ -790,7 +803,14 @@
         "REQUEST_UPDATE": "Mise à jour de demande",
         "VISIT_STATUS": "Statut de visite",
         "SECURITY_ALERT": "Alertes de sécurité"
-      }
+      },
+      "all": "Tous",
+      "updateRequest": "Mettre à jour la demande"
+    },
+    "showMore": "Afficher plus",
+    "showLess": "Afficher moins",
+    "card": {
+      "openFor": "Voir les détails de {name}"
     }
   },
   "gate": {
@@ -1407,7 +1427,8 @@
       "expected": "Encore attendus",
       "expectedHint": "Approuvés, pas encore arrivés",
       "checkedOut": "Sortis",
-      "checkedInHint": "{count, plural, one {# entrée aujourd'hui} other {# entrées aujourd'hui}}"
+      "checkedInHint": "{count, plural, one {# entrée aujourd'hui} other {# entrées aujourd'hui}}",
+      "viewStats": "Voir les chiffres du jour"
     },
     "history": {
       "range": "Période de l'historique",
@@ -1464,7 +1485,8 @@
         "lastVisit": "Dernière visite",
         "comms": "Consentement e-mail",
         "action": "Action"
-      }
+      },
+      "openFor": "Voir l'historique des visites de {name}"
     },
     "analytics": {
       "title": "Analyses du site",
@@ -1505,8 +1527,10 @@
         "alertsRaised": "Alertes émises",
         "alertsOpen": "Alertes encore ouvertes",
         "denied": "Demandes refusées",
-        "deniedDaily": "Demandes refusées par jour"
-      }
+        "deniedDaily": "Demandes refusées par jour",
+        "viewStats": "Voir les chiffres de sécurité"
+      },
+      "viewStats": "Voir les chiffres clés"
     },
     "status": {
       "PENDING": "En attente d'approbation",
@@ -1647,7 +1671,8 @@
         "submit": "Attribuer la carte",
         "saving": "Attribution…",
         "error": "La carte n'a pas pu être attribuée. Veuillez réessayer."
-      }
+      },
+      "openFor": "Voir la carte remise à {name}"
     },
     "card": {
       "visitorAccess": "ACCÈS VISITEUR",
@@ -1770,7 +1795,8 @@
         "gate_kiosk_rotated": "Lien de borne d'entrée remplacé",
         "gate_kiosk_disabled": "Lien de borne d'entrée désactivé",
         "gate_kiosk_enabled": "Lien de borne d'entrée activé"
-      }
+      },
+      "openFor": "Ouvrir l'événement : {action}"
     }
   },
   "rfidCard": {

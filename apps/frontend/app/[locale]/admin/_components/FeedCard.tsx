@@ -21,7 +21,8 @@ export function FeedCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 shadow-xs">
+    // Small screens drop the panel frame: the entries stand as their own cards.
+    <section className="flex flex-col gap-4 md:rounded-xl md:border md:border-border md:bg-surface md:p-5 md:shadow-xs">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-fg">{title}</h2>
         {seeAllHref ? (

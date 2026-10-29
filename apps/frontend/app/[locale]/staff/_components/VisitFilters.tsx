@@ -50,9 +50,7 @@ export function VisitFilters({
 
   return (
     <FilterBar
-      actions={<Button onClick={onSearch}>{tDash("filters.search")}</Button>}
-    >
-      <div className="min-w-56 flex-1">
+      search={
         <SearchInput
           value={value.search}
           onChange={(e) => onChange({ search: e.target.value })}
@@ -62,7 +60,10 @@ export function VisitFilters({
           }}
           placeholder={t("filters.searchPlaceholder")}
         />
-      </div>
+      }
+      filtersLabel={tCommon("filters")}
+      actions={<Button onClick={onSearch}>{tDash("filters.search")}</Button>}
+    >
       <Select
         value={value.status}
         onValueChange={(v) => onChange({ status: v as VisitStatus | "all" })}

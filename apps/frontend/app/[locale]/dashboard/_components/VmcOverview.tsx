@@ -6,6 +6,10 @@ import { useTranslations } from "next-intl";
 import { EvacuationRollLink } from "@/app/[locale]/_components/EvacuationIndicator";
 import {
   OverviewBar,
+  OverviewEyebrow,
+  PANEL_ACTION,
+  PANEL_ACTIONS,
+  PanelActionLabel,
   type OverviewStat,
 } from "@/app/[locale]/_components/OverviewBar";
 
@@ -18,21 +22,6 @@ export interface VmcOverviewProps {
   onNewInvite: () => void;
   /** Above zero, the quick-actions panel turns red and links to the roll. */
   evacuationCount?: number;
-}
-
-function WelcomeHeader({ welcome }: { welcome: string }) {
-  const t = useTranslations("dashboard");
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="flex items-center gap-1.5 text-base font-semibold uppercase tracking-tight text-success">
-        <Signal className="size-4" aria-hidden="true" />
-        {t("hub")}
-      </span>
-      <h1 className="text-[2rem] font-medium leading-tight text-[#344054]">
-        {welcome}
-      </h1>
-    </div>
-  );
 }
 
 function QuickActions({
@@ -57,12 +46,28 @@ function QuickActions({
         <h3 className="text-lg font-semibold">{t("quickActions.title")}</h3>
         <EvacuationRollLink count={evacuationCount} />
       </div>
-      <div className="relative flex flex-wrap items-center gap-3">
-        <Button intent="primary" onClick={onRegisterWalkIn}>
-          {t("quickActions.registerWalkIn")}
+      <div className={PANEL_ACTIONS}>
+        <Button
+          intent="primary"
+          className={PANEL_ACTION}
+          aria-label={t("quickActions.registerWalkIn")}
+          onClick={onRegisterWalkIn}
+        >
+          <PanelActionLabel
+            label={t("quickActions.registerWalkIn")}
+            short={t("quickActions.registerWalkInShort")}
+          />
         </Button>
-        <Button intent="accent" onClick={onNewInvite}>
-          {t("quickActions.newInvite")}
+        <Button
+          intent="accent"
+          className={PANEL_ACTION}
+          aria-label={t("quickActions.newInvite")}
+          onClick={onNewInvite}
+        >
+          <PanelActionLabel
+            label={t("quickActions.newInvite")}
+            short={t("quickActions.newInviteShort")}
+          />
         </Button>
       </div>
     </>
@@ -80,10 +85,9 @@ export function VmcOverview({
   return (
     <OverviewBar
       panelTone={evacuationCount > 0 ? "alert" : "default"}
-      heading={<WelcomeHeader welcome={welcome} />}
+      eyebrow={<OverviewEyebrow icon={Signal}>{t("hub")}</OverviewEyebrow>}
+      welcome={welcome}
       stats={stats}
-      mobileStats="collapsible"
-      collapsibleLabel={t("activity.title")}
       panel={
         <QuickActions
           onRegisterWalkIn={onRegisterWalkIn}

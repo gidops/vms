@@ -6,6 +6,7 @@ import {
   Pagination,
   RecordTable,
   Spinner,
+  StatusBadge,
   Table,
   TableBody,
   TableCell,
@@ -18,6 +19,8 @@ import { CircleUser } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
+import { PageHeaderBar } from "@/app/[locale]/_components/PageHeaderBar";
+import { RecordCard } from "@/app/[locale]/_components/RecordCard";
 import { StatusCell } from "@/app/[locale]/_components/StatusCell";
 import {
   RequestDrawer,
@@ -88,12 +91,10 @@ function MyVisits() {
       filterBar={<VisitFilters value={filters} onChange={onFilters} />}
     >
       <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-stretch justify-between overflow-hidden rounded-xl border-x border-b border-border bg-surface">
-          <h1 className="flex items-center px-6 py-4 text-3xl font-semibold text-fg">
-            {t("myVisits.title")}
-          </h1>
-          <MyVisitsRangeFilter value={tab} onChange={onRange} />
-        </div>
+        <PageHeaderBar
+          title={t("myVisits.title")}
+          actions={<MyVisitsRangeFilter value={tab} onChange={onRange} />}
+        />
 
         <RecordTable
           frameless
@@ -112,102 +113,168 @@ function MyVisits() {
               <Spinner />
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("columns.visitor")}</TableHead>
-                  <TableHead>{t("columns.purpose")}</TableHead>
-                  <TableHead>{t("columns.noOfGuest")}</TableHead>
-                  <TableHead>{t("columns.status")}</TableHead>
-                  <TableHead>{t("columns.action")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody striped>
+            <>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader className="[&_tr]:border-t-0">
+                    <TableRow>
+                      <TableHead>{t("columns.visitor")}</TableHead>
+                      <TableHead>{t("columns.purpose")}</TableHead>
+                      <TableHead>{t("columns.noOfGuest")}</TableHead>
+                      <TableHead>{t("columns.status")}</TableHead>
+                      <TableHead>{t("columns.action")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody striped>
+                    {rows.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={5}
+                          className="py-10 text-center text-fg-subtle"
+                        >
+                          {t("noVisits")}
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      rows.map((row) => {
+                        const isGroup = row.isGroupVisit && row.groupName;
+                        return (
+                          <TableRow key={row.id}>
+                            <TableCell>
+                              <span className="flex items-center gap-3">
+                                <Avatar
+                                  name={
+                                    isGroup
+                                      ? row.groupName!
+                                      : row.visitor.fullName
+                                  }
+                                  size="md"
+                                  accent={row.isGroupVisit ? "group" : "single"}
+                                />
+                                <span className="flex flex-col">
+                                  <span className="font-medium text-fg">
+                                    {isGroup
+                                      ? row.groupName
+                                      : row.visitor.fullName}
+                                  </span>
+                                  <span className="text-xs text-fg-muted">
+                                    {isGroup
+                                      ? (row.groupContact ?? "")
+                                      : row.visitor.email}
+                                  </span>
+                                </span>
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-fg-muted">
+                              {row.purpose}
+                            </TableCell>
+                            <TableCell className="text-fg-muted">
+                              <span className="flex items-center gap-1.5">
+                                <CircleUser
+                                  className="size-4"
+                                  aria-hidden="true"
+                                />
+                                {t("guestCount", { count: row.groupSize })}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <StatusCell
+                                status={row.status}
+                                scheduledAt={row.scheduledAt}
+                                checkInAt={row.checkInAt}
+                                checkOutAt={row.checkOutAt}
+                                createdAt={row.createdAt}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              {row.status === "REVIEW_REQUESTED" ? (
+                                <Button
+                                  intent="danger"
+                                  size="sm"
+                                  className="min-w-28 text-xs"
+                                  onClick={() =>
+                                    setSelected({ kind: "request", id: row.id })
+                                  }
+                                >
+                                  {t("actions.update")}
+                                </Button>
+                              ) : (
+                                <Button
+                                  intent="neutral"
+                                  tone="outline"
+                                  size="sm"
+                                  className="min-w-28 text-xs"
+                                  onClick={() =>
+                                    setSelected({ kind: "request", id: row.id })
+                                  }
+                                >
+                                  {t("actions.viewDetails")}
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Small screens: each visit as a tappable card. */}
+              <div className="flex flex-col gap-4 md:hidden">
                 {rows.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="py-10 text-center text-fg-subtle"
-                    >
-                      {t("noVisits")}
-                    </TableCell>
-                  </TableRow>
+                  <p className="py-10 text-center text-fg-subtle">
+                    {t("noVisits")}
+                  </p>
                 ) : (
                   rows.map((row) => {
-                    const isGroup = row.isGroupVisit && row.groupName;
+                    const name =
+                      row.isGroupVisit && row.groupName
+                        ? row.groupName
+                        : row.visitor.fullName;
+                    const open = () =>
+                      setSelected({ kind: "request", id: row.id });
                     return (
-                      <TableRow key={row.id}>
-                        <TableCell>
-                          <span className="flex items-center gap-3">
-                            <Avatar
-                              name={
-                                isGroup ? row.groupName! : row.visitor.fullName
-                              }
-                              size="md"
-                              accent={row.isGroupVisit ? "group" : "single"}
-                            />
-                            <span className="flex flex-col">
-                              <span className="font-medium text-fg">
-                                {isGroup ? row.groupName : row.visitor.fullName}
-                              </span>
-                              <span className="text-xs text-fg-muted">
-                                {isGroup
-                                  ? (row.groupContact ?? "")
-                                  : row.visitor.email}
-                              </span>
-                            </span>
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-fg-muted">
-                          {row.purpose}
-                        </TableCell>
-                        <TableCell className="text-fg-muted">
+                      <RecordCard
+                        key={row.id}
+                        eyebrow={row.purpose}
+                        title={name}
+                        subtitle={
+                          row.isGroupVisit
+                            ? (row.groupContact ?? undefined)
+                            : row.visitor.email
+                        }
+                        status={<StatusBadge status={row.status} />}
+                        footer={
                           <span className="flex items-center gap-1.5">
                             <CircleUser className="size-4" aria-hidden="true" />
                             {t("guestCount", { count: row.groupSize })}
                           </span>
-                        </TableCell>
-                        <TableCell>
-                          <StatusCell
-                            status={row.status}
-                            scheduledAt={row.scheduledAt}
-                            checkInAt={row.checkInAt}
-                            checkOutAt={row.checkOutAt}
-                            createdAt={row.createdAt}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {row.status === "REVIEW_REQUESTED" ? (
-                            <Button
-                              intent="danger"
-                              size="sm"
-                              className="min-w-28 text-xs"
-                              onClick={() =>
-                                setSelected({ kind: "request", id: row.id })
-                              }
-                            >
-                              {t("actions.update")}
-                            </Button>
-                          ) : (
-                            <Button
-                              intent="neutral"
-                              tone="outline"
-                              size="sm"
-                              className="min-w-28 text-xs"
-                              onClick={() =>
-                                setSelected({ kind: "request", id: row.id })
-                              }
-                            >
-                              {t("actions.viewDetails")}
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
+                        }
+                        action={
+                          <Button
+                            intent={
+                              row.status === "REVIEW_REQUESTED"
+                                ? "danger"
+                                : "primary"
+                            }
+                            size="sm"
+                            className="min-w-28 text-xs"
+                            onClick={open}
+                          >
+                            {row.status === "REVIEW_REQUESTED"
+                              ? t("actions.update")
+                              : t("actions.viewDetails")}
+                          </Button>
+                        }
+                        onOpen={open}
+                        openLabel={t("card.openFor", { name })}
+                      />
                     );
                   })
                 )}
-              </TableBody>
-            </Table>
+              </div>
+            </>
           )}
         </RecordTable>
       </div>

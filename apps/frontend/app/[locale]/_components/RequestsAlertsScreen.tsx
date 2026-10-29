@@ -6,9 +6,9 @@ import {
   EmptyState,
   FilterBar,
   InboxCard,
+  Pagination,
   type InboxCardType,
   SearchInput,
-  SegmentedControl,
   Select,
   SelectContent,
   SelectItem,
@@ -21,7 +21,8 @@ import { Inbox, MessageSquare } from "lucide-react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
-import { InboxPagination } from "@/app/[locale]/_components/InboxPagination";
+import { FilterPills } from "@/app/[locale]/_components/FilterPills";
+import { PageHeaderBar } from "@/app/[locale]/_components/PageHeaderBar";
 import { VisitDetailSheet } from "@/app/[locale]/_components/VisitDetailSheet";
 import type { InboxItem, InboxKind } from "@/data/inbox/inbox.api";
 import {
@@ -227,14 +228,16 @@ export function RequestsAlertsScreen({
     <TopNavShell
       nav={<AppTopNav app={app} active="requests" />}
       filterBar={
-        <FilterBar>
-          <div className="min-w-56 flex-1">
+        <FilterBar
+          search={
             <SearchInput
               placeholder={tDash("filters.searchPlaceholder")}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
-          </div>
+          }
+          filtersLabel={tCommon("filters")}
+        >
           {/* Cards have no status, visit type or purpose to filter on. */}
           {tab === "cards" ? null : (
             <>
@@ -287,29 +290,29 @@ export function RequestsAlertsScreen({
       }
     >
       <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-3xl font-semibold text-primary">
-            {title ?? t("title")}
-          </h1>
-          <SegmentedControl
-            aria-label={t("title")}
-            value={tab}
-            onValueChange={(v) => {
-              setTab(v as InboxKind);
-              setStatus(ALL); // status options differ per tab
-              setPage(1);
-            }}
-            options={[
-              { value: "all", label: t("tabs.all") },
-              { value: "requests", label: t("tabs.requests") },
-              { value: "alerts", label: t("tabs.alerts") },
-              // Overdue cards are only served to readers of every visit.
-              ...(scope === "all"
-                ? [{ value: "cards", label: t("tabs.cards") }]
-                : []),
-            ]}
-          />
-        </div>
+        <PageHeaderBar
+          title={title ?? t("title")}
+          actions={
+            <FilterPills<InboxKind>
+              aria-label={t("title")}
+              value={tab}
+              onValueChange={(v) => {
+                setTab(v);
+                setStatus(ALL); // status options differ per tab
+                setPage(1);
+              }}
+              options={[
+                { value: "all", label: t("tabs.all") },
+                { value: "requests", label: t("tabs.requests") },
+                { value: "alerts", label: t("tabs.alerts") },
+                // Overdue cards are only served to readers of every visit.
+                ...(scope === "all"
+                  ? [{ value: "cards" as const, label: t("tabs.cards") }]
+                  : []),
+              ]}
+            />
+          }
+        />
 
         {isLoading ? (
           <div className="flex justify-center py-16">
@@ -368,11 +371,13 @@ export function RequestsAlertsScreen({
               })}
             </div>
 
-            <InboxPagination
-              page={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-            />
+            <div className="flex justify-center">
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
+            </div>
           </>
         )}
       </div>

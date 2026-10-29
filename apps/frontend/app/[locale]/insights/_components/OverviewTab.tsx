@@ -1,11 +1,9 @@
 "use client";
 
-import { Alert, AlertDescription, cn, Spinner } from "@vms/ui";
+import { Alert, AlertDescription, Spinner } from "@vms/ui";
 import { useLocale, useTranslations } from "next-intl";
 import {
-  cellBg,
-  StatCell,
-  statGridCellClass,
+  StatGrid,
   type OverviewStat,
 } from "@/app/[locale]/_components/OverviewBar";
 import { useInsightsOverview } from "@/data/insights/queries";
@@ -69,16 +67,7 @@ export function OverviewTab() {
       >
         {t("title")}
       </h2>
-      <div className="grid overflow-hidden rounded-xl border border-border sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat, i) => (
-          <div
-            key={stat.label}
-            className={cn(statGridCellClass(i), cellBg(stat))}
-          >
-            <StatCell stat={stat} />
-          </div>
-        ))}
-      </div>
+      <StatGrid stats={stats} mobileTitle={t("viewStats")} />
     </section>
   );
 }

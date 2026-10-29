@@ -9,6 +9,7 @@ import {
   RecordTable,
   SearchInput,
   Spinner,
+  StatusBadge,
   Table,
   TableBody,
   TableCell,
@@ -20,7 +21,11 @@ import { Download, History } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { ExportVisitorsDialog } from "@/app/[locale]/_components/ExportVisitorsDialog";
-import { FilterPills } from "@/app/[locale]/_components/FilterPills";
+import {
+  FilterPills,
+  SCROLLING_PILLS,
+} from "@/app/[locale]/_components/FilterPills";
+import { RecordCard } from "@/app/[locale]/_components/RecordCard";
 import { StatusCell } from "@/app/[locale]/_components/StatusCell";
 import {
   RequestDrawer,
@@ -75,6 +80,7 @@ function VisitorCell({ row }: { row: VisitListItem }) {
 /** Facility-wide for holders of history:read, otherwise the caller's own visits. */
 export function HistoryTab() {
   const t = useTranslations("insights.history");
+  const tStaff = useTranslations("staff");
   const locale = useLocale();
   const nf = new Intl.NumberFormat(locale);
   const { hasPermission } = useAuth();
@@ -99,9 +105,10 @@ export function HistoryTab() {
 
   return (
     <section className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:justify-between">
         <FilterPills
           aria-label={t("range")}
+          className={SCROLLING_PILLS}
           value={range}
           onValueChange={(v) => {
             setRange(v);
@@ -113,7 +120,7 @@ export function HistoryTab() {
           }))}
         />
         {canExport ? (
-          <Button onClick={() => setExportOpen(true)}>
+          <Button className="self-start" onClick={() => setExportOpen(true)}>
             <Download className="size-4" aria-hidden="true" />
             {t("export")}
           </Button>
@@ -169,73 +176,132 @@ export function HistoryTab() {
             <Spinner />
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("columns.visitor")}</TableHead>
-                {facility ? <TableHead>{t("columns.host")}</TableHead> : null}
-                <TableHead>{t("columns.date")}</TableHead>
-                <TableHead>{t("columns.purpose")}</TableHead>
-                <TableHead>{t("columns.status")}</TableHead>
-                <TableHead>
-                  <span className="sr-only">{t("columns.action")}</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody striped>
-              {history.isError ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns}
-                    className="py-10 text-center text-danger"
-                  >
-                    {t("error")}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                (data?.items ?? []).map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell>
-                      <VisitorCell row={row} />
-                    </TableCell>
+          <>
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("columns.visitor")}</TableHead>
                     {facility ? (
-                      <TableCell className="text-fg-muted">
-                        {row.host?.user.fullName ?? t("noHost")}
-                      </TableCell>
+                      <TableHead>{t("columns.host")}</TableHead>
                     ) : null}
-                    <TableCell className="whitespace-nowrap text-fg-muted">
-                      {formatWatDateTime(row.scheduledAt ?? null, locale)}
-                    </TableCell>
-                    <TableCell className="text-fg-muted">
-                      {row.purpose}
-                    </TableCell>
-                    <TableCell>
-                      <StatusCell
-                        status={row.status}
-                        scheduledAt={row.scheduledAt}
-                        checkInAt={row.checkInAt}
-                        checkOutAt={row.checkOutAt}
-                        createdAt={row.createdAt}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        intent="neutral"
-                        tone="outline"
-                        size="sm"
-                        className="min-w-28 text-xs"
-                        onClick={() =>
-                          setSelected({ kind: "request", id: row.id })
-                        }
-                      >
-                        {t("viewDetails")}
-                      </Button>
-                    </TableCell>
+                    <TableHead>{t("columns.date")}</TableHead>
+                    <TableHead>{t("columns.purpose")}</TableHead>
+                    <TableHead>{t("columns.status")}</TableHead>
+                    <TableHead>
+                      <span className="sr-only">{t("columns.action")}</span>
+                    </TableHead>
                   </TableRow>
-                ))
+                </TableHeader>
+                <TableBody striped>
+                  {history.isError ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns}
+                        className="py-10 text-center text-danger"
+                      >
+                        {t("error")}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    (data?.items ?? []).map((row) => (
+                      <TableRow key={row.id}>
+                        <TableCell>
+                          <VisitorCell row={row} />
+                        </TableCell>
+                        {facility ? (
+                          <TableCell className="text-fg-muted">
+                            {row.host?.user.fullName ?? t("noHost")}
+                          </TableCell>
+                        ) : null}
+                        <TableCell className="whitespace-nowrap text-fg-muted">
+                          {formatWatDateTime(row.scheduledAt ?? null, locale)}
+                        </TableCell>
+                        <TableCell className="text-fg-muted">
+                          {row.purpose}
+                        </TableCell>
+                        <TableCell>
+                          <StatusCell
+                            status={row.status}
+                            scheduledAt={row.scheduledAt}
+                            checkInAt={row.checkInAt}
+                            checkOutAt={row.checkOutAt}
+                            createdAt={row.createdAt}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            intent="neutral"
+                            tone="outline"
+                            size="sm"
+                            className="min-w-28 text-xs"
+                            onClick={() =>
+                              setSelected({ kind: "request", id: row.id })
+                            }
+                          >
+                            {t("viewDetails")}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Small screens: each visit as a tappable card. */}
+            <div className="flex flex-col gap-4 md:hidden">
+              {history.isError ? (
+                <p className="py-10 text-center text-danger">{t("error")}</p>
+              ) : (
+                (data?.items ?? []).map((row) => {
+                  const name =
+                    row.isGroupVisit && row.groupName
+                      ? row.groupName
+                      : row.visitor.fullName;
+                  const open = () =>
+                    setSelected({ kind: "request", id: row.id });
+                  return (
+                    <RecordCard
+                      key={row.id}
+                      eyebrow={formatWatDateTime(
+                        row.scheduledAt ?? null,
+                        locale,
+                      )}
+                      title={name}
+                      subtitle={
+                        row.isGroupVisit
+                          ? (row.groupContact ?? undefined)
+                          : row.visitor.email
+                      }
+                      extra={
+                        facility ? (
+                          <span className="text-sm text-fg-muted">
+                            {row.host?.user.fullName ?? t("noHost")}
+                          </span>
+                        ) : undefined
+                      }
+                      status={<StatusBadge status={row.status} />}
+                      footer={row.purpose}
+                      action={
+                        <Button
+                          intent="neutral"
+                          tone="outline"
+                          size="sm"
+                          className="min-w-28 text-xs"
+                          onClick={open}
+                        >
+                          {t("viewDetails")}
+                        </Button>
+                      }
+                      onOpen={open}
+                      openLabel={tStaff("card.openFor", { name })}
+                    />
+                  );
+                })
               )}
-            </TableBody>
-          </Table>
+            </div>
+          </>
         )}
       </RecordTable>
 

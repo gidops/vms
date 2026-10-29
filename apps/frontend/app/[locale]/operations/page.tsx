@@ -30,7 +30,9 @@ function Operations() {
   return (
     <TopNavShell nav={<AppTopNav centerLabel={t("title")} />}>
       <div className="flex flex-col gap-6">
-        <h1 className="text-3xl font-semibold text-fg">{t("title")}</h1>
+        <h1 className="text-2xl font-semibold text-fg md:text-3xl">
+          {t("title")}
+        </h1>
 
         {tabs.length > 1 && tab ? (
           <div className="max-w-full overflow-x-auto">
