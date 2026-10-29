@@ -858,7 +858,9 @@
     "reset": {
       "action": "Send password-reset link",
       "sent": "Reset link sent. It works once and expires in 15 minutes.",
-      "error": "Could not send the reset link."
+      "error": "Could not send the reset link.",
+      "cooldown": "Resend in {seconds}s",
+      "active": "A reset link is already active — it expires at {time}."
     },
     "statusAction": {
       "deactivate": "Deactivate account",

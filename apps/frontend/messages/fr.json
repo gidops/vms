@@ -858,7 +858,9 @@
     "reset": {
       "action": "Envoyer le lien de réinitialisation",
       "sent": "Lien envoyé. Il fonctionne une seule fois et expire dans 15 minutes.",
-      "error": "Impossible d'envoyer le lien de réinitialisation."
+      "error": "Impossible d'envoyer le lien de réinitialisation.",
+      "cooldown": "Renvoi possible dans {seconds} s",
+      "active": "Un lien de réinitialisation est déjà actif — il expire à {time}."
     },
     "statusAction": {
       "deactivate": "Désactiver le compte",
