@@ -34,10 +34,7 @@ export function TopNavShell({
 
   return (
     <div
-      className={cn(
-        "flex h-dvh w-full flex-col bg-canvas text-fg",
-        className,
-      )}
+      className={cn("flex h-dvh w-full flex-col bg-canvas text-fg", className)}
     >
       {nav}
       {filterBar ? (
