@@ -223,9 +223,8 @@ describe("SelfRegistrationScreen", { timeout: 15_000 }, () => {
     );
   });
 
-  it("sends the form and shows the reference straight away", async () => {
+  it("sends the form and confirms the registration straight away", async () => {
     api.submit.mockResolvedValue({
-      referenceCode: "7C42-318",
       fullName: "Ifeoma Chukwu",
       hostName: null,
       visitDate: new Date().toISOString(),
@@ -234,7 +233,9 @@ describe("SelfRegistrationScreen", { timeout: 15_000 }, () => {
     await fillAndSubmit();
 
     expect(await screen.findByText("You're registered")).toBeInTheDocument();
-    expect(screen.getByText("7C42-318")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Reception will hand you your visitor pass/),
+    ).toBeInTheDocument();
     expect(api.submit.mock.calls[0][1]).toMatchObject({
       formToken: "ft",
       email: "ifeoma@gtbank.com",

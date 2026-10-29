@@ -19,7 +19,6 @@ const QR = {
   scansToday: 4,
 };
 const RESULT = {
-  referenceCode: '7C42-318',
   fullName: 'Ifeoma Chukwu',
   hostName: null,
   visitDate: NOW,
@@ -127,7 +126,7 @@ describe('PublicRegistrationService', () => {
     const bot = setup();
     const res = await bot.service.submit(TOKEN, form({ website: 'spam' }), NOW);
     expect(bot.createSelfRegisteredWalkIn).not.toHaveBeenCalled();
-    expect(res.referenceCode).toMatch(/^[A-Z2-9]{4}-\d{3}$/);
+    expect(res.fullName).toBe('Ifeoma Chukwu');
     expect(res.hostName).toBeNull();
     expect(bot.record).toHaveBeenCalledWith(
       expect.objectContaining({

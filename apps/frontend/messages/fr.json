@@ -1217,7 +1217,7 @@
     "submitHelp": "L'envoi du formulaire enregistre votre visite pour aujourd'hui.",
     "done": {
       "title": "Vous êtes enregistré",
-      "body": "Présentez cette référence à l'accueil VMC pour obtenir votre badge.",
+      "body": "Tout est prêt pour aujourd'hui. L'accueil vous remettra votre badge visiteur.",
       "name": "Nom",
       "visiting": "Visite à",
       "when": "Date"

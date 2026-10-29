@@ -64,7 +64,6 @@ describe('Desk QR (e2e)', () => {
       .send(form(open.body.formToken as string, over))
       .expect(201);
     return sent.body as {
-      referenceCode: string;
       fullName: string;
       hostName: string | null;
       visitDate: string;
@@ -142,10 +141,14 @@ describe('Desk QR (e2e)', () => {
       fullName: 'Ifeoma Chukwu',
       hostName: `Desk ${ROLES.STAFF} ${run}`,
     });
+    // The visit's reference code stays server-side: the answer carries none.
+    expect(done).not.toHaveProperty('referenceCode');
 
-    const visit = await prisma.visit.findUniqueOrThrow({
-      where: { referenceCode: done.referenceCode },
+    const visit = await prisma.visit.findFirstOrThrow({
+      where: { visitor: { email: `visitor-${run}@x.com` } },
+      orderBy: { createdAt: 'desc' },
     });
+    expect(visit.referenceCode).toMatch(/^[A-Z2-9]{4}-\d{3}$/);
     expect(visit).toMatchObject({
       type: 'WALK_IN',
       status: 'APPROVED',
@@ -218,7 +221,7 @@ describe('Desk QR (e2e)', () => {
       )
       .expect(201);
     // A normal-looking answer, but nothing was created.
-    expect(res.body.referenceCode).toMatch(/^[A-Z2-9]{4}-\d{3}$/);
+    expect(res.body.fullName).toBe('Honey Pot');
     expect(await prisma.visit.count()).toBe(visitsBefore);
 
     const deadline = Date.now() + 10_000;

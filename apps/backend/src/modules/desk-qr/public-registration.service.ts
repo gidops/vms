@@ -25,7 +25,6 @@ import type { Env } from '../../shared/config/env.schema';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
 import { UsersService } from '../identity/users.service';
 import { VisitAuthoringService } from '../visits/authoring.service';
-import { generateReferenceCode } from '../visits/helpers/visit.codes';
 import { formTokenValid, signFormToken } from './desk-qr.tokens';
 
 /** Submissions per minute, across all phones (a leaked-link backstop beyond the per-IP limits). */
@@ -141,8 +140,8 @@ export class PublicRegistrationService {
 
   /**
    * A bot filled the hidden field. Return the same success shape a person
-   * would see (a plausible reference code, nothing persisted), so automated
-   * probing can't tell it was caught.
+   * would see (nothing persisted), so automated probing can't tell it was
+   * caught.
    */
   private async trapBot(
     qr: DeskQr,
@@ -156,7 +155,6 @@ export class PublicRegistrationService {
       metadata: { deskQrId: qr.id },
     });
     return {
-      referenceCode: generateReferenceCode(),
       fullName: input.fullName,
       hostName: null,
       visitDate: now,

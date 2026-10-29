@@ -221,7 +221,6 @@ export class VisitAuthoringService {
       });
       await onCreated?.(tx, visit.id);
       return {
-        referenceCode: visit.referenceCode!,
         fullName: input.fullName,
         hostName: visit.host?.user.fullName ?? null,
         visitDate: visit.scheduledAt!,

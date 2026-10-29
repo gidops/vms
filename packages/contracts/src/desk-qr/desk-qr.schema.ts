@@ -103,8 +103,8 @@ export const PublicRegistrationInput = z
   });
 export type PublicRegistrationInput = z.infer<typeof PublicRegistrationInput>;
 
+/** Confirmation only: the visit's reference code stays server-side for reception. */
 export const PublicRegistrationResult = z.object({
-  referenceCode: z.string(),
   fullName: z.string(),
   hostName: z.string().nullable(),
   visitDate: z.coerce.date(),
