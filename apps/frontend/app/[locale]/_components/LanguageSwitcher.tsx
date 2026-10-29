@@ -57,12 +57,13 @@ export function LanguageSwitcher() {
       <PopoverTrigger
         aria-label={t("select")}
         className={cn(
-          "hidden size-9 items-center justify-center rounded-full text-accent transition-colors outline-none md:inline-flex",
-          "hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]",
-          "data-[state=open]:bg-white/10",
+          "hidden size-9 items-center justify-center rounded-full bg-white/10 text-accent transition-colors outline-none md:inline-flex",
+          // Hover (and open) flips it: yellow disc, globe in the navbar green.
+          "hover:bg-accent hover:text-emphasis focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]",
+          "data-[state=open]:bg-accent data-[state=open]:text-emphasis",
         )}
       >
-        <Globe className="size-5" aria-hidden="true" />
+        <Globe className="size-5" strokeWidth={1.5} aria-hidden="true" />
       </PopoverTrigger>
       <PopoverContent align="end" className="w-56 p-2">
         <p className="flex items-center gap-2 px-2 py-1.5 text-sm font-semibold text-fg">
