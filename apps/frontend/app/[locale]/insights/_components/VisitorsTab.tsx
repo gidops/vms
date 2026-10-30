@@ -25,7 +25,11 @@ import { CalendarDays, Users } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { CommsOptInsScreen } from "@/app/[locale]/_components/CommsOptInsScreen";
-import { FilterPills } from "@/app/[locale]/_components/FilterPills";
+import {
+  FilterPills,
+  SCROLLING_PILLS,
+} from "@/app/[locale]/_components/FilterPills";
+import { RecordCard } from "@/app/[locale]/_components/RecordCard";
 import { Field } from "@/app/[locale]/_components/visit-detail/helpers";
 import { SheetSection } from "@/app/[locale]/_components/visit-detail/sections/SheetSection";
 import type { VisitorDetail, VisitorItem } from "@/data/insights/insights.api";
@@ -276,21 +280,63 @@ function Directory() {
             <AlertDescription>{t("error")}</AlertDescription>
           </Alert>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("columns.visitor")}</TableHead>
-                <TableHead>{t("columns.organization")}</TableHead>
-                <TableHead>{t("columns.visits")}</TableHead>
-                <TableHead>{t("columns.lastVisit")}</TableHead>
-                <TableHead>{t("columns.comms")}</TableHead>
-                <TableHead>
-                  <span className="sr-only">{t("columns.action")}</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody striped>{(data?.items ?? []).map(row)}</TableBody>
-          </Table>
+          <>
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("columns.visitor")}</TableHead>
+                    <TableHead>{t("columns.organization")}</TableHead>
+                    <TableHead>{t("columns.visits")}</TableHead>
+                    <TableHead>{t("columns.lastVisit")}</TableHead>
+                    <TableHead>{t("columns.comms")}</TableHead>
+                    <TableHead>
+                      <span className="sr-only">{t("columns.action")}</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody striped>{(data?.items ?? []).map(row)}</TableBody>
+              </Table>
+            </div>
+
+            {/* Small screens: each visitor as a tappable card. */}
+            <div className="flex flex-col gap-4 md:hidden">
+              {(data?.items ?? []).map((v) => (
+                <RecordCard
+                  key={v.id}
+                  eyebrow={
+                    v.lastVisitAt
+                      ? `${t("columns.lastVisit")}: ${formatWatDateTime(v.lastVisitAt, locale)}`
+                      : t("columns.lastVisit")
+                  }
+                  title={v.fullName}
+                  subtitle={v.email}
+                  extra={
+                    v.organization ? (
+                      <span className="text-sm text-fg-muted">
+                        {v.organization}
+                      </span>
+                    ) : undefined
+                  }
+                  status={<OptInBadge value={v.commsOptIn} />}
+                  footer={`${t("columns.visits")}: ${nf.format(v.visitCount)}`}
+                  action={
+                    <Button
+                      intent="neutral"
+                      tone="outline"
+                      size="sm"
+                      className="min-w-28 text-xs"
+                      onClick={() => setOpenId(v.id)}
+                    >
+                      {t("viewHistory")}
+                    </Button>
+                  }
+                  onOpen={() => setOpenId(v.id)}
+                  openLabel={t("openFor", { name: v.fullName })}
+                />
+              ))}
+            </div>
+          </>
         )}
       </RecordTable>
       <VisitorSheet id={openId} onClose={() => setOpenId(null)} />
@@ -312,6 +358,7 @@ export function VisitorsTab() {
       {showOptIns ? (
         <FilterPills<View>
           aria-label={t("title")}
+          className={SCROLLING_PILLS}
           value={view}
           onValueChange={setView}
           options={[
@@ -320,11 +367,7 @@ export function VisitorsTab() {
           ]}
         />
       ) : null}
-      {view === "optIns" && showOptIns ? (
-        <CommsOptInsScreen />
-      ) : (
-        <Directory />
-      )}
+      {view === "optIns" && showOptIns ? <CommsOptInsScreen /> : <Directory />}
     </section>
   );
 }

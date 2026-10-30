@@ -25,7 +25,8 @@ describe("OverviewBar", () => {
   it("renders heading, stat cells and the action panel in the desktop bar", () => {
     renderWithIntl(
       <OverviewBar
-        heading={<h1>Good morning</h1>}
+        eyebrow="VMC HUB"
+        welcome="Good morning"
         stats={stats}
         panel={<button type="button">Review approvals</button>}
       />,
@@ -42,7 +43,9 @@ describe("OverviewBar", () => {
   });
 
   it("marks the warning stat as the hero tone", () => {
-    renderWithIntl(<OverviewBar heading="Hi" stats={stats} panel={null} />);
+    renderWithIntl(
+      <OverviewBar eyebrow="HUB" welcome="Hi" stats={stats} panel={null} />,
+    );
     const bar = screen.getByTestId("overview-bar-desktop");
     const hero = within(bar)
       .getByText("Awaiting approval")
@@ -55,38 +58,53 @@ describe("OverviewBar", () => {
   });
 
   it("puts the aside in the heading row and spans the heading otherwise", () => {
-    const { rerender } = renderWithIntl(
+    const { unmount } = renderWithIntl(
       <OverviewBar
-        heading="Hi"
+        eyebrow="HUB"
+        welcome="Hi"
         aside={<span>3RD FLOOR</span>}
         stats={stats}
         panel={null}
       />,
     );
     let bar = screen.getByTestId("overview-bar-desktop");
-    expect(within(bar).getByText("Hi")).toHaveClass("col-span-3");
+    expect(within(bar).getByText("Hi").parentElement).toHaveClass("col-span-3");
     expect(within(bar).getByText("3RD FLOOR")).toBeInTheDocument();
-    rerender(<OverviewBar heading="Hi" stats={stats} panel={null} />);
+    unmount();
+    renderWithIntl(
+      <OverviewBar eyebrow="HUB" welcome="Hi" stats={stats} panel={null} />,
+    );
     bar = screen.getByTestId("overview-bar-desktop");
-    expect(within(bar).getByText("Hi")).toHaveClass("col-span-4");
+    expect(within(bar).getByText("Hi").parentElement).toHaveClass("col-span-4");
   });
 
-  it("collapses the mobile stats behind a toggle when asked", () => {
+  it("keeps the mobile stats collapsed behind View your activity until opened", () => {
     renderWithIntl(
-      <OverviewBar
-        heading="Hi"
-        stats={stats}
-        panel={null}
-        mobileStats="collapsible"
-        collapsibleLabel="View your activity"
-      />,
+      <OverviewBar eyebrow="HUB" welcome="Hi" stats={stats} panel={null} />,
     );
     const toggle = screen.getByRole("button", { name: "View your activity" });
-    expect(toggle).toHaveAttribute("aria-expanded", "true");
-    // Desktop bar + mobile list.
-    expect(screen.getAllByText("Onsite now")).toHaveLength(2);
-    fireEvent.click(toggle);
     expect(toggle).toHaveAttribute("aria-expanded", "false");
+    // Only the desktop bar's copy until the mobile list opens.
     expect(screen.getAllByText("Onsite now")).toHaveLength(1);
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getAllByText("Onsite now")).toHaveLength(2);
+  });
+
+  it("swaps in the mobile eyebrow on small screens only", () => {
+    renderWithIntl(
+      <OverviewBar
+        eyebrow="STAFF HUB"
+        mobileEyebrow="3RD FLOOR - LW"
+        welcome="Hi"
+        stats={stats}
+        panel={null}
+      />,
+    );
+    const bar = screen.getByTestId("overview-bar-desktop");
+    expect(within(bar).getByText("STAFF HUB")).toBeInTheDocument();
+    expect(within(bar).queryByText("3RD FLOOR - LW")).toBeNull();
+    expect(screen.getAllByText("STAFF HUB")).toHaveLength(1);
+    expect(screen.getByText("3RD FLOOR - LW")).toBeInTheDocument();
   });
 });

@@ -22,3 +22,4 @@ export * from "./insights/insights.schema.js";
 export * from "./rfid-card/rfid-card.schema.js";
 export * from "./audit/audit.schema.js";
 export * from "./desk-qr/desk-qr.schema.js";
+export * from "./gate/gate.schema.js";

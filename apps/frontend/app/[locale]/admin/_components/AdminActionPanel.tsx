@@ -7,7 +7,11 @@ import {
   EvacuationRollLink,
   useEvacuationAlertCount,
 } from "@/app/[locale]/_components/EvacuationIndicator";
-import { DecorChevrons } from "@/app/[locale]/_components/OverviewBar";
+import {
+  PANEL_ACTION,
+  PANEL_ACTIONS,
+  PanelActionLabel,
+} from "@/app/[locale]/_components/OverviewBar";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { adminConsoleRole } from "@/shared/auth/adminConsoleRole";
@@ -31,13 +35,25 @@ export function AdminActionPanel({
   // The System Admin approves too, just not as a primary duty.
   const review = () => router.push("/admin/approvals");
 
-  const actions: { key: string; label: string; onClick: () => void }[] = (
+  const actions: {
+    key: string;
+    label: string;
+    short: string;
+    onClick: () => void;
+  }[] = (
     sm
       ? [
-          { key: "review", label: t("reviewCta"), onClick: review, show: true },
+          {
+            key: "review",
+            label: t("reviewCta"),
+            short: t("reviewCtaShort"),
+            onClick: review,
+            show: true,
+          },
           {
             key: "history",
             label: t("historyCta"),
+            short: t("historyCtaShort"),
             onClick: () =>
               router.push({ pathname: "/insights", query: { tab: "history" } }),
             show: canHistory,
@@ -47,12 +63,14 @@ export function AdminActionPanel({
           {
             key: "add",
             label: tQa("addVisitor"),
+            short: tQa("addVisitorShort"),
             onClick: onAddVisitor,
             show: canAdd,
           },
           {
             key: "review",
             label: t("reviewCta"),
+            short: t("reviewCtaShort"),
             onClick: review,
             show: canApprove,
           },
@@ -62,7 +80,6 @@ export function AdminActionPanel({
 
   return (
     <>
-      <DecorChevrons />
       <div className="relative flex flex-col gap-2">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -76,10 +93,11 @@ export function AdminActionPanel({
         </h3>
         <EvacuationRollLink count={evacuationCount} />
       </div>
-      <div className="relative flex flex-wrap items-center gap-3">
+      <div className={PANEL_ACTIONS}>
         {empty ? (
           <Button
             intent="accent"
+            className={PANEL_ACTION}
             onClick={() => router.push("/admin/requests")}
           >
             {t("activityCta")}
@@ -89,9 +107,11 @@ export function AdminActionPanel({
             <Button
               key={a.key}
               intent={i === 0 ? "primary" : "accent"}
+              className={PANEL_ACTION}
+              aria-label={a.label}
               onClick={a.onClick}
             >
-              {a.label}
+              <PanelActionLabel label={a.label} short={a.short} />
             </Button>
           ))
         )}

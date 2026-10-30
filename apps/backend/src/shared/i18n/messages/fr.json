@@ -105,6 +105,11 @@
       "formInvalid": "Ce formulaire n'est pas valide. Veuillez scanner à nouveau le QR code.",
       "formExpired": "Ce formulaire a expiré. Veuillez scanner à nouveau le QR code."
     },
+    "gateKiosk": {
+      "notActive": "Ce lien de borne d'entrée n'est pas actif.",
+      "notFound": "Il n'existe pas encore de lien de borne d'entrée.",
+      "exists": "Le lien de borne d'entrée existe déjà."
+    },
     "visitor": {
       "notFound": "Visiteur introuvable"
     },

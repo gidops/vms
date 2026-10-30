@@ -47,6 +47,13 @@ export const EVENT_TYPES = {
   DeskQrEnabled: 'desk_qr.enabled',
   // Security event (no business transaction), recorded via SecurityAuditService.
   DeskQrHoneypotTriggered: 'desk_qr.honeypot_triggered',
+  /** A visitor's invitation code was checked at the gate (any verdict). */
+  GateCodeChecked: 'gate.code_checked',
+  GateKioskCreated: 'gate.kiosk_created',
+  /** The old kiosk link stops working. */
+  GateKioskRotated: 'gate.kiosk_rotated',
+  GateKioskDisabled: 'gate.kiosk_disabled',
+  GateKioskEnabled: 'gate.kiosk_enabled',
   ConsentWithdrawn: 'consent.withdrawn',
   ConsentGranted: 'consent.granted',
   ConsentExported: 'consent.exported',

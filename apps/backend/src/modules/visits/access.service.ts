@@ -29,7 +29,7 @@ export class VisitAccessService {
     private readonly rfid: RfidCardsService,
   ) {}
 
-  /** Also records gate validation, since there is no separate gate-scan step. */
+  /** Also stamps gate validation when the visitor skipped the gate scan; an earlier gate time is kept. */
   async checkIn(
     id: string,
     input: CheckInVisitInput,

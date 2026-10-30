@@ -19,7 +19,6 @@ describe('Permission matrix (e2e)', () => {
           VMC_ADMIN: 200,
           READ_ADMIN: 403,
           VMC: 200,
-          GATE: 200,
           STAFF: 403,
         },
       ],
@@ -32,7 +31,6 @@ describe('Permission matrix (e2e)', () => {
           VMC_ADMIN: 200,
           READ_ADMIN: 403,
           VMC: 200,
-          GATE: 403,
           STAFF: 403,
         },
       ],
@@ -46,7 +44,6 @@ describe('Permission matrix (e2e)', () => {
           VMC_ADMIN: 403,
           READ_ADMIN: 403,
           VMC: 403,
-          GATE: 403,
           STAFF: 403,
         },
       ],
@@ -60,7 +57,6 @@ describe('Permission matrix (e2e)', () => {
           VMC_ADMIN: 200,
           READ_ADMIN: 403,
           VMC: 200,
-          GATE: 200,
           STAFF: 403,
         },
       ],
@@ -74,7 +70,6 @@ describe('Permission matrix (e2e)', () => {
           VMC_ADMIN: 200,
           READ_ADMIN: 200,
           VMC: 403,
-          GATE: 403,
           STAFF: 403,
         },
       ],
@@ -88,7 +83,6 @@ describe('Permission matrix (e2e)', () => {
           VMC_ADMIN: 403,
           READ_ADMIN: 403,
           VMC: 403,
-          GATE: 403,
           STAFF: 403,
         },
       ],
@@ -111,7 +105,6 @@ describe('Permission matrix (e2e)', () => {
           VMC_ADMIN: 200,
           READ_ADMIN: 200,
           VMC: 200,
-          GATE: 403,
           STAFF: 403,
         },
       ],
@@ -124,7 +117,6 @@ describe('Permission matrix (e2e)', () => {
           VMC_ADMIN: 200,
           READ_ADMIN: 403,
           VMC: 200,
-          GATE: 403,
           STAFF: 403,
         },
       ],
@@ -138,12 +130,7 @@ describe('Permission matrix (e2e)', () => {
     }
 
     it('POST /consent/withdraw is limited to consent:manage holders', async () => {
-      for (const role of [
-        ROLES.ADMIN,
-        ROLES.READ_ADMIN,
-        ROLES.STAFF,
-        ROLES.GATE,
-      ]) {
+      for (const role of [ROLES.ADMIN, ROLES.READ_ADMIN, ROLES.STAFF]) {
         await as(role)
           .post('/consent/withdraw')
           .send({ email: 'x@y.com' })
@@ -165,7 +152,6 @@ describe('Permission matrix (e2e)', () => {
         ROLES.VMC_ADMIN,
         ROLES.READ_ADMIN,
         ROLES.STAFF,
-        ROLES.GATE,
       ]) {
         await as(role)
           .post('/consent/grant')

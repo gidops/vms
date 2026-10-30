@@ -17,12 +17,13 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import {
-  cellBg,
-  StatCell,
-  statGridCellClass,
+  StatGrid,
   type OverviewStat,
 } from "@/app/[locale]/_components/OverviewBar";
-import { FilterPills } from "@/app/[locale]/_components/FilterPills";
+import {
+  FilterPills,
+  SCROLLING_PILLS,
+} from "@/app/[locale]/_components/FilterPills";
 import { useInsightsAnalytics } from "@/data/insights/queries";
 import { watDateLocale } from "@/shared/wat";
 
@@ -57,28 +58,14 @@ function Panel({
   return (
     <section
       className={cn(
-        "flex flex-col gap-4 rounded-xl border border-border bg-surface p-5",
+        // Small screens use the mobile card look: footer-grey outline, tighter padding.
+        "flex min-w-0 flex-col gap-4 rounded-md border border-surface-muted bg-surface p-4 shadow-xs md:rounded-xl md:border-border md:p-5 md:shadow-none",
         className,
       )}
     >
       <h3 className="text-lg font-semibold text-fg">{title}</h3>
       {children}
     </section>
-  );
-}
-
-function StatGrid({ stats }: { stats: OverviewStat[] }) {
-  return (
-    <div className="grid overflow-hidden rounded-xl border border-border sm:grid-cols-2 xl:grid-cols-4">
-      {stats.map((stat, i) => (
-        <div
-          key={stat.label}
-          className={cn(statGridCellClass(i), cellBg(stat))}
-        >
-          <StatCell stat={stat} />
-        </div>
-      ))}
-    </div>
   );
 }
 
@@ -166,7 +153,7 @@ function Charts({ data }: { data: InsightsAnalytics }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <StatGrid stats={stats} />
+      <StatGrid stats={stats} mobileTitle={t("viewStats")} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel title={t("daily")}>
@@ -249,6 +236,7 @@ function Charts({ data }: { data: InsightsAnalytics }) {
             {t("security.title")}
           </h3>
           <StatGrid
+            mobileTitle={t("security.viewStats")}
             stats={[
               {
                 label: t("security.flagged"),
@@ -297,9 +285,10 @@ export function AnalyticsTab() {
 
   return (
     <section className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex min-w-0 flex-wrap items-center gap-3">
         <FilterPills
           aria-label={t("range")}
+          className={SCROLLING_PILLS}
           value={range}
           onValueChange={setRange}
           options={RANGES.map((value) => ({

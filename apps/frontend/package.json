@@ -27,6 +27,7 @@
     "next": "16.2.6",
     "next-intl": "^4.3.0",
     "papaparse": "^5.5.3",
+    "qr-scanner": "1.4.2",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },

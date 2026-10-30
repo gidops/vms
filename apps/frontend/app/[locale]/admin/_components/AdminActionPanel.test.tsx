@@ -15,8 +15,11 @@ vi.mock("@/app/[locale]/_components/EvacuationIndicator", () => ({
   EvacuationRollLink: () => null,
 }));
 
+// Accessible names: the visible text also carries the short mobile label.
 const buttons = () =>
-  screen.getAllByRole("button").map((b) => b.textContent?.trim());
+  screen
+    .getAllByRole("button")
+    .map((b) => b.getAttribute("aria-label") ?? b.textContent?.trim());
 
 describe("AdminActionPanel", () => {
   beforeEach(() => {

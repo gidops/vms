@@ -113,7 +113,7 @@ export class InboxService {
     const wantAlerts =
       !requestOnly && (query.kind === 'all' || query.kind === 'alerts');
 
-    // Principals without `visit:read` (staff, gate) are always limited to `scope=mine`.
+    // Principals without `visit:read` (staff) are always limited to `scope=mine`.
     const mine = query.scope === 'mine' || !canReadAll;
     // Overdue cards are reception's job, so they never appear in a personal scope.
     const wantCards =

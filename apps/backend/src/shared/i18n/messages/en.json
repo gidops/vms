@@ -105,6 +105,11 @@
       "formInvalid": "This form is not valid. Please scan the QR code again.",
       "formExpired": "This form has expired. Please scan the QR code again."
     },
+    "gateKiosk": {
+      "notActive": "This gate kiosk link is not active.",
+      "notFound": "There is no gate kiosk link yet.",
+      "exists": "The gate kiosk link already exists."
+    },
     "visitor": {
       "notFound": "Visitor not found"
     },

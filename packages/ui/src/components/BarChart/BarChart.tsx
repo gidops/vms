@@ -66,7 +66,11 @@ export function BarChart({
         {data.map((d, i) => (
           <span
             key={d.key ?? d.label}
-            className="min-w-0 flex-1 overflow-visible text-center whitespace-nowrap"
+            className={cn(
+              "min-w-0 flex-1 overflow-visible text-center whitespace-nowrap",
+              // Phones have half the width: keep every other label so they don't collide.
+              (i / every) % 2 === 1 && "max-md:invisible",
+            )}
           >
             {i % every === 0 ? d.label : ""}
           </span>

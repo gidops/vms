@@ -57,7 +57,7 @@ const ROLE = {
     PERMISSIONS.VISITOR_READ,
     PERMISSIONS.REPORT_READ,
   ],
-  gate: [PERMISSIONS.EVACUATION_READ],
+  evacuationOnly: [PERMISSIONS.EVACUATION_READ],
   securityManager: [
     PERMISSIONS.EVACUATION_READ,
     PERMISSIONS.HISTORY_READ,
@@ -100,8 +100,8 @@ describe("Insights page", () => {
     expect(tabNames()).toEqual(expected);
   });
 
-  it("shows the gate its one tab without a tab bar", () => {
-    as("gate");
+  it("shows a single tab without a tab bar", () => {
+    as("evacuationOnly");
     renderWithIntl(<InsightsPage />);
     expect(tabNames()).toEqual([]);
     expect(screen.getByText("roll screen")).toBeInTheDocument();

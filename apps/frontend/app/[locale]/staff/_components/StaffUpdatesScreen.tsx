@@ -4,6 +4,7 @@ import {
   EmptyState,
   FilterBar,
   InboxCard,
+  Pagination,
   type InboxCardType,
   Input,
   SearchInput,
@@ -19,7 +20,9 @@ import { Inbox } from "lucide-react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
-import { InboxPagination } from "@/app/[locale]/_components/InboxPagination";
+import { FilterPills } from "@/app/[locale]/_components/FilterPills";
+import { PageHeaderBar } from "@/app/[locale]/_components/PageHeaderBar";
+import { UpdateCard } from "@/app/[locale]/staff/_components/UpdateCard";
 import {
   VisitDetailSheet,
   type NotificationContext,
@@ -50,6 +53,7 @@ function cardType(category: StaffActivityCategory): InboxCardType {
 
 export function StaffUpdatesScreen() {
   const t = useTranslations("staff.updates");
+  const tCommon = useTranslations("common");
   const format = useFormatter();
   // next-intl warns about relative times without an explicit "now".
   const now = useNow();
@@ -102,15 +106,17 @@ export function StaffUpdatesScreen() {
     <TopNavShell
       nav={<AppTopNav app="staff" active="updates" />}
       filterBar={
-        <FilterBar>
-          <div className="min-w-56 flex-1">
+        <FilterBar
+          search={
             <SearchInput
               placeholder={t("searchPlaceholder")}
               aria-label={t("searchPlaceholder")}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
-          </div>
+          }
+          filtersLabel={tCommon("filters")}
+        >
           <Select
             value={category}
             onValueChange={(v) => {
@@ -144,7 +150,27 @@ export function StaffUpdatesScreen() {
       }
     >
       <div className="flex flex-col gap-6">
-        <h1 className="text-3xl font-semibold text-primary">{t("allTitle")}</h1>
+        {/* Shortcuts to the first categories; the dropdown keeps the full list, in step with these. */}
+        <PageHeaderBar
+          title={t("allTitle")}
+          actions={
+            <FilterPills
+              aria-label={t("categoryLabel")}
+              value={category}
+              onValueChange={(v) => {
+                setCategory(v);
+                setPage(1);
+              }}
+              options={[
+                { value: ALL, label: t("all") },
+                ...CATEGORIES.slice(0, 2).map((c) => ({
+                  value: c,
+                  label: t(`category.${c}`),
+                })),
+              ]}
+            />
+          }
+        />
 
         {feed.isLoading ? (
           <div className="flex justify-center py-16">
@@ -154,7 +180,14 @@ export function StaffUpdatesScreen() {
           <EmptyState icon={Inbox} title={t("empty")} />
         ) : (
           <>
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <ul className="flex flex-col gap-4 md:hidden">
+              {items.map((item) => (
+                <li key={item.id}>
+                  <UpdateCard item={item} onOpen={() => openItem(item)} />
+                </li>
+              ))}
+            </ul>
+            <div className="hidden grid-cols-1 gap-4 md:grid lg:grid-cols-2">
               {items.map((item) => (
                 <InboxCard
                   key={item.id}
@@ -167,11 +200,13 @@ export function StaffUpdatesScreen() {
                 />
               ))}
             </div>
-            <InboxPagination
-              page={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-            />
+            <div className="flex justify-center">
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
+            </div>
           </>
         )}
       </div>

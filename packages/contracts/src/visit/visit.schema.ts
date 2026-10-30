@@ -24,16 +24,38 @@ export const VISIT_PURPOSES = [
   "Maintenance",
 ] as const;
 
-export const FLOORS = [
-  "Ground Floor",
-  "Floor Mezzanine",
-  "1st Floor",
-  "2nd Floor",
-  "3rd Floor - LW",
-  "4th Floor",
-  "5th Floor",
-  "Rooftop",
+/** Building order, bottom to top. Visits store the floor name; old visits keep
+ * whatever name was recorded at the time, so treat unknown names as valid. */
+export const FLOOR_OPTIONS = [
+  { code: "GF", name: "Ground Floor" },
+  { code: "MZ", name: "Mezzanine" },
+  { code: "1F", name: "1st Floor" },
+  { code: "2F-LW", name: "2nd Floor - Left Wing" },
+  { code: "2F-RW", name: "2nd Floor - Right Wing" },
+  { code: "3F-LW", name: "3rd Floor - Left Wing" },
+  { code: "3F-RW", name: "3rd Floor - Right Wing" },
+  { code: "4F-LW", name: "4th Floor - Left Wing" },
+  { code: "4F-RW", name: "4th Floor - Right Wing" },
+  { code: "5F-LW", name: "5th Floor - Left Wing" },
+  { code: "5F-RW", name: "5th Floor - Right Wing" },
+  { code: "6F-LW", name: "6th Floor - Left Wing" },
+  { code: "6F-RW", name: "6th Floor - Right Wing" },
+  { code: "7F-LW", name: "7th Floor - Left Wing" },
+  { code: "7F-RW", name: "7th Floor - Right Wing" },
+  { code: "8F-LW", name: "8th Floor - Left Wing" },
+  { code: "8F-RW", name: "8th Floor - Right Wing" },
+  { code: "9F-LW", name: "9th Floor - Left Wing" },
+  { code: "9F-RW", name: "9th Floor - Right Wing" },
+  { code: "RT", name: "Rooftop" },
 ] as const;
+export type FloorCode = (typeof FLOOR_OPTIONS)[number]["code"];
+
+export const FLOORS = FLOOR_OPTIONS.map((f) => f.name);
+
+/** Short code for a floor name, or null for names not in the current list. */
+export function floorCode(name: string | null | undefined): FloorCode | null {
+  return FLOOR_OPTIONS.find((f) => f.name === name)?.code ?? null;
+}
 
 export const EVACUATION_ASSIST_TYPES = [
   "MOBILITY",

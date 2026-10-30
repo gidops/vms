@@ -9,9 +9,14 @@ import {
 import { normalizeE164, parsePhone, toE164 } from "./common/phone";
 import { normalizeConsentEmail } from "./consent/consent.schema";
 import { isPlainName, isPlainOrganization } from "./desk-qr/desk-qr.schema";
+import { GateVerifyInput, normalizeReferenceCode } from "./gate/gate.schema";
 import { ExportVisitsQuery, inclusiveDaySpan } from "./report/report.schema";
 import { nameParts } from "./user/user.schema";
-import { evacuationAssistIssues } from "./visit/visit.schema";
+import {
+  evacuationAssistIssues,
+  FLOOR_OPTIONS,
+  floorCode,
+} from "./visit/visit.schema";
 
 describe("phone helpers", () => {
   it.each([
@@ -88,7 +93,6 @@ describe("role helpers", () => {
   it("sends each role to its home page, defaulting to the dashboard", () => {
     expect(homeFor(ROLES.SUPER_ADMIN)).toBe("/admin");
     expect(homeFor(ROLES.STAFF)).toBe("/staff");
-    expect(homeFor(ROLES.GATE)).toBe("/gate");
     expect(homeFor(null)).toBe("/dashboard");
     expect(homeFor("UNKNOWN")).toBe("/dashboard");
   });
@@ -178,5 +182,47 @@ describe("nameParts", () => {
       firstName: "Mononym",
       lastName: "",
     });
+  });
+});
+
+describe("gate reference codes", () => {
+  it.each([
+    ["ABCD-123", "ABCD-123"],
+    ["abcd-123", "ABCD-123"],
+    [" abcd 123 ", "ABCD-123"],
+    ["ABCD123", "ABCD-123"],
+    ["ab cd–12 3", "ABCD-123"],
+  ])("normalises %j to %j", (raw, code) =>
+    expect(normalizeReferenceCode(raw)).toBe(code),
+  );
+
+  it("leaves non-code input uppercased for a clean not-found", () => {
+    expect(normalizeReferenceCode(" https://x.y/a ")).toBe("HTTPS://X.Y/A");
+  });
+
+  it("normalises the code in the verify input", () => {
+    expect(
+      GateVerifyInput.parse({ code: "wxyz 789", source: "manual" }).code,
+    ).toBe("WXYZ-789");
+    expect(() =>
+      GateVerifyInput.parse({ code: " ", source: "scan" }),
+    ).toThrow();
+  });
+});
+
+describe("floors", () => {
+  it("lists the building bottom to top with unique codes", () => {
+    expect(FLOOR_OPTIONS).toHaveLength(20);
+    expect(FLOOR_OPTIONS[0]).toEqual({ code: "GF", name: "Ground Floor" });
+    expect(FLOOR_OPTIONS.at(-1)).toEqual({ code: "RT", name: "Rooftop" });
+    const codes = FLOOR_OPTIONS.map((f) => f.code);
+    expect(new Set(codes).size).toBe(codes.length);
+  });
+
+  it("looks up a code by name; old or unknown names have none", () => {
+    expect(floorCode("2nd Floor - Left Wing")).toBe("2F-LW");
+    expect(floorCode("9th Floor - Right Wing")).toBe("9F-RW");
+    expect(floorCode("3rd Floor - LW")).toBeNull();
+    expect(floorCode(null)).toBeNull();
   });
 });

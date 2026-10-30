@@ -23,7 +23,11 @@
     "optIns": "Opt-ins",
     "deskQr": "Walk-in QR",
     "insights": "Insights",
-    "operations": "Operations"
+    "operations": "Operations",
+    "accountMenu": "Account menu",
+    "approvalsShort": "Approvals",
+    "activityShort": "Activity",
+    "sections": "Sections"
   },
   "login": {
     "showPassword": "Show password",
@@ -64,7 +68,9 @@
     "quickActions": {
       "title": "Quick actions",
       "registerWalkIn": "Register Walk-In",
-      "newInvite": "New Invite Request"
+      "newInvite": "New Invite Request",
+      "registerWalkInShort": "Walk-in",
+      "newInviteShort": "New Invite"
     },
     "activity": {
       "title": "View your activity"
@@ -97,7 +103,12 @@
     "guestCount": "{count, plural, one {# Guest} other {# Guests}}",
     "onsiteElapsed": "{time} hr",
     "noVisits": "No visits to show.",
-    "noMatches": "No visits match your search or filters."
+    "noMatches": "No visits match your search or filters.",
+    "card": {
+      "invitedGuest": "Invited Guest",
+      "walkInGuest": "Walk-in Guest",
+      "openFor": "View details for {name}"
+    }
   },
   "common": {
     "notifications": "Notifications",
@@ -108,7 +119,8 @@
     "previousGuest": "Previous guest",
     "nextGuest": "Next guest",
     "previousVisitor": "Previous visitor",
-    "nextVisitor": "Next visitor"
+    "nextVisitor": "Next visitor",
+    "filters": "Filters"
   },
   "requests": {
     "title": "Requests & Alerts",
@@ -216,11 +228,6 @@
     "alertNeedsAttention": "Needs Attention",
     "alertDefaultCategory": "Flagged Guest Match",
     "respondPlaceholder": "Respond to alert…",
-    "pagination": {
-      "prev": "Previous",
-      "next": "Next",
-      "pageOf": "Page {page} of {total}"
-    },
     "card": {
       "flaggedTitle": "Flagged Guest Match",
       "title": {
@@ -308,14 +315,14 @@
     "select": "Select language",
     "en": "English",
     "fr": "French",
-    "ar": "Arabic"
+    "ar": "Arabic",
+    "label": "Language"
   },
   "roles": {
     "SUPER_ADMIN": "System Admin",
     "ADMIN": "Security Manager",
     "STAFF": "Staff",
     "VMC": "VMC Reception",
-    "GATE": "Gate",
     "VMC_ADMIN": "VMC Admin",
     "READ_ADMIN": "Read Admin"
   },
@@ -556,7 +563,8 @@
       "quickActions": {
         "title": "Quick Actions",
         "addVisitor": "Add Visitor",
-        "comingSoon": "Coming soon"
+        "comingSoon": "Coming soon",
+        "addVisitorShort": "Add Visitor"
       },
       "activity": {
         "empty": "No recent activity yet.",
@@ -673,7 +681,9 @@
       "reviewCta": "Review Requests",
       "historyCta": "Visit History",
       "activityTitle": "Today's activity\nat a glance",
-      "activityCta": "View Activity"
+      "activityCta": "View Activity",
+      "reviewCtaShort": "Review",
+      "historyCtaShort": "History"
     },
     "table": {
       "title": "Visitor Records",
@@ -708,7 +718,8 @@
       "noAccess": "Only a System Admin can manage users.",
       "searchPlaceholder": "Search users by name or email…",
       "allRoles": "All Roles",
-      "createSubtitle": "Create an account and assign its roles."
+      "createSubtitle": "Create an account and assign its roles.",
+      "openFor": "View {name}"
     }
   },
   "staff": {
@@ -728,7 +739,8 @@
       "officeFloor": "Office Floor",
       "officeFloorUnset": "Not set",
       "bookTitle": "Book Guests into Abuja\nAATC facilities",
-      "newInvite": "New Invite Request"
+      "newInvite": "New Invite Request",
+      "newInviteShort": "New Invite"
     },
     "stats": {
       "expectedToday": "Expected Today",
@@ -791,15 +803,80 @@
         "REQUEST_UPDATE": "Request Update",
         "VISIT_STATUS": "Visit Status",
         "SECURITY_ALERT": "Security Alerts"
-      }
+      },
+      "all": "All",
+      "updateRequest": "Update Request"
+    },
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "card": {
+      "openFor": "View details for {name}"
     }
   },
   "gate": {
-    "welcome": "Welcome {name}",
-    "subtitle": "Gate operations",
-    "placeholderTitle": "Gate dashboard",
-    "placeholderBody": "This dashboard is a placeholder and will be built out soon.",
-    "evacuationRoll": "Evacuation Roll"
+    "title": "Gate check",
+    "heading": "Scan invitation",
+    "subtitle": "Ask the visitor to show the QR code from their invitation email.",
+    "checking": "Checking…",
+    "error": "Could not check this code. Try again.",
+    "scanner": {
+      "label": "Camera viewfinder",
+      "starting": "Starting camera…",
+      "hint": "Hold the QR code inside the frame.",
+      "denied": "Camera access is blocked. Allow the camera in the browser settings, or type the code instead.",
+      "unavailable": "No camera is available. Type the code from the invitation instead.",
+      "insecure": "The camera only works over a secure (HTTPS) connection. Type the code instead."
+    },
+    "manual": {
+      "title": "Enter code",
+      "body": "Camera not working? Type the code printed in the invitation email.",
+      "label": "Invitation code",
+      "submit": "Check code",
+      "invalid": "Codes look like ABCD-123."
+    },
+    "result": {
+      "VALID_TODAY": {
+        "title": "Visit confirmed for today",
+        "body": "Direct the visitor to the VMC to check in."
+      },
+      "ALREADY_CHECKED_IN": {
+        "title": "Already checked in",
+        "body": "This visitor has already checked in at the VMC."
+      },
+      "WRONG_DAY": {
+        "title": "No visit today",
+        "past": "Their visit was on {date}.",
+        "future": "Their visit is scheduled for {date}.",
+        "body": "Let the visitor know. If they think this is a mistake or need to reschedule, they can go to the VMC for help."
+      },
+      "NOT_CONFIRMED": {
+        "title": "Visit not confirmed yet",
+        "body": "This invitation is still awaiting approval. The visitor can go to the VMC for help."
+      },
+      "CLOSED": {
+        "title": "Invitation no longer valid",
+        "body": "This visit was cancelled, declined or has already ended. The visitor can go to the VMC for help."
+      },
+      "NOT_FOUND": {
+        "title": "No invitation found",
+        "body": "This code doesn't match any invitation. Check the code, or direct the visitor to the VMC for help."
+      },
+      "visitDate": "Visit date",
+      "host": "Host",
+      "scanNext": "Scan next",
+      "autoReturn": "Returning to the scanner in {seconds}s"
+    },
+    "kiosk": {
+      "checking": "Opening the gate kiosk…",
+      "notSetUp": {
+        "title": "This device isn't set up as the gate kiosk",
+        "body": "Ask the System Administrator to open the gate kiosk link on this device."
+      },
+      "inactive": {
+        "title": "This kiosk link is no longer active",
+        "body": "The link was replaced or turned off. Ask the System Administrator to open the current gate kiosk link on this device."
+      }
+    }
   },
   "users": {
     "title": "User Management",
@@ -1167,6 +1244,61 @@
       "footer": "VMC desk · QR created {date}"
     }
   },
+  "gateKiosk": {
+    "title": "Gate kiosk link",
+    "status": {
+      "active": "Active",
+      "disabled": "Turned off"
+    },
+    "qrAlt": "QR code of the gate kiosk link",
+    "copyLink": "Copy link",
+    "copied": "Copied",
+    "disabledOverlay": "Turned off",
+    "setup": {
+      "step1": "On the gate tablet, scan this QR with the camera, or open the copied link in the browser.",
+      "step2": "The gate page opens without signing in and remembers this device.",
+      "step3": "From then on, the tablet just opens /gate."
+    },
+    "lastScan": "Last scan",
+    "noScans": "No scans yet",
+    "linkSince": "Current link since",
+    "disabledSince": "Turned off since",
+    "created": "Created",
+    "createdBy": "{time} by {name}",
+    "rotate": "New link",
+    "disable": "Turn off",
+    "enable": "Turn on",
+    "rotateHelp": "A new link stops the old one at once: every device using it must open the new link.",
+    "enableHelp": "While turned off, the gate page shows that the link is no longer active.",
+    "confirmRotate": {
+      "title": "Create a new kiosk link?",
+      "body": "The current link stops working immediately. The gate tablet will need the new link.",
+      "confirm": "Create new link"
+    },
+    "confirmDisable": {
+      "title": "Turn off the kiosk link?",
+      "body": "The gate page stops checking codes until you turn the link back on.",
+      "confirm": "Turn off"
+    },
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "empty": {
+      "title": "No gate kiosk link yet",
+      "body": "Create the link, then open it once on the gate tablet. No one signs in at the gate.",
+      "create": "Create kiosk link"
+    },
+    "loadError": {
+      "title": "Couldn't load the gate kiosk link",
+      "body": "Check your connection and try again."
+    },
+    "errors": {
+      "create": "Couldn't create the kiosk link.",
+      "rotate": "Couldn't create a new link.",
+      "disable": "Couldn't turn the link off.",
+      "enable": "Couldn't turn the link on.",
+      "image": "Couldn't load the QR code."
+    }
+  },
   "selfRegister": {
     "brand": "AATC · VMC desk",
     "title": "Register your visit",
@@ -1269,7 +1401,8 @@
       "expected": "Still expected",
       "expectedHint": "Approved, not arrived yet",
       "checkedOut": "Checked out",
-      "checkedInHint": "{count, plural, one {# checked in today} other {# checked in today}}"
+      "checkedInHint": "{count, plural, one {# checked in today} other {# checked in today}}",
+      "viewStats": "View today's figures"
     },
     "history": {
       "range": "History range",
@@ -1326,7 +1459,8 @@
         "lastVisit": "Last visit",
         "comms": "Email consent",
         "action": "Action"
-      }
+      },
+      "openFor": "View visit history for {name}"
     },
     "analytics": {
       "title": "Facility analytics",
@@ -1367,8 +1501,10 @@
         "alertsRaised": "Alerts raised",
         "alertsOpen": "Alerts still open",
         "denied": "Requests denied",
-        "deniedDaily": "Denied requests per day"
-      }
+        "deniedDaily": "Denied requests per day",
+        "viewStats": "View security figures"
+      },
+      "viewStats": "View key figures"
     },
     "status": {
       "PENDING": "Awaiting approval",
@@ -1393,7 +1529,8 @@
     "tabs": {
       "accessCards": "Access cards",
       "deskQr": "Walk-in QR",
-      "audit": "Audit trail"
+      "audit": "Audit trail",
+      "gateKiosk": "Gate kiosk"
     },
     "accessCards": {
       "title": "Access cards",
@@ -1508,7 +1645,8 @@
         "submit": "Assign card",
         "saving": "Assigning…",
         "error": "The card couldn't be assigned. Please try again."
-      }
+      },
+      "openFor": "View card issued to {name}"
     },
     "card": {
       "visitorAccess": "VISITOR ACCESS",
@@ -1570,7 +1708,8 @@
         "desk_qr": "Walk-in QR",
         "notification": "Notifications",
         "rfid_card": "Access cards",
-        "audit": "Audit trail"
+        "audit": "Audit trail",
+        "gate": "Gate"
       },
       "actions": {
         "alert_created": "Alert raised",
@@ -1624,8 +1763,14 @@
         "visitor_rated": "Visit rated",
         "desk_qr_honeypot_triggered": "Walk-in QR bot blocked",
         "desk_qr_code_rejected": "Wrong desk code entered",
-        "desk_qr_registration_locked": "Walk-in registration locked"
-      }
+        "desk_qr_registration_locked": "Walk-in registration locked",
+        "gate_code_checked": "Gate code checked",
+        "gate_kiosk_created": "Gate kiosk link created",
+        "gate_kiosk_rotated": "Gate kiosk link replaced",
+        "gate_kiosk_disabled": "Gate kiosk link turned off",
+        "gate_kiosk_enabled": "Gate kiosk link turned on"
+      },
+      "openFor": "Open event: {action}"
     }
   },
   "rfidCard": {
