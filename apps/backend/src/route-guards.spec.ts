@@ -111,7 +111,6 @@ const PUBLIC_ROUTES = [
   'GET /public/desk-qr/:token',
   'GET /public/desk-qr/:token/hosts',
   'POST /public/desk-qr/:token/registrations',
-  'POST /public/desk-qr/:token/registrations/:id/verify',
   // Gate kiosk device: the kiosk link token is the credential, checked and
   // rate-limited (per IP and per link) on every call.
   'GET /public/gate/:token',

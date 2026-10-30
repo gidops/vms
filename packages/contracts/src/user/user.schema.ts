@@ -108,6 +108,8 @@ export const UserDetail = z.object({
   isActive: z.boolean(),
   roles: z.array(z.string()).default([]),
   lastLoginAt: z.coerce.date().nullable(),
+  /** When an outstanding (unused, unexpired) password-reset link expires; null if none. */
+  resetLinkExpiresAt: z.coerce.date().nullable().optional(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
   hostDepartment: z.string().nullable().optional(),

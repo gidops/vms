@@ -1,12 +1,9 @@
 import { DESK_QR_TOKEN_RE } from '@vms/contracts';
 import {
   formTokenValid,
-  hashVerificationCode,
   newDeskToken,
-  newVerificationCode,
   parseV1Token,
   signFormToken,
-  verificationCodeMatches,
 } from './desk-qr.tokens';
 
 const SECRET = 'test-secret';
@@ -53,20 +50,5 @@ describe('form tokens', () => {
       reason: 'invalid',
     });
     expect(formTokenValid(SECRET, 'qr1', 'junk', now).ok).toBe(false);
-  });
-});
-
-describe('verification codes', () => {
-  it('are six digits', () => {
-    for (let i = 0; i < 50; i++)
-      expect(newVerificationCode()).toMatch(/^\d{6}$/);
-  });
-
-  it('match only the same code for the same registration', () => {
-    const hash = hashVerificationCode(SECRET, 'r1', '004219');
-    expect(verificationCodeMatches(SECRET, 'r1', '004219', hash)).toBe(true);
-    expect(verificationCodeMatches(SECRET, 'r1', '004218', hash)).toBe(false);
-    expect(verificationCodeMatches(SECRET, 'r2', '004219', hash)).toBe(false);
-    expect(verificationCodeMatches('other', 'r1', '004219', hash)).toBe(false);
   });
 });

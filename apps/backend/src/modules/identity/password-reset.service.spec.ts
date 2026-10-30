@@ -30,7 +30,10 @@ describe('PasswordResetService.requestReset', () => {
     };
     prisma = {
       user: { findUnique: jest.fn().mockResolvedValue(user) },
-      passwordResetToken: { deleteMany: jest.fn() },
+      passwordResetToken: {
+        deleteMany: jest.fn(),
+        findFirst: jest.fn().mockResolvedValue(null),
+      },
     };
     txm = { run: jest.fn(async (cb: (t: unknown) => unknown) => cb(tx)) };
     events = { publish: jest.fn() };
@@ -72,6 +75,18 @@ describe('PasswordResetService.requestReset', () => {
     expect(url).toMatch(/^http:\/\/localhost:3000\/reset-password\?token=/);
     // The emailed token must be the raw one (the hash is useless to the user).
     expect(url).not.toContain(created.tokenHash);
+  });
+
+  it('refuses a resend within the cooldown (429), before touching tokens', async () => {
+    prisma.passwordResetToken.findFirst.mockResolvedValue({
+      id: 'tok1',
+      createdAt: new Date(),
+    });
+    await expect(svc.requestReset('u1', 'admin1')).rejects.toMatchObject({
+      status: 429,
+    });
+    expect(txm.run).not.toHaveBeenCalled();
+    expect(notifications.enqueue).not.toHaveBeenCalled();
   });
 
   it('rejects an unknown user', async () => {

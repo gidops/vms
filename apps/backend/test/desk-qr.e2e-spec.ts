@@ -1,7 +1,6 @@
 import { INestApplication } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ADDON_ROLES, DESK_QR_CODE_ATTEMPTS, ROLES } from '@vms/contracts';
+import { ADDON_ROLES, ROLES } from '@vms/contracts';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
@@ -10,9 +9,9 @@ import { PrismaService } from './../src/prisma/prisma.service';
 
 /**
  * The VMC desk QR end to end: who may manage it, and the visitor's public
- * flow (open the form, search hosts, submit, receive the desk code by email,
- * verify) through to today's walk-in, plus replaced/disabled QRs, the
- * honeypot, no overwriting of a known visitor, and rate limiting.
+ * flow (open the form, search hosts, submit) straight through to today's
+ * walk-in, plus replaced/disabled QRs, the honeypot, no overwriting of a
+ * known visitor, and rate limiting.
  */
 jest.setTimeout(30_000);
 
@@ -23,7 +22,6 @@ describe('Desk QR (e2e)', () => {
   const password = 'Passw0rd!';
   const tokens: Record<string, string> = {};
   const userIds: Record<string, string> = {};
-  const codeEmail = `desk-${run}@test.local`;
   const roles = [
     ROLES.SUPER_ADMIN,
     ROLES.ADMIN,
@@ -39,8 +37,6 @@ describe('Desk QR (e2e)', () => {
       http().get(url).set('Authorization', `Bearer ${tokens[role]}`),
     post: (url: string) =>
       http().post(url).set('Authorization', `Bearer ${tokens[role]}`),
-    patch: (url: string) =>
-      http().patch(url).set('Authorization', `Bearer ${tokens[role]}`),
   });
 
   const tokenOf = (url: string) => url.split('/r/')[1];
@@ -60,30 +56,17 @@ describe('Desk QR (e2e)', () => {
     ...over,
   });
 
-  /** The code is only ever in the email to the desk. */
-  async function emailedCode(visitorName: string): Promise<string> {
-    const deadline = Date.now() + 5_000;
-    for (;;) {
-      const row = await prisma.notification.findFirst({
-        where: { templateKey: 'desk_qr.code', recipient: codeEmail },
-        orderBy: { createdAt: 'desc' },
-      });
-      const payload = row?.payload as { code?: string; visitorName?: string };
-      if (payload?.visitorName === visitorName && payload.code) {
-        return payload.code;
-      }
-      if (Date.now() > deadline) throw new Error('No desk code email');
-      await new Promise((r) => setTimeout(r, 100));
-    }
-  }
-
   async function register(token: string, over: Record<string, unknown>) {
     const open = await http().get(`/public/desk-qr/${token}`).expect(200);
     const sent = await http()
       .post(`/public/desk-qr/${token}/registrations`)
       .send(form(open.body.formToken as string, over))
       .expect(201);
-    return sent.body.registrationId as string;
+    return sent.body as {
+      fullName: string;
+      hostName: string | null;
+      visitDate: string;
+    };
   }
 
   beforeAll(async () => {
@@ -91,16 +74,6 @@ describe('Desk QR (e2e)', () => {
       imports: [AppModule],
     }).compile();
     app = moduleFixture.createNestApplication();
-    // Codes go out by email, so switch email on for this suite (the env is
-    // read before the test runs); with no SMTP host it only logs.
-    const config = app.get(ConfigService);
-    const get = config.get.bind(config) as ConfigService['get'];
-    jest
-      .spyOn(config, 'get')
-      .mockImplementation(((key: string, opts?: unknown) =>
-        key === 'EMAIL_ENABLED'
-          ? true
-          : get(key, opts as never)) as ConfigService['get']);
     prisma = app.get(PrismaService);
     await app.init();
     await prisma.deskQr.deleteMany();
@@ -134,25 +107,19 @@ describe('Desk QR (e2e)', () => {
       true,
     );
     for (const role of roles.filter((r) => r !== ROLES.SUPER_ADMIN)) {
-      await as(role).post('/desk-qr').send({ codeEmail }).expect(403);
+      await as(role).post('/desk-qr').expect(403);
       await as(role).get('/desk-qr').expect(403);
       await as(role).get('/desk-qr/qr.png').expect(403);
     }
-    const created = await as(ROLES.SUPER_ADMIN)
-      .post('/desk-qr')
-      .send({ codeEmail })
-      .expect(201);
-    expect(created.body).toMatchObject({ isActive: true, codeEmail });
+    const created = await as(ROLES.SUPER_ADMIN).post('/desk-qr').expect(201);
+    expect(created.body).toMatchObject({ isActive: true });
     expect(tokenOf(created.body.url as string)).toMatch(/^[\w-]{22}$/);
-    await as(ROLES.SUPER_ADMIN)
-      .post('/desk-qr')
-      .send({ codeEmail })
-      .expect(409);
+    await as(ROLES.SUPER_ADMIN).post('/desk-qr').expect(409);
     const png = await as(ROLES.SUPER_ADMIN).get('/desk-qr/qr.png').expect(200);
     expect(png.headers['content-type']).toBe('image/png');
   });
 
-  it('registers a visitor once reception reads them the emailed code', async () => {
+  it("registers the walk-in the moment the visitor's form is submitted", async () => {
     const qr = await as(ROLES.SUPER_ADMIN).get('/desk-qr').expect(200);
     const token = tokenOf(qr.body.url as string);
 
@@ -168,31 +135,19 @@ describe('Desk QR (e2e)', () => {
     ]);
     expect(hosts.body[0]).not.toHaveProperty('email');
 
-    const id = await register(token, {});
-    expect(
-      await prisma.visit.count({
-        where: { visitor: { email: form('').email } },
-      }),
-    ).toBe(0);
-    const code = await emailedCode('Ifeoma Chukwu');
-
-    const wrong = code === '000000' ? '111111' : '000000';
-    await http()
-      .post(`/public/desk-qr/${token}/registrations/${id}/verify`)
-      .send({ code: wrong })
-      .expect(422);
-    const done = await http()
-      .post(`/public/desk-qr/${token}/registrations/${id}/verify`)
-      .send({ code })
-      .expect(200);
-    expect(done.body).toMatchObject({
+    const done = await register(token, {});
+    expect(done).toMatchObject({
       fullName: 'Ifeoma Chukwu',
       hostName: `Desk ${ROLES.STAFF} ${run}`,
     });
+    // The visit's reference code stays server-side: the answer carries none.
+    expect(done).not.toHaveProperty('referenceCode');
 
-    const visit = await prisma.visit.findUniqueOrThrow({
-      where: { referenceCode: done.body.referenceCode as string },
+    const visit = await prisma.visit.findFirstOrThrow({
+      where: { visitor: { email: `visitor-${run}@x.com` } },
+      orderBy: { createdAt: 'desc' },
     });
+    expect(visit.referenceCode).toMatch(/^[A-Z2-9]{4}-\d{3}$/);
     expect(visit).toMatchObject({
       type: 'WALK_IN',
       status: 'APPROVED',
@@ -201,11 +156,6 @@ describe('Desk QR (e2e)', () => {
       evacuationAssistTypes: ['MOBILITY'],
       commsConsent: true,
     });
-    // The code works once.
-    await http()
-      .post(`/public/desk-qr/${token}/registrations/${id}/verify`)
-      .send({ code })
-      .expect(404);
 
     const after = await as(ROLES.SUPER_ADMIN).get('/desk-qr').expect(200);
     expect(after.body.scansToday).toBeGreaterThanOrEqual(1);
@@ -218,16 +168,11 @@ describe('Desk QR (e2e)', () => {
     await prisma.visitor.create({
       data: { email, fullName: 'Real Name', phone: '+2348000000001' },
     });
-    const id = await register(token, {
+    await register(token, {
       email,
       fullName: 'Someone Else',
       phone: '+2348099999999',
     });
-    const code = await emailedCode('Someone Else');
-    await http()
-      .post(`/public/desk-qr/${token}/registrations/${id}/verify`)
-      .send({ code })
-      .expect(200);
     const visitor = await prisma.visitor.findUniqueOrThrow({
       where: { email },
     });
@@ -260,27 +205,11 @@ describe('Desk QR (e2e)', () => {
     expect(row?.fullName).toBe('Someone Else');
   });
 
-  it('locks a registration after three wrong codes', async () => {
-    const qr = await as(ROLES.SUPER_ADMIN).get('/desk-qr');
-    const token = tokenOf(qr.body.url as string);
-    const id = await register(token, { fullName: 'Three Strikes' });
-    const code = await emailedCode('Three Strikes');
-    const wrong = code === '000000' ? '111111' : '000000';
-    const verify = (c: string) =>
-      http()
-        .post(`/public/desk-qr/${token}/registrations/${id}/verify`)
-        .send({ code: c });
-    await verify(wrong).expect(422);
-    await verify(wrong).expect(422);
-    await verify(wrong).expect(423);
-    await verify(code).expect(423);
-  });
-
-  it('traps a filled-in honeypot: no code sent, no personal data, a security row', async () => {
+  it('traps a filled-in honeypot: no visit, no personal data, a security row', async () => {
     const qr = await as(ROLES.SUPER_ADMIN).get('/desk-qr');
     const token = tokenOf(qr.body.url as string);
     const open = await http().get(`/public/desk-qr/${token}`).expect(200);
-    const emailsBefore = await prisma.notification.count();
+    const visitsBefore = await prisma.visit.count();
     const res = await http()
       .post(`/public/desk-qr/${token}/registrations`)
       .send(
@@ -290,45 +219,20 @@ describe('Desk QR (e2e)', () => {
         }),
       )
       .expect(201);
-    const id = res.body.registrationId as string;
-    const stored = await prisma.deskQrRegistration.findUnique({
-      where: { id },
-    });
-    expect(stored).not.toBeNull();
-    expect(stored?.payload).not.toContain('Honey');
-    expect(await prisma.notification.count()).toBe(emailsBefore);
-    expect(
-      await prisma.auditLog.count({
-        where: {
-          action: 'desk_qr.honeypot_triggered',
-          entityId: stored!.deskQrId,
-        },
-      }),
-    ).toBeGreaterThan(0);
-  });
+    // A normal-looking answer, but nothing was created.
+    expect(res.body.fullName).toBe('Honey Pot');
+    expect(await prisma.visit.count()).toBe(visitsBefore);
 
-  it('holds the attempt limit when guesses arrive at the same time', async () => {
-    const qr = await as(ROLES.SUPER_ADMIN).get('/desk-qr');
-    const token = tokenOf(qr.body.url as string);
-    const id = await register(token, { fullName: 'Parallel Guesses' });
-    const code = await emailedCode('Parallel Guesses');
-    const wrong = code === '000000' ? '111111' : '000000';
-    const results = await Promise.all(
-      Array.from({ length: 6 }, () =>
-        http()
-          .post(`/public/desk-qr/${token}/registrations/${id}/verify`)
-          .send({ code: wrong }),
-      ),
-    );
-    const statuses = results.map((r) => r.status);
-    // Each 422 is a counted guess; at most attempts - 1 can be "wrong, try again".
-    expect(statuses.filter((s) => s === 422).length).toBeLessThanOrEqual(
-      DESK_QR_CODE_ATTEMPTS - 1,
-    );
-    expect(statuses.every((s) => [422, 423, 429].includes(s))).toBe(true);
-    const reg = await prisma.deskQrRegistration.findUnique({ where: { id } });
-    expect(reg?.attempts).toBeLessThanOrEqual(DESK_QR_CODE_ATTEMPTS);
-    expect(reg?.visitId).toBeNull();
+    const deadline = Date.now() + 10_000;
+    let trapped = 0;
+    while (Date.now() < deadline) {
+      trapped = await prisma.auditLog.count({
+        where: { action: 'desk_qr.honeypot_triggered' },
+      });
+      if (trapped > 0) break;
+      await new Promise((r) => setTimeout(r, 250));
+    }
+    expect(trapped).toBeGreaterThan(0);
   });
 
   it('rejects a forged form and an unanswered help type', async () => {
@@ -362,16 +266,6 @@ describe('Desk QR (e2e)', () => {
     await http().get(`/public/desk-qr/${newToken}`).expect(200);
     // Unknown codes get the same answer as replaced ones.
     await http().get('/public/desk-qr/AAAAAAAAAAAAAAAAAAAAAA').expect(404);
-
-    await as(ROLES.SUPER_ADMIN)
-      .patch('/desk-qr')
-      .send({ codeEmail: `new-${codeEmail}` })
-      .expect(200)
-      .expect((res) => expect(res.body.codeEmail).toBe(`new-${codeEmail}`));
-    await as(ROLES.SUPER_ADMIN)
-      .patch('/desk-qr')
-      .send({ codeEmail })
-      .expect(200);
   });
 
   it('audits every change without the printed token', async () => {
@@ -383,11 +277,7 @@ describe('Desk QR (e2e)', () => {
         select: { action: true, metadata: true },
       });
       const actions = new Set(rows.map((r) => r.action));
-      if (
-        ['desk_qr.created', 'desk_qr.rotated', 'desk_qr.code_sent'].every((a) =>
-          actions.has(a),
-        )
-      )
+      if (['desk_qr.created', 'desk_qr.rotated'].every((a) => actions.has(a)))
         break;
       await new Promise((r) => setTimeout(r, 250));
     }

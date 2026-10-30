@@ -62,9 +62,7 @@ function useDeskQrAction<A>(fn: (arg: A) => Promise<DeskQrView>) {
 }
 
 export const useCreateDeskQr = () =>
-  useDeskQrAction((codeEmail: string) => deskQrApi.create({ codeEmail }));
-export const useUpdateDeskQr = () =>
-  useDeskQrAction((codeEmail: string) => deskQrApi.update({ codeEmail }));
+  useDeskQrAction(() => deskQrApi.create());
 export const useRotateDeskQr = () => useDeskQrAction(() => deskQrApi.rotate());
 export const useDisableDeskQr = () =>
   useDeskQrAction(() => deskQrApi.disable());

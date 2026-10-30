@@ -1,9 +1,4 @@
-import {
-  createHmac,
-  randomBytes,
-  randomInt,
-  timingSafeEqual,
-} from 'node:crypto';
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 
 export function newDeskToken(): string {
   return randomBytes(16).toString('base64url');
@@ -56,29 +51,4 @@ export function formTokenValid(
     return { ok: false, reason: 'invalid' };
   }
   return exp > now.getTime() ? { ok: true } : { ok: false, reason: 'expired' };
-}
-
-export function newVerificationCode(): string {
-  return String(randomInt(0, 1_000_000)).padStart(6, '0');
-}
-
-/** Bound to its registration so a stored hash can't be reused or brute-forced offline. */
-export function hashVerificationCode(
-  secret: string,
-  registrationId: string,
-  code: string,
-): string {
-  return hmac(secret, `code:${registrationId}:${code}`).toString('hex');
-}
-
-export function verificationCodeMatches(
-  secret: string,
-  registrationId: string,
-  code: string,
-  storedHash: string,
-): boolean {
-  return sameBytes(
-    Buffer.from(hashVerificationCode(secret, registrationId, code), 'hex'),
-    Buffer.from(storedHash, 'hex'),
-  );
 }

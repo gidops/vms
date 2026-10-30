@@ -35,6 +35,11 @@ import { formatWatDateTime } from "@/shared/wat";
 const errorText = (err: unknown, fallback: string) =>
   err instanceof ApiError ? err.message : fallback;
 
+// Mirrors the backend's reset-token.util.ts: links live 15 min, resends are
+// blocked (429) for 60 s after each send. Both derive from resetLinkExpiresAt.
+const RESET_TTL_MS = 15 * 60_000;
+const RESET_COOLDOWN_MS = 60_000;
+
 /** Outcome of a footer action, shown at the top of the sheet body while the
  *  same user is open. */
 type Notice = { userId: string; intent: "success" | "danger"; text: string };
@@ -55,11 +60,30 @@ export function UserDetailDrawer({
   selfId: string | undefined;
 }) {
   const t = useTranslations("users");
+  const locale = useLocale();
   const { data: user, isLoading, isError } = useUser(userId);
   const reset = useRequestPasswordReset();
   const [notice, setNotice] = React.useState<Notice | null>(null);
   const [confirming, setConfirming] = React.useState(false);
   const shownNotice = notice?.userId === userId ? notice : null;
+
+  // Ticks once a second only while a resend cooldown is counting down.
+  const resetExpiresAt = user?.resetLinkExpiresAt
+    ? new Date(user.resetLinkExpiresAt).getTime()
+    : null;
+  const cooldownEndsAt = resetExpiresAt
+    ? resetExpiresAt - RESET_TTL_MS + RESET_COOLDOWN_MS
+    : null;
+  const [now, setNow] = React.useState(() => Date.now());
+  React.useEffect(() => {
+    if (!cooldownEndsAt || cooldownEndsAt <= Date.now()) return;
+    const tick = setInterval(() => setNow(Date.now()), 1_000);
+    return () => clearInterval(tick);
+  }, [cooldownEndsAt]);
+  const cooldownLeft = cooldownEndsAt
+    ? Math.max(0, Math.ceil((cooldownEndsAt - now) / 1_000))
+    : 0;
+  const linkActive = !!resetExpiresAt && resetExpiresAt > now;
 
   const showReset =
     !!user &&
@@ -90,10 +114,12 @@ export function UserDetailDrawer({
             intent="neutral"
             tone="outline"
             size="sm"
-            disabled={reset.isPending}
+            disabled={reset.isPending || cooldownLeft > 0}
             onClick={() => sendReset(user.id)}
           >
-            {t("reset.action")}
+            {cooldownLeft > 0
+              ? t("reset.cooldown", { seconds: cooldownLeft })
+              : t("reset.action")}
           </Button>
         ) : null}
         {showStatus ? (
@@ -133,6 +159,17 @@ export function UserDetailDrawer({
           {shownNotice ? (
             <Alert intent={shownNotice.intent}>
               <AlertDescription>{shownNotice.text}</AlertDescription>
+            </Alert>
+          ) : linkActive && showReset ? (
+            <Alert intent="info">
+              <AlertDescription>
+                {t("reset.active", {
+                  time: formatWatDateTime(
+                    new Date(resetExpiresAt).toISOString(),
+                    locale,
+                  ),
+                })}
+              </AlertDescription>
             </Alert>
           ) : null}
           <DetailBody user={user} canUpdate={canUpdate} />
