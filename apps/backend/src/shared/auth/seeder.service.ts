@@ -1,6 +1,6 @@
 import { Injectable, type OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ACCESS_CARD_ZONES, PERMISSIONS, ROLES } from '@vms/contracts';
+import { FLOORS, formatPassNumber, PERMISSIONS, ROLES } from '@vms/contracts';
 import type { Env } from '../config/env.schema';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -19,6 +19,8 @@ const ROLE_DEFS: Record<
       PERMISSIONS.VISIT_DENY,
       PERMISSIONS.VISIT_FLAG,
       PERMISSIONS.VISIT_REQUEST_INFO,
+      // Cancels FLAGGED visits only; requesters cancel their own pre-approval.
+      PERMISSIONS.VISIT_CANCEL,
       PERMISSIONS.ALERT_RESOLVE,
       PERMISSIONS.ALERT_ESCALATE,
       PERMISSIONS.NOTE_ADD,
@@ -115,8 +117,10 @@ export class SeederService implements OnApplicationBootstrap {
   async onApplicationBootstrap(): Promise<void> {
     // Seeded in every environment so first-run /signup can assign SUPER_ADMIN; no admin user is seeded.
     await this.seedRbac();
-    await this.seedAccessCards();
+    // Real visitor passes are recorded or printed from Operations; sample ones
+    // would make the day-one inventory wrong.
     if (this.config.get('SEED_DEMO_DATA', { infer: true })) {
+      await this.seedAccessCards();
       await this.seedDemoData();
     }
   }
@@ -189,15 +193,13 @@ export class SeederService implements OnApplicationBootstrap {
     }
   }
 
-  /** Sets `zone` only on create so reassigned badges aren't clobbered on reboot. */
+  /** Demo only: a few passes per floor-wing, numbered 001… within each. */
   private async seedAccessCards(): Promise<void> {
-    let n = 0;
-    for (const zone of ACCESS_CARD_ZONES) {
-      for (let i = 0; i < 4; i++) {
-        n += 1;
-        const cardNumber = String(n).padStart(4, '0');
+    for (const zone of FLOORS) {
+      for (let n = 1; n <= 4; n++) {
+        const cardNumber = formatPassNumber(n);
         await this.prisma.accessCard.upsert({
-          where: { cardNumber },
+          where: { zone_cardNumber: { zone, cardNumber } },
           update: {},
           create: { cardNumber, zone },
         });

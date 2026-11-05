@@ -447,6 +447,23 @@ export function AccessCardsTab() {
   const [view, setView] = React.useState<View>("active");
   const [assignOpen, setAssignOpen] = React.useState(false);
   const [openId, setOpenId] = React.useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = React.useState(false);
+  // Photos that couldn't be uploaded, by assignment id; kept for this session only.
+  const [localPhotos, setLocalPhotos] = React.useState<Record<string, string>>(
+    {},
+  );
+  const localPhotosRef = React.useRef(localPhotos);
+  React.useEffect(() => {
+    localPhotosRef.current = localPhotos;
+  }, [localPhotos]);
+  React.useEffect(
+    () => () => {
+      Object.values(localPhotosRef.current).forEach((url) =>
+        URL.revokeObjectURL(url),
+      );
+    },
+    [],
+  );
 
   return (
     <section className="flex flex-col gap-6">
@@ -477,14 +494,35 @@ export function AccessCardsTab() {
       <AssignCardDrawer
         open={assignOpen}
         onOpenChange={setAssignOpen}
-        onAssigned={(created) => {
+        onAssigned={(created, localPhotoUrl) => {
+          if (localPhotoUrl) {
+            setLocalPhotos((m) => ({ ...m, [created.id]: localPhotoUrl }));
+          }
           setAssignOpen(false);
           setView("active");
-          // Open the new card: its preview and the Print button.
+          // Open the new card straight into its preview, ready to print.
           setOpenId(created.id);
+          setPreviewOpen(true);
         }}
       />
-      <AssignmentSheet id={openId} onClose={() => setOpenId(null)} />
+      <AssignmentSheet
+        id={openId}
+        localPhotoUrl={openId ? (localPhotos[openId] ?? null) : null}
+        previewOpen={previewOpen}
+        onPreviewOpenChange={setPreviewOpen}
+        onLocalPhoto={(url) => {
+          if (!openId) return;
+          const id = openId;
+          setLocalPhotos(({ [id]: previous, ...rest }) => {
+            if (previous && previous !== url) URL.revokeObjectURL(previous);
+            return url ? { ...rest, [id]: url } : rest;
+          });
+        }}
+        onClose={() => {
+          setPreviewOpen(false);
+          setOpenId(null);
+        }}
+      />
     </section>
   );
 }

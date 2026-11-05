@@ -52,7 +52,7 @@ describe("VmcOverview quick actions", () => {
       />,
     );
     const links = screen.getAllByRole("link", {
-      name: /3 need evacuation help · View roll/,
+      name: /3 need evacuation help · View/,
     });
     expect(links.length).toBeGreaterThan(0);
     expect(links[0]).toHaveAttribute("href", "/insights?tab=evacuation");

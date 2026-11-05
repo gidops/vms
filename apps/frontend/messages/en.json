@@ -498,7 +498,7 @@
       "comingSoon": "Coming soon",
       "collapse": "Collapse sidebar",
       "expand": "Expand sidebar",
-      "evacuation": "Evacuation Roll",
+      "evacuation": "Evacuation Help",
       "optIns": "Comms Opt-ins",
       "deskQr": "Walk-in QR"
     },
@@ -957,7 +957,10 @@
     "tabs": {
       "profile": "Profile Information",
       "desk": "My Desk",
-      "preferences": "Security/Preferences"
+      "preferences": "Security/Preferences",
+      "profileShort": "Profile",
+      "deskShort": "Desk",
+      "preferencesShort": "Preferences"
     },
     "profile": {
       "personalInfo": "Personal Information",
@@ -1027,9 +1030,9 @@
   "evacuation": {
     "indicator": {
       "count": "{count, plural, one {# needs evacuation help} other {# need evacuation help}}",
-      "viewRoll": "View roll"
+      "viewRoll": "View"
     },
-    "title": "Evacuation Roll",
+    "title": "Evacuation Help",
     "refresh": "Refresh",
     "countBanner": "on site need evacuation help",
     "floors": "{count, plural, one {# floor} other {# floors}}",
@@ -1052,7 +1055,7 @@
     },
     "print": {
       "button": "Print",
-      "heading": "AATC Abuja · Evacuation Roll",
+      "heading": "AATC Abuja · Evacuation Help",
       "generated": "Generated {datetime} WAT",
       "count": "{count, plural, one {# visitor needs evacuation assistance} other {# visitors need evacuation assistance}}"
     }
@@ -1386,7 +1389,7 @@
     "nothingHere": "There is nothing to show for your role yet.",
     "tabs": {
       "overview": "Overview",
-      "evacuation": "Evacuation Roll",
+      "evacuation": "Evacuation Help",
       "history": "History",
       "visitors": "Visitors",
       "analytics": "Analytics"
@@ -1527,10 +1530,132 @@
     "title": "Operations",
     "noAccess": "Operations is for System Admins.",
     "tabs": {
+      "visitorPasses": "Visitor passes",
       "accessCards": "Access cards",
       "deskQr": "Walk-in QR",
       "audit": "Audit trail",
       "gateKiosk": "Gate kiosk"
+    },
+    "visitorPasses": {
+      "title": "Visitor passes",
+      "frontLabel": "Visitor pass front: {zone}, pass {number}",
+      "backLabel": "Visitor pass back",
+      "intro": "Print the passes reception hands out at check-in, and keep a record of every pass that exists. Assigning passes happens at the VMC.",
+      "printPasses": "Print passes",
+      "recordPasses": "Record existing passes",
+      "summary": {
+        "total": "Passes on record",
+        "available": "Available",
+        "inUse": "In use",
+        "retired": "Retired"
+      },
+      "filters": {
+        "all": "All",
+        "available": "Available",
+        "inUse": "In use",
+        "retired": "Retired",
+        "allFloors": "All floors",
+        "floor": "Floor",
+        "search": "Search pass ID"
+      },
+      "columns": {
+        "floor": "Floor",
+        "passId": "Pass ID",
+        "status": "Status",
+        "prints": "Prints",
+        "lastPrinted": "Last printed",
+        "origin": "Origin",
+        "action": "Action"
+      },
+      "status": {
+        "AVAILABLE": "Available",
+        "IN_USE": "In use",
+        "RETIRED": "Retired"
+      },
+      "origin": {
+        "PRINTED": "Printed here",
+        "RECORDED": "Recorded",
+        "NOT_PRINTED": "Not printed yet"
+      },
+      "count": "{count, plural, one {pass} other {passes}}",
+      "empty": "No passes on record yet. Print new passes, or record the ones you already have.",
+      "noMatches": "No passes match these filters.",
+      "view": "View",
+      "openFor": "Open pass {number}, {zone}",
+      "never": "Never",
+      "printedNotice": "{count, plural, one {# pass sent} other {# passes sent}} to the printer.",
+      "plan": {
+        "title": "Print passes",
+        "subtitle": "Suggested quantities follow how many visitors each floor-wing received. Adjust any number before printing.",
+        "total": "Passes to print",
+        "period": "Based on visits in the last",
+        "days": "{count} days",
+        "floor": "Floor-wing",
+        "visits": "Visits",
+        "stock": "In stock",
+        "inUse": "In use",
+        "quantity": "Print",
+        "quantityFor": "Passes to print for {zone}",
+        "noTraffic": "No visits recorded in this period, so the passes are split evenly.",
+        "selected": "{count, plural, one {# pass} other {# passes}} across {floors, plural, one {# floor-wing} other {# floor-wings}}",
+        "printerHint": "Card printer: choose CR80, portrait, and print both sides.",
+        "submit": "Create & print",
+        "creating": "Creating…",
+        "error": "Couldn't create the passes. Please try again.",
+        "cancel": "Cancel"
+      },
+      "record": {
+        "title": "Record existing passes",
+        "subtitle": "Add passes that were printed before this system. Pass IDs already on file are skipped.",
+        "floor": "Floor-wing",
+        "from": "From pass ID",
+        "to": "To pass ID",
+        "note": "Note (optional)",
+        "notePlaceholder": "e.g. Printed in 2025 batch",
+        "submit": "Record passes",
+        "saving": "Recording…",
+        "cancel": "Close",
+        "error": "Couldn't record the passes. Please try again.",
+        "created": "{count, plural, =0 {No new passes recorded.} one {# pass recorded.} other {# passes recorded.}}",
+        "skipped": "Already on file, skipped: {ids}",
+        "rangeInvalid": "\"To\" must be at least \"From\", and at most 500 passes at a time.",
+        "pickFloor": "Choose a floor-wing"
+      },
+      "sheet": {
+        "title": "Visitor pass",
+        "preview": "Pass preview",
+        "previewPass": "Preview pass",
+        "previewTitle": "Visitor pass",
+        "print": "Print pass",
+        "holder": "Handed out to",
+        "since": "since {when}",
+        "details": "Details",
+        "created": "Added",
+        "lastReturned": "Last returned",
+        "history": "Print history",
+        "noHistory": "Never printed or recorded.",
+        "batch": "Batch {id}",
+        "kind": {
+          "PRINTED": "Printed",
+          "REPRINTED": "Reprinted",
+          "RECORDED": "Recorded (printed before this system)"
+        },
+        "by": "by {name}",
+        "retire": "Retire pass",
+        "retireHelp": "Take this pass out of service if it's lost, damaged or doesn't exist. Reception won't be able to assign it.",
+        "retireNote": "Reason (optional)",
+        "retired": "Retired {when}",
+        "reactivate": "Put back in service",
+        "inUseHint": "Handed out right now; it can be retired after the visitor checks out.",
+        "loadError": "Unable to load this pass. Please try again.",
+        "actionError": "Couldn't update the pass. Please try again."
+      }
+    },
+    "preview": {
+      "flip": "Flip card",
+      "front": "Front",
+      "back": "Back",
+      "print": "Print"
     },
     "accessCards": {
       "title": "Access cards",
@@ -1596,8 +1721,10 @@
         "cardNo": "Card {number}",
         "loadError": "Unable to load this card. Please try again.",
         "preview": "Card preview",
-        "noPhoto": "No photo on file: the card prints with an empty photo frame.",
-        "printerHint": "DTC printer: choose CR80, portrait, and print both sides.",
+        "previewTitle": "Card preview",
+        "previewCard": "Preview card",
+        "photoSaving": "Saving photo…",
+        "photoError": "Couldn't save the photo. Please try again.",
         "details": "Details",
         "validFrom": "Valid from",
         "validUntil": "Valid until",
@@ -1616,7 +1743,6 @@
         "markReturned": "Card returned",
         "markLost": "Card lost",
         "print": "Print card",
-        "reprint": "Reprint card",
         "error": "That didn't work. Please try again."
       },
       "assignCard": "Assign card",
@@ -1768,7 +1894,12 @@
         "gate_kiosk_created": "Gate kiosk link created",
         "gate_kiosk_rotated": "Gate kiosk link replaced",
         "gate_kiosk_disabled": "Gate kiosk link turned off",
-        "gate_kiosk_enabled": "Gate kiosk link turned on"
+        "gate_kiosk_enabled": "Gate kiosk link turned on",
+        "visitor_pass_created": "Visitor passes created",
+        "visitor_pass_printed": "Visitor passes printed",
+        "visitor_pass_reactivated": "Visitor pass back in service",
+        "visitor_pass_recorded": "Visitor passes recorded",
+        "visitor_pass_retired": "Visitor pass retired"
       },
       "openFor": "Open event: {action}"
     }

@@ -179,7 +179,11 @@ export class VisitsController {
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() principal: AuthUser,
   ) {
-    return this.authoring.cancel(id, principal.userId);
+    return this.authoring.cancel(
+      id,
+      principal.userId,
+      principal.permissions.includes(PERMISSIONS.VISIT_FLAG),
+    );
   }
 
   @Patch(':id')

@@ -12,7 +12,7 @@ import {
   StatusBadge,
   Textarea,
 } from "@vms/ui";
-import { CalendarDays, Printer } from "lucide-react";
+import { CalendarDays, Eye } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { Field } from "@/app/[locale]/_components/visit-detail/helpers";
@@ -24,24 +24,32 @@ import {
   useRfidAssignment,
   useUpdateRfidAssignment,
 } from "@/data/rfid-cards/queries";
-import type { AssignmentDetail } from "@/data/rfid-cards/rfid-cards.api";
+import {
+  rfidCardsApi,
+  type AssignmentDetail,
+} from "@/data/rfid-cards/rfid-cards.api";
 import { formatWatDateTime } from "@/shared/wat";
 import { AssignmentBadge } from "./AssignmentBadge";
-import { CardBack, CardFront, type CardContent } from "./CardFaces";
-import { CardPrintView } from "./CardPrintView";
+import { CardFront, type CardContent } from "./CardFaces";
+import { CardPreviewDialog } from "./CardPreviewDialog";
+import { PhotoInput } from "./PhotoInput";
 import { splitWat, watIso } from "./wat-input";
 
 const errorText = (err: unknown, fallback: string) =>
   err instanceof ApiError ? err.message : fallback;
 
-export function cardContent(a: AssignmentDetail): CardContent {
+export function cardContent(
+  a: AssignmentDetail,
+  localPhotoUrl: string | null = null,
+): CardContent {
   return {
     fullName: a.visitor.fullName,
     organization: a.visitor.organization,
     cardNumber: a.card.cardNumber,
     validFrom: a.validFrom,
     validUntil: a.validUntil,
-    photoUrl: a.photoUrl,
+    // A photo picked this session that couldn't be stored wins over the saved one.
+    photoUrl: localPhotoUrl ?? a.photoUrl,
   };
 }
 
@@ -135,19 +143,96 @@ function CloseCard({ a }: { a: AssignmentDetail }) {
   );
 }
 
+/**
+ * Replace the card's photo. The picker always looks fresh (as if no photo was ever
+ * added); a new photo replaces the saved one. If it can't be stored, it is kept
+ * locally so the card can still be previewed and printed this session.
+ */
+function UpdatePhoto({
+  a,
+  currentUrl,
+  onLocalPhoto,
+}: {
+  a: AssignmentDetail;
+  currentUrl: string | null;
+  onLocalPhoto: (url: string | null) => void;
+}) {
+  const t = useTranslations("operations.accessCards.sheet");
+  const update = useUpdateRfidAssignment(a.id);
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const save = async (blob: Blob, previewUrl: string) => {
+    setSaving(true);
+    setError(null);
+    let photoKey: string;
+    try {
+      photoKey = await rfidCardsApi.uploadPhoto(blob);
+    } catch {
+      onLocalPhoto(previewUrl);
+      setSaving(false);
+      return;
+    }
+    try {
+      await update.mutateAsync({ photoKey });
+      URL.revokeObjectURL(previewUrl);
+      onLocalPhoto(null);
+    } catch (err) {
+      onLocalPhoto(previewUrl);
+      setError(errorText(err, t("photoError")));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <PhotoInput
+        compact
+        value={null}
+        currentUrl={currentUrl}
+        disabled={saving}
+        onChange={(photo) => {
+          if (photo && !saving) void save(photo.blob, photo.previewUrl);
+        }}
+      />
+      {saving ? (
+        <span className="text-xs text-fg-muted" role="status">
+          {t("photoSaving")}
+        </span>
+      ) : null}
+      {error ? (
+        <span className="text-xs text-danger" role="alert">
+          {error}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 /** Prints and reprints are each logged. */
 export function AssignmentSheet({
   id,
+  localPhotoUrl = null,
+  previewOpen,
+  onPreviewOpenChange,
+  onLocalPhoto,
   onClose,
 }: {
   id: string | null;
+  /** Photo picked at assignment that couldn't be stored; used for preview/print only. */
+  localPhotoUrl?: string | null;
+  /** The enlarged card preview modal; controlled so a new card can open straight into it. */
+  previewOpen: boolean;
+  onPreviewOpenChange: (open: boolean) => void;
+  /** A new photo that couldn't be stored (url), or null once one is saved. */
+  onLocalPhoto: (url: string | null) => void;
   onClose: () => void;
 }) {
   const t = useTranslations("operations.accessCards.sheet");
   const locale = useLocale();
   const { data: a, isLoading, isError } = useRfidAssignment(id);
   const printed = useMarkRfidPrinted();
-  const [printing, setPrinting] = React.useState(false);
 
   const date = (d: string | null) => (d ? formatWatDateTime(d, locale) : "—");
 
@@ -158,11 +243,11 @@ export function AssignmentSheet({
       onOpenChange={(open) => !open && onClose()}
       title={t("title")}
       footer={
-        a?.status === "ACTIVE" ? (
+        a ? (
           <div className="flex w-full justify-end">
-            <Button onClick={() => setPrinting(true)} disabled={printing}>
-              <Printer className="size-4" aria-hidden="true" />
-              {a.printCount > 0 ? t("reprint") : t("print")}
+            <Button onClick={() => onPreviewOpenChange(true)}>
+              <Eye className="size-4" aria-hidden="true" />
+              {t("previewCard")}
             </Button>
           </div>
         ) : undefined
@@ -205,14 +290,21 @@ export function AssignmentSheet({
 
           <SheetSection title={t("preview")}>
             <div className="flex flex-col gap-2">
-              <div className="flex gap-3 overflow-x-auto pb-1">
-                <CardFront card={cardContent(a)} />
-                <CardBack card={cardContent(a)} />
+              <div className="flex items-start gap-4">
+                {/* Thumbnail of the true-size face; the modal shows it large. */}
+                <div className="relative h-[calc(85.6mm*0.6)] w-[calc(54mm*0.6)] shrink-0">
+                  <div className="absolute left-0 top-0 origin-top-left scale-[0.6]">
+                    <CardFront card={cardContent(a, localPhotoUrl)} />
+                  </div>
+                </div>
+                {a.status === "ACTIVE" ? (
+                  <UpdatePhoto
+                    a={a}
+                    currentUrl={localPhotoUrl ?? a.photoUrl}
+                    onLocalPhoto={onLocalPhoto}
+                  />
+                ) : null}
               </div>
-              {!a.hasPhoto ? (
-                <span className="text-xs text-fg-muted">{t("noPhoto")}</span>
-              ) : null}
-              <span className="text-xs text-fg-muted">{t("printerHint")}</span>
             </div>
           </SheetSection>
 
@@ -279,15 +371,14 @@ export function AssignmentSheet({
             </>
           ) : null}
 
-          {printing ? (
-            <CardPrintView
-              card={cardContent(a)}
-              onDone={() => {
-                setPrinting(false);
-                printed.mutate(a.id);
-              }}
-            />
-          ) : null}
+          <CardPreviewDialog
+            open={previewOpen}
+            onOpenChange={onPreviewOpenChange}
+            card={cardContent(a, localPhotoUrl)}
+            onPrinted={
+              a.status === "ACTIVE" ? () => printed.mutate(a.id) : undefined
+            }
+          />
         </>
       )}
     </DetailDrawer>

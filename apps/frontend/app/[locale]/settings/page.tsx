@@ -9,7 +9,8 @@ import { MyDeskTab } from "./_components/MyDeskTab";
 import { PreferencesTab } from "./_components/PreferencesTab";
 import { ProfileTab } from "./_components/ProfileTab";
 
-type Tab = "profile" | "desk" | "preferences";
+const TABS = ["profile", "desk", "preferences"] as const;
+type Tab = (typeof TABS)[number];
 
 function Settings() {
   const t = useTranslations("settings");
@@ -21,14 +22,19 @@ function Settings() {
         <h1 className="text-3xl font-semibold text-fg">{t("title")}</h1>
 
         <SegmentedControl
+          className="max-w-full"
           aria-label={t("title")}
           value={tab}
           onValueChange={(v) => setTab(v as Tab)}
-          options={[
-            { value: "profile", label: t("tabs.profile") },
-            { value: "desk", label: t("tabs.desk") },
-            { value: "preferences", label: t("tabs.preferences") },
-          ]}
+          options={TABS.map((value) => ({
+            value,
+            label: (
+              <>
+                <span className="sm:hidden">{t(`tabs.${value}Short`)}</span>
+                <span className="hidden sm:inline">{t(`tabs.${value}`)}</span>
+              </>
+            ),
+          }))}
         />
 
         {tab === "profile" ? <ProfileTab /> : null}

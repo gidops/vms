@@ -425,7 +425,11 @@ describe('VisitAuthoringService.cancel', () => {
   }
 
   it('cancels for the creator and emits VisitCancelled', async () => {
-    const { service, tx, publish } = setup({ createdById: 'me', host: null });
+    const { service, tx, publish } = setup({
+      status: 'PENDING',
+      createdById: 'me',
+      host: null,
+    });
     await service.cancel('v1', 'me');
     expect(tx.visit.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { status: 'CANCELLED' } }),
@@ -438,10 +442,56 @@ describe('VisitAuthoringService.cancel', () => {
 
   it('forbids cancelling for a non-owner, non-host', async () => {
     const { service } = setup({
+      status: 'PENDING',
       createdById: 'other',
       host: { userId: 'someone' },
     });
     await expect(service.cancel('v1', 'me')).rejects.toThrow(
+      ForbiddenException,
+    );
+  });
+
+  it('lets the host cancel a request awaiting more info', async () => {
+    const { service, tx } = setup({
+      status: 'REVIEW_REQUESTED',
+      createdById: 'other',
+      host: { userId: 'me' },
+    });
+    await service.cancel('v1', 'me');
+    expect(tx.visit.update).toHaveBeenCalled();
+  });
+
+  it.each(['APPROVED', 'FLAGGED', 'CHECKED_IN', 'CANCELLED'])(
+    'rejects a requester cancelling a %s visit',
+    async (status) => {
+      const { service, tx } = setup({ status, createdById: 'me', host: null });
+      await expect(service.cancel('v1', 'me')).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(tx.visit.update).not.toHaveBeenCalled();
+    },
+  );
+
+  it('lets a moderator cancel a FLAGGED visit they do not own', async () => {
+    const { service, tx, publish } = setup({
+      status: 'FLAGGED',
+      createdById: 'other',
+      host: { userId: 'someone' },
+    });
+    await service.cancel('v1', 'sm', true);
+    expect(tx.visit.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: 'CANCELLED' } }),
+    );
+    expect(publish).toHaveBeenCalled();
+  });
+
+  it('does not let a moderator cancel an APPROVED visit', async () => {
+    const { service } = setup({
+      status: 'APPROVED',
+      createdById: 'other',
+      host: { userId: 'someone' },
+    });
+    await expect(service.cancel('v1', 'sm', true)).rejects.toThrow(
       ForbiddenException,
     );
   });

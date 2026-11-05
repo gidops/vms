@@ -165,7 +165,11 @@ export function AssignCardDrawer({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAssigned: (assignment: AssignmentDetail) => void;
+  /** `localPhotoUrl` is set when the photo couldn't be stored (e.g. S3 not configured). */
+  onAssigned: (
+    assignment: AssignmentDetail,
+    localPhotoUrl: string | null,
+  ) => void;
 }) {
   const t = useTranslations("operations.accessCards.assign");
   const assign = useAssignRfidCard();
@@ -199,9 +203,17 @@ export function AssignCardDrawer({
     setPending(true);
     setError(null);
     try {
-      const photoKey = photo
-        ? await rfidCardsApi.uploadPhoto(photo.blob)
-        : undefined;
+      // A failed photo upload must not block the card: it's saved without one and
+      // the picked photo is kept locally so the card can still be previewed and printed.
+      let photoKey: string | undefined;
+      let localPhotoUrl: string | null = null;
+      if (photo) {
+        try {
+          photoKey = await rfidCardsApi.uploadPhoto(photo.blob);
+        } catch {
+          localPhotoUrl = photo.previewUrl;
+        }
+      }
       const created = await assign.mutateAsync({
         cardNumber: cardNumber.trim(),
         visitorId: visitor.id,
@@ -212,7 +224,7 @@ export function AssignCardDrawer({
         ...(notes.trim() ? { notes: notes.trim() } : {}),
       });
       reset();
-      onAssigned(created);
+      onAssigned(created, localPhotoUrl);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("error"));
     } finally {

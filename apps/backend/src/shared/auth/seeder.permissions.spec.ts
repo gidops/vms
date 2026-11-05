@@ -159,11 +159,12 @@ describe('Role → permission matrix', () => {
   });
 
   it('keeps the Operations tools to the System Admin (no scoped role holds them)', () => {
-    // Desk QR, RFID access cards and the audit trail.
+    // Desk QR, RFID access cards, visitor-pass printing and the audit trail.
     const SYSTEM_ADMIN_ONLY = [
       PERMISSIONS.ISSUER_READ,
       PERMISSIONS.ISSUER_MANAGE,
       PERMISSIONS.RFID_MANAGE,
+      PERMISSIONS.PASS_MANAGE,
       PERMISSIONS.AUDIT_READ,
       PERMISSIONS.AUDIT_EXPORT,
     ];

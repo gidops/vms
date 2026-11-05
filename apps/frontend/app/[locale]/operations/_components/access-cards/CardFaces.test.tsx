@@ -15,7 +15,7 @@ const card = {
 };
 
 describe("access card faces", () => {
-  it("prints the visitor, validity (WAT) and card number on the front", () => {
+  it("prints the visitor and card number on the front, not the validity", () => {
     renderWithIntl(<CardFront card={card} />);
     const front = screen.getByRole("img", { name: /Card front for Ifeoma/ });
     expect(front).toHaveAttribute("data-theme", "light");
@@ -23,14 +23,15 @@ describe("access card faces", () => {
     expect(front).toHaveTextContent("Ifeoma Chukwu");
     expect(front).toHaveTextContent("Guaranty Trust Bank");
     expect(front).toHaveTextContent("RF-0042");
-    // 07:00Z = 08:00 WAT; 17:00Z = 18:00 WAT.
-    expect(front).toHaveTextContent(/24 Oct 2026, 08:00 – 26 Oct 2026, 18:00/);
+    expect(front).not.toHaveTextContent(/24 Oct 2026/);
   });
 
   it("puts the return notice and card number on the back", () => {
     renderWithIntl(<CardBack card={card} />);
     const back = screen.getByRole("img", { name: "Card back" });
     expect(back).toHaveTextContent("RF-0042");
+    // 07:00Z = 08:00 WAT; 17:00Z = 18:00 WAT.
+    expect(back).toHaveTextContent(/24 Oct 2026, 08:00 – 26 Oct 2026, 18:00/);
     expect(back).toHaveTextContent(
       /must be returned to the Visitor Management Centre/,
     );

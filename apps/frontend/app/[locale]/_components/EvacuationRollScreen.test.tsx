@@ -103,7 +103,7 @@ describe("EvacuationRollScreen", () => {
       rows,
     };
     renderWithIntl(<EvacuationRollScreen />);
-    const table = () => screen.getByRole("table", { name: "Evacuation Roll" });
+    const table = () => screen.getByRole("table", { name: "Evacuation Help" });
     expect(within(table()).getByText("Visitor 10")).toBeInTheDocument();
     expect(within(table()).queryByText("Visitor 11")).not.toBeInTheDocument();
     expect(within(table()).getByText(/· 12/)).toBeInTheDocument();

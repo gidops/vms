@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Input, Label } from "@vms/ui";
-import { parsePhone, toE164 } from "@vms/contracts";
+import { nameParts, parsePhone, toE164 } from "@vms/contracts";
 import { Monitor, UserRound } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
@@ -42,8 +42,10 @@ export function ProfileTab() {
   const { user, activeRole } = useAuth();
   const updateMe = useUpdateMe();
 
-  const [firstName, setFirstName] = React.useState(user?.firstName ?? "");
-  const [lastName, setLastName] = React.useState(user?.lastName ?? "");
+  // Admin-created accounts hold only fullName; split it so neither field opens blank.
+  const initialName = user ? nameParts(user) : { firstName: "", lastName: "" };
+  const [firstName, setFirstName] = React.useState(initialName.firstName);
+  const [lastName, setLastName] = React.useState(initialName.lastName);
   const initialPhone = parsePhone(user?.phone, DIAL_CODES);
   const [phoneCode, setPhoneCode] = React.useState(initialPhone.code);
   const [phoneNumber, setPhoneNumber] = React.useState(initialPhone.number);

@@ -65,6 +65,14 @@ export const EVENT_TYPES = {
   RfidCardReturned: 'rfid_card.returned',
   RfidCardLost: 'rfid_card.lost',
   RfidCardStatusChanged: 'rfid_card.status_changed',
+  /** New visitor passes numbered for printing (one event per run). */
+  VisitorPassesCreated: 'visitor_pass.created',
+  /** Existing physical passes entered into the record. */
+  VisitorPassesRecorded: 'visitor_pass.recorded',
+  /** One event per print run; reprints are flagged. */
+  VisitorPassesPrinted: 'visitor_pass.printed',
+  VisitorPassRetired: 'visitor_pass.retired',
+  VisitorPassReactivated: 'visitor_pass.reactivated',
   /** Recorded before the first byte of an audit-trail export is sent. */
   AuditExportStarted: 'audit.export_started',
   AuditExported: 'audit.exported',

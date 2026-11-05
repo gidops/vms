@@ -27,6 +27,9 @@ vi.mock("@/i18n/navigation", () => ({
 vi.mock("@/app/[locale]/_components/DeskQrScreen", () => ({
   DeskQrScreen: () => <p>desk qr screen</p>,
 }));
+vi.mock("./_components/visitor-passes/VisitorPassesTab", () => ({
+  VisitorPassesTab: () => <p>visitor passes tab</p>,
+}));
 vi.mock("./_components/access-cards/AccessCardsTab", () => ({
   AccessCardsTab: () => <p>access cards tab</p>,
 }));
@@ -44,19 +47,20 @@ describe("Operations page", () => {
     replace.mockReset();
   });
 
-  it("gives the System Admin all four tabs, opening on Access cards", () => {
+  it("gives the System Admin all five tabs, opening on Visitor passes", () => {
     Object.values(PERMISSIONS).forEach((p) => perms.add(p));
     renderWithIntl(<OperationsPage />);
     expect(
       screen.getByRole("heading", { level: 1, name: "Operations" }),
     ).toBeInTheDocument();
     expect(tabNames()).toEqual([
+      "Visitor passes",
       "Access cards",
       "Walk-in QR",
       "Gate kiosk",
       "Audit trail",
     ]);
-    expect(screen.getByText("access cards tab")).toBeInTheDocument();
+    expect(screen.getByText("visitor passes tab")).toBeInTheDocument();
   });
 
   it("opens ?tab= and keeps tab changes in the URL", () => {

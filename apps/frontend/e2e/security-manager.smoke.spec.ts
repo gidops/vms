@@ -17,7 +17,7 @@ test.describe("Security Manager smoke", () => {
   test("opens the Evacuation Roll", async ({ page }) => {
     await page.goto("/insights?tab=evacuation");
     await expect(
-      page.getByRole("radio", { name: "Evacuation Roll" }),
+      page.getByRole("radio", { name: "Evacuation Help" }),
     ).toBeChecked();
     await expect(
       page.getByRole("button", { name: "Print", exact: true }),

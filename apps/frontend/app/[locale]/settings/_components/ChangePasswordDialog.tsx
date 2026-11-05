@@ -10,8 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  Input,
   Label,
+  PasswordInput,
 } from "@vms/ui";
 import { useTranslations } from "next-intl";
 import * as React from "react";
@@ -91,9 +91,9 @@ function ChangePasswordForm({
       ) : null}
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="cp-current">{t("password.current")}</Label>
-        <Input
+        <PasswordInput
           id="cp-current"
-          type="password"
+          autoComplete="current-password"
           required
           value={current}
           onChange={(e) => setCurrent(e.target.value)}
@@ -101,9 +101,9 @@ function ChangePasswordForm({
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="cp-new">{t("password.new")}</Label>
-        <Input
+        <PasswordInput
           id="cp-new"
-          type="password"
+          autoComplete="new-password"
           required
           minLength={8}
           value={next}
@@ -112,9 +112,9 @@ function ChangePasswordForm({
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="cp-confirm">{t("password.confirm")}</Label>
-        <Input
+        <PasswordInput
           id="cp-confirm"
-          type="password"
+          autoComplete="new-password"
           required
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
