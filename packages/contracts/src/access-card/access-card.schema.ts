@@ -98,9 +98,7 @@ export type VisitorPassSummary = z.infer<typeof VisitorPassSummary>;
 /** Create new passes, numbered after each floor-wing's highest; printed separately. */
 export const CreatePassesInput = z.object({
   items: z
-    .array(
-      z.object({ zone: Zone, quantity: z.number().int().min(1).max(500) }),
-    )
+    .array(z.object({ zone: Zone, quantity: z.number().int().min(1).max(500) }))
     .min(1)
     .max(40),
 });
