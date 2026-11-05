@@ -450,6 +450,7 @@
     "successSubtitle": "Processus d'enregistrement terminé",
     "backToDashboard": "Retour au tableau de bord",
     "noCards": "Aucun badge disponible pour cette zone",
+    "noFloorCards": "Aucun badge pour cet étage. Tous les badges sont affichés.",
     "error": "Une erreur s'est produite. Veuillez réessayer."
   },
   "checkout": {

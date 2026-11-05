@@ -94,7 +94,7 @@ export function CheckInModal({
           <p className="text-sm text-fg-muted">{t("confirmSubtitle")}</p>
         </div>
 
-        <AssignPass value={cardId} onChange={setCardId} />
+        <AssignPass value={cardId} onChange={setCardId} floor={visit.floor} />
 
         <div className="rounded-lg bg-surface-muted/60 px-4">
           <SummaryRow label={t("guestName")} value={visit.visitor.fullName} />

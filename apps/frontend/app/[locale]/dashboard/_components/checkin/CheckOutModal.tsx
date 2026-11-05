@@ -201,7 +201,7 @@ export function CheckOutModal({
 
       <div className="flex flex-col items-center gap-1">
         {changing ? (
-          <AssignPass value={cardId} onChange={setCardId} />
+          <AssignPass value={cardId} onChange={setCardId} floor={visit.floor} />
         ) : (
           <span className="rounded-lg bg-warning-subtle px-8 py-2 text-xl font-bold tracking-[0.2em] text-warning">
             {visit.pass?.cardNumber ?? "—"}
