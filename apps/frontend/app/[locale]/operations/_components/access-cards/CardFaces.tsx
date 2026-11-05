@@ -97,8 +97,8 @@ export function CardFront({ card }: { card: CardContent }) {
           </span>
         ) : null}
       </div>
-      <div className="flex items-end justify-between gap-[2mm] px-[3mm] pb-[3mm]">
-        <Validity card={card} />
+      {/* Validity is printed on the back only. */}
+      <div className="flex justify-end px-[3mm] pb-[3mm]">
         <span className="font-mono text-[7pt] font-semibold">
           {card.cardNumber}
         </span>

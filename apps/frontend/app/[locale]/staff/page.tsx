@@ -15,7 +15,7 @@ import {
   TopNavShell,
 } from "@vms/ui";
 import { ChevronDown, CircleUser } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
 import { RecordCard } from "@/app/[locale]/_components/RecordCard";
@@ -118,6 +118,7 @@ function ExpectedGuestCards({
 
 function Staff() {
   const t = useTranslations("staff");
+  const format = useFormatter();
   const { user } = useAuth();
 
   const [range, setRange] = React.useState<StaffRange>("today");
@@ -293,13 +294,7 @@ function Staff() {
                                 {row.purpose}
                               </TableCell>
                               <TableCell className="text-fg-muted">
-                                <span className="flex items-center gap-1.5">
-                                  <CircleUser
-                                    className="size-4"
-                                    aria-hidden="true"
-                                  />
-                                  {t("guestCount", { count: row.groupSize })}
-                                </span>
+                                {format.number(row.groupSize)}
                               </TableCell>
                               <TableCell>
                                 <StatusCell

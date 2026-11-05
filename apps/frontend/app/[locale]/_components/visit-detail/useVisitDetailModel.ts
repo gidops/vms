@@ -79,7 +79,11 @@ export function useVisitDetailModel(
     const canResolveAlert = hasAlert && hasPermission("alert:resolve");
     const canResubmit =
       status === "REVIEW_REQUESTED" && data.host?.user.id === user?.id;
-    const canCancel = data.source === "VMC_STATION" && isMine && !isTerminal;
+    // Requesters withdraw only before a decision; the SM may cancel a flagged visit.
+    const canCancel =
+      hasPermission("visit:cancel") &&
+      ((data.source === "VMC_STATION" && isMine && preApproval) ||
+        (status === "FLAGGED" && hasPermission("visit:flag")));
     const canEdit = isMine && preApproval;
     const canCheckIn =
       status === "APPROVED" &&

@@ -155,6 +155,63 @@ describe('UsersService.setStatus', () => {
   });
 });
 
+describe('UsersService.updateMe', () => {
+  let prisma: any;
+  let tx: any;
+  let svc: UsersService;
+
+  beforeEach(() => {
+    tx = { user: { update: jest.fn() } };
+    prisma = { user: { findUnique: jest.fn() } };
+    const txm = { run: jest.fn(async (cb: (t: unknown) => unknown) => cb(tx)) };
+    svc = new UsersService(
+      prisma,
+      {} as never,
+      txm as never,
+      { publish: jest.fn() } as never,
+    );
+    jest
+      .spyOn(svc, 'findByIdWithAccess')
+      .mockResolvedValue({ id: 'u1' } as never);
+  });
+
+  it('keeps the surname of a full-name-only account when only the first name changes', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1',
+      fullName: 'Ada Lovelace',
+      firstName: null,
+      lastName: null,
+    });
+    await svc.updateMe('u1', { firstName: 'Augusta' });
+    expect(tx.user.update).toHaveBeenCalledWith({
+      where: { id: 'u1' },
+      data: {
+        firstName: 'Augusta',
+        lastName: 'Lovelace',
+        fullName: 'Augusta Lovelace',
+      },
+    });
+  });
+
+  it('stores both names and rebuilds fullName', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'u1',
+      fullName: 'Ada Lovelace',
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+    });
+    await svc.updateMe('u1', { firstName: 'Grace', lastName: 'Hopper' });
+    expect(tx.user.update).toHaveBeenCalledWith({
+      where: { id: 'u1' },
+      data: {
+        firstName: 'Grace',
+        lastName: 'Hopper',
+        fullName: 'Grace Hopper',
+      },
+    });
+  });
+});
+
 describe('UsersService.adminUpdate', () => {
   let prisma: any;
   let tx: any;

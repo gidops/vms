@@ -499,7 +499,7 @@
       "comingSoon": "Bientôt disponible",
       "collapse": "Réduire la barre latérale",
       "expand": "Développer la barre latérale",
-      "evacuation": "Liste d'évacuation",
+      "evacuation": "Aide à l'évacuation",
       "optIns": "Abonnements aux communications",
       "deskQr": "QR sans rendez-vous"
     },
@@ -958,7 +958,10 @@
     "tabs": {
       "profile": "Informations du profil",
       "desk": "Mon poste",
-      "preferences": "Sécurité/Préférences"
+      "preferences": "Sécurité/Préférences",
+      "profileShort": "Profil",
+      "deskShort": "Poste",
+      "preferencesShort": "Préférences"
     },
     "profile": {
       "personalInfo": "Informations personnelles",
@@ -1028,9 +1031,9 @@
   "evacuation": {
     "indicator": {
       "count": "{count, plural, one {# personne a besoin d'aide à l'évacuation} other {# personnes ont besoin d'aide à l'évacuation}}",
-      "viewRoll": "Voir la liste"
+      "viewRoll": "Voir"
     },
-    "title": "Liste d'évacuation",
+    "title": "Aide à l'évacuation",
     "refresh": "Actualiser",
     "countBanner": "sur place ont besoin d'aide pour évacuer",
     "floors": "{count, plural, one {# étage} other {# étages}}",
@@ -1053,7 +1056,7 @@
     },
     "print": {
       "button": "Imprimer",
-      "heading": "AATC Abuja · Liste d'évacuation",
+      "heading": "AATC Abuja · Aide à l'évacuation",
       "generated": "Générée le {datetime} WAT",
       "count": "{count, plural, one {# visiteur a besoin d'aide pour évacuer} other {# visiteurs ont besoin d'aide pour évacuer}}"
     }
@@ -1387,7 +1390,7 @@
     "nothingHere": "Rien à afficher pour votre rôle pour le moment.",
     "tabs": {
       "overview": "Vue d'ensemble",
-      "evacuation": "Liste d'évacuation",
+      "evacuation": "Aide à l'évacuation",
       "history": "Historique",
       "visitors": "Visiteurs",
       "analytics": "Analyses"
@@ -1528,10 +1531,132 @@
     "title": "Opérations",
     "noAccess": "Les opérations sont réservées aux administrateurs système.",
     "tabs": {
+      "visitorPasses": "Badges visiteurs",
       "accessCards": "Cartes d'accès",
       "deskQr": "QR sans rendez-vous",
       "audit": "Journal d'audit",
       "gateKiosk": "Borne d'entrée"
+    },
+    "visitorPasses": {
+      "title": "Badges visiteurs",
+      "frontLabel": "Recto du badge visiteur : {zone}, badge {number}",
+      "backLabel": "Verso du badge visiteur",
+      "intro": "Imprimez les badges remis par l'accueil à l'enregistrement et tenez un registre de chaque badge existant. L'attribution se fait au VMC.",
+      "printPasses": "Imprimer des badges",
+      "recordPasses": "Enregistrer des badges existants",
+      "summary": {
+        "total": "Badges enregistrés",
+        "available": "Disponibles",
+        "inUse": "En service",
+        "retired": "Retirés"
+      },
+      "filters": {
+        "all": "Tous",
+        "available": "Disponibles",
+        "inUse": "En service",
+        "retired": "Retirés",
+        "allFloors": "Tous les étages",
+        "floor": "Étage",
+        "search": "Rechercher un n° de badge"
+      },
+      "columns": {
+        "floor": "Étage",
+        "passId": "N° de badge",
+        "status": "Statut",
+        "prints": "Impressions",
+        "lastPrinted": "Dernière impression",
+        "origin": "Origine",
+        "action": "Action"
+      },
+      "status": {
+        "AVAILABLE": "Disponible",
+        "IN_USE": "En service",
+        "RETIRED": "Retiré"
+      },
+      "origin": {
+        "PRINTED": "Imprimé ici",
+        "RECORDED": "Enregistré",
+        "NOT_PRINTED": "Pas encore imprimé"
+      },
+      "count": "{count, plural, one {badge} other {badges}}",
+      "empty": "Aucun badge enregistré. Imprimez de nouveaux badges ou enregistrez ceux que vous avez déjà.",
+      "noMatches": "Aucun badge ne correspond à ces filtres.",
+      "view": "Voir",
+      "openFor": "Ouvrir le badge {number}, {zone}",
+      "never": "Jamais",
+      "printedNotice": "{count, plural, one {# badge envoyé} other {# badges envoyés}} à l'imprimante.",
+      "plan": {
+        "title": "Imprimer des badges",
+        "subtitle": "Les quantités suggérées suivent le nombre de visiteurs reçus par chaque aile. Ajustez avant d'imprimer.",
+        "total": "Badges à imprimer",
+        "period": "Selon les visites des derniers",
+        "days": "{count} jours",
+        "floor": "Étage - aile",
+        "visits": "Visites",
+        "stock": "En stock",
+        "inUse": "En service",
+        "quantity": "Imprimer",
+        "quantityFor": "Badges à imprimer pour {zone}",
+        "noTraffic": "Aucune visite sur cette période : les badges sont répartis équitablement.",
+        "selected": "{count, plural, one {# badge} other {# badges}} sur {floors, plural, one {# aile} other {# ailes}}",
+        "printerHint": "Imprimante de cartes : choisissez CR80, portrait, recto verso.",
+        "submit": "Créer et imprimer",
+        "creating": "Création…",
+        "error": "Impossible de créer les badges. Veuillez réessayer.",
+        "cancel": "Annuler"
+      },
+      "record": {
+        "title": "Enregistrer des badges existants",
+        "subtitle": "Ajoutez les badges imprimés avant ce système. Les numéros déjà enregistrés sont ignorés.",
+        "floor": "Étage - aile",
+        "from": "Du n°",
+        "to": "Au n°",
+        "note": "Note (facultatif)",
+        "notePlaceholder": "ex. Lot imprimé en 2025",
+        "submit": "Enregistrer",
+        "saving": "Enregistrement…",
+        "cancel": "Fermer",
+        "error": "Impossible d'enregistrer les badges. Veuillez réessayer.",
+        "created": "{count, plural, =0 {Aucun nouveau badge enregistré.} one {# badge enregistré.} other {# badges enregistrés.}}",
+        "skipped": "Déjà enregistrés, ignorés : {ids}",
+        "rangeInvalid": "« Au n° » doit être supérieur ou égal à « Du n° », 500 badges maximum à la fois.",
+        "pickFloor": "Choisissez une aile"
+      },
+      "sheet": {
+        "title": "Badge visiteur",
+        "preview": "Aperçu du badge",
+        "previewPass": "Aperçu du badge",
+        "previewTitle": "Badge visiteur",
+        "print": "Imprimer le badge",
+        "holder": "Remis à",
+        "since": "depuis {when}",
+        "details": "Détails",
+        "created": "Ajouté",
+        "lastReturned": "Dernier retour",
+        "history": "Historique d'impression",
+        "noHistory": "Jamais imprimé ni enregistré.",
+        "batch": "Lot {id}",
+        "kind": {
+          "PRINTED": "Imprimé",
+          "REPRINTED": "Réimprimé",
+          "RECORDED": "Enregistré (imprimé avant ce système)"
+        },
+        "by": "par {name}",
+        "retire": "Retirer le badge",
+        "retireHelp": "Retirez ce badge du service s'il est perdu, abîmé ou inexistant. L'accueil ne pourra plus l'attribuer.",
+        "retireNote": "Motif (facultatif)",
+        "retired": "Retiré {when}",
+        "reactivate": "Remettre en service",
+        "inUseHint": "Actuellement remis ; il pourra être retiré après la sortie du visiteur.",
+        "loadError": "Impossible de charger ce badge. Veuillez réessayer.",
+        "actionError": "Impossible de mettre à jour le badge. Veuillez réessayer."
+      }
+    },
+    "preview": {
+      "flip": "Retourner la carte",
+      "front": "Recto",
+      "back": "Verso",
+      "print": "Imprimer"
     },
     "accessCards": {
       "title": "Cartes d'accès",
@@ -1597,8 +1722,10 @@
         "cardNo": "Carte {number}",
         "loadError": "Impossible de charger cette carte. Veuillez réessayer.",
         "preview": "Aperçu de la carte",
-        "noPhoto": "Aucune photo : la carte s'imprime avec un cadre photo vide.",
-        "printerHint": "Imprimante DTC : choisissez CR80, portrait, recto verso.",
+        "previewTitle": "Aperçu de la carte",
+        "previewCard": "Aperçu de la carte",
+        "photoSaving": "Enregistrement de la photo…",
+        "photoError": "Impossible d'enregistrer la photo. Veuillez réessayer.",
         "details": "Détails",
         "validFrom": "Valable du",
         "validUntil": "Valable jusqu'au",
@@ -1617,7 +1744,6 @@
         "markReturned": "Carte rendue",
         "markLost": "Carte perdue",
         "print": "Imprimer la carte",
-        "reprint": "Réimprimer la carte",
         "error": "Échec de l'opération. Veuillez réessayer."
       },
       "assignCard": "Attribuer une carte",
@@ -1769,7 +1895,12 @@
         "gate_kiosk_created": "Lien de borne d'entrée créé",
         "gate_kiosk_rotated": "Lien de borne d'entrée remplacé",
         "gate_kiosk_disabled": "Lien de borne d'entrée désactivé",
-        "gate_kiosk_enabled": "Lien de borne d'entrée activé"
+        "gate_kiosk_enabled": "Lien de borne d'entrée activé",
+        "visitor_pass_created": "Badges visiteurs créés",
+        "visitor_pass_printed": "Badges visiteurs imprimés",
+        "visitor_pass_reactivated": "Badge visiteur remis en service",
+        "visitor_pass_recorded": "Badges visiteurs enregistrés",
+        "visitor_pass_retired": "Badge visiteur retiré"
       },
       "openFor": "Ouvrir l'événement : {action}"
     }

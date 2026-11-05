@@ -338,17 +338,35 @@ export class VisitAuthoringService {
     return this.read.getDetail(id);
   }
 
-  async cancel(id: string, actorUserId: string): Promise<VisitRequestDetail> {
+  /**
+   * Requesters may withdraw only before a decision (PENDING / REVIEW_REQUESTED);
+   * a moderator (Security Manager) may cancel a FLAGGED visit on anyone's behalf.
+   */
+  async cancel(
+    id: string,
+    actorUserId: string,
+    canModerate = false,
+  ): Promise<VisitRequestDetail> {
     const visit = await this.prisma.visit.findUnique({
       where: { id },
-      select: { createdById: true, host: { select: { userId: true } } },
+      select: {
+        status: true,
+        createdById: true,
+        host: { select: { userId: true } },
+      },
     });
     if (!visit) throw new NotFoundException('errors.visit.notFound');
-    if (
-      visit.createdById !== actorUserId &&
-      visit.host?.userId !== actorUserId
-    ) {
-      throw new ForbiddenException('errors.visit.notOwner');
+    const moderatorCancel = canModerate && visit.status === 'FLAGGED';
+    if (!moderatorCancel) {
+      if (
+        visit.createdById !== actorUserId &&
+        visit.host?.userId !== actorUserId
+      ) {
+        throw new ForbiddenException('errors.visit.notOwner');
+      }
+      if (visit.status !== 'PENDING' && visit.status !== 'REVIEW_REQUESTED') {
+        throw new BadRequestException('errors.visit.notCancellable');
+      }
     }
     await this.txm.run(async (tx) => {
       await tx.visit.update({

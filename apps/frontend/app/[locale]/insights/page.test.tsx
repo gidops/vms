@@ -81,15 +81,15 @@ describe("Insights page", () => {
   it.each([
     ["staff", ["History", "Visitors", "Analytics"]],
     ["readAdmin", ["Overview", "History", "Visitors", "Analytics"]],
-    ["vmc", ["Evacuation Roll", "History"]],
-    ["vmcAdmin", ["Evacuation Roll", "History", "Visitors", "Analytics"]],
+    ["vmc", ["Evacuation Help", "History"]],
+    ["vmcAdmin", ["Evacuation Help", "History", "Visitors", "Analytics"]],
     [
       "securityManager",
-      ["Evacuation Roll", "History", "Visitors", "Analytics"],
+      ["Evacuation Help", "History", "Visitors", "Analytics"],
     ],
     [
       "systemAdmin",
-      ["Overview", "Evacuation Roll", "History", "Visitors", "Analytics"],
+      ["Overview", "Evacuation Help", "History", "Visitors", "Analytics"],
     ],
   ] as const)("gives %s the right tabs", (role, expected) => {
     as(role);

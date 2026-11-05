@@ -14,6 +14,7 @@ import { AccessCardsTab } from "./_components/access-cards/AccessCardsTab";
 import { AuditTrailTab } from "./_components/AuditTrailTab";
 import { GateKioskTab } from "./_components/GateKioskTab";
 import { OPERATIONS_TABS, type OperationsTab } from "./_components/tabs";
+import { VisitorPassesTab } from "./_components/visitor-passes/VisitorPassesTab";
 
 /** Each tab shows with its permission; the tab lives in `?tab=` so links land on it. */
 function Operations() {
@@ -54,6 +55,7 @@ function Operations() {
         {tab === undefined ? (
           <EmptyState icon={Wrench} title={t("noAccess")} />
         ) : null}
+        {tab === "visitorPasses" ? <VisitorPassesTab /> : null}
         {tab === "accessCards" ? <AccessCardsTab /> : null}
         {tab === "deskQr" ? (
           <DeskQrScreen headingLevel={2} showHeading={false} />
