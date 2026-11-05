@@ -450,6 +450,7 @@
     "successSubtitle": "User check-in process complete",
     "backToDashboard": "Back to Dashboard",
     "noCards": "No badges available for this zone",
+    "noFloorCards": "No passes for this floor. Showing all passes.",
     "error": "Something went wrong. Please try again."
   },
   "checkout": {
