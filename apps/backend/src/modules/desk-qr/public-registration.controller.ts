@@ -2,9 +2,7 @@ import {
   Body,
   Controller,
   Get,
-  HttpCode,
   Param,
-  ParseUUIDPipe,
   Post,
   Query,
   UseGuards,
@@ -13,10 +11,8 @@ import {
   DESK_QR_TOKEN_RE,
   PublicHostSearchQuery,
   PublicRegistrationInput,
-  VerifyRegistrationInput,
   type DeskQrFormSession,
   type PublicHostOption,
-  type PublicRegistrationPending,
   type PublicRegistrationResult,
 } from '@vms/contracts';
 import { Public } from '../../shared/auth/auth.decorators';
@@ -68,23 +64,7 @@ export class PublicRegistrationController {
     @Param('token') token: string,
     @Body(new ZodValidationPipe(PublicRegistrationInput))
     input: PublicRegistrationInput,
-  ): Promise<PublicRegistrationPending> {
-    return this.registrations.submit(token, input);
-  }
-
-  @Post('registrations/:id/verify')
-  @HttpCode(200)
-  @RateLimit(
-    { name: 'verify-ip', limit: 10, windowMs: MINUTE, by: 'ip' },
-    // Per QR too: behind a proxy or with spoofed addresses, per-IP limits alone do not bound guesses.
-    { name: 'verify-qr', limit: 60, windowMs: MINUTE, by: BY_TOKEN },
-  )
-  verify(
-    @Param('token') token: string,
-    @Param('id', new ParseUUIDPipe()) id: string,
-    @Body(new ZodValidationPipe(VerifyRegistrationInput))
-    input: VerifyRegistrationInput,
   ): Promise<PublicRegistrationResult> {
-    return this.registrations.verify(token, id, input.code);
+    return this.registrations.submit(token, input);
   }
 }

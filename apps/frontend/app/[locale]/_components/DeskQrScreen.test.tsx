@@ -18,7 +18,6 @@ type Query = {
 let deskQr: Query;
 const actions = {
   create: vi.fn(),
-  update: vi.fn(),
   rotate: vi.fn(),
   disable: vi.fn(),
   enable: vi.fn(),
@@ -34,8 +33,7 @@ const mutation = (fn: (...a: unknown[]) => void) => ({
 });
 vi.mock("@/data/desk-qr/desk-qr.api", () => ({
   deskQrApi: {
-    create: (input: unknown) => actions.create(input),
-    update: (input: unknown) => actions.update(input),
+    create: () => actions.create(),
     rotate: () => actions.rotate(),
     disable: () => actions.disable(),
     enable: () => actions.enable(),
@@ -49,10 +47,7 @@ vi.mock("@/data/desk-qr/queries", () => ({
     isError: false,
   }),
   useDownloadDeskQr: () => mutation(vi.fn()),
-  useCreateDeskQr: () =>
-    mutation((codeEmail) => void actions.create({ codeEmail })),
-  useUpdateDeskQr: () =>
-    mutation((codeEmail) => void actions.update({ codeEmail })),
+  useCreateDeskQr: () => mutation(() => void actions.create()),
   useRotateDeskQr: () => mutation(() => void actions.rotate()),
   useDisableDeskQr: () => mutation(() => void actions.disable()),
   useEnableDeskQr: () => mutation(() => void actions.enable()),
@@ -62,7 +57,6 @@ const view = (over: Partial<DeskQrView> = {}): DeskQrView => ({
   id: "qr1",
   isActive: true,
   url: "https://vms.example.org/r/k7Qm2xVb9TfLw4Rz8cPd00",
-  codeEmail: "reception@aatc.org",
   scansToday: 37,
   lastScanAt: new Date("2026-10-19T09:42:00Z"),
   tokenRotatedAt: new Date("2026-10-02T08:15:00Z"),
@@ -86,7 +80,7 @@ describe("DeskQrScreen", () => {
     };
   });
 
-  it("shows the QR, its link, today's scans and where codes go", () => {
+  it("shows the QR, its link and today's scans", () => {
     renderWithIntl(<DeskQrScreen />);
     const card = screen.getByRole("region", { name: /Walk-in QR/ });
     expect(within(card).getByText("Active")).toBeInTheDocument();
@@ -99,7 +93,6 @@ describe("DeskQrScreen", () => {
     ).toBeInTheDocument();
     expect(within(card).getByText("37")).toBeInTheDocument();
     expect(within(card).getByText("Last scan 10:42 WAT")).toBeInTheDocument();
-    expect(within(card).getByText("reception@aatc.org")).toBeInTheDocument();
     for (const name of ["New QR", "Disable"])
       expect(
         within(card).getByRole("button", { name: new RegExp(name) }),
@@ -157,49 +150,22 @@ describe("DeskQrScreen", () => {
     expect(actions.enable).toHaveBeenCalled();
   });
 
-  it("changes the code email after checking it", async () => {
-    renderWithIntl(<DeskQrScreen />);
-    fireEvent.click(screen.getByRole("button", { name: "Change" }));
-    const dialog = await screen.findByRole("dialog");
-    const input = within(dialog).getByLabelText("Email for verification codes");
-    fireEvent.change(input, { target: { value: "not-an-email" } });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Save" }));
-    expect(
-      within(dialog).getByText(/Enter an email address/),
-    ).toBeInTheDocument();
-    expect(actions.update).not.toHaveBeenCalled();
-    fireEvent.change(input, { target: { value: "desk@aatc.org" } });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Save" }));
-    expect(actions.update).toHaveBeenCalledWith({ codeEmail: "desk@aatc.org" });
-  });
-
   it("shows no management buttons to read-only roles", () => {
     perms.delete(PERMISSIONS.ISSUER_MANAGE);
     renderWithIntl(<DeskQrScreen />);
     expect(screen.queryByRole("button", { name: /New QR/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /Disable/ })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Change" })).toBeNull();
     expect(
       screen.getByRole("button", { name: /Print poster/ }),
     ).toBeInTheDocument();
   });
 
-  it("creates the desk QR from the empty state", async () => {
+  it("creates the desk QR from the empty state", () => {
     deskQr.data = null;
     renderWithIntl(<DeskQrScreen />);
     expect(screen.getByText("No walk-in QR yet")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Create walk-in QR" }));
-    const dialog = await screen.findByRole("dialog");
-    fireEvent.change(
-      within(dialog).getByLabelText("Email for verification codes"),
-      { target: { value: "reception@aatc.org" } },
-    );
-    fireEvent.click(
-      within(dialog).getByRole("button", { name: "Create walk-in QR" }),
-    );
-    expect(actions.create).toHaveBeenCalledWith({
-      codeEmail: "reception@aatc.org",
-    });
+    expect(actions.create).toHaveBeenCalledTimes(1);
   });
 
   it("tells read-only roles reception hasn't set it up", () => {

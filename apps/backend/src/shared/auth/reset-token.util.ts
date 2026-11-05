@@ -7,6 +7,13 @@ import { createHash, randomBytes } from 'node:crypto';
  */
 export const RESET_TOKEN_TTL_MS = 15 * 60 * 1000;
 
+/**
+ * Minimum gap between reset emails for one user. Long enough to stop
+ * click-spam (every send supersedes the last link and emails afresh), short
+ * enough that an admin can quickly resend when the mail never arrived.
+ */
+export const RESET_RESEND_COOLDOWN_MS = 60 * 1000;
+
 /** The raw token travels only inside the emailed link; the DB keeps the hash. */
 export function generateResetToken(): { token: string; hash: string } {
   const token = randomBytes(32).toString('base64url');

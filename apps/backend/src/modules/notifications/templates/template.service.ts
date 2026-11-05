@@ -1,14 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NotificationChannel } from '@prisma/client';
 import Handlebars from 'handlebars';
 import mjml2html from 'mjml';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import type { Env } from '../../../shared/config/env.schema';
 import { I18nService, type Locale } from '../../../shared/i18n/i18n.service';
 import { TEMPLATE_META, type RenderedMessage } from '../notification.types';
 import { QrService } from '../qr/qr.service';
 
 const EMAIL_DIR = join(__dirname, 'email');
+/** Served by the frontend; email clients fetch it over the public URL. */
+const BRAND_LOCKUP_PATH = '/brand/afreximbank-aatc-lockup.png';
 
 function toTemplateVar(value: unknown): string {
   if (value == null) return '';
@@ -34,6 +38,7 @@ export class TemplateService {
   constructor(
     private readonly i18n: I18nService,
     private readonly qr: QrService,
+    private readonly config: ConfigService<Env, true>,
   ) {
     this.hbs = Handlebars.create();
     // {{t 'key' var=value}} — locale comes from the per-render data root.
@@ -90,7 +95,16 @@ export class TemplateService {
     locale: Locale,
     data: Record<string, unknown>,
   ): Promise<RenderedMessage> {
-    const ctx = { ...data, __locale: locale, year: new Date().getFullYear() };
+    const appUrl = (
+      this.config.get('APP_PUBLIC_URL', { infer: true }) ?? ''
+    ).replace(/\/+$/, '');
+    const ctx = {
+      ...data,
+      __locale: locale,
+      year: new Date().getFullYear(),
+      // Falls back to the text wordmark in the layout when unset.
+      logoUrl: appUrl ? `${appUrl}${BRAND_LOCKUP_PATH}` : '',
+    };
     const body = this.compile(`${meta.emailFile}.mjml.hbs`)(ctx);
     const mjml = this.compile('layout.mjml.hbs')({
       ...ctx,

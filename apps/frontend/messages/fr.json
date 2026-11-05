@@ -935,7 +935,9 @@
     "reset": {
       "action": "Envoyer le lien de réinitialisation",
       "sent": "Lien envoyé. Il fonctionne une seule fois et expire dans 15 minutes.",
-      "error": "Impossible d'envoyer le lien de réinitialisation."
+      "error": "Impossible d'envoyer le lien de réinitialisation.",
+      "cooldown": "Renvoi possible dans {seconds} s",
+      "active": "Un lien de réinitialisation est déjà actif — il expire à {time}."
     },
     "statusAction": {
       "deactivate": "Désactiver le compte",
@@ -1203,20 +1205,6 @@
     "rotateHelp": "Nouveau QR remplace le code. L'affiche imprimée cesse aussitôt de fonctionner : imprimez la nouvelle avant d'appuyer.",
     "enableHelp": "Le scan affiche « Veuillez vous enregistrer à l'accueil VMC ». Activer rétablit le même code : l'affiche de l'accueil fonctionne de nouveau.",
     "disabledOverlay": "Le scan affiche « Veuillez vous enregistrer à l'accueil VMC »",
-    "codes": {
-      "title": "Codes de vérification",
-      "emailedTo": "Codes envoyés par e-mail à",
-      "change": "Modifier",
-      "help": "Quand un visiteur remplit le formulaire, un code à 6 chiffres arrive dans cette boîte. Lisez-le au visiteur à l'accueil pour terminer son enregistrement. Un code ne sert qu'une fois et expire au bout de 10 minutes."
-    },
-    "codeEmail": {
-      "createTitle": "Configurer le QR sans rendez-vous",
-      "changeTitle": "Changer l'adresse des codes",
-      "help": "Les codes de vérification des visiteurs sont envoyés ici. Choisissez une boîte lue par quelqu'un à l'accueil VMC.",
-      "label": "E-mail pour les codes de vérification",
-      "invalid": "Saisissez une adresse e-mail, par exemple reception@aatc.org",
-      "save": "Enregistrer"
-    },
     "empty": {
       "title": "Pas encore de QR sans rendez-vous",
       "body": "Créez le QR, imprimez l'affiche et placez-la à l'accueil VMC.",
@@ -1230,7 +1218,6 @@
     "retry": "Réessayer",
     "errors": {
       "create": "Le QR sans rendez-vous n'a pas été créé. Réessayez dans un instant.",
-      "update": "L'e-mail n'a pas été modifié. Réessayez dans un instant.",
       "rotate": "Le nouveau QR n'a pas été créé. Le QR actuel fonctionne toujours. Réessayez dans un instant.",
       "disable": "Le QR n'a pas été désactivé. Il fonctionne toujours. Réessayez dans un instant.",
       "enable": "Le QR n'a pas été activé. Réessayez dans un instant.",
@@ -1361,19 +1348,10 @@
     },
     "checkAnswers": "{count, plural, one {Vérifiez # réponse ci-dessous.} other {Vérifiez # réponses ci-dessous.}}",
     "submit": "Enregistrer ma visite",
-    "submitHelp": "L'accueil vous lira un code pour terminer.",
-    "code": {
-      "heading": "Presque terminé",
-      "title": "Demandez votre code à l'accueil",
-      "body": "Nous avons envoyé un code à 6 chiffres à l'accueil. Donnez votre nom et on vous le lira.",
-      "label": "Code à 6 chiffres",
-      "confirm": "Confirmer",
-      "expires": "Le code expire dans {countdown}"
-    },
-    "codeWrong": "{left, plural, =0 {Ce code ne correspond pas.} one {Ce code ne correspond pas. Vérifiez-le auprès de l'accueil et réessayez. Il reste # essai.} other {Ce code ne correspond pas. Vérifiez-le auprès de l'accueil et réessayez. Il reste # essais.}}",
+    "submitHelp": "L'envoi du formulaire enregistre votre visite pour aujourd'hui.",
     "done": {
       "title": "Vous êtes enregistré",
-      "body": "Présentez cette référence à l'accueil VMC pour obtenir votre badge.",
+      "body": "Tout est prêt pour aujourd'hui. L'accueil vous remettra votre badge visiteur.",
       "name": "Nom",
       "visiting": "Visite à",
       "when": "Date"
@@ -1385,10 +1363,6 @@
     "expired": {
       "title": "Ce formulaire a expiré",
       "body": "Veuillez scanner à nouveau le QR code."
-    },
-    "locked": {
-      "title": "Trop de codes erronés",
-      "body": "Veuillez scanner à nouveau le QR code, ou vous enregistrer à l'accueil VMC."
     },
     "startAgain": "Recommencer",
     "problems": {

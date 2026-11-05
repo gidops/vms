@@ -6,11 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma, type DeskQr } from '@prisma/client';
-import type {
-  CreateDeskQrInput,
-  DeskQrView,
-  UpdateDeskQrInput,
-} from '@vms/contracts';
+import type { DeskQrView } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 import { watToday } from '../../shared/common/wat';
 import type { Env } from '../../shared/config/env.schema';
@@ -44,7 +40,6 @@ export class DeskQrService {
       id: row.id,
       isActive: row.isActive,
       url: this.urlFor(row.token),
-      codeEmail: row.codeEmail,
       // The counter belongs to the WAT day it was last bumped on.
       scansToday: row.scanDay === watToday(now) ? row.scansToday : 0,
       lastScanAt: row.lastScanAt,
@@ -73,10 +68,7 @@ export class DeskQrService {
     return row ? this.toView(row) : null;
   }
 
-  async create(
-    input: CreateDeskQrInput,
-    actorUserId: string,
-  ): Promise<DeskQrView> {
+  async create(actorUserId: string): Promise<DeskQrView> {
     if (await this.find()) throw new ConflictException('errors.deskQr.exists');
     const id = await this.txm
       .run(async (tx) => {
@@ -84,13 +76,16 @@ export class DeskQrService {
           data: {
             key: DESK,
             token: newDeskToken(),
-            codeEmail: input.codeEmail,
             createdById: actorUserId,
           },
         });
-        await this.publish(tx, EVENT_TYPES.DeskQrCreated, row.id, actorUserId, {
-          codeEmail: row.codeEmail,
-        });
+        await this.publish(
+          tx,
+          EVENT_TYPES.DeskQrCreated,
+          row.id,
+          actorUserId,
+          {},
+        );
         return row.id;
       })
       .catch((err: unknown) => {
@@ -109,7 +104,6 @@ export class DeskQrService {
   /** Adopts the already-printed issuer QR so it keeps working; creates the desk QR or replaces its token. */
   async importV1(
     v1UrlOrToken: string,
-    codeEmail: string,
     actorUserId?: string,
   ): Promise<DeskQrView> {
     const token = parseV1Token(v1UrlOrToken);
@@ -120,44 +114,25 @@ export class DeskQrService {
         create: {
           key: DESK,
           token,
-          codeEmail,
           createdById: actorUserId ?? null,
         },
         update: {
           token,
-          codeEmail,
           isActive: true,
           disabledAt: null,
           tokenRotatedAt: new Date(),
         },
       });
-      await this.publish(tx, EVENT_TYPES.DeskQrImported, row.id, actorUserId, {
-        codeEmail,
-      });
+      await this.publish(
+        tx,
+        EVENT_TYPES.DeskQrImported,
+        row.id,
+        actorUserId,
+        {},
+      );
       return row.id;
     });
     return this.toView(await this.reload(id));
-  }
-
-  async update(
-    input: UpdateDeskQrInput,
-    actorUserId: string,
-  ): Promise<DeskQrView> {
-    const current = await this.findOrThrow();
-    await this.txm.run(async (tx) => {
-      await tx.deskQr.update({
-        where: { id: current.id },
-        data: { codeEmail: input.codeEmail },
-      });
-      await this.publish(
-        tx,
-        EVENT_TYPES.DeskQrUpdated,
-        current.id,
-        actorUserId,
-        { codeEmail: input.codeEmail },
-      );
-    });
-    return this.toView(await this.reload(current.id));
   }
 
   async rotate(actorUserId: string): Promise<DeskQrView> {

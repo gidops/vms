@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
   DeskQrFormSession,
   PublicRegistrationInput,
-  PublicRegistrationPending,
+  PublicRegistrationResult,
 } from "@vms/contracts";
 import { publicRegistrationApi } from "./desk-qr.api";
 
@@ -40,23 +40,9 @@ export function usePublicHostSearch(
 }
 
 export function useSubmitRegistration(token: string) {
-  return useMutation<
-    Timed<PublicRegistrationPending>,
-    unknown,
-    PublicRegistrationInput
-  >({
-    mutationFn: (input) => stamp(publicRegistrationApi.submit(token, input)),
-  });
-}
-
-export function useVerifyRegistration(token: string) {
-  return useMutation({
-    mutationFn: ({
-      registrationId,
-      code,
-    }: {
-      registrationId: string;
-      code: string;
-    }) => publicRegistrationApi.verify(token, registrationId, code),
-  });
+  return useMutation<PublicRegistrationResult, unknown, PublicRegistrationInput>(
+    {
+      mutationFn: (input) => publicRegistrationApi.submit(token, input),
+    },
+  );
 }

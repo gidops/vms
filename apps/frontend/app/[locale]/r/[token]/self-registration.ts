@@ -8,7 +8,6 @@ import {
   type PublicHostOption,
   type DeskQrFormSession,
   type PublicRegistrationInput,
-  type PublicRegistrationPending,
   type PublicRegistrationResult,
 } from "@vms/contracts";
 import type { Timed } from "@/data/desk-qr/public-registration.queries";
@@ -129,10 +128,8 @@ export function toRegistrationInput(
 export type RegistrationProblem =
   | "inactive"
   | "expired"
-  | "codeWrong"
-  | "tooManyTries"
+  | "rejected"
   | "rateLimited"
-  | "codeNotSent"
   | "invalid"
   | "offline"
   | "unknown";
@@ -145,14 +142,11 @@ export function problemOf(err: unknown): RegistrationProblem {
         return "inactive";
       case 410:
         return "expired";
+      // A forged/stale form token or a host who is no longer staff.
       case 422:
-        return "codeWrong";
-      case 423:
-        return "tooManyTries";
+        return "rejected";
       case 429:
         return "rateLimited";
-      case 503:
-        return "codeNotSent";
       case 400:
         return "invalid";
       default:
@@ -178,11 +172,9 @@ export function problemText(
 export type Step =
   | { kind: "form" }
   | { kind: "inactive" }
-  | { kind: "code"; pending: Timed<PublicRegistrationPending> }
   | { kind: "done"; result: PublicRegistrationResult }
   /** `timedOut`: the countdown ran out on this screen, so focus moves to the notice. */
-  | { kind: "expired"; timedOut?: boolean }
-  | { kind: "locked" };
+  | { kind: "expired"; timedOut?: boolean };
 
 /** What the screen shows: the step, unless opening or the form could not open. */
 export type Phase =

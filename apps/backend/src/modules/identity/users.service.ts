@@ -138,6 +138,12 @@ export class UsersService {
       include: {
         userRoles: { include: { role: true } },
         host: { select: { department: true, office: true } },
+        passwordResetTokens: {
+          where: { usedAt: null, expiresAt: { gt: new Date() } },
+          orderBy: { expiresAt: 'desc' },
+          take: 1,
+          select: { expiresAt: true },
+        },
       },
     });
     if (!user) throw new NotFoundException('User not found');
@@ -152,6 +158,7 @@ export class UsersService {
       isActive: user.isActive,
       roles: user.userRoles.map((ur) => ur.role.name),
       lastLoginAt: user.lastLoginAt,
+      resetLinkExpiresAt: user.passwordResetTokens[0]?.expiresAt ?? null,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       hostDepartment: user.host?.department ?? null,

@@ -8,9 +8,8 @@ import {
 
 export const VISIT_SOURCE_DESK_QR = "QR_SELF_REGISTER";
 
-/** Minutes a scanned form stays open, and a sent code stays valid. */
+/** Minutes a scanned form stays open. */
 export const DESK_QR_FORM_MINUTES = 10;
-export const DESK_QR_CODE_ATTEMPTS = 3;
 /** Accepts base64url and imported legacy hex tokens. */
 export const DESK_QR_TOKEN_RE = /^[A-Za-z0-9_-]{16,64}$/;
 
@@ -18,8 +17,6 @@ export const DeskQrView = z.object({
   id: z.string().uuid(),
   isActive: z.boolean(),
   url: z.string().url(),
-  /** Verification codes are emailed here. */
-  codeEmail: z.string().email(),
   scansToday: z.number().int().min(0),
   lastScanAt: z.coerce.date().nullable(),
   tokenRotatedAt: z.coerce.date(),
@@ -28,14 +25,6 @@ export const DeskQrView = z.object({
   createdByName: z.string().nullable(),
 });
 export type DeskQrView = z.infer<typeof DeskQrView>;
-
-export const CreateDeskQrInput = z.object({
-  codeEmail: z.string().trim().email().max(100),
-});
-export type CreateDeskQrInput = z.infer<typeof CreateDeskQrInput>;
-
-export const UpdateDeskQrInput = CreateDeskQrInput;
-export type UpdateDeskQrInput = z.infer<typeof UpdateDeskQrInput>;
 
 export const DeskQrFormSession = z.object({
   formToken: z.string(),
@@ -60,7 +49,7 @@ export const PublicHostSearchQuery = z.object({
 });
 export type PublicHostSearchQuery = z.infer<typeof PublicHostSearchQuery>;
 
-// Visitor-typed text lands in the reception inbox, so it must not carry links or markup.
+// Visitor-typed text shows up in staff screens and host emails, so it must not carry links or markup.
 const NAME_CHARS = /^[\p{L}\p{M} .'’-]+$/u;
 const ORGANIZATION_CHARS = /^[\p{L}\p{M}\p{N} .,'’&()-]+$/u;
 const LOOKS_LIKE_LINK =
@@ -114,22 +103,8 @@ export const PublicRegistrationInput = z
   });
 export type PublicRegistrationInput = z.infer<typeof PublicRegistrationInput>;
 
-export const PublicRegistrationPending = z.object({
-  registrationId: z.string().uuid(),
-  codeExpiresAt: z.coerce.date(),
-  secondsLeft: z.number().int().nonnegative(),
-});
-export type PublicRegistrationPending = z.infer<
-  typeof PublicRegistrationPending
->;
-
-export const VerifyRegistrationInput = z.object({
-  code: z.string().regex(/^\d{6}$/),
-});
-export type VerifyRegistrationInput = z.infer<typeof VerifyRegistrationInput>;
-
+/** Confirmation only: the visit's reference code stays server-side for reception. */
 export const PublicRegistrationResult = z.object({
-  referenceCode: z.string(),
   fullName: z.string(),
   hostName: z.string().nullable(),
   visitDate: z.coerce.date(),

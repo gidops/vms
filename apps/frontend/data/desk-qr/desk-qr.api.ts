@@ -1,12 +1,9 @@
 import type {
-  CreateDeskQrInput,
   DeskQrFormSession,
   DeskQrView,
   PublicHostOption,
   PublicRegistrationInput,
-  PublicRegistrationPending,
   PublicRegistrationResult,
-  UpdateDeskQrInput,
 } from "@vms/contracts";
 import { api, apiBlob, apiDownload } from "@/data/http/client";
 
@@ -16,11 +13,8 @@ export const deskQrApi = {
   async get(): Promise<DeskQrView | null> {
     return (await api<DeskQrView | null>(`/desk-qr`)) ?? null;
   },
-  create(input: CreateDeskQrInput) {
-    return api<DeskQrView>(`/desk-qr`, { method: "POST", body: input });
-  },
-  update(input: UpdateDeskQrInput) {
-    return api<DeskQrView>(`/desk-qr`, { method: "PATCH", body: input });
+  create() {
+    return api<DeskQrView>(`/desk-qr`, { method: "POST" });
   },
   rotate() {
     return api<DeskQrView>(`/desk-qr/rotate`, { method: "POST" });
@@ -54,16 +48,10 @@ export const publicRegistrationApi = {
     });
   },
   submit(token: string, input: PublicRegistrationInput) {
-    return api<PublicRegistrationPending>(`${pub(token)}/registrations`, {
+    return api<PublicRegistrationResult>(`${pub(token)}/registrations`, {
       method: "POST",
       body: input,
       auth: false,
     });
-  },
-  verify(token: string, registrationId: string, code: string) {
-    return api<PublicRegistrationResult>(
-      `${pub(token)}/registrations/${registrationId}/verify`,
-      { method: "POST", body: { code }, auth: false },
-    );
   },
 };

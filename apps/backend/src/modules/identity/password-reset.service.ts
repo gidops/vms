@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Injectable,
   NotFoundException,
   ServiceUnavailableException,
@@ -9,6 +11,7 @@ import { AuthProvider, NotificationChannel } from '@prisma/client';
 import type { Env } from '../../shared/config/env.schema';
 import {
   generateResetToken,
+  RESET_RESEND_COOLDOWN_MS,
   RESET_TOKEN_TTL_MS,
 } from '../../shared/auth/reset-token.util';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
@@ -56,6 +59,21 @@ export class PasswordResetService {
     if (!this.config.get('EMAIL_ENABLED', { infer: true })) {
       throw new ServiceUnavailableException(
         'Email delivery is disabled, so the reset link cannot be sent',
+      );
+    }
+    // Every send supersedes the last link and emails afresh, so repeated
+    // clicks only spam the inbox: enforce a short gap between sends.
+    const recent = await this.prisma.passwordResetToken.findFirst({
+      where: {
+        userId: user.id,
+        usedAt: null,
+        createdAt: { gt: new Date(Date.now() - RESET_RESEND_COOLDOWN_MS) },
+      },
+    });
+    if (recent) {
+      throw new HttpException(
+        'A reset link was just sent to this user — wait a minute before sending another',
+        HttpStatus.TOO_MANY_REQUESTS,
       );
     }
 

@@ -362,10 +362,8 @@ model Visit {
   evacuationAssistTypes String[]            @default([])
   evacuationAssistOther String?
   commsConsent          Boolean?
-  // Set when the visit came from the desk QR self-registration.
-  deskQrRegistration    DeskQrRegistration?
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   visitor    Visitor              @relation(fields: [visitorId], references: [id], onDelete: Cascade)
   host       Host?                @relation(fields: [hostId], references: [id], onDelete: Cascade)
@@ -592,8 +590,8 @@ model OutboxEvent {
 }
 
 /// The one QR printed at the VMC desk. Visitors scan it, fill in a short form
-/// and, once reception reads them the code emailed to `codeEmail`, become
-/// today's walk-ins. Only one row ever exists (`key` is always "desk").
+/// and immediately become today's walk-ins — no desk verification step.
+/// Only one row ever exists (`key` is always "desk").
 model DeskQr {
   id             String    @id @default(uuid())
   key            String    @unique @default("desk")
@@ -602,8 +600,6 @@ model DeskQr {
   token          String    @unique
   isActive       Boolean   @default(true)
   disabledAt     DateTime?
-  /// Verification codes go to this inbox (V1: the issuer's email).
-  codeEmail      String
   tokenRotatedAt DateTime  @default(now())
   /// Form opens in the WAT day `scanDay` (YYYY-MM-DD); resets on a new day.
   scanDay        String?
@@ -613,8 +609,7 @@ model DeskQr {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  createdBy     User?                @relation(fields: [createdById], references: [id], onDelete: SetNull)
-  registrations DeskQrRegistration[]
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
 }
 
 /// The gate kiosk link: a no-login device page (`/gate/<token>`) that checks
@@ -633,26 +628,6 @@ model GateKiosk {
   updatedAt      DateTime  @updatedAt
 
   createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
-}
-
-/// A submitted self-registration waiting for its desk code. The form is kept
-/// encrypted (it holds personal data) and the code only as a keyed hash. The
-/// visit is created when the right code is entered.
-model DeskQrRegistration {
-  id        String   @id @default(uuid())
-  deskQrId  String
-  /// EncryptionService ciphertext of the submitted form (JSON).
-  payload   String
-  codeHash  String
-  attempts  Int      @default(0)
-  expiresAt DateTime
-  visitId   String?  @unique
-  createdAt DateTime @default(now())
-
-  deskQr DeskQr @relation(fields: [deskQrId], references: [id], onDelete: Cascade)
-  visit  Visit? @relation(fields: [visitId], references: [id], onDelete: SetNull)
-
-  @@index([deskQrId, createdAt])
 }
 
 enum RfidCardStatus {
