@@ -9,11 +9,7 @@ import { LogEmailProvider } from './log.provider';
 import { SendgridProvider } from './sendgrid.provider';
 import { SmtpProvider } from './smtp.provider';
 
-/**
- * Email channel. Selects a provider by EMAIL_PROVIDER, falling back to a log
- * provider when the chosen one isn't configured, so enabling EMAIL never breaks
- * boot or the request path.
- */
+/** Falls back to a log provider when the chosen one isn't configured, so enabling EMAIL never breaks boot. */
 @Injectable()
 export class EmailTransport implements NotificationTransport {
   readonly channel = NotificationChannel.EMAIL;
@@ -31,13 +27,11 @@ export class EmailTransport implements NotificationTransport {
 
   private provider(): EmailProvider {
     const chosen = this.config.get('EMAIL_PROVIDER', { infer: true });
-    if (chosen === 'sendgrid' && this.sendgrid.isConfigured) {
-      return this.sendgrid;
+
+    if (chosen === 'sendgrid') {
+      return this.sendgrid.isConfigured ? this.sendgrid : this.log;
     }
-    if (chosen === 'smtp' && this.smtp.isConfigured) {
-      return this.smtp;
-    }
-    return this.log;
+    return this.smtp.isConfigured ? this.smtp : this.log;
   }
 
   private from(): string {

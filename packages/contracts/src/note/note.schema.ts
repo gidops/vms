@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-/** A freeform remark attached to a visit request or an alert. */
 export const Note = z.object({
   id: z.string().uuid(),
   visitId: z.string().uuid().nullable().optional(),
@@ -13,7 +12,7 @@ export const Note = z.object({
 });
 export type Note = z.infer<typeof Note>;
 
-/** Add a note to a visit or an alert (exactly one target). */
+/** Exactly one target. */
 export const AddNoteInput = z
   .object({
     visitId: z.string().uuid().optional(),

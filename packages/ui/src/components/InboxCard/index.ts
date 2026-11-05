@@ -1,1 +1,5 @@
-export { InboxCard, type InboxCardProps } from "./InboxCard";
+export {
+  InboxCard,
+  type InboxCardProps,
+  type InboxCardType,
+} from "./InboxCard";

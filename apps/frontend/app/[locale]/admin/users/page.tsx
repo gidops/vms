@@ -1,17 +1,19 @@
 "use client";
 
+import { PERMISSIONS } from "@vms/contracts";
 import {
   Badge,
   Button,
-  Checkbox,
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
   EmptyState,
-  Input,
-  Label,
+  FilterBar,
+  Pagination,
+  RecordTable,
+  SearchInput,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Spinner,
   Table,
   TableBody,
@@ -21,14 +23,23 @@ import {
   TableRow,
   TopNavShell,
 } from "@vms/ui";
-import { Trash2, Users } from "lucide-react";
+import { Users } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
 import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
-import { ApiError } from "@/data/http/client";
+import { RecordCard } from "@/app/[locale]/_components/RecordCard";
+import {
+  headerActionButton,
+  PageHeaderBar,
+} from "@/app/[locale]/_components/PageHeaderBar";
+import {
+  CreateUserDialog,
+  DeleteUserDialog,
+  EditRolesDialog,
+} from "@/app/[locale]/admin/_components/users/UserDialogs";
 import {
   useCreateUser,
-  useDeleteUser,
   useRoles,
   useUpdateUserRoles,
   useUsers,
@@ -37,422 +48,362 @@ import type { UserListItem } from "@/data/users/users.api";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
 import { roleLabel } from "@/shared/auth/roleLabels";
+import { useDebounced } from "@/shared/useDebounced";
+import { UserDetailDrawer } from "../_components/users/UserDetailDrawer";
+import { UserFormDrawer } from "../_components/users/UserFormDrawer";
 
-function RoleChecklist({
-  roles,
-  selected,
-  onToggle,
-}: {
-  roles: string[];
-  selected: Set<string>;
-  onToggle: (role: string) => void;
-}) {
-  const tRoles = useTranslations("roles");
-  return (
-    <div className="flex flex-col gap-2">
-      {roles.map((role) => (
-        <label key={role} className="flex items-center gap-2 text-sm text-fg">
-          <Checkbox
-            checked={selected.has(role)}
-            onCheckedChange={() => onToggle(role)}
-          />
-          {roleLabel(tRoles, role)}
-        </label>
-      ))}
-    </div>
-  );
-}
+const ALL = "all";
+const PAGE_SIZE = 10;
 
-function Users_() {
+/** `?layout=drawer` opens create/edit as a leading-edge drawer; read-only roles see the table only. */
+function UsersTab() {
   const t = useTranslations("users");
+  const tV2 = useTranslations("adminV2.users");
   const tRoles = useTranslations("roles");
+  const tCommon = useTranslations("common");
   const format = useFormatter();
-  const { user } = useAuth();
-  const { data, isLoading } = useUsers();
+  const drawer = useSearchParams().get("layout") === "drawer";
+  const { user, hasPermission } = useAuth();
+  const canCreate = hasPermission(PERMISSIONS.USER_CREATE);
+  const canUpdate = hasPermission(PERMISSIONS.USER_UPDATE);
+  const canDelete = hasPermission(PERMISSIONS.USER_DELETE);
+  const canResetPassword = hasPermission(PERMISSIONS.USER_RESET_PASSWORD);
+  const hasActions = canUpdate || canDelete;
+
+  const [search, setSearch] = React.useState("");
+  const [role, setRole] = React.useState(ALL);
+  const [status, setStatus] = React.useState(ALL);
+  const [page, setPage] = React.useState(1);
+  const [createOpen, setCreateOpen] = React.useState(false);
+  const [editing, setEditing] = React.useState<UserListItem | null>(null);
+  const [deleting, setDeleting] = React.useState<UserListItem | null>(null);
+  const [viewingId, setViewingId] = React.useState<string | null>(null);
+
+  // Search, filters and paging run server-side; debounce keeps typing cheap.
+  const debouncedSearch = useDebounced(search.trim());
+  const { data, isLoading } = useUsers({
+    page,
+    pageSize: PAGE_SIZE,
+    search: debouncedSearch || undefined,
+    role: role === ALL ? undefined : role,
+    status: status === ALL ? undefined : (status as "active" | "inactive"),
+  });
   const { data: roles = [] } = useRoles();
   const createUser = useCreateUser();
   const updateRoles = useUpdateUserRoles();
 
-  const [createOpen, setCreateOpen] = React.useState(false);
-  const [editing, setEditing] = React.useState<UserListItem | null>(null);
-  const [deleting, setDeleting] = React.useState<UserListItem | null>(null);
+  const rows = data?.items ?? [];
+  const totalPages = data?.totalPages ?? 1;
 
-  const items = data?.items ?? [];
+  const onCreate = (input: Parameters<typeof createUser.mutate>[0]) =>
+    createUser.mutate(input, { onSuccess: () => setCreateOpen(false) });
+  const onUpdateRoles = (id: string, next: string[]) =>
+    updateRoles.mutate(
+      { id, roles: next },
+      { onSuccess: () => setEditing(null) },
+    );
 
   return (
-    <TopNavShell nav={<AppTopNav />}>
+    <TopNavShell
+      nav={<AppTopNav app="admin" active="users" />}
+      filterBar={
+        <FilterBar
+          search={
+            <SearchInput
+              placeholder={tV2("searchPlaceholder")}
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              onClear={() => setSearch("")}
+            />
+          }
+          filtersLabel={tCommon("filters")}
+        >
+          <Select
+            value={role}
+            onValueChange={(v) => {
+              setRole(v);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>{tV2("allRoles")}</SelectItem>
+              {roles.map((r) => (
+                <SelectItem key={r} value={r}>
+                  {roleLabel(tRoles, r)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={status}
+            onValueChange={(v) => {
+              setStatus(v);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>{t("filters.allStatuses")}</SelectItem>
+              <SelectItem value="active">{t("active")}</SelectItem>
+              <SelectItem value="inactive">{t("inactive")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterBar>
+      }
+    >
       <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-3xl font-semibold text-primary">{t("title")}</h1>
-          <Button onClick={() => setCreateOpen(true)}>{t("newUser")}</Button>
-        </div>
+        <PageHeaderBar
+          title={t("title")}
+          actions={
+            canCreate ? (
+              <Button
+                size="sm"
+                className={headerActionButton}
+                onClick={() => setCreateOpen(true)}
+              >
+                {t("newUser")}
+              </Button>
+            ) : undefined
+          }
+        />
 
         {isLoading ? (
           <div className="flex justify-center py-16">
             <Spinner />
           </div>
-        ) : items.length === 0 ? (
+        ) : rows.length === 0 ? (
           <EmptyState icon={Users} title={t("empty")} />
         ) : (
-          <div className="overflow-hidden rounded-lg border border-border bg-surface">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("columns.user")}</TableHead>
-                  <TableHead>{t("columns.roles")}</TableHead>
-                  <TableHead>{t("columns.status")}</TableHead>
-                  <TableHead>{t("columns.created")}</TableHead>
-                  <TableHead>{t("columns.actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody striped>
-                {items.map((u) => (
-                  <TableRow key={u.id}>
-                    <TableCell>
-                      <span className="flex flex-col">
-                        <span className="font-medium text-fg">
-                          {u.fullName}
-                        </span>
-                        <span className="text-xs text-fg-muted">{u.email}</span>
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="flex flex-wrap gap-1">
-                        {u.roles.map((r) => (
-                          <Badge key={r} intent="primary" tone="soft">
-                            {roleLabel(tRoles, r)}
-                          </Badge>
-                        ))}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        intent={u.isActive ? "success" : "neutral"}
-                        tone="soft"
-                      >
-                        {u.isActive ? t("active") : t("inactive")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-fg-muted">
-                      {format.dateTime(new Date(u.createdAt), {
-                        dateStyle: "medium",
-                      })}
-                    </TableCell>
-                    <TableCell>
-                      <span className="flex items-center gap-2">
-                        <Button
-                          intent="neutral"
-                          tone="outline"
-                          size="sm"
-                          onClick={() => setEditing(u)}
-                        >
-                          {t("editRoles")}
-                        </Button>
-                        <Button
-                          intent="danger"
-                          tone="ghost"
-                          size="sm"
-                          aria-label={t("delete")}
-                          disabled={u.id === user?.id}
-                          onClick={() => setDeleting(u)}
-                        >
-                          <Trash2 className="size-4" aria-hidden="true" />
-                        </Button>
-                      </span>
-                    </TableCell>
+          <RecordTable
+            frameless
+            pagination={
+              totalPages > 1 ? (
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                />
+              ) : undefined
+            }
+          >
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader className="[&_tr]:border-t-0">
+                  <TableRow>
+                    <TableHead>{t("columns.user")}</TableHead>
+                    <TableHead>{t("columns.roles")}</TableHead>
+                    <TableHead>{t("columns.status")}</TableHead>
+                    <TableHead>{t("columns.created")}</TableHead>
+                    {hasActions ? (
+                      <TableHead>{t("columns.actions")}</TableHead>
+                    ) : null}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody striped>
+                  {rows.map((u) => (
+                    <TableRow
+                      key={u.id}
+                      className="cursor-pointer"
+                      onClick={() => setViewingId(u.id)}
+                    >
+                      <TableCell>
+                        <span className="flex flex-col">
+                          <span className="font-medium text-fg">
+                            {u.fullName}
+                          </span>
+                          <span className="text-xs text-fg-muted">
+                            {u.email}
+                          </span>
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="flex flex-wrap gap-1">
+                          {u.roles.map((r) => (
+                            <Badge key={r} intent="primary" tone="soft">
+                              {roleLabel(tRoles, r)}
+                            </Badge>
+                          ))}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          intent={u.isActive ? "success" : "neutral"}
+                          tone="soft"
+                        >
+                          {u.isActive ? t("active") : t("inactive")}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-fg-muted">
+                        {format.dateTime(new Date(u.createdAt), {
+                          dateStyle: "medium",
+                        })}
+                      </TableCell>
+                      {hasActions ? (
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <span className="flex items-center gap-2">
+                            {canUpdate ? (
+                              <Button
+                                intent="neutral"
+                                tone="outline"
+                                size="sm"
+                                className="min-w-28 text-xs"
+                                onClick={() => setEditing(u)}
+                              >
+                                {t("editRoles")}
+                              </Button>
+                            ) : null}
+                            {canDelete ? (
+                              <Button
+                                intent="danger"
+                                tone="outline"
+                                size="sm"
+                                className="min-w-28 text-xs"
+                                disabled={u.id === user?.id}
+                                onClick={() => setDeleting(u)}
+                              >
+                                {t("delete")}
+                              </Button>
+                            ) : null}
+                          </span>
+                        </TableCell>
+                      ) : null}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Small screens: each user as a tappable card. */}
+            <div className="flex flex-col gap-4 md:hidden">
+              {rows.map((u) => (
+                <RecordCard
+                  key={u.id}
+                  eyebrow={u.roles.map((r) => roleLabel(tRoles, r)).join(" · ")}
+                  title={u.fullName}
+                  subtitle={u.email}
+                  status={
+                    <Badge
+                      intent={u.isActive ? "success" : "neutral"}
+                      tone="soft"
+                    >
+                      {u.isActive ? t("active") : t("inactive")}
+                    </Badge>
+                  }
+                  footer={`${t("columns.created")} ${format.dateTime(
+                    new Date(u.createdAt),
+                    { dateStyle: "medium" },
+                  )}`}
+                  action={
+                    hasActions ? (
+                      <>
+                        {canUpdate ? (
+                          <Button
+                            intent="neutral"
+                            tone="outline"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => setEditing(u)}
+                          >
+                            {t("editRoles")}
+                          </Button>
+                        ) : null}
+                        {canDelete ? (
+                          <Button
+                            intent="danger"
+                            tone="outline"
+                            size="sm"
+                            className="bg-surface text-xs"
+                            disabled={u.id === user?.id}
+                            onClick={() => setDeleting(u)}
+                          >
+                            {t("delete")}
+                          </Button>
+                        ) : null}
+                      </>
+                    ) : undefined
+                  }
+                  onOpen={() => setViewingId(u.id)}
+                  openLabel={tV2("openFor", { name: u.fullName })}
+                />
+              ))}
+            </div>
+          </RecordTable>
         )}
       </div>
 
-      <CreateUserDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        roles={roles}
-        pending={createUser.isPending}
-        onSubmit={(input) =>
-          createUser.mutate(input, { onSuccess: () => setCreateOpen(false) })
-        }
-      />
-      <EditRolesDialog
-        user={editing}
-        onOpenChange={(open) => !open && setEditing(null)}
-        roles={roles}
-        pending={updateRoles.isPending}
-        onSubmit={(id, next) =>
-          updateRoles.mutate(
-            { id, roles: next },
-            { onSuccess: () => setEditing(null) },
-          )
-        }
-      />
+      {drawer ? (
+        <UserFormDrawer
+          creating={createOpen}
+          editing={editing}
+          roles={roles}
+          pending={createUser.isPending || updateRoles.isPending}
+          onClose={() => {
+            setCreateOpen(false);
+            setEditing(null);
+          }}
+          onCreate={onCreate}
+          onUpdateRoles={onUpdateRoles}
+        />
+      ) : (
+        <>
+          <CreateUserDialog
+            open={createOpen}
+            onOpenChange={setCreateOpen}
+            roles={roles}
+            pending={createUser.isPending}
+            onSubmit={onCreate}
+          />
+          <EditRolesDialog
+            user={editing}
+            onOpenChange={(open) => !open && setEditing(null)}
+            roles={roles}
+            pending={updateRoles.isPending}
+            onSubmit={onUpdateRoles}
+          />
+        </>
+      )}
       <DeleteUserDialog
         user={deleting}
         onOpenChange={(open) => !open && setDeleting(null)}
         onDeleted={() => setDeleting(null)}
       />
+      <UserDetailDrawer
+        userId={viewingId}
+        onClose={() => setViewingId(null)}
+        canUpdate={canUpdate}
+        canResetPassword={canResetPassword}
+        selfId={user?.id}
+      />
     </TopNavShell>
   );
 }
 
-/** Toggle helper shared by the create + edit forms. */
-function useRoleSelection(initial: string[]) {
-  const [selected, setSelected] = React.useState<Set<string>>(
-    () => new Set(initial),
-  );
-  const toggle = (role: string) =>
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(role)) next.delete(role);
-      else next.add(role);
-      return next;
-    });
-  return { selected, toggle };
-}
-
-function CreateUserDialog({
-  open,
-  onOpenChange,
-  roles,
-  pending,
-  onSubmit,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  roles: string[];
-  pending: boolean;
-  onSubmit: (input: {
-    email: string;
-    fullName: string;
-    password: string;
-    roles: string[];
-  }) => void;
-}) {
-  const t = useTranslations("users");
+/** Users are the System Admin's; anyone else gets a notice, not a 403. */
+function UsersGate() {
+  const tV2 = useTranslations("adminV2.users");
+  const { hasPermission } = useAuth();
+  if (hasPermission(PERMISSIONS.USER_READ)) return <UsersTab />;
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("newUser")}</DialogTitle>
-        </DialogHeader>
-        {/* Mounted only while open, so the form resets naturally on reopen. */}
-        <CreateUserForm roles={roles} pending={pending} onSubmit={onSubmit} />
-      </DialogContent>
-    </Dialog>
+    <TopNavShell nav={<AppTopNav app="admin" active="overview" />}>
+      <EmptyState icon={Users} title={tV2("noAccess")} />
+    </TopNavShell>
   );
 }
 
-function CreateUserForm({
-  roles,
-  pending,
-  onSubmit,
-}: {
-  roles: string[];
-  pending: boolean;
-  onSubmit: (input: {
-    email: string;
-    fullName: string;
-    password: string;
-    roles: string[];
-  }) => void;
-}) {
-  const t = useTranslations("users");
-  const [fullName, setFullName] = React.useState("");
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const { selected, toggle } = useRoleSelection([]);
-
-  return (
-    <form
-      className="flex flex-col gap-4"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (selected.size === 0) return;
-        onSubmit({ fullName, email, password, roles: [...selected] });
-      }}
-    >
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="cu-name">{t("form.fullName")}</Label>
-        <Input
-          id="cu-name"
-          required
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-        />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="cu-email">{t("form.email")}</Label>
-        <Input
-          id="cu-email"
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="cu-pw">{t("form.password")}</Label>
-        <Input
-          id="cu-pw"
-          type="password"
-          required
-          minLength={8}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label>{t("form.roles")}</Label>
-        <RoleChecklist roles={roles} selected={selected} onToggle={toggle} />
-      </div>
-      <DialogFooter>
-        <Button
-          type="submit"
-          disabled={pending || selected.size === 0}
-          fullWidth
-        >
-          {t("form.create")}
-        </Button>
-      </DialogFooter>
-    </form>
-  );
-}
-
-function EditRolesDialog({
-  user,
-  onOpenChange,
-  roles,
-  pending,
-  onSubmit,
-}: {
-  user: UserListItem | null;
-  onOpenChange: (open: boolean) => void;
-  roles: string[];
-  pending: boolean;
-  onSubmit: (id: string, roles: string[]) => void;
-}) {
-  const t = useTranslations("users");
-  return (
-    <Dialog open={!!user} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {t("editRolesFor", { name: user?.fullName ?? "" })}
-          </DialogTitle>
-        </DialogHeader>
-        {/* key remounts the form (fresh state) when a different user is edited. */}
-        {user ? (
-          <EditRolesForm
-            key={user.id}
-            initialRoles={user.roles}
-            roles={roles}
-            pending={pending}
-            onSubmit={(next) => onSubmit(user.id, next)}
-          />
-        ) : null}
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function EditRolesForm({
-  initialRoles,
-  roles,
-  pending,
-  onSubmit,
-}: {
-  initialRoles: string[];
-  roles: string[];
-  pending: boolean;
-  onSubmit: (roles: string[]) => void;
-}) {
-  const t = useTranslations("users");
-  const { selected, toggle } = useRoleSelection(initialRoles);
-  return (
-    <div className="flex flex-col gap-4">
-      <RoleChecklist roles={roles} selected={selected} onToggle={toggle} />
-      <DialogFooter>
-        <Button
-          disabled={pending || selected.size === 0}
-          fullWidth
-          onClick={() => onSubmit([...selected])}
-        >
-          {t("form.save")}
-        </Button>
-      </DialogFooter>
-    </div>
-  );
-}
-
-function DeleteUserDialog({
-  user,
-  onOpenChange,
-  onDeleted,
-}: {
-  user: UserListItem | null;
-  onOpenChange: (open: boolean) => void;
-  onDeleted: () => void;
-}) {
-  const t = useTranslations("users");
-  const deleteUser = useDeleteUser();
-  const [error, setError] = React.useState<string | null>(null);
-
-  function confirm() {
-    if (!user) return;
-    setError(null);
-    deleteUser.mutate(user.id, {
-      onSuccess: onDeleted,
-      onError: (e) =>
-        setError(e instanceof ApiError ? e.message : t("deleteError")),
-    });
-  }
-
-  return (
-    <Dialog
-      open={!!user}
-      onOpenChange={(open) => {
-        setError(null);
-        onOpenChange(open);
-      }}
-    >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("deleteConfirmTitle")}</DialogTitle>
-        </DialogHeader>
-        <div className="flex flex-col gap-4">
-          <p className="text-sm text-fg-muted">
-            {t("deleteConfirmBody", { name: user?.fullName ?? "" })}
-          </p>
-          {error ? <p className="text-sm text-danger">{error}</p> : null}
-          <DialogFooter>
-            <Button
-              intent="neutral"
-              tone="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              {t("form.cancel")}
-            </Button>
-            <Button
-              intent="danger"
-              disabled={deleteUser.isPending}
-              onClick={confirm}
-            >
-              {t("delete")}
-            </Button>
-          </DialogFooter>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-export default function UsersPage() {
+export default function AdminUsersPage() {
   return (
     <RouteGuard home="/admin">
-      <Users_ />
+      <React.Suspense>
+        <UsersGate />
+      </React.Suspense>
     </RouteGuard>
   );
 }

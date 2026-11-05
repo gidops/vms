@@ -9,6 +9,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard, PermissionsGuard } from './guards';
 import { JwtStrategy } from './jwt.strategy';
+import { RateLimitGuard } from '../rate-limit/rate-limit.guard';
 import { LocalAuthProvider } from './local-auth.provider';
 import { PasswordService } from './password.service';
 import { RefreshTokenService } from './refresh.service';
@@ -32,7 +33,7 @@ import { TokenService } from './token.service';
     RefreshTokenService,
     JwtStrategy,
     SeederService,
-    // Global auth (with @Public opt-out) then global permission enforcement.
+    RateLimitGuard,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: PermissionsGuard },
   ],

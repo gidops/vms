@@ -22,7 +22,7 @@ export const Default: Story = {
     <Card className="w-80">
       <CardHeader>
         <CardTitle>Visit Request</CardTitle>
-        <CardDescription>Awaiting CSO approval</CardDescription>
+        <CardDescription>Awaiting SM approval</CardDescription>
       </CardHeader>
       <CardContent className="text-sm text-fg-muted">
         Judith Francis · 12th floor · 2 Mar, 9:42 AM

@@ -1,0 +1,419 @@
+import { Injectable } from '@nestjs/common';
+import { normalizeConsentEmail, type ExportVisitsQuery } from '@vms/contracts';
+import ExcelJS from 'exceljs';
+import PDFDocument from 'pdfkit';
+import { randomUUID } from 'node:crypto';
+import type { Writable } from 'node:stream';
+import { PrismaService } from '../../prisma/prisma.service';
+import { CSV_BOM, toCsvRow } from '../../shared/common/csv';
+import { WAT_OFFSET_MS, formatWat, watDayRange } from '../../shared/common/wat';
+import { EVENT_TYPES } from '../../shared/events/domain-event';
+import { EventPublisher } from '../../shared/events/event-publisher';
+import { TransactionManager } from '../../shared/events/transaction.manager';
+import { latestConsent } from '../consent/latest-consent';
+import { evacuationAssistLabel } from './helpers/evacuation-assist';
+import { identityAtVisit } from './helpers/visit-identity';
+
+const BATCH = 500;
+
+export const EXPORT_COLUMNS = [
+  'Reference code',
+  'Visitor',
+  'Email',
+  'Phone',
+  'Organization',
+  'Host',
+  'Visit type',
+  'Channel',
+  'Status',
+  'Visit date',
+  'Check-in time',
+  'Check-out time',
+  'Floor',
+  'Purpose',
+  'Group name',
+  'Badge',
+  'Evacuation assist',
+  'Evacuation assistance',
+  // Current status (latest answer wins), so a later opt-out is never mailed from an old export.
+  'Email consent',
+  'Email status',
+  'Created by',
+] as const;
+
+/** Columns that fit landscape A4 (indexes into EXPORT_COLUMNS; widths sum to 770pt). */
+const PDF_COLUMNS: { col: number; width: number }[] = [
+  { col: 0, width: 62 }, // Reference code
+  { col: 1, width: 100 }, // Visitor
+  { col: 4, width: 100 }, // Organization
+  { col: 5, width: 90 }, // Host
+  { col: 6, width: 58 }, // Visit type
+  { col: 8, width: 66 }, // Status
+  { col: 9, width: 74 }, // Visit date
+  { col: 10, width: 74 }, // Check-in time
+  { col: 11, width: 74 }, // Check-out time
+  { col: 12, width: 72 }, // Floor
+];
+const PDF_MARGIN = 36;
+const PDF_ROW_HEIGHT = 16;
+
+const TYPE_LABEL: Record<string, string> = {
+  WALK_IN: 'Walk-in',
+  PRE_INVITED: 'Invite',
+  APPOINTMENT: 'Appointment',
+};
+
+export function channelLabel(source: string | null): string {
+  switch (source) {
+    case 'VMC_STATION':
+    case null:
+      return 'VMC';
+    case 'QR_SELF_REGISTER':
+      return 'QR';
+    case 'STAFF':
+      return 'Staff';
+    default:
+      return source;
+  }
+}
+
+function yesNo(v: boolean | null): string {
+  if (v === null) return 'Not asked';
+  return v ? 'Yes' : 'No';
+}
+
+/** SENT means accepted by the provider. */
+function emailStatusLabel(status: string | undefined): string {
+  if (!status) return '';
+  if (status === 'SENT') return 'Sent';
+  if (status === 'FAILED') return 'Failed';
+  return 'Queued';
+}
+
+/** UTC fields read as WAT wall-clock, since Excel dates have no zone. */
+function asWatWallClock(d: Date | null): Date | null {
+  return d ? new Date(d.getTime() + WAT_OFFSET_MS) : null;
+}
+
+type ExportVisit = Awaited<
+  ReturnType<VisitExportService['fetchBatch']>
+>[number];
+
+/** Audited before the first byte and again on completion/failure, so aborted downloads still leave a trace. */
+@Injectable()
+export class VisitExportService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly txm: TransactionManager,
+    private readonly events: EventPublisher,
+  ) {}
+
+  filename(q: ExportVisitsQuery): string {
+    return `aatc-visitors_${q.from}_${q.to}.${q.format}`;
+  }
+
+  contentType(q: ExportVisitsQuery): string {
+    switch (q.format) {
+      case 'xlsx':
+        return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      case 'pdf':
+        return 'application/pdf';
+      default:
+        return 'text/csv; charset=utf-8';
+    }
+  }
+
+  fetchBatch(range: { gte: Date; lt: Date }, cursor?: string) {
+    return this.prisma.visit.findMany({
+      where: { scheduledAt: range },
+      include: {
+        visitor: true,
+        host: { include: { user: true } },
+        pass: { include: { accessCard: true } },
+      },
+      orderBy: [{ scheduledAt: 'asc' }, { id: 'asc' }],
+      take: BATCH,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+    });
+  }
+
+  private async emailStatuses(ids: string[]): Promise<Map<string, string>> {
+    if (ids.length === 0) return new Map();
+    const rows = await this.prisma.notification.findMany({
+      where: { visitId: { in: ids }, channel: 'EMAIL' },
+      select: { visitId: true, status: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    const out = new Map<string, string>();
+    for (const r of rows) {
+      if (r.visitId && !out.has(r.visitId)) out.set(r.visitId, r.status);
+    }
+    return out;
+  }
+
+  toRow(
+    v: ExportVisit,
+    emailStatus?: string,
+    consent: boolean | null = null,
+  ): (string | Date | null)[] {
+    const card = v.pass?.accessCard;
+    return [
+      v.referenceCode ?? '',
+      identityAtVisit(v).fullName,
+      v.visitor.email,
+      v.visitor.phone ?? '',
+      identityAtVisit(v).organization ?? '',
+      v.host?.user.fullName ?? '',
+      TYPE_LABEL[v.type] ?? v.type,
+      channelLabel(v.source),
+      v.status,
+      asWatWallClock(v.scheduledAt),
+      asWatWallClock(v.checkInAt),
+      asWatWallClock(v.checkOutAt),
+      v.floor ?? '',
+      v.purpose,
+      v.groupName ?? '',
+      card ? [card.zone, card.cardNumber].filter(Boolean).join(' · ') : '',
+      yesNo(v.needsEvacuationAssist),
+      evacuationAssistLabel(v.evacuationAssistTypes, v.evacuationAssistOther),
+      yesNo(consent),
+      emailStatusLabel(emailStatus),
+      v.createdByName ?? '',
+    ];
+  }
+
+  /** Stops querying as soon as the client has gone, instead of reading up to a year of visits for nobody. */
+  private async *batches(q: ExportVisitsQuery, out: Writable) {
+    const range = watDayRange(q.from, q.to);
+    let cursor: string | undefined;
+    for (;;) {
+      if (out.destroyed) throw new ExportAbortedError();
+      const batch = await this.fetchBatch(range, cursor);
+      if (batch.length === 0) return;
+      const [statuses, consent] = await Promise.all([
+        this.emailStatuses(batch.map((v) => v.id)),
+        latestConsent(
+          this.prisma,
+          batch.map((v) => v.visitor.email),
+        ),
+      ]);
+      yield batch.map((v) =>
+        this.toRow(
+          v,
+          statuses.get(v.id),
+          consent.get(normalizeConsentEmail(v.visitor.email)) ?? null,
+        ),
+      );
+      if (batch.length < BATCH) return;
+      cursor = batch[batch.length - 1].id;
+    }
+  }
+
+  private audit(
+    type: (typeof EVENT_TYPES)[
+      | 'VisitsExportStarted'
+      | 'VisitsExported'
+      | 'VisitsExportFailed'],
+    exportId: string,
+    payload: Record<string, unknown>,
+    actorUserId: string,
+  ) {
+    return this.txm.run((tx) =>
+      this.events.publish(tx, {
+        type,
+        aggregateType: 'Report',
+        aggregateId: exportId,
+        payload,
+        metadata: { actorUserId },
+      }),
+    );
+  }
+
+  /** If the start can't be audited, nothing is sent. */
+  async write(
+    q: ExportVisitsQuery,
+    out: Writable,
+    actorUserId: string,
+  ): Promise<number> {
+    const exportId = randomUUID();
+    const range = { from: q.from, to: q.to, format: q.format };
+    await this.audit(
+      EVENT_TYPES.VisitsExportStarted,
+      exportId,
+      range,
+      actorUserId,
+    );
+    let rowCount = 0;
+    try {
+      await this.stream(q, out, (n) => (rowCount += n));
+    } catch (err) {
+      await this.audit(
+        EVENT_TYPES.VisitsExportFailed,
+        exportId,
+        { ...range, rowCount },
+        actorUserId,
+      ).catch(() => undefined); // keep the original error
+      throw err;
+    }
+    await this.audit(
+      EVENT_TYPES.VisitsExported,
+      exportId,
+      { ...range, rowCount },
+      actorUserId,
+    );
+    return rowCount;
+  }
+
+  private async stream(
+    q: ExportVisitsQuery,
+    out: Writable,
+    add: (rows: number) => void,
+  ): Promise<void> {
+    if (q.format === 'pdf') {
+      await this.streamPdf(q, out, add);
+    } else if (q.format === 'xlsx') {
+      const wb = new ExcelJS.stream.xlsx.WorkbookWriter({
+        stream: out,
+        useStyles: true,
+      });
+      const ws = wb.addWorksheet('Visitors');
+      ws.columns = EXPORT_COLUMNS.map((header, i) => ({
+        header,
+        width: i >= 9 && i <= 11 ? 18 : 20,
+        ...(i >= 9 && i <= 11 ? { style: { numFmt: 'yyyy-mm-dd hh:mm' } } : {}),
+      }));
+      ws.getRow(1).font = { bold: true };
+      ws.getRow(1).commit();
+      for await (const rows of this.batches(q, out)) {
+        for (const r of rows) ws.addRow(r).commit();
+        add(rows.length);
+      }
+      ws.commit();
+      await wb.commit();
+    } else {
+      await writeChunk(out, CSV_BOM + toCsvRow([...EXPORT_COLUMNS]));
+      for await (const rows of this.batches(q, out)) {
+        await writeChunk(
+          out,
+          rows
+            .map((r) =>
+              toCsvRow(
+                r.map((c) =>
+                  c instanceof Date
+                    ? formatWat(new Date(c.getTime() - WAT_OFFSET_MS))
+                    : c,
+                ),
+              ),
+            )
+            .join(''),
+        );
+        add(rows.length);
+      }
+      out.end();
+    }
+  }
+
+  private async streamPdf(
+    q: ExportVisitsQuery,
+    out: Writable,
+    add: (rows: number) => void,
+  ): Promise<void> {
+    const doc = new PDFDocument({
+      size: 'A4',
+      layout: 'landscape',
+      margin: PDF_MARGIN,
+      info: { Title: `AATC visitors ${q.from} to ${q.to}` },
+    });
+    const done = new Promise<void>((resolve, reject) => {
+      out.on('finish', resolve);
+      out.on('error', reject);
+    });
+    doc.pipe(out);
+    const bottom = doc.page.height - PDF_MARGIN;
+
+    const drawRow = (cells: string[], bold: boolean) => {
+      if (doc.y + PDF_ROW_HEIGHT > bottom) {
+        doc.addPage();
+        drawHeader();
+      }
+      const y = doc.y;
+      let x = PDF_MARGIN;
+      doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(7);
+      PDF_COLUMNS.forEach(({ width }, i) => {
+        doc.text(cells[i] ?? '', x + 2, y + 4, {
+          width: width - 4,
+          height: PDF_ROW_HEIGHT - 4,
+          ellipsis: true,
+          lineBreak: false,
+        });
+        x += width;
+      });
+      doc
+        .moveTo(PDF_MARGIN, y + PDF_ROW_HEIGHT)
+        .lineTo(x, y + PDF_ROW_HEIGHT)
+        .lineWidth(0.3)
+        .strokeColor('#cccccc')
+        .stroke();
+      doc.x = PDF_MARGIN;
+      doc.y = y + PDF_ROW_HEIGHT;
+    };
+    const drawHeader = () =>
+      drawRow(
+        PDF_COLUMNS.map(({ col }) => EXPORT_COLUMNS[col]),
+        true,
+      );
+
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(13)
+      .text(`AATC visitors — ${q.from} to ${q.to} (WAT)`);
+    doc.moveDown(0.5);
+    drawHeader();
+    let total = 0;
+    for await (const rows of this.batches(q, out)) {
+      for (const r of rows) {
+        drawRow(
+          PDF_COLUMNS.map(({ col }) => {
+            const c = r[col];
+            return c instanceof Date
+              ? formatWat(new Date(c.getTime() - WAT_OFFSET_MS))
+              : (c ?? '');
+          }),
+          false,
+        );
+      }
+      total += rows.length;
+      add(rows.length);
+    }
+    if (total === 0) {
+      doc
+        .moveDown()
+        .font('Helvetica')
+        .fontSize(9)
+        .text('No visits in this range.');
+    }
+    doc.end();
+    await done;
+  }
+}
+
+export class ExportAbortedError extends Error {
+  constructor() {
+    super('Export stopped: the client disconnected');
+  }
+}
+
+/** Waits for the client to drain a full buffer (or for the connection to close) before writing more. */
+async function writeChunk(out: Writable, chunk: string): Promise<void> {
+  if (out.destroyed) throw new ExportAbortedError();
+  if (out.write(chunk)) return;
+  await new Promise<void>((resolve) => {
+    const done = () => {
+      out.off('drain', done);
+      out.off('close', done);
+      resolve();
+    };
+    out.once('drain', done);
+    out.once('close', done);
+  });
+}

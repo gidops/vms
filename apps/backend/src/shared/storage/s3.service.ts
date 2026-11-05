@@ -1,4 +1,8 @@
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -12,11 +16,9 @@ const EXT_BY_TYPE: Record<AvatarContentType, string> = {
   'image/webp': 'webp',
 };
 
-/**
- * Issues presigned S3 PUT URLs for direct browser uploads. Credentials come
- * from the AWS default provider chain (env vars in dev, the EC2 instance role
- * in prod). Only the object key is persisted by callers — never the URL.
- */
+export const VISITOR_PHOTO_PREFIX = 'visitor-photos/';
+
+/** Callers persist only the object key, never the URL. */
 @Injectable()
 export class S3Service {
   private readonly client: S3Client;
@@ -31,9 +33,30 @@ export class S3Service {
     return Boolean(this.config.get('S3_BUCKET', { infer: true }));
   }
 
-  /** Presign an avatar upload for a user. Throws 400 if S3 isn't configured. */
-  async presignAvatar(
+  presignAvatar(
     userId: string,
+    contentType: AvatarContentType,
+  ): Promise<PresignResult> {
+    return this.presignPut(`avatars/${userId}/`, contentType);
+  }
+
+  /** Personal data: read back only through {@link presignGet}, never a public URL. */
+  presignVisitorPhoto(contentType: AvatarContentType): Promise<PresignResult> {
+    return this.presignPut(VISITOR_PHOTO_PREFIX, contentType);
+  }
+
+  async presignGet(key: string): Promise<string | null> {
+    const bucket = this.config.get('S3_BUCKET', { infer: true });
+    if (!bucket) return null;
+    return getSignedUrl(
+      this.client,
+      new GetObjectCommand({ Bucket: bucket, Key: key }),
+      { expiresIn: this.config.get('S3_PRESIGN_EXPIRY', { infer: true }) },
+    );
+  }
+
+  private async presignPut(
+    prefix: string,
     contentType: AvatarContentType,
   ): Promise<PresignResult> {
     const bucket = this.config.get('S3_BUCKET', { infer: true });
@@ -42,7 +65,7 @@ export class S3Service {
         'Image uploads are not configured (missing S3_BUCKET).',
       );
     }
-    const key = `avatars/${userId}/${randomUUID()}.${EXT_BY_TYPE[contentType]}`;
+    const key = `${prefix}${randomUUID()}.${EXT_BY_TYPE[contentType]}`;
     const uploadUrl = await getSignedUrl(
       this.client,
       new PutObjectCommand({

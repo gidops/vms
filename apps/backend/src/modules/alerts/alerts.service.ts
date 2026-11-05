@@ -8,10 +8,17 @@ import { TransactionManager } from '../../shared/events/transaction.manager';
 
 const detailInclude = Prisma.validator<Prisma.AlertInclude>()({
   visitor: true,
+  visit: { include: { host: { include: { user: true } } } },
   notes: { include: { author: true }, orderBy: { createdAt: 'asc' } },
 });
 
 type AlertDetailRow = Prisma.AlertGetPayload<{ include: typeof detailInclude }>;
+
+function isVisitOwner(alert: AlertDetailRow, userId: string): boolean {
+  return (
+    alert.visit?.createdById === userId || alert.visit?.host?.userId === userId
+  );
+}
 
 @Injectable()
 export class AlertsService {
@@ -21,12 +28,15 @@ export class AlertsService {
     private readonly events: EventPublisher,
   ) {}
 
-  async getDetail(id: string): Promise<AlertWithVisitor> {
+  /** `ownerUserId` scopes to visits that user created or hosts; others read as not found so existence isn't confirmed. */
+  async getDetail(id: string, ownerUserId?: string): Promise<AlertWithVisitor> {
     const alert = await this.prisma.alert.findUnique({
       where: { id },
       include: detailInclude,
     });
-    if (!alert) throw new NotFoundException('Alert not found');
+    if (!alert || (ownerUserId && !isVisitOwner(alert, ownerUserId))) {
+      throw new NotFoundException('Alert not found');
+    }
     return this.toDetail(alert);
   }
 
@@ -35,29 +45,72 @@ export class AlertsService {
     input: UpdateAlertStatusInput,
     actorUserId: string,
   ): Promise<AlertWithVisitor> {
-    const count = await this.prisma.alert.count({ where: { id } });
-    if (count === 0) throw new NotFoundException('Alert not found');
+    const alert = await this.prisma.alert.findUnique({
+      where: { id },
+      select: { id: true, visitId: true, type: true },
+    });
+    if (!alert) throw new NotFoundException('Alert not found');
+    const closing = input.status === 'RESOLVED' || input.status === 'DISMISSED';
 
     await this.txm.run(async (tx) => {
       await tx.alert.update({
         where: { id },
         data: {
           status: input.status,
-          resolvedById:
-            input.status === 'RESOLVED' || input.status === 'DISMISSED'
-              ? actorUserId
-              : null,
+          resolvedById: closing ? actorUserId : null,
         },
       });
+      // Lift the visit hold once no other open alert of the matching kind remains.
+      if (closing && alert.visitId) {
+        await this.clearVisitHold(tx, alert.visitId);
+      }
       await this.events.publish(tx, {
         type: EVENT_TYPES.AlertUpdated,
         aggregateType: 'Alert',
         aggregateId: id,
-        payload: { alertId: id, status: input.status },
+        payload: { alertId: id, status: input.status, visitId: alert.visitId },
         metadata: { actorUserId },
       });
     });
     return this.getDetail(id);
+  }
+
+  /** FLAGGED → APPROVED, REVIEW_REQUESTED → PENDING, once no open alert of that kind remains. */
+  private async clearVisitHold(
+    tx: Prisma.TransactionClient,
+    visitId: string,
+  ): Promise<void> {
+    const visit = await tx.visit.findUnique({
+      where: { id: visitId },
+      select: { status: true },
+    });
+    if (!visit) return;
+
+    if (visit.status === 'FLAGGED') {
+      const remaining = await tx.alert.count({
+        where: {
+          visitId,
+          status: 'OPEN',
+          type: { in: ['SECURITY_REVIEW', 'RESTRICTED_MATCH'] },
+        },
+      });
+      if (remaining === 0) {
+        await tx.visit.update({
+          where: { id: visitId },
+          data: { status: 'APPROVED' },
+        });
+      }
+    } else if (visit.status === 'REVIEW_REQUESTED') {
+      const remaining = await tx.alert.count({
+        where: { visitId, status: 'OPEN', type: 'ADDITIONAL_INFO' },
+      });
+      if (remaining === 0) {
+        await tx.visit.update({
+          where: { id: visitId },
+          data: { status: 'PENDING' },
+        });
+      }
+    }
   }
 
   private toDetail(alert: AlertDetailRow): AlertWithVisitor {
@@ -65,6 +118,7 @@ export class AlertsService {
       id: alert.id,
       visitId: alert.visitId,
       visitorId: alert.visitorId,
+      type: alert.type,
       level: alert.level,
       status: alert.status,
       reason: alert.reason,
@@ -74,6 +128,14 @@ export class AlertsService {
       createdAt: alert.createdAt,
       updatedAt: alert.updatedAt,
       visitor: alert.visitor,
+      visit: alert.visit
+        ? {
+            hostName: alert.visit.host?.user.fullName ?? null,
+            hostUnit: alert.visit.host?.department ?? null,
+            floor: alert.visit.floor,
+            scheduledAt: alert.visit.scheduledAt,
+          }
+        : null,
       notes: alert.notes.map((note) => ({
         id: note.id,
         visitId: note.visitId,

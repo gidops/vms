@@ -1,0 +1,117 @@
+"use client";
+
+import type { VisitStatus, VisitType } from "@vms/contracts";
+import { VISIT_PURPOSES } from "@vms/contracts";
+import {
+  Button,
+  FilterBar,
+  SearchInput,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@vms/ui";
+import { useTranslations } from "next-intl";
+
+const STATUSES: VisitStatus[] = [
+  "PENDING",
+  "REVIEW_REQUESTED",
+  "APPROVED",
+  "CHECKED_IN",
+  "CHECKED_OUT",
+  "DENIED",
+  "CANCELLED",
+  "EXPIRED",
+];
+
+const TYPES: VisitType[] = ["PRE_INVITED", "WALK_IN", "APPOINTMENT"];
+
+export interface VisitFiltersValue {
+  search: string;
+  status: VisitStatus | "all";
+  type: VisitType | "all";
+  purpose: string;
+}
+
+/** Controlled; with `onSearch`, Search / Enter flush the term to the server, otherwise callers filter locally. */
+export function VisitFilters({
+  value,
+  onChange,
+  onSearch,
+}: {
+  value: VisitFiltersValue;
+  onChange: (patch: Partial<VisitFiltersValue>) => void;
+  onSearch?: () => void;
+}) {
+  const t = useTranslations("staff");
+  const tCommon = useTranslations("common");
+  const tDash = useTranslations("dashboard");
+
+  return (
+    <FilterBar
+      search={
+        <SearchInput
+          value={value.search}
+          onChange={(e) => onChange({ search: e.target.value })}
+          onClear={() => onChange({ search: "" })}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onSearch?.();
+          }}
+          placeholder={t("filters.searchPlaceholder")}
+        />
+      }
+      filtersLabel={tCommon("filters")}
+      actions={<Button onClick={onSearch}>{tDash("filters.search")}</Button>}
+    >
+      <Select
+        value={value.status}
+        onValueChange={(v) => onChange({ status: v as VisitStatus | "all" })}
+      >
+        <SelectTrigger className="w-44">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">{tCommon("allStatus")}</SelectItem>
+          {STATUSES.map((s) => (
+            <SelectItem key={s} value={s}>
+              {t(`status.${s}`)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={value.type}
+        onValueChange={(v) => onChange({ type: v as VisitType | "all" })}
+      >
+        <SelectTrigger className="w-44">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">{tDash("filters.allVisitTypes")}</SelectItem>
+          {TYPES.map((ty) => (
+            <SelectItem key={ty} value={ty}>
+              {t(`visitType.${ty}`)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={value.purpose}
+        onValueChange={(v) => onChange({ purpose: v })}
+      >
+        <SelectTrigger className="w-44">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">{tDash("filters.allPurpose")}</SelectItem>
+          {VISIT_PURPOSES.map((p) => (
+            <SelectItem key={p} value={p}>
+              {p}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </FilterBar>
+  );
+}

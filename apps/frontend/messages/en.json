@@ -3,18 +3,36 @@
     "name": "AATC VMS"
   },
   "nav": {
+    "home": "Home",
     "schedule": "Today's Schedule",
     "myVisits": "My Visits",
     "requests": "Requests & Alerts",
+    "updates": "Updates",
     "visitors": "Visitors",
     "switchAccount": "Switch Account",
     "accountSettings": "Account Settings",
-    "help": "Help/Support",
-    "logout": "Logout"
+    "logout": "Logout",
+    "notifications": "Notifications",
+    "notificationsUnread": "Notifications, {count} unread",
+    "overview": "Overview",
+    "pendingApprovals": "Pending Approvals",
+    "recentActivity": "Recent Activity",
+    "users": "Users",
+    "analytics": "Analytics",
+    "evacuation": "Evacuation",
+    "optIns": "Opt-ins",
+    "deskQr": "Walk-in QR",
+    "insights": "Insights",
+    "operations": "Operations",
+    "accountMenu": "Account menu",
+    "approvalsShort": "Approvals",
+    "activityShort": "Activity",
+    "sections": "Sections"
   },
   "login": {
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "title": "Sign in",
-    "subtitle": "Access the Visitor Management System",
     "email": "Email",
     "emailPlaceholder": "name@aatc.org",
     "password": "Password",
@@ -24,8 +42,7 @@
     "signingIn": "Signing in…",
     "error": "Invalid email or password.",
     "or": "or",
-    "okta": "Login with Okta SSO",
-    "createFirstAdmin": "Set up the first admin account"
+    "okta": "Login with Okta SSO"
   },
   "dashboard": {
     "hub": "VMC HUB",
@@ -36,7 +53,12 @@
       "searchPlaceholder": "Search visitor, host, floor, pass id",
       "allVisitTypes": "All Visit types",
       "allPurpose": "All Purpose",
-      "search": "Search"
+      "search": "Search",
+      "status": {
+        "APPROVED": "Expected",
+        "CHECKED_IN": "Onsite",
+        "CHECKED_OUT": "Checked out"
+      }
     },
     "stats": {
       "onsite": "Onsite Visitors",
@@ -47,8 +69,8 @@
       "title": "Quick actions",
       "registerWalkIn": "Register Walk-In",
       "newInvite": "New Invite Request",
-      "formComingSoonTitle": "Coming soon",
-      "formComingSoon": "This form is being built and will be available shortly."
+      "registerWalkInShort": "Walk-in",
+      "newInviteShort": "New Invite"
     },
     "activity": {
       "title": "View your activity"
@@ -60,7 +82,8 @@
     },
     "channel": {
       "invited": "Invited",
-      "walkIn": "Walk-in"
+      "walkIn": "Walk-in",
+      "qr": "QR"
     },
     "actions": {
       "checkIn": "Check-In",
@@ -68,39 +91,62 @@
       "viewDetails": "View Details"
     },
     "columns": {
-      "visitor": "Visitor",
+      "visitor": "Guest",
       "channel": "Channel",
       "hostUnit": "Host / Floor / Unit",
       "purpose": "Purpose",
       "timeCreated": "Time Created",
       "status": "Status",
-      "action": "Action"
+      "action": "Action",
+      "guestCount": "No of Guest"
+    },
+    "guestCount": "{count, plural, one {# Guest} other {# Guests}}",
+    "onsiteElapsed": "{time} hr",
+    "noVisits": "No visits to show.",
+    "noMatches": "No visits match your search or filters.",
+    "card": {
+      "invitedGuest": "Invited Guest",
+      "walkInGuest": "Walk-in Guest",
+      "openFor": "View details for {name}"
     }
   },
   "common": {
     "notifications": "Notifications",
     "logout": "Log out",
-    "allStatus": "All Status"
+    "allStatus": "All Status",
+    "noAccess": "You don't have access to this page.",
+    "countryDialCode": "Country dialling code",
+    "previousGuest": "Previous guest",
+    "nextGuest": "Next guest",
+    "previousVisitor": "Previous visitor",
+    "nextVisitor": "Next visitor",
+    "filters": "Filters"
   },
   "requests": {
     "title": "Requests & Alerts",
-    "tabs": { "all": "All", "requests": "Requests", "alerts": "Alerts" },
+    "tabs": {
+      "all": "All",
+      "requests": "Requests",
+      "alerts": "Alerts",
+      "cards": "Cards"
+    },
     "typeRequest": "Visit Request",
     "typeAlert": "Alerts",
     "createdBy": "Created by",
     "notesCount": "{count} notes",
     "empty": "No requests or alerts",
-    "detailTitle": "Visit Request Details",
-    "alertDetailTitle": "Alert Details",
-    "visitorAwaiting": "Awaiting Approval",
-    "vmcReception": "VMC Reception",
+    "detailTitle": "Visit Details",
     "noNotes": "No remarks yet.",
-    "addNotePlaceholder": "Add a note…",
+    "addNotePlaceholder": "Start typing",
+    "addingNote": "Adding note",
+    "sendCode": "Send CODE to guest",
+    "codeSent": "Code sent",
+    "notAssigned": "Not Assigned",
     "status": {
-      "awaitingApproval": "Awaiting CSO Approval",
+      "awaitingApproval": "Awaiting SM Approval",
       "needsMoreInfo": "Needs More Info",
-      "approvedByCso": "Approved by CSO",
-      "deniedByCso": "Denied by CSO",
+      "approvedBySm": "Approved by SM",
+      "deniedBySm": "Denied by SM",
       "cancelled": "Cancelled",
       "onsite": "Onsite",
       "checkedOut": "Checked Out",
@@ -108,21 +154,37 @@
       "open": "Open",
       "acknowledged": "Acknowledged",
       "resolved": "Resolved",
-      "dismissed": "Dismissed"
+      "dismissed": "Dismissed",
+      "reviewRequested": "Review Requested",
+      "flagged": "Flagged"
     },
     "timeline": {
       "inviteCreated": "Invite Created",
-      "awaitingApproval": "Awaiting CSO Approval",
+      "awaitingApproval": "Awaiting SM Approval",
+      "awaitingSm": "Awaiting SM Approval",
       "checkedIn": "Checked In",
       "passIssued": "Pass Issued",
-      "checkedOut": "Checked out"
+      "issuedPass": "Issued Pass",
+      "checkedOut": "Checked out",
+      "gateValidated": "Gate Validation Successful"
     },
     "sections": {
       "hostDetails": "Host/Unit /Floor Details",
       "floor": "Floor",
-      "visitorInfo": "Visitor Information",
-      "trackStatus": "Track request status",
-      "purposeOfVisit": "Purpose of visit",
+      "host": "Host",
+      "visitorInfo": "Guest Information",
+      "trackStatus": "Track visit progress",
+      "visitSummary": "Visit Summary",
+      "visitingFloor": "Visiting Floor",
+      "guestPass": "Guest Pass",
+      "checkInDateTime": "Check In Date/Time",
+      "checkInTime": "Check In Time",
+      "checkOutDateTime": "Check Out Date/Time",
+      "timeSpentOnsite": "Time Spent Onsite",
+      "checkedInBy": "Checked In By",
+      "visitNotes": "Visit Notes",
+      "destination": "Destination",
+      "rateGuest": "Rate Guest",
       "purposeCategory": "Purpose Category",
       "scheduledFor": "Scheduled for",
       "origin": "Request origin",
@@ -131,7 +193,16 @@
       "source": "Source",
       "role": "Role",
       "remarks": "Remarks/notes",
-      "reason": "Reason"
+      "reason": "Reason",
+      "staffRole": "Staff Role",
+      "scheduled": "Scheduled",
+      "alertSummary": "Alert Summary",
+      "riskLevel": "Risk Level",
+      "alertCategory": "Alert Category",
+      "flaggedAt": "Flagged At",
+      "alertReason": "Alert Reason",
+      "trackRequestStatus": "Track request status",
+      "checkedOutBy": "Checked Out By"
     },
     "actions": {
       "cancelRequest": "Cancel Request",
@@ -143,25 +214,121 @@
       "approve": "Approve",
       "deny": "Deny",
       "resubmit": "Resubmit Request",
-      "confirmDeny": "Confirm denial"
+      "confirmDeny": "Confirm denial",
+      "checkIn": "Check-In",
+      "checkOut": "Check-Out",
+      "requestInfo": "Request Info",
+      "flag": "Flag Visit",
+      "confirmFlag": "Confirm Flag",
+      "confirmRequestInfo": "Send Request"
     },
-    "denyReasonPlaceholder": "Reason for denial"
+    "denyReasonPlaceholder": "Reason for denial",
+    "typeFeedback": "SM Feedback",
+    "editTitle": "Edit Visit Request",
+    "alertNeedsAttention": "Needs Attention",
+    "alertDefaultCategory": "Flagged Guest Match",
+    "respondPlaceholder": "Respond to alert…",
+    "card": {
+      "flaggedTitle": "Flagged Guest Match",
+      "title": {
+        "PENDING": "Visit Request from {host}",
+        "REVIEW_REQUESTED": "More Info Requested",
+        "APPROVED": "Request Approved by SM",
+        "DENIED": "Visit Request Denied",
+        "CHECKED_IN": "{visitor} Checked In",
+        "CHECKED_OUT": "{visitor} Checked Out",
+        "CANCELLED": "Request Cancelled",
+        "EXPIRED": "Request Expired",
+        "FLAGGED": "Visit Flagged"
+      },
+      "desc": {
+        "PENDING": "Visit request for {visitor} from",
+        "REVIEW_REQUESTED": "The Security Manager needs more information for {visitor} from",
+        "APPROVED": "{visitor}'s visit to {host} has been approved.",
+        "DENIED": "{visitor}'s visit to {host} was denied by the Security Manager.",
+        "CHECKED_IN": "{visitor} is now on site.",
+        "CHECKED_OUT": "{visitor} has checked out.",
+        "CANCELLED": "The visit request for {visitor} was cancelled.",
+        "EXPIRED": "The visit request for {visitor} has expired.",
+        "FLAGGED": "{visitor}'s visit has been flagged for security review."
+      }
+    },
+    "pill": {
+      "PENDING": "Awaiting Approval",
+      "REVIEW_REQUESTED": "Review Requested",
+      "FLAGGED": "Flagged",
+      "APPROVED": "Expected",
+      "DENIED": "Denied",
+      "CHECKED_IN": "Onsite",
+      "CHECKED_OUT": "Checked Out",
+      "CANCELLED": "Cancelled",
+      "EXPIRED": "Expired"
+    },
+    "statusOption": {
+      "PENDING": "Awaiting Approval",
+      "REVIEW_REQUESTED": "Needs More Info",
+      "APPROVED": "Approved",
+      "DENIED": "Denied",
+      "CHECKED_IN": "Onsite",
+      "CHECKED_OUT": "Checked Out",
+      "CANCELLED": "Cancelled",
+      "EXPIRED": "Expired",
+      "OPEN": "Open",
+      "ACKNOWLEDGED": "Acknowledged",
+      "RESOLVED": "Resolved",
+      "DISMISSED": "Dismissed",
+      "FLAGGED": "Flagged"
+    },
+    "typeOption": {
+      "WALK_IN": "Walk-in",
+      "PRE_INVITED": "Invited",
+      "APPOINTMENT": "Appointment"
+    },
+    "stripe": {
+      "securityReview": "Security Review Required",
+      "additionalInfo": "Additional Information Required"
+    },
+    "riskLevel": {
+      "LOW": "Low",
+      "MEDIUM": "Medium",
+      "HIGH": "High",
+      "CRITICAL": "Critical"
+    },
+    "requestInfoPlaceholder": "What additional information is needed?",
+    "flagReasonPlaceholder": "Describe the security concern…",
+    "createdByYou": "(you)",
+    "evacuationAssistYes": "Needs evacuation help",
+    "evacuationAssistNo": "Evacuation help: No",
+    "sources": {
+      "deskQr": "Walk-in QR (self-registered)",
+      "selfRegistered": "Visitor, via the walk-in QR"
+    },
+    "storedVisitorDiffers": "This email belongs to {name} in our records. Check ID before check-in.",
+    "typeCard": "Access card",
+    "cardItem": {
+      "title": "Access card overdue",
+      "desc": "{visitor} still has card {number}. It was due {due}.",
+      "overdue": "Not returned"
+    }
   },
   "language": {
     "select": "Select language",
     "en": "English",
     "fr": "French",
-    "ar": "Arabic"
+    "ar": "Arabic",
+    "label": "Language"
   },
   "roles": {
-    "SUPER_ADMIN": "Super Admin",
-    "ADMIN": "Admin",
-    "AUDITOR": "Auditor",
+    "SUPER_ADMIN": "System Admin",
+    "ADMIN": "Security Manager",
     "STAFF": "Staff",
     "VMC": "VMC Reception",
-    "GATE": "Gate"
+    "VMC_ADMIN": "VMC Admin",
+    "READ_ADMIN": "Read Admin"
   },
   "signup": {
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "title": "Create admin account",
     "subtitle": "Set up the first administrator for the VMS",
     "fullName": "Full name",
@@ -178,82 +345,402 @@
     "goToLogin": "Go to login"
   },
   "invite": {
-    "titleInvite": "Create Invite Request",
-    "titleWalkin": "Create Walk-In Visit",
-    "subtitle": "Fill out the form below to send invitation to your guests",
-    "steps": {
-      "visitor": "Visitor Details",
-      "host": "Host Details",
-      "visit": "Visit Details",
-      "summary": "Summary"
-    },
-    "sections": {
-      "visitorDetails": "Visitor details",
-      "visitPurpose": "Visit Purpose",
-      "hostDetails": "Host details"
-    },
+    "titleInvite": "Create Visit Invite",
+    "titleWalkin": "New Walk-in Guest",
+    "subtitleInvite": "Fill out the form below to send invitation to your guests",
+    "subtitleWalkin": "Fill out the form below to register walk-in Guest",
     "importCsv": "Import guests from CSV",
     "downloadTemplate": "Download CSV Template",
-    "addVisitor": "Add Visitor",
-    "removeVisitor": "Remove",
+    "addGuest": "Add Guest",
+    "removeGuest": "Remove Guest",
+    "useSameVisitDetails": "Use same visit details",
+    "sections": {
+      "guestDetails": "Guest Details",
+      "visitDetails": "Visit Details",
+      "safetyConsent": "Safety & consent"
+    },
     "fields": {
-      "fullName": "Enter Visitors Full name",
+      "fullName": "Enter Guests Full name",
       "fullNamePlaceholder": "Enter fullname",
-      "email": "Visitor Email",
+      "email": "Guest Email",
       "emailPlaceholder": "e.g. david@gmail.com",
       "organization": "Organization",
       "organizationPlaceholder": "Enter organization",
-      "phone": "Visitor Phone",
-      "phonePlaceholder": "+234 000-00-000",
+      "phone": "Telephone",
+      "phonePlaceholder": "(000) 000-0000",
       "host": "Select Host/Staff",
       "hostPlaceholder": "Add a staff / host",
       "floor": "Floor/Department",
       "floorPlaceholder": "Select floor",
       "purpose": "Visit Purpose",
       "purposePlaceholder": "Select visit category",
-      "dateTime": "Visit Date and Time",
+      "visitDate": "Visit Date",
+      "visitTime": "Time of Visit",
       "notes": "Visit notes",
-      "notesPlaceholder": "Enter visit notes"
+      "notesPlaceholder": "Enter visit notes",
+      "groupName": "Group Name",
+      "groupNamePlaceholder": "e.g. Acme Corp delegation",
+      "groupContact": "Group Contact",
+      "groupContactPlaceholder": "Email or phone number",
+      "optional": "Optional",
+      "noHost": "No host",
+      "evacuationAssist": "Need help evacuating in an emergency?",
+      "commsConsent": "Get updates on Afreximbank events?",
+      "yes": "Yes",
+      "no": "No",
+      "chooseYesNo": "Choose Yes or No"
     },
-    "summary": {
+    "confirm": {
+      "title": "Confirm Visit Invite",
+      "subtitle": "Please review all details carefully to ensure they're correct.",
+      "guestDetails": "Guest details",
+      "visitDetails": "Visit details",
+      "fullName": "Full Name",
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "organization": "Organization",
       "host": "Select Host/Staff",
+      "floor": "Floor/Department",
+      "purpose": "Visit Purpose",
       "dateTime": "Visit Date and Time",
-      "clearance": "Visit Clearance",
-      "pending": "Pending",
-      "approved": "Approved"
+      "notes": "Visit Notes"
     },
-    "showAllVisitors": "Show All Visitors ({count})",
-    "showLessVisitors": "Show Less Visitors",
-    "goToHost": "Go to Host details",
+    "success": {
+      "title": "Invite Created Successfully",
+      "subtitle": "This invite has been sent to all guest added to this visit",
+      "guestsName": "Guests name",
+      "host": "Host",
+      "purpose": "Visit Purpose",
+      "schedule": "Visit Schedule",
+      "floor": "Floor/Department",
+      "checkInVisitor": "Check-In Visitor"
+    },
     "review": "Review Details",
-    "submitInvite": "Send Invite Request",
-    "submitWalkin": "Create Walk-In Visit",
+    "submitInvite": "Create Invite",
+    "submitWalkin": "Continue",
     "submitting": "Submitting…",
     "back": "Back",
     "cancel": "Cancel",
-    "submitError": "Something went wrong. Please try again."
+    "guestCount": "Guest {current} of {total}",
+    "submitError": "Something went wrong. Please try again.",
+    "groupVisit": "Group visit"
+  },
+  "checkin": {
+    "groupTitle": "Group check in",
+    "guestInformation": "Guest Information",
+    "checkedInCount": "{done}/{total} checked in",
+    "checkInAll": "Check-In All",
+    "selectAll": "Select all",
+    "checkIn": "Check-in",
+    "checkOut": "Check-Out",
+    "viewDetails": "View Details",
+    "gatePending": "Gate validation pending",
+    "gateDone": "Gate validation done",
+    "confirmTitle": "Confirm Check-in",
+    "confirmSubtitle": "You're about to check-in this Guest and make this as onsite",
+    "assignPass": "Assign pass",
+    "checkInHint": "Check invite code matches before checking-in",
+    "guestName": "Guest's name",
+    "host": "Host",
+    "purpose": "Visit Purpose",
+    "schedule": "Visit Schedule",
+    "status": "Visit Status",
+    "complete": "Complete Check-in",
+    "successTitle": "Checked-In",
+    "successSubtitle": "User check-in process complete",
+    "backToDashboard": "Back to Dashboard",
+    "noCards": "No badges available for this zone",
+    "error": "Something went wrong. Please try again."
+  },
+  "checkout": {
+    "gateDone": "Gate validation done",
+    "confirmTitle": "Confirm Check-out",
+    "confirmSubtitle": "You're about to check-out this guest from the facility",
+    "changePassId": "Change Pass ID",
+    "timeInFacility": "Time In Facility",
+    "onsiteFor": "Guest onsite for {duration}",
+    "alreadyCheckedIn": "This code has been checked-in",
+    "guestName": "Guests name",
+    "host": "Host",
+    "purpose": "Visit Purpose",
+    "schedule": "Visit Schedule",
+    "status": "Visit Status",
+    "complete": "Complete Check-Out",
+    "error": "Something went wrong. Please try again.",
+    "rfid": {
+      "title": "RFID access card",
+      "question": "Was the card handed back?",
+      "returned": "Card retrieved",
+      "lost": "Not returned",
+      "noteLabel": "What happened to the card?",
+      "notePlaceholder": "e.g. The guest left without returning it",
+      "answerRequired": "Say whether the card was retrieved.",
+      "noteRequired": "Add a note about the card."
+    }
   },
   "admin": {
-    "welcome": "Welcome {name}",
-    "subtitle": "Administration console",
-    "userManagement": "User Management",
-    "userManagementBody": "View users, create accounts and assign roles.",
-    "manageUsers": "Manage users",
     "pendingTitle": "Pending Requests",
     "pendingBody": "Review and decide visit requests awaiting approval.",
     "pendingEmpty": "No requests awaiting approval.",
-    "pendingCount": "{count} awaiting approval"
+    "groupLabel": "{name} · {count} guests",
+    "nav": {
+      "label": "Admin sections",
+      "overview": "Overview",
+      "visitors": "Visitors",
+      "requests": "Requests & Approvals",
+      "watchlist": "Watchlist",
+      "users": "Users & Staff Roles",
+      "floors": "Floors & Locations",
+      "categories": "Visit Categories",
+      "analytics": "Analytics & Reports",
+      "integrations": "Integrations",
+      "settings": "Settings",
+      "comingSoon": "Coming soon",
+      "collapse": "Collapse sidebar",
+      "expand": "Expand sidebar",
+      "evacuation": "Evacuation Roll",
+      "optIns": "Comms Opt-ins",
+      "deskQr": "Walk-in QR"
+    },
+    "requests": {
+      "title": "Requests & Approvals",
+      "subtitle": "Visit requests waiting for a decision."
+    },
+    "overview": {
+      "loadError": "Unable to load dashboard data. Please try again.",
+      "loading": "Loading dashboard…",
+      "title": "Overview",
+      "subtitle": "System-wide visitor operations at a glance.",
+      "searchPlaceholder": "Search visitors, hosts, floors…",
+      "stats": {
+        "visitorsToday": "Visitors Today",
+        "sameAsYesterday": "Same as yesterday",
+        "expected": "Expected Visitors",
+        "expectedHint": "Approved for today",
+        "pending": "Pending Requests",
+        "onsite": "Onsite",
+        "onsiteHint": "On site now",
+        "checkedOut": "Checked Out"
+      },
+      "traffic": {
+        "loadError": "Unable to load dashboard data. Please try again.",
+        "title": "Today's Traffic",
+        "range": "Traffic period",
+        "today": "Today",
+        "yesterday": "Yesterday"
+      },
+      "breakdown": {
+        "title": "Status Breakdown",
+        "checkedIn": "Checked-in",
+        "checkedOut": "Checked-out",
+        "rejected": "Rejected"
+      },
+      "visitors": {
+        "loadError": "Unable to load dashboard data. Please try again.",
+        "title": "Today's Visitors",
+        "searchPlaceholder": "Search visitors…",
+        "columns": {
+          "visitor": "Visitor",
+          "status": "Status",
+          "host": "Host",
+          "guests": "No. of guests",
+          "time": "Time",
+          "action": "Action"
+        },
+        "guestCount": "{count, plural, one {# Guest} other {# Guests}}",
+        "view": "View",
+        "viewVisitor": "View {name}",
+        "noMatches": "No visitors match your search.",
+        "filterLabel": "Filter visitors",
+        "filters": {
+          "all": "All",
+          "onsite": "Onsite",
+          "expected": "Expected",
+          "out": "Out"
+        },
+        "emptyFilter": "No visitors in this view today."
+      },
+      "quickActions": {
+        "title": "Quick Actions",
+        "addVisitor": "Add Visitor",
+        "comingSoon": "Coming soon",
+        "addVisitorShort": "Add Visitor"
+      },
+      "activity": {
+        "empty": "No recent activity yet.",
+        "loadError": "Unable to load dashboard data. Please try again.",
+        "title": "Recent Activity",
+        "viewAll": "View all",
+        "visitorForHost": "{visitor} for {host}",
+        "events": {
+          "alert": "Security alert raised",
+          "requested": "New visit request",
+          "approved": "Visit request approved",
+          "denied": "Visit request denied",
+          "reviewRequested": "More information requested",
+          "flagged": "Visit flagged for security review",
+          "checkedIn": "Visitor checked in",
+          "checkedOut": "Visitor checked out",
+          "cancelled": "Visit cancelled",
+          "expired": "Visit expired",
+          "cardOverdue": "Access card overdue"
+        }
+      },
+      "upcoming": {
+        "loadError": "Unable to load dashboard data. Please try again.",
+        "title": "Upcoming",
+        "empty": "No more visitors expected today.",
+        "host": "Host: {name}",
+        "approved": "Approved",
+        "pending": "Pending"
+      },
+      "bar": {
+        "eyebrow": "Admin console",
+        "greeting": "Good {part, select, morning {morning} afternoon {afternoon} other {evening}}",
+        "greetingName": "Good {part, select, morning {morning} afternoon {afternoon} other {evening}}, {name}",
+        "awaiting": "Awaiting approval",
+        "awaitingHint": "Visit requests to decide",
+        "awaitingOverdue": "{count, plural, one {# waiting over 1 hour} other {# waiting over 1 hour}}",
+        "awaitingMoreInfo": "{count, plural, one {# waiting on more info} other {# waiting on more info}}",
+        "onsite": "Onsite now",
+        "onsiteHint": "Checked in, not yet out",
+        "expected": "Expected today",
+        "expectedHint": "Approved, not arrived",
+        "actionsTitle": "Quick actions",
+        "reviewApprovals": "Review approvals",
+        "addVisitor": "Add visitor",
+        "export": "Export",
+        "readOnly": "Read-only access",
+        "loadError": "Unable to load dashboard data. Please try again.",
+        "awaitingNone": "All caught up",
+        "onsiteFloors": "{count, plural, one {across # floor} other {across # floors}}",
+        "console": {
+          "SUPER_ADMIN": "System console",
+          "ADMIN": "Security console"
+        }
+      },
+      "approvals": {
+        "title": "Pending approvals",
+        "waitingCount": "{count, plural, one {# waiting} other {# waiting}}",
+        "oldestFirst": "Oldest first",
+        "openQueue": "Open queue",
+        "columns": {
+          "visitor": "Visitor",
+          "host": "Host · Unit",
+          "time": "Visit time",
+          "waiting": "Waiting",
+          "decision": "Decision"
+        },
+        "groupGuests": "{count, plural, one {Group · # guest} other {Group · # guests}}",
+        "waitingHours": "{hours}h {minutes}m",
+        "waitingMinutes": "{minutes}m",
+        "approve": "Approve",
+        "deny": "Deny",
+        "reviewGroup": "Review group",
+        "approveFor": "Approve {name}",
+        "denyFor": "Deny {name}",
+        "reviewGroupFor": "Review group {name}",
+        "showing": "Showing {shown} of {total}",
+        "seeAll": "See all {total}",
+        "loading": "Loading approvals…",
+        "loadError": "Unable to load pending approvals. Please try again.",
+        "todayAt": "Today, {time}",
+        "moreInfoAsked": "More info asked",
+        "view": "View",
+        "viewFor": "View {name}",
+        "filterLabel": "Filter requests by type",
+        "filters": {
+          "all": "All",
+          "walkIn": "Walk-in",
+          "invite": "Invite",
+          "group": "Group"
+        },
+        "emptyFilter": "No requests of this type are waiting."
+      }
+    },
+    "analytics": {
+      "title": "Analytics & Reports",
+      "subtitle": "Visitor trends and outcomes. Everything that left the overview lives here.",
+      "export": "Export CSV",
+      "denied": "Denied",
+      "loading": "Loading analytics…",
+      "loadError": "Unable to load analytics. Please try again."
+    }
+  },
+  "adminV2": {
+    "overview": {
+      "eyebrow": "Admin Console · {role}",
+      "openApprovals": "Open Pending Approvals",
+      "welcome": "Welcome {name}",
+      "pendingApprovals": "Pending approvals",
+      "pendingCount": "{count, plural, =0 {None} one {# request} other {# requests}}",
+      "trendUp": "+{count} from yesterday",
+      "trendDown": "−{count} from yesterday"
+    },
+    "panel": {
+      "reviewCta": "Review Requests",
+      "historyCta": "Visit History",
+      "activityTitle": "Today's activity\nat a glance",
+      "activityCta": "View Activity",
+      "reviewCtaShort": "Review",
+      "historyCtaShort": "History"
+    },
+    "table": {
+      "title": "Visitor Records",
+      "review": "Review",
+      "empty": "No visits in this window."
+    },
+    "feed": {
+      "seeAll": "See all",
+      "viewDetails": "View details"
+    },
+    "charts": {
+      "title": "Traffic & Outcomes"
+    },
+    "approvals": {
+      "title": "Pending Approvals",
+      "columns": {
+        "hostFloor": "Host / Floor"
+      },
+      "review": "Review",
+      "view": "View",
+      "reviewFor": "Review {name}",
+      "viewFor": "View {name}",
+      "empty": "Nothing is waiting for a decision.",
+      "bucket": {
+        "all": "All",
+        "REVIEW_REQUESTED": "Info requested",
+        "FLAGGED": "Flagged",
+        "group": "Group"
+      }
+    },
+    "users": {
+      "noAccess": "Only a System Admin can manage users.",
+      "searchPlaceholder": "Search users by name or email…",
+      "allRoles": "All Roles",
+      "createSubtitle": "Create an account and assign its roles.",
+      "openFor": "View {name}"
+    }
   },
   "staff": {
     "hub": "STAFF HUB",
     "welcome": "Welcome {name}",
-    "recentVisitors": "Recent Visitors",
-    "myVisits": { "title": "My Visits" },
+    "expectedGuests": "Expected Guests",
+    "guestCount": "{count, plural, one {# Guest} other {# Guests}}",
+    "onsiteFor": "For {time} HR",
+    "statusSub": {
+      "fromSm": "From SM"
+    },
+    "myVisits": {
+      "title": "My Visits"
+    },
     "noVisits": "No visits to show.",
     "overview": {
       "officeFloor": "Office Floor",
-      "bookTitle": "Book visitors into Abuja AATC facilities",
-      "newInvite": "New Invite Request"
+      "officeFloorUnset": "Not set",
+      "bookTitle": "Book Guests into Abuja\nAATC facilities",
+      "newInvite": "New Invite Request",
+      "newInviteShort": "New Invite"
     },
     "stats": {
       "expectedToday": "Expected Today",
@@ -265,15 +752,17 @@
       "last7": "Last 7 days",
       "custom": "Custom",
       "upcoming": "Upcoming",
-      "yesterday": "Yesterday"
+      "yesterday": "Yesterday",
+      "pickDate": "Pick date"
     },
     "filters": {
       "searchPlaceholder": "Search visitor, organization, purpose, request id"
     },
     "columns": {
-      "visitor": "Visitor",
+      "visitor": "Guest",
       "organization": "Organization",
       "purpose": "Purpose",
+      "noOfGuest": "No of Guest",
       "timeCreated": "Time Created",
       "status": "Status",
       "action": "Action"
@@ -284,7 +773,7 @@
     },
     "status": {
       "PENDING": "Awaiting Approval",
-      "NEEDS_MORE_INFO": "Needs More Info",
+      "REVIEW_REQUESTED": "Needs More Info",
       "APPROVED": "Expected",
       "DENIED": "Denied",
       "CHECKED_IN": "Onsite",
@@ -303,20 +792,91 @@
       "empty": "No recent updates.",
       "viewUpdate": "View Update",
       "viewDetails": "View Details",
+      "allTitle": "All Updates",
+      "searchPlaceholder": "Search visitor name or email",
+      "categoryLabel": "Update type",
+      "allCategories": "All updates",
+      "dateLabel": "Filter by day",
       "category": {
         "ARRIVAL_UPDATE": "Arrival Update",
-        "CSO_FEEDBACK": "CSO Feedback",
+        "SM_FEEDBACK": "SM Feedback",
         "REQUEST_UPDATE": "Request Update",
         "VISIT_STATUS": "Visit Status",
         "SECURITY_ALERT": "Security Alerts"
-      }
+      },
+      "all": "All",
+      "updateRequest": "Update Request"
+    },
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "card": {
+      "openFor": "View details for {name}"
     }
   },
   "gate": {
-    "welcome": "Welcome {name}",
-    "subtitle": "Gate operations",
-    "placeholderTitle": "Gate dashboard",
-    "placeholderBody": "This dashboard is a placeholder and will be built out soon."
+    "title": "Gate check",
+    "heading": "Scan invitation",
+    "subtitle": "Ask the visitor to show the QR code from their invitation email.",
+    "checking": "Checking…",
+    "error": "Could not check this code. Try again.",
+    "scanner": {
+      "label": "Camera viewfinder",
+      "starting": "Starting camera…",
+      "hint": "Hold the QR code inside the frame.",
+      "denied": "Camera access is blocked. Allow the camera in the browser settings, or type the code instead.",
+      "unavailable": "No camera is available. Type the code from the invitation instead.",
+      "insecure": "The camera only works over a secure (HTTPS) connection. Type the code instead."
+    },
+    "manual": {
+      "title": "Enter code",
+      "body": "Camera not working? Type the code printed in the invitation email.",
+      "label": "Invitation code",
+      "submit": "Check code",
+      "invalid": "Codes look like ABCD-123."
+    },
+    "result": {
+      "VALID_TODAY": {
+        "title": "Visit confirmed for today",
+        "body": "Direct the visitor to the VMC to check in."
+      },
+      "ALREADY_CHECKED_IN": {
+        "title": "Already checked in",
+        "body": "This visitor has already checked in at the VMC."
+      },
+      "WRONG_DAY": {
+        "title": "No visit today",
+        "past": "Their visit was on {date}.",
+        "future": "Their visit is scheduled for {date}.",
+        "body": "Let the visitor know. If they think this is a mistake or need to reschedule, they can go to the VMC for help."
+      },
+      "NOT_CONFIRMED": {
+        "title": "Visit not confirmed yet",
+        "body": "This invitation is still awaiting approval. The visitor can go to the VMC for help."
+      },
+      "CLOSED": {
+        "title": "Invitation no longer valid",
+        "body": "This visit was cancelled, declined or has already ended. The visitor can go to the VMC for help."
+      },
+      "NOT_FOUND": {
+        "title": "No invitation found",
+        "body": "This code doesn't match any invitation. Check the code, or direct the visitor to the VMC for help."
+      },
+      "visitDate": "Visit date",
+      "host": "Host",
+      "scanNext": "Scan next",
+      "autoReturn": "Returning to the scanner in {seconds}s"
+    },
+    "kiosk": {
+      "checking": "Opening the gate kiosk…",
+      "notSetUp": {
+        "title": "This device isn't set up as the gate kiosk",
+        "body": "Ask the System Administrator to open the gate kiosk link on this device."
+      },
+      "inactive": {
+        "title": "This kiosk link is no longer active",
+        "body": "The link was replaced or turned off. Ask the System Administrator to open the current gate kiosk link on this device."
+      }
+    }
   },
   "users": {
     "title": "User Management",
@@ -344,7 +904,52 @@
       "roles": "Roles",
       "create": "Create user",
       "save": "Save changes",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "addonHint": "Add-on for {base}"
+    },
+    "detail": {
+      "title": "User details",
+      "profile": "Profile",
+      "access": "Access",
+      "activity": "Activity",
+      "fullName": "Full name",
+      "email": "Email",
+      "phone": "Phone",
+      "roles": "Roles",
+      "status": "Status",
+      "department": "Department",
+      "office": "Office",
+      "lastLogin": "Last login",
+      "never": "Never",
+      "created": "Created",
+      "updated": "Updated",
+      "editProfile": "Edit profile",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "save": "Save changes",
+      "saved": "Profile updated.",
+      "saveError": "Could not update this user.",
+      "loadError": "Could not load this user.",
+      "sso": "This account signs in through SSO and has no local password."
+    },
+    "reset": {
+      "action": "Send password-reset link",
+      "sent": "Reset link sent. It works once and expires in 15 minutes.",
+      "error": "Could not send the reset link.",
+      "cooldown": "Resend in {seconds}s",
+      "active": "A reset link is already active — it expires at {time}."
+    },
+    "statusAction": {
+      "deactivate": "Deactivate account",
+      "activate": "Activate account",
+      "confirmDeactivateTitle": "Deactivate user",
+      "confirmDeactivateBody": "Deactivate {name}? They are signed out everywhere and cannot sign in until reactivated.",
+      "confirmActivateTitle": "Activate user",
+      "confirmActivateBody": "Activate {name}? They will be able to sign in again.",
+      "error": "Could not change this user's status."
+    },
+    "filters": {
+      "allStatuses": "All statuses"
     }
   },
   "settings": {
@@ -402,9 +1007,790 @@
       "title": "Notifications",
       "help": "Stay informed about your account activity.",
       "newInviteRequest": "New invite request",
-      "csoDenied": "CSO denied request",
-      "csoApproved": "CSO approved request",
+      "smDenied": "SM denied request",
+      "smApproved": "SM approved request",
       "flaggedVisitor": "Flagged visitor alert"
     }
+  },
+  "approval": {
+    "groupTitle": "Approve group",
+    "guestInformation": "Guest Information",
+    "approvedCount": "{done}/{total} approved",
+    "select": "Select guest",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approveSelected": "Approve Selected ({count})",
+    "rejectSelected": "Reject Selected ({count})",
+    "approveAll": "Approve All",
+    "reasonPlaceholder": "Rejection reason (required to reject)"
+  },
+  "evacuation": {
+    "indicator": {
+      "count": "{count, plural, one {# needs evacuation help} other {# need evacuation help}}",
+      "viewRoll": "View roll"
+    },
+    "title": "Evacuation Roll",
+    "refresh": "Refresh",
+    "countBanner": "on site need evacuation help",
+    "floors": "{count, plural, one {# floor} other {# floors}}",
+    "generated": "Generated <b>{time}</b>",
+    "noFloor": "Floor not set",
+    "loadError": "Couldn't load the evacuation roll. Try Refresh.",
+    "columns": {
+      "visitor": "Visitor",
+      "assistance": "Assistance needed",
+      "floor": "Floor / Wing",
+      "host": "Host",
+      "phone": "Phone",
+      "checkedIn": "Checked in",
+      "organization": "Organization",
+      "badge": "Badge"
+    },
+    "empty": {
+      "title": "No one on site needs evacuation help",
+      "body": "{count, plural, =0 {No visitors are checked in right now.} one {# visitor is checked in. They did not ask for assistance.} other {# visitors are checked in. None asked for assistance.}}"
+    },
+    "print": {
+      "button": "Print",
+      "heading": "AATC Abuja · Evacuation Roll",
+      "generated": "Generated {datetime} WAT",
+      "count": "{count, plural, one {# visitor needs evacuation assistance} other {# visitors need evacuation assistance}}"
+    }
+  },
+  "consent": {
+    "title": "Email consent",
+    "filterLabel": "Show",
+    "filters": {
+      "in": "Consented",
+      "out": "Not consented",
+      "all": "All"
+    },
+    "count": {
+      "in": "consented",
+      "out": "not consented",
+      "all": "people"
+    },
+    "exportCsv": "Export CSV",
+    "exportError": "The export failed. Please try again.",
+    "searchPlaceholder": "Search email or name",
+    "columns": {
+      "email": "Email",
+      "name": "Name",
+      "lastAnswered": "Last updated",
+      "status": "Email consent"
+    },
+    "empty": {
+      "in": "No one has agreed to email updates yet.",
+      "out": "No one has opted out.",
+      "all": "No one has answered yet."
+    },
+    "noMatches": "No one matches your search.",
+    "loadError": "Couldn't load the email consent list.",
+    "withdrawTitle": "Withdraw consent",
+    "withdrawHelp": "Stops updates to this email until they say yes at a later visit.",
+    "email": "Email",
+    "emailPlaceholder": "name@company.com",
+    "withdraw": "Withdraw",
+    "invalidEmail": "Enter a valid email address.",
+    "confirmTitle": "Withdraw consent?",
+    "confirmBody": "<b>{email}</b> will stop getting Afreximbank event updates.",
+    "cancel": "Cancel",
+    "done": "Consent withdrawn for {email}.",
+    "notFound": "No records for this email.",
+    "error": "Something went wrong. Please try again.",
+    "toggleLabel": "Email consent for {email}",
+    "removeNotAllowed": "You can't change email consent.",
+    "addNotAllowed": "Only a System Admin can add someone back.",
+    "removeTitle": "Remove email consent?",
+    "removeBody": "<b>{email}</b> will stop getting Afreximbank event updates.",
+    "confirmRemove": "Remove consent",
+    "addTitle": "Add email consent?",
+    "addBody": "Only do this if <b>{email}</b> has agreed to get Afreximbank event updates.",
+    "confirmAdd": "Add consent",
+    "granted": "{email} will get event updates again."
+  },
+  "export": {
+    "title": "Export Visitor Data",
+    "subtitle": "Choose the date range and format.",
+    "dateRange": "Date range",
+    "from": "From",
+    "to": "To",
+    "format": "File format",
+    "csv": "CSV",
+    "excel": "Excel",
+    "cancel": "Cancel",
+    "submit": "Export",
+    "exporting": "Exporting…",
+    "rangeTooLong": "Pick a range of 366 days or less.",
+    "rangeInvalid": "The end date must be on or after the start date.",
+    "error": "The export failed. Please try again.",
+    "quickRange": "Quick range",
+    "presets": {
+      "week": "Last week",
+      "month": "Last month",
+      "quarter": "Last 3 months",
+      "custom": "Custom"
+    },
+    "pdf": "PDF"
+  },
+  "delivery": {
+    "title": "Notifications",
+    "failedCount": "{count} failed",
+    "channel": {
+      "EMAIL": "Email",
+      "SMS": "SMS",
+      "WHATSAPP": "WhatsApp"
+    },
+    "template": {
+      "inviteCode": "Invite code",
+      "visitorArrived": "Visitor arrived",
+      "thankYou": "Thank you",
+      "other": "Message"
+    },
+    "status": {
+      "SENT": "Sent",
+      "PENDING": "Queued",
+      "FAILED": "Failed"
+    },
+    "attempts": "{count, plural, one {# attempt} other {# attempts}}",
+    "retry": "Retry",
+    "empty": "No messages have been sent for this visit yet.",
+    "loadError": "Couldn't load notifications.",
+    "retryError": "Retry failed. Please try again."
+  },
+  "evacuationAssist": {
+    "question": "What help would you need?",
+    "types": {
+      "MOBILITY": "Mobility assistance (wheelchair, difficulty walking or using stairs)",
+      "VISUAL": "Visual impairment support",
+      "HEARING": "Hearing impairment support",
+      "MEDICAL": "Medical assistance",
+      "OTHER": "Other (please specify)"
+    },
+    "short": {
+      "MOBILITY": "Mobility",
+      "VISUAL": "Visual",
+      "HEARING": "Hearing",
+      "MEDICAL": "Medical",
+      "OTHER": "Other"
+    },
+    "otherLabel": "Describe the assistance needed",
+    "otherPlaceholder": "For example, needs a ramp",
+    "chooseType": "Choose the type of assistance needed",
+    "describeOther": "Describe the assistance needed"
+  },
+  "deskQr": {
+    "title": "Walk-in QR",
+    "walkInBadge": "Walk-in · no approval needed",
+    "status": {
+      "active": "Active",
+      "disabled": "Disabled"
+    },
+    "qrAlt": "Walk-in QR code",
+    "copyLink": "Copy link",
+    "copied": "Copied",
+    "scansToday": "Scans today",
+    "lastScan": "Last scan {time} WAT",
+    "noScans": "No scans yet today",
+    "disabledAt": "Disabled {time} WAT",
+    "created": "Created",
+    "createdBy": "{time} by {name}",
+    "visitsItCreates": "Visits it creates",
+    "visitsItCreatesValue": "Walk-in, today only, tagged QR",
+    "print": "Print poster",
+    "downloadPng": "Download PNG",
+    "rotate": "New QR",
+    "disable": "Disable",
+    "enable": "Enable",
+    "rotateHelp": "New QR replaces the code. The printed poster stops working at once, so print the new one before you press it.",
+    "enableHelp": "Scanning shows \"Please register at the VMC desk\". Enable brings back the same code, so the poster on the desk works again.",
+    "disabledOverlay": "Scanning shows \"Please register at the VMC desk\"",
+    "empty": {
+      "title": "No walk-in QR yet",
+      "body": "Create the QR, print the poster and put it on the VMC desk.",
+      "readOnly": "Reception hasn't set up the walk-in QR yet.",
+      "create": "Create walk-in QR"
+    },
+    "loadError": {
+      "title": "Couldn't load the walk-in QR.",
+      "body": "Check your connection, then try again. The poster on the desk keeps working."
+    },
+    "retry": "Try again",
+    "errors": {
+      "create": "The walk-in QR wasn't created. Try again in a moment.",
+      "rotate": "New QR wasn't created. The current QR still works. Try again in a moment.",
+      "disable": "The QR wasn't disabled. It still works. Try again in a moment.",
+      "enable": "The QR wasn't enabled. Try again in a moment.",
+      "download": "The PNG didn't download. Try again in a moment.",
+      "image": "Couldn't show the QR."
+    },
+    "confirmRotate": {
+      "title": "Replace the walk-in QR?",
+      "body": "The QR on the desk poster <b>stops working immediately</b>. Visitors who scan it will be asked to register at the desk. Print and put up the new poster straight after.",
+      "confirm": "Create new QR"
+    },
+    "confirmDisable": {
+      "title": "Disable the walk-in QR?",
+      "body": "Visitors can't register by scanning until you enable it again. Reception can still register walk-ins as usual.",
+      "confirm": "Disable"
+    },
+    "cancel": "Cancel",
+    "poster": {
+      "brand": "AFREXIMBANK AFRICAN TRADE CENTRE · ABUJA",
+      "title": "Scan to register your visit",
+      "subtitle": "Abuja-AATC Visitor Management",
+      "then": "Then fill in the short form on your phone.",
+      "code": "Reception will read you a code to finish.",
+      "footer": "VMC desk · QR created {date}"
+    }
+  },
+  "gateKiosk": {
+    "title": "Gate kiosk link",
+    "status": {
+      "active": "Active",
+      "disabled": "Turned off"
+    },
+    "qrAlt": "QR code of the gate kiosk link",
+    "copyLink": "Copy link",
+    "copied": "Copied",
+    "disabledOverlay": "Turned off",
+    "setup": {
+      "step1": "On the gate tablet, scan this QR with the camera, or open the copied link in the browser.",
+      "step2": "The gate page opens without signing in and remembers this device.",
+      "step3": "From then on, the tablet just opens /gate."
+    },
+    "lastScan": "Last scan",
+    "noScans": "No scans yet",
+    "linkSince": "Current link since",
+    "disabledSince": "Turned off since",
+    "created": "Created",
+    "createdBy": "{time} by {name}",
+    "rotate": "New link",
+    "disable": "Turn off",
+    "enable": "Turn on",
+    "rotateHelp": "A new link stops the old one at once: every device using it must open the new link.",
+    "enableHelp": "While turned off, the gate page shows that the link is no longer active.",
+    "confirmRotate": {
+      "title": "Create a new kiosk link?",
+      "body": "The current link stops working immediately. The gate tablet will need the new link.",
+      "confirm": "Create new link"
+    },
+    "confirmDisable": {
+      "title": "Turn off the kiosk link?",
+      "body": "The gate page stops checking codes until you turn the link back on.",
+      "confirm": "Turn off"
+    },
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "empty": {
+      "title": "No gate kiosk link yet",
+      "body": "Create the link, then open it once on the gate tablet. No one signs in at the gate.",
+      "create": "Create kiosk link"
+    },
+    "loadError": {
+      "title": "Couldn't load the gate kiosk link",
+      "body": "Check your connection and try again."
+    },
+    "errors": {
+      "create": "Couldn't create the kiosk link.",
+      "rotate": "Couldn't create a new link.",
+      "disable": "Couldn't turn the link off.",
+      "enable": "Couldn't turn the link on.",
+      "image": "Couldn't load the QR code."
+    }
+  },
+  "selfRegister": {
+    "brand": "AATC · VMC desk",
+    "title": "Register your visit",
+    "today": "Today, {date}",
+    "expiresIn": "Form expires in {countdown}",
+    "oneMinuteLeft": "1 minute left",
+    "optional": "Optional",
+    "yes": "Yes",
+    "no": "No",
+    "sections": {
+      "contact": "Your contact details",
+      "about": "About you",
+      "visiting": "Who are you visiting?",
+      "visit": "Visit details",
+      "safety": "Safety and communication"
+    },
+    "fields": {
+      "email": "Email address",
+      "phone": "Phone number",
+      "fullName": "Full name",
+      "organization": "Organisation",
+      "floor": "Floor of visit",
+      "floorNotSure": "Not sure / not applicable",
+      "purpose": "Purpose of visit",
+      "evacuation": "In the event of an emergency, would you require assistance with evacuation?",
+      "consent": "Would you like to receive updates on Afreximbank's activities and events?"
+    },
+    "host": {
+      "label": "Search for the person you're visiting",
+      "placeholder": "Type a name",
+      "help": "Leave this empty if your visit is a general enquiry.",
+      "results": "Matching staff",
+      "count": "{count, plural, one {# matching staff member.} other {# matching staff members.}}",
+      "none": "No matching staff. Leave blank for a general enquiry.",
+      "remove": "Remove {name}"
+    },
+    "errors": {
+      "email": "Enter a full email address, like name@company.com",
+      "phone": "Enter a valid phone number, or leave it empty",
+      "required": "Fill this in",
+      "choose": "Choose one",
+      "yesNo": "Choose Yes or No",
+      "chooseType": "Choose the type of assistance you need",
+      "describeOther": "Describe the assistance you need",
+      "plainName": "Use letters only, without links or symbols",
+      "plainOrganization": "Use letters and numbers only, without links or symbols"
+    },
+    "checkAnswers": "{count, plural, one {Check # answer below.} other {Check # answers below.}}",
+    "submit": "Register my visit",
+    "submitHelp": "Submitting registers your visit for today.",
+    "done": {
+      "title": "You're registered",
+      "body": "You're all set for today. Reception will hand you your visitor pass.",
+      "name": "Name",
+      "visiting": "Visiting",
+      "when": "When"
+    },
+    "inactive": {
+      "title": "This QR code isn't active",
+      "body": "Please register at the VMC desk. Reception will sign you in."
+    },
+    "expired": {
+      "title": "This form has expired",
+      "body": "Please scan the QR code again."
+    },
+    "startAgain": "Start again",
+    "problems": {
+      "offline": "No connection. Your answers are still here. Try again when you're back online.",
+      "unknown": "Something went wrong. Try again, or register at the VMC desk."
+    }
+  },
+  "auth": {
+    "heroTitle": "AATC",
+    "heroSubtitle": "Visitor Management Portal",
+    "logoAlt": "Afreximbank African Trade Centre",
+    "heroCaption": "Afreximbank African Trade Centre"
+  },
+  "forgotPassword": {
+    "title": "Forgot password?",
+    "body": "Password resets are handled by your system administrator. Contact support to have yours reset.",
+    "back": "Back to login"
+  },
+  "insights": {
+    "title": "Insights",
+    "nothingHere": "There is nothing to show for your role yet.",
+    "tabs": {
+      "overview": "Overview",
+      "evacuation": "Evacuation Roll",
+      "history": "History",
+      "visitors": "Visitors",
+      "analytics": "Analytics"
+    },
+    "overview": {
+      "title": "Today at a glance",
+      "error": "Unable to load today's numbers. Please try again.",
+      "onsite": "On site now",
+      "onsiteFloors": "{count, plural, =0 {No floors occupied} one {Across # floor} other {Across # floors}}",
+      "visitorsToday": "Visitors today",
+      "yesterday": "{count, plural, one {# yesterday} other {# yesterday}}",
+      "expected": "Still expected",
+      "expectedHint": "Approved, not arrived yet",
+      "checkedOut": "Checked out",
+      "checkedInHint": "{count, plural, one {# checked in today} other {# checked in today}}",
+      "viewStats": "View today's figures"
+    },
+    "history": {
+      "range": "History range",
+      "ranges": {
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "90d": "Last 3 months",
+        "all": "All time"
+      },
+      "export": "Export",
+      "visits": "visits",
+      "searchPlaceholder": "Search visitor, host, floor or code…",
+      "empty": "No visits in this range",
+      "noMatches": "No visits match your search",
+      "error": "Unable to load the history. Please try again.",
+      "noHost": "No host",
+      "viewDetails": "View details",
+      "columns": {
+        "visitor": "Visitor",
+        "host": "Host",
+        "date": "Visit date",
+        "purpose": "Purpose",
+        "status": "Status",
+        "action": "Action"
+      }
+    },
+    "visitors": {
+      "title": "Visitors",
+      "views": {
+        "directory": "Directory",
+        "optIns": "Email consent"
+      },
+      "countFacility": "visitors",
+      "countMine": "people have visited you",
+      "searchPlaceholder": "Search name, email, organisation or phone…",
+      "empty": "No visitors yet",
+      "noMatches": "No visitors match your search",
+      "error": "Unable to load visitors. Please try again.",
+      "viewHistory": "View history",
+      "optedIn": "Consented",
+      "optedOut": "Not consented",
+      "sheetTitle": "Visitor details",
+      "visitorInfo": "Visitor information",
+      "noVisits": "No visits yet",
+      "summary": "Summary",
+      "firstVisit": "First visit",
+      "avgStay": "Average stay",
+      "minutes": "{count, plural, one {# min} other {# mins}}",
+      "visitHistory": "Visit history",
+      "columns": {
+        "visitor": "Visitor",
+        "organization": "Organisation",
+        "visits": "Visits",
+        "lastVisit": "Last visit",
+        "comms": "Email consent",
+        "action": "Action"
+      },
+      "openFor": "View visit history for {name}"
+    },
+    "analytics": {
+      "title": "Facility analytics",
+      "range": "Analytics range",
+      "ranges": {
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "90d": "Last 3 months"
+      },
+      "error": "Unable to load analytics. Please try again.",
+      "minutes": "{count, plural, one {# min} other {# mins}}",
+      "kpi": {
+        "hosted": "Visitors hosted",
+        "allTime": "All-time visits",
+        "upcoming": "Upcoming visits",
+        "avgStay": "Average stay",
+        "visits": "Visits",
+        "uniqueVisitors": "Unique visitors",
+        "arrived": "Arrived",
+        "noShows": "{count, plural, one {# no-show} other {# no-shows}}"
+      },
+      "daily": "Daily visitor volume",
+      "weekly": "Weekly visitor volume (12 weeks)",
+      "hourly": "Peak arrival hours",
+      "outcomes": "Visit outcomes",
+      "statusMix": "Status breakdown",
+      "visitMix": "Walk-ins vs invited",
+      "repeatVisitors": "Repeat visitors",
+      "noRepeat": "No repeat visitors in this range",
+      "onsiteByFloor": "On site now, by floor",
+      "nobodyOnsite": "Nobody is on site right now",
+      "topHosts": "Busiest hosts",
+      "topOrganizations": "Top visiting organisations",
+      "noData": "No visits in this range",
+      "security": {
+        "title": "Security",
+        "flagged": "Flagged for review",
+        "alertsRaised": "Alerts raised",
+        "alertsOpen": "Alerts still open",
+        "denied": "Requests denied",
+        "deniedDaily": "Denied requests per day",
+        "viewStats": "View security figures"
+      },
+      "viewStats": "View key figures"
+    },
+    "status": {
+      "PENDING": "Awaiting approval",
+      "REVIEW_REQUESTED": "Review requested",
+      "FLAGGED": "Flagged",
+      "APPROVED": "Expected",
+      "DENIED": "Denied",
+      "CHECKED_IN": "On site",
+      "CHECKED_OUT": "Checked out",
+      "CANCELLED": "Cancelled",
+      "EXPIRED": "Expired"
+    },
+    "visitType": {
+      "WALK_IN": "Walk-in",
+      "PRE_INVITED": "Invited",
+      "APPOINTMENT": "Appointment"
+    }
+  },
+  "operations": {
+    "title": "Operations",
+    "noAccess": "Operations is for System Admins.",
+    "tabs": {
+      "accessCards": "Access cards",
+      "deskQr": "Walk-in QR",
+      "audit": "Audit trail",
+      "gateKiosk": "Gate kiosk"
+    },
+    "accessCards": {
+      "title": "Access cards",
+      "views": {
+        "active": "Out now",
+        "history": "History",
+        "registry": "Card registry"
+      },
+      "countActive": "cards out",
+      "countHistory": "past issues",
+      "countCards": "cards",
+      "searchPlaceholder": "Search visitor or card number…",
+      "registrySearch": "Search card number or holder…",
+      "noMatches": "Nothing matches your search",
+      "emptyActive": "No access cards are out right now",
+      "emptyHistory": "No returned or lost cards yet",
+      "emptyRegistry": "No cards logged yet. Assigning a card adds it here.",
+      "view": "View",
+      "markFound": "Mark found",
+      "reinstate": "Reinstate",
+      "retire": "Retire",
+      "until": "until {when}",
+      "columns": {
+        "visitor": "Visitor",
+        "card": "Card",
+        "validUntil": "Valid until",
+        "status": "Status",
+        "closed": "Outcome",
+        "action": "Action",
+        "cardStatus": "Status",
+        "holder": "Current holder",
+        "timesIssued": "Times issued"
+      },
+      "status": {
+        "active": "Active",
+        "endsToday": "Ends today",
+        "overdue": "Overdue for return",
+        "returned": "Returned",
+        "lost": "Lost"
+      },
+      "cardStatus": {
+        "AVAILABLE": "Available",
+        "ASSIGNED": "Assigned",
+        "LOST": "Lost",
+        "RETIRED": "Retired"
+      },
+      "photo": {
+        "upload": "Upload photo",
+        "take": "Take photo",
+        "capture": "Capture",
+        "cancel": "Cancel",
+        "remove": "Remove",
+        "live": "Camera preview",
+        "preview": "Visitor photo",
+        "hint": "Printed on the front of the card. JPG, PNG or WebP, up to 5 MB.",
+        "badType": "Use a JPG, PNG or WebP image.",
+        "tooBig": "The photo must be 5 MB or smaller.",
+        "noCamera": "The camera isn't available. Allow camera access or upload a photo instead."
+      },
+      "sheet": {
+        "title": "Access card",
+        "visitorInfo": "Visitor information",
+        "cardNo": "Card {number}",
+        "loadError": "Unable to load this card. Please try again.",
+        "preview": "Card preview",
+        "noPhoto": "No photo on file: the card prints with an empty photo frame.",
+        "printerHint": "DTC printer: choose CR80, portrait, and print both sides.",
+        "details": "Details",
+        "validFrom": "Valid from",
+        "validUntil": "Valid until",
+        "validUntilTime": "Valid until (time)",
+        "issued": "Issued",
+        "prints": "Printed",
+        "notPrinted": "Not printed yet",
+        "printedTimes": "{count, plural, one {Once} other {# times}}, last {when}",
+        "closed": "Closed",
+        "notes": "Notes",
+        "visit": "Linked visit",
+        "extend": "Change validity",
+        "saveValidity": "Save",
+        "close": "Close card",
+        "closeNote": "Note (optional)",
+        "markReturned": "Card returned",
+        "markLost": "Card lost",
+        "print": "Print card",
+        "reprint": "Reprint card",
+        "error": "That didn't work. Please try again."
+      },
+      "assignCard": "Assign card",
+      "assign": {
+        "title": "Assign access card",
+        "subtitle": "Log the configured RFID card, set how long it is valid, and add the photo to print.",
+        "visitor": "Visitor",
+        "visitorSearch": "Search visitor by name, email or phone…",
+        "noVisitors": "No visitors found. Register the visit first.",
+        "change": "Change",
+        "visit": "Visit (optional)",
+        "noVisit": "Not linked to a visit",
+        "card": "Card",
+        "cardNumber": "Card number",
+        "cardNumberHint": "As printed on / encoded in the RFID card. New numbers are added to the registry.",
+        "validity": "Validity (WAT)",
+        "validFrom": "Valid from",
+        "validFromTime": "Valid from (time)",
+        "validUntil": "Valid until",
+        "validUntilTime": "Valid until (time)",
+        "validityHint": "Can span several days. Reception retrieves the card at check-out.",
+        "rangeInvalid": "Valid until must be after valid from.",
+        "photo": "Photo",
+        "notes": "Notes",
+        "cancel": "Cancel",
+        "submit": "Assign card",
+        "saving": "Assigning…",
+        "error": "The card couldn't be assigned. Please try again."
+      },
+      "openFor": "View card issued to {name}"
+    },
+    "card": {
+      "visitorAccess": "VISITOR ACCESS",
+      "valid": "Valid",
+      "frontLabel": "Card front for {name}",
+      "backLabel": "Card back",
+      "backTitle": "VISITOR ACCESS CARD",
+      "cardNumber": "Card number",
+      "returnNotice": "This card must be returned to the Visitor Management Centre (VMC) when you leave.",
+      "foundNotice": "If found, please return it to the AATC reception.",
+      "property": "Property of Afreximbank African Trade Centre"
+    },
+    "audit": {
+      "range": "Audit range",
+      "ranges": {
+        "today": "Today",
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "custom": "Custom"
+      },
+      "from": "From",
+      "to": "To",
+      "watHint": "WAT calendar days, up to 366.",
+      "rangeInvalid": "The end date must be on or after the start date.",
+      "export": "Export CSV",
+      "exportError": "The export failed. Please try again.",
+      "events": "events",
+      "category": "Category",
+      "allCategories": "All categories",
+      "searchPlaceholder": "Search action, user, entity or correlation id…",
+      "empty": "No audit events match these filters",
+      "error": "Unable to load the audit trail. Please try again.",
+      "system": "System",
+      "open": "Open",
+      "sheetTitle": "Audit event",
+      "details": "Details",
+      "metadata": "Event data",
+      "userAgent": "Browser",
+      "correlationId": "Correlation id",
+      "columns": {
+        "time": "Time (WAT)",
+        "user": "User",
+        "action": "Action",
+        "category": "Category",
+        "entity": "Entity",
+        "ip": "IP address",
+        "open": "Open"
+      },
+      "categories": {
+        "visit": "Visits",
+        "visitor": "Check-in / out",
+        "invitation": "Invitations",
+        "alert": "Alerts",
+        "note": "Notes",
+        "user": "Users",
+        "auth": "Sign-in & security",
+        "report": "Exports",
+        "consent": "Comms opt-ins",
+        "desk_qr": "Walk-in QR",
+        "notification": "Notifications",
+        "rfid_card": "Access cards",
+        "audit": "Audit trail",
+        "gate": "Gate"
+      },
+      "actions": {
+        "alert_created": "Alert raised",
+        "alert_updated": "Alert updated",
+        "audit_export_started": "Audit export started",
+        "audit_exported": "Audit trail exported",
+        "auth_login_failed": "Sign-in failed",
+        "auth_logout": "Signed out",
+        "auth_refresh_reuse_detected": "Session token reuse detected",
+        "auth_role_switched": "Switched role",
+        "auth_signup_blocked": "Sign-up blocked",
+        "auth_token_refreshed": "Session refreshed",
+        "auth_user_logged_in": "Signed in",
+        "authz_permission_denied": "Permission denied",
+        "consent_exported": "Opt-ins exported",
+        "consent_withdrawn": "Opt-in withdrawn",
+        "desk_qr_code_sent": "Desk code sent",
+        "desk_qr_created": "Walk-in QR created",
+        "desk_qr_disabled": "Walk-in QR disabled",
+        "desk_qr_enabled": "Walk-in QR enabled",
+        "desk_qr_imported": "Walk-in QR imported",
+        "desk_qr_rotated": "Walk-in QR replaced",
+        "desk_qr_updated": "Walk-in QR updated",
+        "invitation_created": "Invitation created",
+        "note_added": "Note added",
+        "notification_retried": "Notification resent",
+        "report_visits_export_failed": "Visitor export failed",
+        "report_visits_export_started": "Visitor export started",
+        "report_visits_exported": "Visitors exported",
+        "rfid_card_assigned": "Access card assigned",
+        "rfid_card_lost": "Access card lost",
+        "rfid_card_printed": "Access card printed",
+        "rfid_card_returned": "Access card returned",
+        "rfid_card_status_changed": "Access card status changed",
+        "rfid_card_updated": "Access card updated",
+        "user_created": "User created",
+        "user_deleted": "User deleted",
+        "user_password_changed": "Password changed",
+        "user_profile_updated": "Profile updated",
+        "user_roles_updated": "Roles changed",
+        "visit_approved": "Visit approved",
+        "visit_cancelled": "Visit cancelled",
+        "visit_denied": "Visit denied",
+        "visit_flagged": "Visit flagged",
+        "visit_invite_resent": "Invite resent",
+        "visit_requested": "Visit requested",
+        "visit_review_requested": "More information requested",
+        "visit_updated": "Visit updated",
+        "visitor_checked_in": "Visitor checked in",
+        "visitor_checked_out": "Visitor checked out",
+        "visitor_rated": "Visit rated",
+        "desk_qr_honeypot_triggered": "Walk-in QR bot blocked",
+        "desk_qr_code_rejected": "Wrong desk code entered",
+        "desk_qr_registration_locked": "Walk-in registration locked",
+        "gate_code_checked": "Gate code checked",
+        "gate_kiosk_created": "Gate kiosk link created",
+        "gate_kiosk_rotated": "Gate kiosk link replaced",
+        "gate_kiosk_disabled": "Gate kiosk link turned off",
+        "gate_kiosk_enabled": "Gate kiosk link turned on"
+      },
+      "openFor": "Open event: {action}"
+    }
+  },
+  "rfidCard": {
+    "badge": "RFID {number}",
+    "overdue": "Overdue",
+    "validUntil": "Valid until {date}"
+  },
+  "resetPassword": {
+    "title": "Set a new password",
+    "body": "Choose a new password for your account.",
+    "invalidTitle": "Link expired",
+    "invalidBody": "This reset link is invalid or has already been used. Ask your administrator to send a new one.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "mismatch": "Passwords do not match.",
+    "minLength": "Use at least 8 characters.",
+    "submit": "Set password",
+    "error": "Could not set the password. The link may have expired — ask your administrator for a new one.",
+    "successTitle": "Password updated",
+    "successBody": "Your password has been changed. Sign in with your new password.",
+    "toLogin": "Go to sign in"
   }
 }

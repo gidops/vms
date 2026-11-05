@@ -1,28 +1,32 @@
-import { ChevronRight, Flag, Users } from "lucide-react";
+import { ChevronRight, Flag, MessageSquareText, Users } from "lucide-react";
 import * as React from "react";
 import { cn } from "../../foundations/cn";
 import { Badge } from "../../primitives/Badge/index";
 
+export type InboxCardType = "request" | "feedback" | "alert";
+
 export interface InboxCardProps {
-  /** "request" tints the type pill teal (people icon); "alert" tints it red (flag). */
-  type: "request" | "alert";
-  /** Localised label for the type pill ("Visit Request" / "Alerts"). */
+  type: InboxCardType;
   typeLabel: string;
   title: React.ReactNode;
   description: React.ReactNode;
-  /** Relative timestamp, e.g. "2 min ago". */
   timeAgo: React.ReactNode;
-  /** Footer meta row (created-by, status pill, notes count). */
   meta?: React.ReactNode;
+  /** Unread items get a highlight that fades once read. */
+  unread?: boolean;
   onClick?: () => void;
   className?: string;
 }
 
-/**
- * Inbox list card for the Requests & Alerts feed. Clickable surface that opens
- * the detail drawer; reuses `Badge` for the type pill and exposes a `meta` slot
- * for the footer (created-by / status / notes).
- */
+const TYPE_META: Record<
+  InboxCardType,
+  { intent: "primary" | "warning" | "danger"; icon: typeof Users }
+> = {
+  request: { intent: "primary", icon: Users },
+  feedback: { intent: "warning", icon: MessageSquareText },
+  alert: { intent: "danger", icon: Flag },
+};
+
 export function InboxCard({
   type,
   typeLabel,
@@ -30,23 +34,28 @@ export function InboxCard({
   description,
   timeAgo,
   meta,
+  unread,
   onClick,
   className,
 }: InboxCardProps) {
-  const Icon = type === "alert" ? Flag : Users;
+  const { intent, icon: Icon } = TYPE_META[type];
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "group relative flex w-full flex-col gap-4 rounded-xl border border-border bg-surface p-5 pe-10 text-start shadow-xs transition-colors",
+        // Tighter padding and corners on small screens, where cards fill the width.
+        "group relative flex w-full flex-col gap-4 rounded-md border p-3 pe-9 text-start shadow-xs transition-colors duration-500 md:rounded-xl md:p-5 md:pe-10",
+        unread
+          ? "border-primary/30 bg-primary-subtle/50"
+          : "border-surface-muted bg-surface",
         "hover:border-border-strong hover:bg-surface-muted/40",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]",
         className,
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <Badge intent={type === "alert" ? "danger" : "primary"} tone="soft">
+        <Badge intent={intent} tone="soft">
           <Icon className="size-3.5" aria-hidden="true" />
           {typeLabel}
         </Badge>

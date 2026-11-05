@@ -1,18 +1,28 @@
-import { Body, Controller, Get, HttpCode, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ChangePasswordInput,
+  CompletePasswordResetInput,
   LoginInput,
+  RefreshInput,
   SignupInput,
   SwitchRoleInput,
+  ValidateResetTokenInput,
 } from '@vms/contracts';
 import type { Request } from 'express';
-import { z } from 'zod';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import { RateLimit, RateLimitGuard } from '../rate-limit/rate-limit.guard';
 import { CurrentUser, Public, type AuthUser } from './auth.decorators';
 import { AuthService } from './auth.service';
 
-const RefreshBody = z.object({ refreshToken: z.string().min(1) });
-type RefreshBody = z.infer<typeof RefreshBody>;
+const MINUTE = 60_000;
 
 @Controller('auth')
 export class AuthController {
@@ -32,7 +42,6 @@ export class AuthController {
     });
   }
 
-  /** First-run only: bootstraps the initial SUPER_ADMIN account. */
   @Public()
   @Post('signup')
   @HttpCode(201)
@@ -74,16 +83,47 @@ export class AuthController {
     );
   }
 
+  /** Lets the reset page distinguish a live link from an expired one. */
+  @Public()
+  @UseGuards(RateLimitGuard)
+  @RateLimit({ name: 'reset-validate', limit: 30, windowMs: MINUTE, by: 'ip' })
+  @Post('reset-password/validate')
+  @HttpCode(200)
+  async validateResetToken(
+    @Body(new ZodValidationPipe(ValidateResetTokenInput))
+    body: ValidateResetTokenInput,
+  ) {
+    return { valid: await this.auth.validateResetToken(body.token) };
+  }
+
+  /** Completes an admin-issued reset; rate-limited because the token is the only credential. */
+  @Public()
+  @UseGuards(RateLimitGuard)
+  @RateLimit({
+    name: 'reset-complete',
+    limit: 10,
+    windowMs: 15 * MINUTE,
+    by: 'ip',
+  })
+  @Post('reset-password')
+  @HttpCode(204)
+  async resetPassword(
+    @Body(new ZodValidationPipe(CompletePasswordResetInput))
+    body: CompletePasswordResetInput,
+  ) {
+    await this.auth.completePasswordReset(body.token, body.newPassword);
+  }
+
   @Public()
   @Post('refresh')
   @HttpCode(200)
-  refresh(@Body(new ZodValidationPipe(RefreshBody)) body: RefreshBody) {
+  refresh(@Body(new ZodValidationPipe(RefreshInput)) body: RefreshInput) {
     return this.auth.refresh(body.refreshToken);
   }
 
   @Post('logout')
   @HttpCode(204)
-  async logout(@Body(new ZodValidationPipe(RefreshBody)) body: RefreshBody) {
+  async logout(@Body(new ZodValidationPipe(RefreshInput)) body: RefreshInput) {
     await this.auth.logout(body.refreshToken);
   }
 }

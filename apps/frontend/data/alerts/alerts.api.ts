@@ -17,6 +17,13 @@ export interface AlertDetail {
     phone?: string | null;
     organization?: string | null;
   } | null;
+  /** The visit that triggered the flag (host/unit/floor/schedule), when linked. */
+  visit?: {
+    hostName?: string | null;
+    hostUnit?: string | null;
+    floor?: string | null;
+    scheduledAt?: string | null;
+  } | null;
   notes: VisitNote[];
 }
 

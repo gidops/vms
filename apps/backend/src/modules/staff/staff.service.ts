@@ -8,17 +8,14 @@ import type {
   StaffDashboardStats,
 } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
+import { watDayRange, watToday } from '../../shared/common/wat';
 
-/** Inclusive start / exclusive end of the calendar day containing `ref`. */
 function dayBounds(ref: Date): { start: Date; end: Date } {
-  const start = new Date(ref);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
-  return { start, end };
+  const day = watToday(ref);
+  const { gte, lt } = watDayRange(day, day);
+  return { start: gte, end: lt };
 }
 
-/** Maps an audit event type → the feed card's category + copy. */
 const ACTIVITY_MAP: Record<
   string,
   {
@@ -63,14 +60,26 @@ const ACTIVITY_MAP: Record<
     body: (n) => `${n} is checked out.`,
   },
   'note.added': {
-    category: 'CSO_FEEDBACK',
-    title: 'From CSO Desk',
+    category: 'SM_FEEDBACK',
+    title: 'From SM Desk',
     body: (n) => `A new remark was added to ${n}'s visit request.`,
   },
+  'visit.flagged': {
+    category: 'SECURITY_ALERT',
+    title: 'Visit Flagged',
+    body: (n) => `${n}'s visit was flagged and needs security review.`,
+  },
+  'visit.review_requested': {
+    category: 'SM_FEEDBACK',
+    title: 'More Information Requested',
+    body: (n) =>
+      `The Security Manager requested more information for ${n}'s visit.`,
+  },
+  // flag/request-info also emit `alert.created`; it is not mapped so each action yields one feed card.
   'alert.updated': {
     category: 'SECURITY_ALERT',
-    title: 'Visitor Flagged',
-    body: (n) => `${n}'s visit raised a security alert.`,
+    title: 'Security Alert Updated',
+    body: (n) => `${n}'s security alert was updated.`,
   },
 };
 
@@ -78,52 +87,64 @@ const ACTIVITY_MAP: Record<
 export class StaffService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Headline counts for the signed-in host's "Today's Schedule". */
   async stats(userId: string): Promise<StaffDashboardStats> {
-    const hostWhere: Prisma.VisitWhereInput = { host: { userId } };
+    // "Mine" = created OR hosted, so counts include requests raised for someone else's guest.
+    const mineWhere: Prisma.VisitWhereInput = {
+      OR: [{ createdById: userId }, { host: { userId } }],
+    };
     const { start, end } = dayBounds(new Date());
 
     const [expectedToday, awaitingApproval, onsite] = await Promise.all([
       this.prisma.visit.count({
         where: {
-          ...hostWhere,
+          ...mineWhere,
           status: 'APPROVED',
           scheduledAt: { gte: start, lt: end },
         },
       }),
       this.prisma.visit.count({
         where: {
-          ...hostWhere,
-          status: { in: ['PENDING', 'NEEDS_MORE_INFO'] },
+          ...mineWhere,
+          status: { in: ['PENDING', 'REVIEW_REQUESTED'] },
         },
       }),
       this.prisma.visit.count({
-        where: { ...hostWhere, status: 'CHECKED_IN' },
+        where: { ...mineWhere, status: 'CHECKED_IN' },
       }),
     ]);
 
     return { expectedToday, awaitingApproval, onsite };
   }
 
-  /**
-   * The host's "Recent Updates" feed, read from the append-only AuditLog. Resolves
-   * the host's own visits (+ their visitors' alerts) and surfaces audit rows for
-   * those aggregates, newest first, mapped to human-facing cards.
-   */
+  /** Read from the append-only AuditLog for visits the staff created or hosts, plus their visitors' alerts. */
   async activityFeed(
     userId: string,
     query: StaffActivityQuery,
   ): Promise<Paginated<StaffActivityItem>> {
+    const visitorMatch: Prisma.VisitorWhereInput | undefined = query.search
+      ? {
+          OR: [
+            { fullName: { contains: query.search, mode: 'insensitive' } },
+            { email: { contains: query.search, mode: 'insensitive' } },
+          ],
+        }
+      : undefined;
     const visits = await this.prisma.visit.findMany({
-      where: { host: { userId } },
+      where: {
+        OR: [{ createdById: userId }, { host: { userId } }],
+        ...(visitorMatch ? { visitor: visitorMatch } : {}),
+      },
       select: {
         id: true,
         visitorId: true,
+        visitorNameAtVisit: true,
         visitor: { select: { fullName: true } },
       },
     });
 
-    const visitName = new Map(visits.map((v) => [v.id, v.visitor.fullName]));
+    const visitName = new Map(
+      visits.map((v) => [v.id, v.visitorNameAtVisit ?? v.visitor.fullName]),
+    );
     const visitorIds = [...new Set(visits.map((v) => v.visitorId))];
 
     const alerts = visitorIds.length
@@ -142,8 +163,12 @@ export class StaffService {
       return this.emptyPage(query);
     }
 
+    const actions = Object.entries(ACTIVITY_MAP)
+      .filter(([, m]) => !query.category || m.category === query.category)
+      .map(([action]) => action);
+
     const where: Prisma.AuditLogWhereInput = {
-      action: { in: Object.keys(ACTIVITY_MAP) },
+      action: { in: actions },
       OR: [
         { entityType: 'Visit', entityId: { in: visitIds } },
         { entityType: 'Alert', entityId: { in: alertIds } },

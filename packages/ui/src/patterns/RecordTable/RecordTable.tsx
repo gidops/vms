@@ -2,38 +2,43 @@ import * as React from "react";
 import { cn } from "../../foundations/cn";
 
 export interface RecordTableProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** Filter/search row above the table. */
   toolbar?: React.ReactNode;
-  /** Pagination row below the table. */
   pagination?: React.ReactNode;
-  /** Shown in place of the table body area when there are no records. */
   isEmpty?: boolean;
   emptyState?: React.ReactNode;
-  /** The <Table> (or a loading skeleton). */
+  /** Drop the surrounding card so the table sits flush on the page. */
+  frameless?: boolean;
   children: React.ReactNode;
 }
 
-/**
- * Composes FilterBar + Table + Pagination + EmptyState into the standard
- * records surface (Dashboard "Visitor Records", inbox lists, etc.).
- */
+/** FilterBar + Table + Pagination + EmptyState as the standard records surface. */
 export function RecordTable({
   toolbar,
   pagination,
   isEmpty,
   emptyState,
+  frameless,
   className,
   children,
   ...props
 }: RecordTableProps) {
+  const body = isEmpty ? (
+    <div className={frameless ? "py-6" : "p-6"}>{emptyState}</div>
+  ) : (
+    children
+  );
   return (
     <div className={cn("flex flex-col gap-4", className)} {...props}>
       {toolbar}
-      <div className="overflow-hidden rounded-lg border border-border bg-surface">
-        {isEmpty ? <div className="p-6">{emptyState}</div> : children}
-      </div>
+      {frameless ? (
+        body
+      ) : (
+        <div className="overflow-hidden rounded-lg border border-border bg-surface">
+          {body}
+        </div>
+      )}
       {pagination && !isEmpty ? (
-        <div className="flex justify-end">{pagination}</div>
+        <div className="flex justify-center">{pagination}</div>
       ) : null}
     </div>
   );

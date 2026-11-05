@@ -1,21 +1,17 @@
 import type { VisitStatus } from "@vms/contracts";
+import { cn } from "../../foundations/cn";
 import { Badge, type BadgeProps } from "../../primitives/Badge/index";
 
 type Intent = NonNullable<BadgeProps["intent"]>;
 
-/**
- * Maps the shared `VisitStatus` lifecycle (from @vms/contracts) to a badge
- * intent + human label. Because the status union comes from the contracts
- * package, the UI can never render a status the backend doesn't define.
- */
+/** Keyed by the contracts' `VisitStatus`, so the UI can't render a status the backend doesn't define. */
 const STATUS_MAP: Record<VisitStatus, { intent: Intent; label: string }> = {
   PENDING: { intent: "warning", label: "Awaiting Approval" },
-  // The CSO bounced the request back to the host for more detail.
-  NEEDS_MORE_INFO: { intent: "danger", label: "Needs More Info" },
-  // An approved, not-yet-arrived visit is shown to gate staff as "Expected".
+  REVIEW_REQUESTED: { intent: "danger", label: "Review Requested" },
+  FLAGGED: { intent: "danger", label: "Flagged" },
+  // Gate staff see an approved, not-yet-arrived visit as "Expected".
   APPROVED: { intent: "info", label: "Expected" },
   DENIED: { intent: "danger", label: "Denied" },
-  // A checked-in visitor is physically on site.
   CHECKED_IN: { intent: "success", label: "Onsite" },
   CHECKED_OUT: { intent: "neutral", label: "Checked Out" },
   CANCELLED: { intent: "warning", label: "Cancelled" },
@@ -31,12 +27,18 @@ export interface StatusBadgeProps extends Omit<
 
 export function StatusBadge({
   status,
-  dot = true,
+  dot = false,
+  className,
   ...props
 }: StatusBadgeProps) {
   const { intent, label } = STATUS_MAP[status];
   return (
-    <Badge intent={intent} dot={dot} {...props}>
+    <Badge
+      intent={intent}
+      dot={dot}
+      className={cn("border-current/15", className)}
+      {...props}
+    >
       {label}
     </Badge>
   );

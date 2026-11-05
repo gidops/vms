@@ -5,14 +5,20 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import {
+  ADDON_ROLES,
+  isAddonRole,
+  nameParts,
   ROLES,
+  type AdminUpdateUserInput,
   type CreateUserInput,
   type HostOption,
+  type PublicHostOption,
   type LoginActivityItem,
   type Paginated,
-  type PaginationQuery,
   type UpdateMeInput,
+  type UserDetail,
   type UserListItem,
+  type UserListQuery,
 } from '@vms/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EVENT_TYPES } from '../../shared/events/domain-event';
@@ -26,19 +32,15 @@ const accessInclude = Prisma.validator<Prisma.UserInclude>()({
       role: { include: { rolePermissions: { include: { permission: true } } } },
     },
   },
-  // The user's Host row (when they receive visitors) surfaces office/department
-  // on the self-profile for the staff dashboard's "Office Floor" panel.
+
   host: { select: { department: true, office: true } },
 });
 
 type UserWithRoles = Prisma.UserGetPayload<{ include: typeof accessInclude }>;
 
 export interface UserWithAccess extends UserWithRoles {
-  /** Role names, ordered by assignment (earliest first). */
   roles: string[];
-  /** Union of every role's permissions (kept for reference/back-compat). */
   permissions: string[];
-  /** Permission keys per role name (used to scope the active role). */
   rolePermissions: Record<string, string[]>;
 }
 
@@ -67,15 +69,19 @@ export class UsersService {
     return user ? this.withAccess(user) : null;
   }
 
-  /** The user's default active role: the earliest-assigned one. */
   defaultRole(user: UserWithAccess): string | null {
-    return user.roles[0] ?? null;
+    return user.roles.find((r) => !isAddonRole(r)) ?? null;
   }
 
-  /** Permissions granted by a single role (for active-role scoping). */
+  // Add-ons extend their base role: READ_ADMIN on STAFF, VMC_ADMIN on VMC.
   permissionsForRole(user: UserWithAccess, role: string | null): string[] {
     if (!role) return [];
-    return user.rolePermissions[role] ?? [];
+    const addons = user.roles.filter((r) => ADDON_ROLES[r] === role);
+    return [
+      ...new Set(
+        [role, ...addons].flatMap((r) => user.rolePermissions[r] ?? []),
+      ),
+    ];
   }
 
   /** Whether any SUPER_ADMIN user exists (gates first-run signup). */
@@ -86,16 +92,29 @@ export class UsersService {
     return count > 0;
   }
 
-  /** Paginated user list for the admin User Management screen. */
-  async list(query: PaginationQuery): Promise<Paginated<UserListItem>> {
+  async list(query: UserListQuery): Promise<Paginated<UserListItem>> {
+    const where: Prisma.UserWhereInput = {};
+    if (query.search) {
+      where.OR = [
+        { fullName: { contains: query.search, mode: 'insensitive' } },
+        { email: { contains: query.search, mode: 'insensitive' } },
+      ];
+    }
+    if (query.role) {
+      where.userRoles = { some: { role: { name: query.role } } };
+    }
+    if (query.status) {
+      where.isActive = query.status === 'active';
+    }
     const [rows, total] = await Promise.all([
       this.prisma.user.findMany({
+        where,
         orderBy: { createdAt: 'desc' },
         skip: (query.page - 1) * query.pageSize,
         take: query.pageSize,
         include: { userRoles: { include: { role: true } } },
       }),
-      this.prisma.user.count(),
+      this.prisma.user.count({ where }),
     ]);
     return {
       items: rows.map((u) => ({
@@ -113,10 +132,40 @@ export class UsersService {
     };
   }
 
-  /**
-   * Selectable hosts for the invite/walk-in forms — users with the STAFF role,
-   * joined to their Host record (department/office may be null until set).
-   */
+  async getDetail(id: string): Promise<UserDetail> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        userRoles: { include: { role: true } },
+        host: { select: { department: true, office: true } },
+        passwordResetTokens: {
+          where: { usedAt: null, expiresAt: { gt: new Date() } },
+          orderBy: { expiresAt: 'desc' },
+          take: 1,
+          select: { expiresAt: true },
+        },
+      },
+    });
+    if (!user) throw new NotFoundException('User not found');
+    return {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phone,
+      authProvider: user.authProvider,
+      isActive: user.isActive,
+      roles: user.userRoles.map((ur) => ur.role.name),
+      lastLoginAt: user.lastLoginAt,
+      resetLinkExpiresAt: user.passwordResetTokens[0]?.expiresAt ?? null,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      hostDepartment: user.host?.department ?? null,
+      hostOffice: user.host?.office ?? null,
+    };
+  }
+
   async listHosts(): Promise<HostOption[]> {
     const users = await this.prisma.user.findMany({
       where: {
@@ -140,7 +189,43 @@ export class UsersService {
     }));
   }
 
-  /** All role names (for the create/edit role multi-select). */
+  // Public endpoint: return name and department only, never contact details.
+  async searchPublicHosts(
+    query: string,
+    take = 8,
+  ): Promise<PublicHostOption[]> {
+    const users = await this.prisma.user.findMany({
+      where: {
+        isActive: true,
+        userRoles: { some: { role: { name: ROLES.STAFF } } },
+        fullName: { contains: query, mode: 'insensitive' },
+      },
+      orderBy: { fullName: 'asc' },
+      take,
+      select: {
+        id: true,
+        fullName: true,
+        host: { select: { department: true } },
+      },
+    });
+    return users.map((u) => ({
+      userId: u.id,
+      fullName: u.fullName,
+      department: u.host?.department ?? null,
+    }));
+  }
+
+  async isActiveHost(userId: string): Promise<boolean> {
+    const n = await this.prisma.user.count({
+      where: {
+        id: userId,
+        isActive: true,
+        userRoles: { some: { role: { name: ROLES.STAFF } } },
+      },
+    });
+    return n > 0;
+  }
+
   async listRoleNames(): Promise<string[]> {
     const roles = await this.prisma.role.findMany({
       orderBy: { name: 'asc' },
@@ -149,7 +234,6 @@ export class UsersService {
     return roles.map((r) => r.name);
   }
 
-  /** Create a user with one or more roles (hashes the password). */
   async create(
     input: CreateUserInput,
     actorUserId?: string,
@@ -190,7 +274,6 @@ export class UsersService {
     return created;
   }
 
-  /** Replace a user's role set. */
   async updateRoles(
     id: string,
     roles: string[],
@@ -224,7 +307,6 @@ export class UsersService {
     return updated;
   }
 
-  /** Self-service profile + preferences update (Account Settings). */
   async updateMe(
     userId: string,
     input: UpdateMeInput,
@@ -242,7 +324,6 @@ export class UsersService {
     if (input.assignedDesk !== undefined)
       data.assignedDesk = input.assignedDesk;
 
-    // Keep fullName in sync when either name part changes.
     if (input.firstName !== undefined || input.lastName !== undefined) {
       const first = input.firstName ?? user.firstName ?? '';
       const last = input.lastName ?? user.lastName ?? '';
@@ -250,7 +331,6 @@ export class UsersService {
       if (full) data.fullName = full;
     }
 
-    // Merge notification prefs over the existing object.
     if (input.notificationPrefs !== undefined) {
       const existing =
         (user.notificationPrefs as Record<string, boolean> | null) ?? {};
@@ -276,18 +356,124 @@ export class UsersService {
     return fresh;
   }
 
-  /** Persist a freshly-uploaded avatar's S3 object key. */
+  /** Admin edit of another user's profile; names/phone only, roles stay in updateRoles. */
+  async adminUpdate(
+    id: string,
+    input: AdminUpdateUserInput,
+    actorUserId: string,
+  ): Promise<UserDetail> {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const data: Prisma.UserUpdateInput = {};
+    if (input.phone !== undefined) data.phone = input.phone;
+    if (input.firstName !== undefined || input.lastName !== undefined) {
+      // Older accounts hold only fullName; the untouched half comes from it so
+      // editing one name never drops the other.
+      const current = nameParts(user);
+      const first = input.firstName ?? current.firstName;
+      const last = input.lastName ?? current.lastName;
+      data.firstName = first || null;
+      data.lastName = last || null;
+      const full = `${first} ${last}`.trim();
+      if (full) data.fullName = full;
+    }
+    if (Object.keys(data).length === 0) {
+      throw new BadRequestException('Nothing to update');
+    }
+
+    await this.txm.run(async (tx) => {
+      await tx.user.update({ where: { id }, data });
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.UserProfileUpdated,
+        aggregateType: 'User',
+        aggregateId: id,
+        payload: { fields: Object.keys(data) },
+        metadata: { actorUserId },
+      });
+    });
+    return this.getDetail(id);
+  }
+
+  /** Blocked for self and for the last active Super Admin; deactivation revokes sessions. */
+  async setStatus(
+    id: string,
+    isActive: boolean,
+    actorUserId: string,
+  ): Promise<UserDetail> {
+    if (id === actorUserId && !isActive) {
+      throw new BadRequestException('You cannot deactivate your own account');
+    }
+    const target = await this.prisma.user.findUnique({
+      where: { id },
+      include: { userRoles: { include: { role: true } } },
+    });
+    if (!target) throw new NotFoundException('User not found');
+
+    if (!isActive) {
+      const isSuperAdmin = target.userRoles.some(
+        (ur) => ur.role.name === ROLES.SUPER_ADMIN,
+      );
+      if (isSuperAdmin) {
+        const activeSuperAdmins = await this.prisma.userRole.count({
+          where: {
+            role: { name: ROLES.SUPER_ADMIN },
+            user: { isActive: true },
+          },
+        });
+        if (activeSuperAdmins <= 1) {
+          throw new BadRequestException(
+            'Cannot deactivate the last active Super Admin',
+          );
+        }
+      }
+    }
+
+    if (target.isActive !== isActive) {
+      await this.txm.run(async (tx) => {
+        await tx.user.update({ where: { id }, data: { isActive } });
+        if (!isActive) {
+          // Mirror RefreshTokenService.revokeAllForUser inside this transaction:
+          // a deactivated user must not keep refreshing (the JWT itself lapses
+          // within its own short TTL).
+          const now = new Date();
+          await tx.refreshToken.updateMany({
+            where: { userId: id, revokedAt: null },
+            data: { revokedAt: now },
+          });
+          await tx.session.updateMany({
+            where: { userId: id, revokedAt: null },
+            data: { revokedAt: now },
+          });
+        }
+        await this.events.publish(tx, {
+          type: EVENT_TYPES.UserStatusChanged,
+          aggregateType: 'User',
+          aggregateId: id,
+          payload: { isActive },
+          metadata: { actorUserId },
+        });
+      });
+    }
+    return this.getDetail(id);
+  }
+
   async setAvatar(userId: string, avatarKey: string): Promise<UserWithAccess> {
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { avatarKey },
+    await this.txm.run(async (tx) => {
+      await tx.user.update({ where: { id: userId }, data: { avatarKey } });
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.UserProfileUpdated,
+        aggregateType: 'User',
+        aggregateId: userId,
+        payload: { fields: ['avatarKey'] },
+        metadata: { actorUserId: userId },
+      });
     });
     const fresh = await this.findByIdWithAccess(userId);
     if (!fresh) throw new NotFoundException('User not found');
     return fresh;
   }
 
-  /** Active sessions for the "Login Activity" list (most recent first). */
   async listSessions(
     userId: string,
     currentSessionId: string | undefined,
@@ -309,11 +495,7 @@ export class UsersService {
     });
   }
 
-  /**
-   * Hard-delete a user. Records they created are preserved (FK SetNull /
-   * plain-UUID actor columns + denormalized author/creator names). Blocked for
-   * self, the last Super Admin, and users who are hosts (would erase visits).
-   */
+  /** Authored records survive (SetNull FKs, denormalized names); blocked for self, the last Super Admin, and hosts. */
   async deleteUser(id: string, actorUserId: string): Promise<void> {
     if (id === actorUserId) {
       throw new BadRequestException('You cannot delete your own account');
@@ -352,7 +534,21 @@ export class UsersService {
     });
   }
 
-  private async resolveRoleIds(names: string[]): Promise<string[]> {
+  private async resolveRoleIds(requested: string[]): Promise<string[]> {
+    // An add-on only extends its base role, so it needs that role alongside it.
+    for (const name of requested) {
+      const base = ADDON_ROLES[name];
+      if (base && !requested.includes(base)) {
+        throw new BadRequestException(
+          `${name} is an add-on for ${base}; assign ${base} as well`,
+        );
+      }
+    }
+    // Add-ons go last so the first listed base role stays the default.
+    const names = [
+      ...requested.filter((r) => !isAddonRole(r)),
+      ...requested.filter(isAddonRole),
+    ];
     const roles = await this.prisma.role.findMany({
       where: { name: { in: names } },
     });

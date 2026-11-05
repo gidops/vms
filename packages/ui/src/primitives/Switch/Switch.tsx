@@ -6,10 +6,6 @@ export type SwitchProps = React.ComponentPropsWithoutRef<
   typeof SwitchPrimitive.Root
 >;
 
-/**
- * On/off toggle (Radix Switch) — the track fills with the primary color when
- * on. Used for the settings notification preferences.
- */
 export const Switch = React.forwardRef<
   React.ElementRef<typeof SwitchPrimitive.Root>,
   SwitchProps

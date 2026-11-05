@@ -32,7 +32,8 @@ export const FlaggedVisitor: Story = {
         <>
           <AlertTitle>Do not check in this visitor</AlertTitle>
           <AlertDescription>
-            This visitor matches a watchlist entry and requires CSO review.
+            This visitor matches a watchlist entry and requires Security Manager
+            review.
           </AlertDescription>
         </>
       }
@@ -46,7 +47,7 @@ export const FlaggedVisitor: Story = {
           <Button intent="neutral" tone="soft">
             Add Note
           </Button>
-          <Button intent="warning">Escalate to CSO</Button>
+          <Button intent="warning">Escalate to SM</Button>
         </>
       }
     >
@@ -58,7 +59,7 @@ export const FlaggedVisitor: Story = {
             <span className="text-xs text-fg-muted">Unknown affiliation</span>
           </div>
         </div>
-        <Badge intent="warning">Requires CSO Review</Badge>
+        <Badge intent="warning">Requires SM Review</Badge>
       </div>
 
       <Table>

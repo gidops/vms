@@ -5,10 +5,7 @@ import {
   type NotificationTransport,
 } from './transport.interface';
 
-/**
- * Routes a channel to its transport. IN_APP has no transport — those
- * notifications are delivered by persisting the row, handled in the dispatcher.
- */
+/** IN_APP has no transport: the dispatcher delivers it by persisting the row. */
 @Injectable()
 export class ChannelRegistry {
   private readonly byChannel = new Map<

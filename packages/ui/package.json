@@ -8,9 +8,12 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./styles.css": "./src/styles.css"
+    "./styles.css": "./src/styles.css",
+    "./print.css": "./src/print.css"
   },
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "scripts": {
     "lint": "eslint src",
     "lint:check": "eslint src",

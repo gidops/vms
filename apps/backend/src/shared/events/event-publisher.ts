@@ -14,11 +14,7 @@ export interface PublishParams {
   metadata?: EventMetadata;
 }
 
-/**
- * Builds a domain event (stamping correlation id from the request CLS) and
- * appends it to the outbox within the caller's transaction. Swapping the
- * downstream transport to NATS later changes only the relay, never callers.
- */
+/** Appends to the outbox within the caller's transaction; never publishes to the bus directly. */
 @Injectable()
 export class EventPublisher {
   constructor(

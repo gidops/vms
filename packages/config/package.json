@@ -10,8 +10,6 @@
   ],
   "exports": {
     "./tsconfig/base.json": "./tsconfig/base.json",
-    "./tsconfig/node.json": "./tsconfig/node.json",
-    "./tsconfig/nextjs.json": "./tsconfig/nextjs.json",
     "./tsconfig/react-lib.json": "./tsconfig/react-lib.json",
     "./eslint/base": "./eslint/base.mjs",
     "./eslint/react-lib": "./eslint/react-lib.mjs"

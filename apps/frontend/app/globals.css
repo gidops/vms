@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@vms/tokens/theme.css";
+@import "@vms/ui/print.css";
 
 /* Tailwind v4 auto-detects content in this app, but not sibling workspace
  * packages. Scan the design system source so utilities used inside @vms/ui

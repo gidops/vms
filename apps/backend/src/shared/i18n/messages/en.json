@@ -38,6 +38,14 @@
       "intro": "Dear {name}, thank you for visiting AATC. We hope you had a pleasant experience.",
       "ratingPrompt": "We would love your feedback. Please take a moment to rate your visit:",
       "ratingButton": "Rate your visit"
+    },
+    "passwordReset": {
+      "subject": "Set a new password for your AATC VMS account",
+      "heading": "Reset your password",
+      "intro": "An administrator has reset your AATC VMS password. Use the button below to choose a new one.",
+      "cta": "Set a new password",
+      "expiry": "This link works once and expires in {minutes} minutes. If it has expired, ask your administrator to send a new one.",
+      "ignore": "If you did not expect this email, you can ignore it; your current password still works."
     }
   },
   "sms": {
@@ -71,7 +79,9 @@
     "validationFailed": "Validation failed",
     "visit": {
       "notFound": "Visit not found",
-      "invalidState": "The visit is not in a valid state for this action."
+      "invalidState": "The visit is not in a valid state for this action.",
+      "notOwner": "You are not allowed to modify this visit.",
+      "notCheckedOut": "The visit must be checked out before it can be rated."
     },
     "alert": {
       "notFound": "Alert not found"
@@ -80,10 +90,42 @@
       "notFound": "User not found"
     },
     "notification": {
-      "notFound": "Notification not found"
+      "notFound": "Notification not found",
+      "notRetryable": "This message can only be retried after it has failed."
     },
     "auth": {
       "invalidCredentials": "Invalid email or password."
+    },
+    "rateLimited": "Too many attempts. Wait a minute and try again.",
+    "deskQr": {
+      "notFound": "The desk QR has not been set up yet.",
+      "exists": "The desk QR already exists.",
+      "badV1Token": "That is not a V1 QR link or token.",
+      "notActive": "This QR code isn't active. Please register at the VMC desk.",
+      "formInvalid": "This form is not valid. Please scan the QR code again.",
+      "formExpired": "This form has expired. Please scan the QR code again."
+    },
+    "gateKiosk": {
+      "notActive": "This gate kiosk link is not active.",
+      "notFound": "There is no gate kiosk link yet.",
+      "exists": "The gate kiosk link already exists."
+    },
+    "visitor": {
+      "notFound": "Visitor not found"
+    },
+    "rfid": {
+      "notFound": "Access card assignment not found",
+      "cardNotFound": "Access card not found",
+      "visitorHasCard": "This visitor already holds an access card. Close it before issuing another.",
+      "cardInUse": "This card is already assigned to someone.",
+      "cardLost": "This card is marked lost. Mark it found before assigning it.",
+      "cardRetired": "This card is retired and cannot be assigned.",
+      "visitMismatch": "That visit does not belong to this visitor.",
+      "notActive": "This card has already been returned or marked lost.",
+      "invalidValidity": "Valid until must be after valid from.",
+      "invalidPhoto": "Upload the photo through the access card form.",
+      "returnRequired": "This visitor holds an access card. Say whether it was retrieved before checking them out.",
+      "returnNotAllowed": "You can't take back access cards. Ask reception to check this visitor out."
     }
   },
   "validation": {

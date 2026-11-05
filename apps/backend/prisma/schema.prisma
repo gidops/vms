@@ -35,7 +35,8 @@ enum VisitType {
 
 enum VisitStatus {
   PENDING
-  NEEDS_MORE_INFO
+  REVIEW_REQUESTED
+  FLAGGED
   APPROVED
   DENIED
   CHECKED_IN
@@ -72,6 +73,12 @@ enum AlertStatus {
   ACKNOWLEDGED
   RESOLVED
   DISMISSED
+}
+
+enum AlertType {
+  SECURITY_REVIEW
+  ADDITIONAL_INFO
+  RESTRICTED_MATCH
 }
 
 enum GateEventType {
@@ -122,21 +129,31 @@ model User {
   avatarKey         String?
   timezone          String? // IANA-ish identifier for region/time preference
   assignedDesk      String? // VMC reception desk/location label
-  // Per-channel notification toggles, e.g. { newInviteRequest, csoDenied, ... }.
+  // Per-channel notification toggles, e.g. { newInviteRequest, smDenied, ... }.
   notificationPrefs Json?
   isActive          Boolean      @default(true)
   preferredLocale   Locale       @default(EN)
   mfaEnabled        Boolean      @default(false)
+  // When the user last opened Requests & Alerts. An inbox item is "unread" for
+  // them if its updatedAt is newer than this; opening the page bumps it to now.
+  lastInboxSeenAt   DateTime?
+  // Set on every successful login (session start), shown on the admin user detail.
+  lastLoginAt       DateTime?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
-  userRoles     UserRole[]
-  sessions      Session[]
-  refreshTokens RefreshToken[]
-  auditLogs     AuditLog[]
-  host          Host?
-  createdVisits Visit[]        @relation("VisitCreatedBy")
-  authoredNotes Note[]
+  userRoles           UserRole[]
+  sessions            Session[]
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  auditLogs           AuditLog[]
+  host                Host?
+  createdVisits       Visit[]              @relation("VisitCreatedBy")
+  authoredNotes       Note[]
+  deskQrsCreated      DeskQr[]
+  gateKiosksCreated   GateKiosk[]
+  rfidCardsIssued     RfidCardAssignment[] @relation("RfidIssuedBy")
+  rfidCardsReturned   RfidCardAssignment[] @relation("RfidReturnedBy")
 
   @@index([tenantId])
 }
@@ -199,6 +216,24 @@ model Session {
   @@index([userId])
 }
 
+/// Admin-issued password-reset link. The raw token travels only inside the
+/// emailed link; at rest it is kept as a sha256 hash. Single-use, short expiry,
+/// and a new request supersedes any outstanding one for the same user.
+model PasswordResetToken {
+  id          String    @id @default(uuid())
+  userId      String
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  /// Admin who triggered the reset (plain id, no FK: admins may be deleted later).
+  createdById String?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 model RefreshToken {
   id           String    @id @default(uuid())
   sessionId    String
@@ -244,22 +279,23 @@ model AuditLog {
 // Domain
 // ---------------------------------------------------------------------------
 model Visitor {
-  id           String   @id @default(uuid())
-  fullName     String
-  email        String   @unique
-  phone        String? // encrypted at rest (application layer)
-  nationalId   String? // encrypted at rest (application layer)
-  organization String?
-  photoUrl     String?
+  id              String   @id @default(uuid())
+  fullName        String
+  email           String   @unique
+  phone           String? // encrypted at rest (application layer)
+  nationalId      String? // encrypted at rest (application layer)
+  organization    String?
+  photoUrl        String?
   // Preferred language for visitor-facing notifications. Defaults to EN until
   // captured (e.g. at invitation/registration time).
-  preferredLocale Locale @default(EN)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  preferredLocale Locale   @default(EN)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  visits  Visit[]
-  ratings Rating[]
-  alerts  Alert[]
+  visits    Visit[]
+  ratings   Rating[]
+  alerts    Alert[]
+  rfidCards RfidCardAssignment[]
 }
 
 model Host {
@@ -276,42 +312,75 @@ model Host {
 }
 
 model Visit {
-  id           String      @id @default(uuid())
-  visitorId    String
-  hostId       String
-  invitationId String?     @unique
-  type         VisitType
-  status       VisitStatus @default(PENDING)
-  purpose      String
+  id                    String              @id @default(uuid())
+  visitorId             String
+  // Optional: walk-ins may not be visiting a named staff host.
+  hostId                String?
+  invitationId          String?             @unique
+  // Set ONLY for a true group visit — every guest of that group shares one
+  // groupId so the group collapses to one VMC row and checks in together. Bulk
+  // invites/walk-ins and lone guests are independent visits with groupId = null.
+  groupId               String?
+  // True when this visit belongs to a group visit (the group signal). groupName
+  // and groupContact are the shared group display name and optional contact
+  // (a free-text email or phone number).
+  isGroupVisit          Boolean             @default(false)
+  groupName             String?
+  groupContact          String?
+  // Human-friendly invite code (e.g. "5A19-795") generated for invites at
+  // creation and encoded in the guest's QR. Null for walk-ins.
+  referenceCode         String?             @unique
+  type                  VisitType
+  status                VisitStatus         @default(PENDING)
+  purpose               String
   // Per-visit floor/department selected at request time (distinct from Host.office).
-  floor        String?
-  riskLevel    RiskLevel?
-  scheduledAt  DateTime?
-  checkInAt    DateTime?
-  checkOutAt   DateTime?
-  approvedById String?
-  deniedReason String?
+  floor                 String?
+  riskLevel             RiskLevel?
+  scheduledAt           DateTime?
+  // Set when the visit's QR is validated at the gate (or auto-set at VMC check-in).
+  gateValidatedAt       DateTime?
+  checkInAt             DateTime?
+  checkOutAt            DateTime?
+  approvedById          String?
+  deniedReason          String?
   // Origin of the request: who logged it and from which station/channel.
-  createdById  String?
+  createdById           String?
   // Denormalized creator name, preserved if the creator's account is deleted.
-  createdByName String?
-  source       String?     @default("VMC_STATION")
+  createdByName         String?
+  // Name and organisation typed at a walk-in QR self-registration. The public
+  // form can't verify the email, so these (not the matched Visitor record)
+  // identify who is actually on site.
+  visitorNameAtVisit    String?
+  organizationAtVisit   String?
+  source                String?             @default("VMC_STATION")
+  // Intake answers (null = legacy visit created before the questions existed).
+  // needsEvacuationAssist feeds the live Evacuation Roll; commsConsent is the
+  // answer given at THIS visit (current opt-in status lives in CommsConsentEvent).
+  needsEvacuationAssist Boolean?
+  // When the answer is Yes: MOBILITY | VISUAL | HEARING | MEDICAL | OTHER
+  // (contracts EVACUATION_ASSIST_TYPES), plus free text for OTHER.
+  evacuationAssistTypes String[]            @default([])
+  evacuationAssistOther String?
+  commsConsent          Boolean?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
-  visitor    Visitor     @relation(fields: [visitorId], references: [id], onDelete: Cascade)
-  host       Host        @relation(fields: [hostId], references: [id], onDelete: Cascade)
-  invitation Invitation? @relation(fields: [invitationId], references: [id])
-  createdBy  User?       @relation("VisitCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  visitor    Visitor              @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  host       Host?                @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  invitation Invitation?          @relation(fields: [invitationId], references: [id])
+  createdBy  User?                @relation("VisitCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   pass       Pass?
   rating     Rating?
   alerts     Alert[]
   notes      Note[]
   gateEvents GateEvent[]
+  rfidCards  RfidCardAssignment[]
 
   @@index([status])
   @@index([visitorId])
   @@index([hostId])
+  @@index([groupId])
+  @@index([scheduledAt])
 }
 
 model Invitation {
@@ -348,12 +417,17 @@ model Pass {
 model AccessCard {
   id         String    @id @default(uuid())
   cardNumber String    @unique
+  // Zone/location the badge belongs to (e.g. "5th Floor - left wing"). Drives the
+  // "Assign pass" dropdown grouping at check-in.
+  zone       String?
   passId     String?   @unique
   assignedAt DateTime?
   returnedAt DateTime?
   isActive   Boolean   @default(true)
 
   pass Pass? @relation(fields: [passId], references: [id], onDelete: SetNull)
+
+  @@index([zone])
 }
 
 model Rating {
@@ -374,6 +448,7 @@ model Alert {
   id           String      @id @default(uuid())
   visitId      String?
   visitorId    String?
+  type         AlertType   @default(SECURITY_REVIEW)
   level        RiskLevel
   status       AlertStatus @default(OPEN)
   reason       String
@@ -394,9 +469,9 @@ model Alert {
 // Freeform remarks attached to a visit request or an alert (the "Remarks/notes"
 // and "Add Note" affordance). Polymorphic via nullable visit/alert FKs.
 model Note {
-  id      String  @id @default(uuid())
-  visitId String?
-  alertId String?
+  id         String   @id @default(uuid())
+  visitId    String?
+  alertId    String?
   // Author link is SetNull on user deletion; authorName is denormalized so the
   // note keeps its attribution even after the author's account is removed.
   authorId   String?
@@ -466,6 +541,33 @@ model Notification {
 
   @@index([status, availableAt])
   @@index([userId, readAt])
+  @@index([visitId])
+}
+
+// ---------------------------------------------------------------------------
+// Communication consent (NDPR accountability)
+// ---------------------------------------------------------------------------
+enum ConsentSource {
+  VISIT
+  WITHDRAWAL
+  // Recorded by a System Admin on the visitor's behalf (opted back in).
+  ADMIN
+}
+
+// Append-only log of every comms-consent answer, keyed on the normalised
+// (trimmed, lower-cased) email. The current status for an email is its latest
+// event; a withdrawal is a new event, so visit history is never rewritten.
+model CommsConsentEvent {
+  id          String        @id @default(uuid())
+  email       String
+  consent     Boolean
+  source      ConsentSource
+  visitId     String?
+  actorUserId String?
+  createdAt   DateTime      @default(now())
+
+  @@index([email, createdAt])
+  @@index([visitId])
 }
 
 // ---------------------------------------------------------------------------
@@ -485,4 +587,112 @@ model OutboxEvent {
   createdAt     DateTime     @default(now())
 
   @@index([status, availableAt])
+}
+
+/// The one QR printed at the VMC desk. Visitors scan it, fill in a short form
+/// and immediately become today's walk-ins — no desk verification step.
+/// Only one row ever exists (`key` is always "desk").
+model DeskQr {
+  id             String    @id @default(uuid())
+  key            String    @unique @default("desk")
+  /// In the printed URL. New tokens are random base64url; an imported V1
+  /// token keeps its 32-hex value so the poster already on the desk works.
+  token          String    @unique
+  isActive       Boolean   @default(true)
+  disabledAt     DateTime?
+  tokenRotatedAt DateTime  @default(now())
+  /// Form opens in the WAT day `scanDay` (YYYY-MM-DD); resets on a new day.
+  scanDay        String?
+  scansToday     Int       @default(0)
+  lastScanAt     DateTime?
+  createdById    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+}
+
+/// The gate kiosk link: a no-login device page (`/gate/<token>`) that checks
+/// invitation codes. A singleton, managed by the System Admin like the Desk QR.
+model GateKiosk {
+  id             String    @id @default(uuid())
+  key            String    @unique @default("gate")
+  /// In the kiosk URL; kept readable so the System Admin can copy it again.
+  token          String    @unique
+  isActive       Boolean   @default(true)
+  disabledAt     DateTime?
+  tokenRotatedAt DateTime  @default(now())
+  lastScanAt     DateTime?
+  createdById    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+}
+
+enum RfidCardStatus {
+  AVAILABLE
+  ASSIGNED
+  LOST
+  RETIRED
+}
+
+enum RfidAssignmentStatus {
+  ACTIVE
+  RETURNED
+  LOST
+}
+
+// A personalised RFID access card (Operations → Access cards). Another
+// department configures its doors/floors; the System Admin team prints the
+// visitor's photo and validity on it and assigns it here. NOT the visitor-pass
+// badge pool (`AccessCard`) that reception hands out at check-in. A card is
+// registered the first time its number is assigned and reused after return.
+model RfidCard {
+  id         String         @id @default(uuid())
+  cardNumber String         @unique
+  status     RfidCardStatus @default(AVAILABLE)
+  notes      String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  assignments RfidCardAssignment[]
+
+  @@index([status])
+}
+
+// One issue of an RFID card to a visitor for a validity window (may span many
+// days). At most one ACTIVE assignment per card and per visitor (enforced in
+// the service). Reception retrieves the card at check-out (VMC follow-up).
+model RfidCardAssignment {
+  id            String               @id @default(uuid())
+  cardId        String
+  visitorId     String
+  // Optional visit the card was issued for (e.g. the current one).
+  visitId       String?
+  validFrom     DateTime
+  validUntil    DateTime
+  // S3 key of the visitor photo printed on the card (served via signed URL).
+  photoKey      String?
+  status        RfidAssignmentStatus @default(ACTIVE)
+  issuedById    String?
+  issuedAt      DateTime             @default(now())
+  printCount    Int                  @default(0)
+  lastPrintedAt DateTime?
+  returnedAt    DateTime?
+  returnedById  String?
+  closeNote     String?
+  notes         String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  card       RfidCard @relation(fields: [cardId], references: [id], onDelete: Restrict)
+  visitor    Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  visit      Visit?   @relation(fields: [visitId], references: [id], onDelete: SetNull)
+  issuedBy   User?    @relation("RfidIssuedBy", fields: [issuedById], references: [id], onDelete: SetNull)
+  returnedBy User?    @relation("RfidReturnedBy", fields: [returnedById], references: [id], onDelete: SetNull)
+
+  @@index([cardId])
+  @@index([visitorId])
+  @@index([status])
 }

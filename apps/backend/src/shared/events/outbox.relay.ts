@@ -13,12 +13,7 @@ import { OutboxRepository } from './outbox.repository';
 const BATCH_SIZE = 50;
 const RETRY_BACKOFF_MS = 5000;
 
-/**
- * Polls the outbox and republishes PENDING events onto the in-process bus
- * (EventEmitter2). This is the ONLY component that knows the transport; moving
- * to NATS later is a change here alone. Runs as a simple interval loop so we
- * don't add a scheduler dependency.
- */
+/** The only component that knows the transport; swapping it is a change here alone. */
 @Injectable()
 export class OutboxRelay implements OnApplicationBootstrap, OnModuleDestroy {
   private readonly logger = new Logger(OutboxRelay.name);

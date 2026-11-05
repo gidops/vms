@@ -2,18 +2,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-/** Supported backend locales (mirror of the contracts/Prisma Locale enum). */
-export const LOCALES = ['EN', 'FR', 'AR'] as const;
+/** Mirrors the Prisma Locale enum. */
+const LOCALES = ['EN', 'FR', 'AR'] as const;
 export type Locale = (typeof LOCALES)[number];
-export const DEFAULT_LOCALE: Locale = 'EN';
+const DEFAULT_LOCALE: Locale = 'EN';
 
 type Catalog = Record<string, unknown>;
 
-/**
- * Normalize any locale-ish input (e.g. "en", "fr-FR", "AR") to a backend Locale,
- * falling back to EN. A pure function so the request middleware can use it
- * without pulling in the DI container.
- */
+/** Pure so the request middleware can use it without the DI container. */
 export function normalizeLocale(input?: string | null): Locale {
   if (!input) return DEFAULT_LOCALE;
   const code = input.trim().slice(0, 2).toUpperCase();
@@ -22,14 +18,7 @@ export function normalizeLocale(input?: string | null): Locale {
     : DEFAULT_LOCALE;
 }
 
-/**
- * Backend localization. Loads per-locale message catalogs (JSON, mirroring the
- * frontend's namespaced structure) and resolves dot-paths with `{var}`
- * interpolation. Used both by the notification templating layer and by the API
- * error/validation path so the backend is the single source of truth for
- * localized strings. Falls back to EN, then to the raw key, so a missing
- * translation degrades gracefully instead of throwing.
- */
+/** Falls back to EN, then the raw key, so a missing translation never throws. */
 @Injectable()
 export class I18nService {
   private readonly logger = new Logger(I18nService.name);
@@ -53,15 +42,10 @@ export class I18nService {
     }
   }
 
-  /** Normalize any locale-ish input (e.g. "en", "fr-FR", "AR") to a Locale. */
   resolveLocale(input?: string | null): Locale {
     return normalizeLocale(input);
   }
 
-  /**
-   * Translate a dot-path key for a locale, interpolating `{var}` placeholders.
-   * Resolution order: requested locale → EN → the key itself.
-   */
   translate(
     key: string,
     locale: Locale = DEFAULT_LOCALE,
@@ -72,7 +56,7 @@ export class I18nService {
     return this.interpolate(raw, vars);
   }
 
-  /** True when the key resolves to a string in any catalog (key vs. free text). */
+  /** Distinguishes a catalog key from free text. */
   has(key: string): boolean {
     return (
       this.lookup(key, DEFAULT_LOCALE) !== undefined ||

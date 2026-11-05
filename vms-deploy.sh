@@ -3,20 +3,26 @@
 # vms-deploy.sh — deploy the VMS monorepo to AWS via prebuilt ECR images,
 # tagged by git short SHA (NOT :latest), with PER-APP image tags.
 #
-# Why per-app tags:
-#   Terraform has two variables (no defaults), each interpolated into one
-#   instance's user_data:
-#       var.backend_image_tag  -> backend  `docker run ...:<tag>`
-#       var.frontend_image_tag -> frontend `docker run ...:<tag>`
-#   The tag is part of the instance configuration:
-#     - Change an app's tag -> its user_data changes -> `terraform apply`
-#       REPLACES only that instance (re-runs user_data, pulls the new image).
-#     - Same tag -> no diff -> no-op for that instance.
+# TARGET ENVIRONMENT: the Platta Integrated non-prod account (Identity Center
+# SSO profile `platta-nonprod` by default — override with AWS_PROFILE). The
+# stack is a SINGLE private Docker host running both containers behind an
+# HTTPS ALB with host-based routing:
+#   frontend  https://<domain>/        (ALB :443 → host :80,  container :3000)
+#   backend   https://api.<domain>/    (ALB :443 host rule → host :4000)
 #
-#   Crucially, deploying ONE app must NOT disturb the other. So every apply
-#   passes BOTH tag vars: $TAG for the app(s) being deployed, and the OTHER
-#   app's CURRENT deployed tag (read from `terraform output`) for the rest.
-#   That keeps the untouched app pinned to the image it's already running.
+# Why per-app tags:
+#   Terraform has two variables (no defaults), both interpolated into the app
+#   host's user_data:
+#       var.backend_image_tag  -> `docker run ...backend:<tag>`
+#       var.frontend_image_tag -> `docker run ...frontend:<tag>`
+#   The tags are part of the instance configuration:
+#     - Change either tag -> user_data changes -> `terraform apply` REPLACES
+#       the host (re-runs user_data, pulls the new image(s)).
+#     - Same tags -> no diff -> no-op.
+#   NOTE: with a single host, deploying EITHER app replaces the shared host,
+#   so both containers restart (brief downtime — acceptable in dev). Passing
+#   the untouched app's CURRENT tag keeps IT pinned to the image it already
+#   runs; only the app you're deploying changes version.
 #
 # Modes:
 #   --deploy [backend|frontend|both]   (default: both)
@@ -24,21 +30,22 @@
 #       (deployed app -> $TAG, other app -> its current tag). Handles first-time
 #       creation AND updates — no -replace. Also bootstraps Phase A if needed.
 #
-#   --redeploy [backend|frontend|both] (default: both)
-#       NO build. Recreate the named instance(s) with -replace, passing BOTH
-#       current tags UNCHANGED. This is the only mode that needs -replace: tags
-#       don't change, so Terraform would otherwise see no diff and refuse to
-#       touch a crash-looping box.
+#   --redeploy                          (no target needed — one host)
+#       NO build. Recreate the app host with -replace, passing BOTH current
+#       tags UNCHANGED. Use to recover a crash-looping box when the images
+#       haven't changed (tags identical -> terraform would otherwise see no
+#       diff and refuse to touch it).
 #
-# NOTE — Phase A ordering: the ECR repos and the backend EIP must exist BEFORE
-# any image can be built/pushed (the frontend bakes the EIP in at build time,
-# and you can't push to a repo that doesn't exist). On a destroyed stack the
-# registry/EIP outputs are empty, so --deploy first runs a targeted apply:
-#   terraform apply -var="backend_image_tag=$TAG" -var="frontend_image_tag=$TAG" \
-#     -target=aws_ecr_repository.backend -target=aws_ecr_repository.frontend \
-#     -target=aws_eip.backend
-# then re-reads the outputs and continues. (Both tag vars are required even for
-# a targeted apply; the images get built right after.)
+# NOTE — Phase A ordering: the ECR repos and the ALB must exist BEFORE any
+# image can be built/pushed (you can't push to a repo that doesn't exist, and
+# the first apply stores the outputs — including api_base_url, which the
+# frontend bakes into NEXT_PUBLIC_API_BASE_URL at build time). On a fresh
+# stack the outputs are empty, so --deploy first runs a targeted apply:
+#   terraform apply -var=... -target=aws_ecr_repository.backend \
+#     -target=aws_ecr_repository.frontend -target=aws_lb.main
+# (the ALB target pulls in the VPC/subnets/SGs it depends on), then re-reads
+# the outputs and continues. Both tag vars are required even for a targeted
+# apply; the images get built right after.
 #
 # FRESH-STACK RULE: on a truly fresh stack there are no current tags, so an app
 # you are NOT building would have no image to pin to. --deploy therefore REQUIRES
@@ -46,23 +53,34 @@
 #
 # Examples:
 #   ./vms-deploy.sh --deploy            # build+push both @ SHA, apply
-#   ./vms-deploy.sh --deploy backend    # roll only backend; frontend stays put
-#   ./vms-deploy.sh --redeploy frontend # recreate a broken box, no rebuild
+#   ./vms-deploy.sh --deploy backend    # roll only backend; frontend stays pinned
+#   ./vms-deploy.sh --redeploy          # recreate the host, no rebuild
 #
 # Run from the repo root (where ./terraform lives). Nothing is hardcoded — repo
-# URLs, registry host, EIP, and current tags are all read from `terraform output`.
+# URLs, ALB DNS and current tags are all read from `terraform output`.
 
 set -euo pipefail
 
 REGION="us-east-1"
 TF="terraform -chdir=terraform"
 
-# Approval flags applied to EVERY `terraform apply`. In CI (Jenkins sets
-# VMS_AUTO_APPROVE=1) there is no TTY, so terraform's own "Do you want to perform
-# these actions?" prompt hits stdin EOF and dies — the human approval already
-# happened at the upstream Jenkins `input` gate. When VMS_AUTO_APPROVE=1, run
-# every apply with -auto-approve -input=false. Left empty otherwise so local,
-# interactive runs still get terraform's normal confirmation prompt.
+# Identity Center SSO profile for the Platta non-prod account. Everything —
+# terraform (via var.aws_profile default), the ECR login below — uses it.
+# If the session has expired: aws sso login --profile platta-nonprod
+export AWS_PROFILE="${AWS_PROFILE:-platta-nonprod}"
+
+# Frontend API base URL baked into the Next.js bundle at build time. Default
+# comes from the api_base_url terraform output (https://api.<domain>, routed by
+# the ALB's host-header rule). Override with VMS_API_BASE_URL for one-offs
+# (e.g. a staging domain).
+API_BASE_URL="${VMS_API_BASE_URL:-}"
+
+# Approval flags applied to EVERY `terraform apply`. In CI there is no TTY, so
+# terraform's own "Do you want to perform these actions?" prompt hits stdin EOF
+# and dies — the human approval already happened at the upstream gate. When
+# VMS_AUTO_APPROVE=1, run every apply with -auto-approve -input=false. Left
+# empty otherwise so local, interactive runs still get terraform's normal
+# confirmation prompt.
 APPLY_FLAGS=()
 if [ "${VMS_AUTO_APPROVE:-0}" = "1" ]; then
   APPLY_FLAGS=(-input=false -auto-approve)
@@ -76,7 +94,7 @@ usage() {
   cat >&2 <<EOF
 Usage:
   $0 --deploy   [backend|frontend|both]   (default: both)
-  $0 --redeploy [backend|frontend|both]   (default: both)
+  $0 --redeploy                            (replace the app host, no rebuild)
 EOF
   exit 1
 }
@@ -103,15 +121,19 @@ tf_out() {
   printf '%s' "$val"
 }
 
-# Populate registry/repo/EIP vars + the currently-deployed per-app tags.
+# Populate registry/repo/ALB vars + the currently-deployed per-app tags.
 # Empties are allowed (Phase A not applied yet / first ever deploy).
 read_outputs() {
   BACKEND_REPO="$(tf_out ecr_backend_repository_url)"
   FRONTEND_REPO="$(tf_out ecr_frontend_repository_url)"
-  BACKEND_EIP="$(tf_out backend_eip)"
+  ALB_DNS="$(tf_out alb_dns_name)"
   CURRENT_BACKEND="$(tf_out backend_image_tag)"
   CURRENT_FRONTEND="$(tf_out frontend_image_tag)"
   REGISTRY="${BACKEND_REPO%/*}" # strip trailing /vms-backend to get the registry host
+  # Resolve the frontend's API base URL (https://api.<domain>) from outputs.
+  if [ -z "$API_BASE_URL" ]; then
+    API_BASE_URL="$(tf_out api_base_url)"
+  fi
 }
 
 # Same, but hard-fail if anything is missing (used where the stack must be up).
@@ -119,27 +141,66 @@ require_outputs() {
   read_outputs
   [ -n "$BACKEND_REPO" ] || die "ecr_backend_repository_url missing. Is the stack applied?"
   [ -n "$FRONTEND_REPO" ] || die "ecr_frontend_repository_url missing."
-  [ -n "$BACKEND_EIP" ] || die "backend_eip missing. Is the EIP allocated?"
+  [ -n "$ALB_DNS" ] || die "alb_dns_name missing. Is the ALB created?"
+  [ -n "$API_BASE_URL" ] || die "api_base_url missing (and no VMS_API_BASE_URL override)."
 }
 
-# Create ONLY the ECR repos + EIP, so images can be pushed and the EIP baked in.
-# Lets --deploy work from a fully destroyed state. Both tag vars are required.
+# Create ONLY the ECR repos + the ALB (and its network dependencies), so images
+# can be pushed and the ALB DNS baked into the frontend. Lets --deploy work
+# from a fully destroyed state. Both tag vars are required.
 bootstrap_phase_a() {
-  echo "=== Phase A: ECR repos + EIP not found — creating them first ==="
+  echo "=== Phase A: ECR repos + ALB not found — creating them first ==="
   $TF apply "${APPLY_FLAGS[@]}" \
     -var="backend_image_tag=$TAG" \
     -var="frontend_image_tag=$TAG" \
     -target=aws_ecr_repository.backend \
     -target=aws_ecr_repository.frontend \
-    -target=aws_eip.backend
+    -target=aws_internet_gateway.main \
+    -target=aws_lb.main
   read_outputs
   [ -n "$BACKEND_REPO" ] || die "ecr_backend_repository_url still missing after Phase A."
   [ -n "$FRONTEND_REPO" ] || die "ecr_frontend_repository_url still missing after Phase A."
-  [ -n "$BACKEND_EIP" ] || die "backend_eip still missing after Phase A."
-  echo "=== Phase A done. Backend EIP = $BACKEND_EIP ==="
+  [ -n "$ALB_DNS" ] || die "alb_dns_name still missing after Phase A."
+  if [ -z "$API_BASE_URL" ]; then
+    # Targeted applies can skip recording the var-only api_base_url output. A
+    # refresh-only apply is non-destructive (state sync only) and records it.
+    echo "=== api_base_url not recorded by the targeted apply — syncing outputs ==="
+    $TF apply -refresh-only -auto-approve \
+      -var="backend_image_tag=$TAG" -var="frontend_image_tag=$TAG"
+    read_outputs
+  fi
+  [ -n "$API_BASE_URL" ] || die "api_base_url still missing after Phase A — frontend cannot be baked."
+  echo "=== Phase A done. ALB DNS = $ALB_DNS ==="
+}
+
+# Preflight: Docker Desktop's WSL credential helper is broken ("The stub
+# received bad data" on `docker login`), and Docker Desktop silently re-adds
+# `"credsStore": "desktop.exe"` to ~/.docker/config.json on restart/update —
+# so the breakage recurs. Strip it before the ECR login rather than dying
+# mid-deploy. Credentials then land base64-encoded in config.json, which is
+# acceptable: ECR tokens are short-lived (~12h), not long-term secrets.
+preflight_docker_creds() {
+  local cfg="$HOME/.docker/config.json"
+  [ -f "$cfg" ] || return 0
+  grep -q '"credsStore"[[:space:]]*:[[:space:]]*"desktop.exe"' "$cfg" || return 0
+  echo "=== Preflight: removing broken 'desktop.exe' credsStore from $cfg ==="
+  if command -v python3 >/dev/null 2>&1; then
+    python3 - "$cfg" <<'PYEOF'
+import json, sys
+path = sys.argv[1]
+with open(path) as f:
+    cfg = json.load(f)
+cfg.pop("credsStore", None)
+with open(path, "w") as f:
+    json.dump(cfg, f, indent=2)
+PYEOF
+  else
+    die "Docker config uses the broken 'desktop.exe' credsStore and python3 is unavailable to fix it. Remove the \"credsStore\" line from $cfg and re-run."
+  fi
 }
 
 ecr_login() {
+  preflight_docker_creds
   echo "=== Logging in to ECR ($REGISTRY) ==="
   aws ecr get-login-password --region "$REGION" \
     | docker login --username AWS --password-stdin "$REGISTRY"
@@ -152,56 +213,46 @@ build_push_backend() {
 }
 
 build_push_frontend() {
-  echo "=== Building + pushing FRONTEND @ $TAG (EIP $BACKEND_EIP baked in) ==="
+  # An empty API_BASE_URL would bake "" into the bundle (browser then calls the
+  # frontend's own origin and every request 404s) — and verify_frontend_bake
+  # passes vacuously on "" (grep -rlF "" matches everything). Happens on fresh
+  # deploys: Phase A's targeted apply doesn't record the api_base_url output.
+  [ -n "$API_BASE_URL" ] || die "API_BASE_URL is empty — refusing to bake a frontend with no API URL. (Set VMS_API_BASE_URL or apply the stack first.)"
+  echo "=== Building + pushing FRONTEND @ $TAG ($API_BASE_URL baked in) ==="
   docker build -f apps/frontend/Dockerfile \
-    --build-arg NEXT_PUBLIC_API_BASE_URL="http://$BACKEND_EIP:4000" \
+    --build-arg NEXT_PUBLIC_API_BASE_URL="$API_BASE_URL" \
     -t "$FRONTEND_REPO:$TAG" .
   docker push "$FRONTEND_REPO:$TAG"
   verify_frontend_bake
 }
 
-# Hard-fail if the EIP did not get inlined into the frontend bundle — this is the
-# single highest-risk silent failure (browser ends up calling a dead address).
+# Hard-fail if the API base URL did not get inlined into the frontend bundle —
+# this is the single highest-risk silent failure (browser ends up calling a dead
+# address). grep -F: the URL contains "/" and ":", so match it as a fixed string.
 verify_frontend_bake() {
-  echo "--- Verifying $BACKEND_EIP is baked into the frontend bundle ---"
+  echo "--- Verifying $API_BASE_URL is baked into the frontend bundle ---"
   docker run --rm --entrypoint node "$FRONTEND_REPO:$TAG" -e "
     const cp = require('child_process');
-    const hit = cp.execSync('grep -rl ${BACKEND_EIP} /app 2>/dev/null || true').toString().trim();
+    const hit = cp.execSync('grep -rlF \"${API_BASE_URL}\" /app 2>/dev/null || true').toString().trim();
     if (!hit) { console.error('  NOT FOUND'); process.exit(1); }
     console.log('  OK: ' + hit.split('\n')[0]);
-  " || die "EIP $BACKEND_EIP not found in frontend bundle — build-arg did not take. Stopping before deploy."
+  " || die "API base URL $API_BASE_URL not found in frontend bundle — build-arg did not take. Stopping before deploy."
 }
 
-# Pause so a human reads the plan before any apply that could touch the EIP or RDS.
+# Pause so a human reads the plan before any apply that could touch RDS.
 confirm_plan() {
   echo
   echo ">>> Review the plan above carefully:"
-  echo "    - It should create/replace ONLY the instance(s) you intend (+ aws_eip_association.backend)."
-  echo "    - It must NOT show aws_eip.backend being destroyed/replaced (that drifts your address)."
+  echo "    - It should create/replace ONLY aws_instance.app (+ its two target group attachments)."
   echo "    - It must NOT show aws_db_instance.main (RDS) — that would drop your tables."
-  # CI/CD (Jenkins) runs non-interactively: there is no TTY to read from, so the
-  # human review above is gated upstream (a Jenkins `input` approval step). Set
-  # VMS_AUTO_APPROVE=1 to skip the blocking prompt.
+  echo "    - Replacing the single host restarts BOTH containers (brief dev downtime)."
+  # CI/CD runs non-interactively: there is no TTY to read from, so the human
+  # review is gated upstream. Set VMS_AUTO_APPROVE=1 to skip the blocking prompt.
   if [ "${VMS_AUTO_APPROVE:-0}" = "1" ]; then
     echo ">>> VMS_AUTO_APPROVE=1 — skipping interactive confirmation (non-interactive run)."
     return 0
   fi
   read -r -p ">>> Press Enter to apply, or Ctrl-C to abort. "
-}
-
-# After an apply, confirm the EIP held; if not, the frontend bake is now stale.
-check_eip_held() {
-  local before="$1"
-  local after
-  after="$(tf_out backend_eip)"
-  echo
-  if [ "$after" = "$before" ]; then
-    echo "=== EIP held: $after (frontend bake still valid) ==="
-  else
-    echo "!!! EIP CHANGED: was $before, now $after"
-    echo "!!! The frontend image is now baked with a STALE address."
-    echo "!!! Re-run: $0 --deploy frontend"
-  fi
 }
 
 # ---------- modes ----------
@@ -211,7 +262,7 @@ do_deploy() {
   echo "########## DEPLOY: $target (build + push @ $TAG, then apply) ##########"
 
   read_outputs
-  if [ -z "$BACKEND_REPO" ] || [ -z "$FRONTEND_REPO" ] || [ -z "$BACKEND_EIP" ]; then
+  if [ -z "$BACKEND_REPO" ] || [ -z "$FRONTEND_REPO" ] || [ -z "$ALB_DNS" ]; then
     # Fresh/destroyed stack: no current tags exist, so an app we don't build
     # would have nothing to pin to. Require "both".
     [ "$target" = "both" ] || die "Fresh stack (no current tags): --deploy must be 'both', not '$target'."
@@ -238,7 +289,6 @@ do_deploy() {
       ;;
   esac
 
-  local eip_before="$BACKEND_EIP"
   ecr_login
   case "$target" in
     backend) build_push_backend ;;
@@ -250,52 +300,42 @@ do_deploy() {
   esac
 
   echo "=== Applying: backend_image_tag=$backend_tag frontend_image_tag=$frontend_tag ==="
-  echo ">>> Only the app(s) whose tag changed get replaced; the other stays pinned."
+  echo ">>> A changed tag replaces the (single) app host; unchanged tags stay pinned."
   $TF plan -var="backend_image_tag=$backend_tag" -var="frontend_image_tag=$frontend_tag"
   confirm_plan
   $TF apply "${APPLY_FLAGS[@]}" -var="backend_image_tag=$backend_tag" -var="frontend_image_tag=$frontend_tag"
 
-  check_eip_held "$eip_before"
   echo
   echo "=== Deploy complete. Current addresses: ==="
   $TF output
+  echo
+  echo "    Frontend: $(tf_out app_url)/"
+  echo "    Backend:  $API_BASE_URL/health"
 }
 
 do_redeploy() {
-  local target="$1"
-  echo "########## REDEPLOY: $target (replace only, NO rebuild) ##########"
+  echo "########## REDEPLOY: replace the app host (NO rebuild) ##########"
   require_outputs
   [ -n "$CURRENT_BACKEND" ] || die "No current backend_image_tag to pass through. Is the stack deployed?"
   [ -n "$CURRENT_FRONTEND" ] || die "No current frontend_image_tag to pass through. Is the stack deployed?"
-  local eip_before="$BACKEND_EIP"
 
-  local replace_args=()
-  case "$target" in
-    backend) replace_args=(-replace=aws_instance.backend) ;;
-    frontend) replace_args=(-replace=aws_instance.frontend) ;;
-    both) replace_args=(-replace=aws_instance.backend -replace=aws_instance.frontend) ;;
-  esac
-
-  echo "=== Replacing instance(s) — no rebuild; both tags unchanged ==="
+  echo "=== Replacing the app host — no rebuild; both tags unchanged ==="
   echo "    backend_image_tag=$CURRENT_BACKEND frontend_image_tag=$CURRENT_FRONTEND"
-  echo "    (Use this to recover a crash-looping box when the image hasn't changed.)"
-  $TF plan -var="backend_image_tag=$CURRENT_BACKEND" -var="frontend_image_tag=$CURRENT_FRONTEND" "${replace_args[@]}"
+  echo "    (Use this to recover a crash-looping box when the images haven't changed.)"
+  $TF plan -var="backend_image_tag=$CURRENT_BACKEND" -var="frontend_image_tag=$CURRENT_FRONTEND" -replace=aws_instance.app
   confirm_plan
-  $TF apply "${APPLY_FLAGS[@]}" -var="backend_image_tag=$CURRENT_BACKEND" -var="frontend_image_tag=$CURRENT_FRONTEND" "${replace_args[@]}"
-
-  check_eip_held "$eip_before"
+  $TF apply "${APPLY_FLAGS[@]}" -var="backend_image_tag=$CURRENT_BACKEND" -var="frontend_image_tag=$CURRENT_FRONTEND" -replace=aws_instance.app
 }
 
 # ---------- entry ----------
 
 [ -d terraform ] || die "No ./terraform directory here. Run from the repo root."
 
-# Initialize the S3 backend BEFORE any terraform command. The app stack uses a
-# remote S3 backend, so a fresh Jenkins workspace has no .terraform/ and every
-# `terraform output/plan/apply` — including the Phase A bootstrap below — would
-# fail with "Backend initialization required, please run terraform init".
-# Plain init suffices (no local state to migrate; the S3 backend auto-configures);
-# -input=false so it never blocks on a prompt in non-interactive CI.
+# Initialize the S3 backend BEFORE any terraform command. The stack uses a
+# remote S3 backend (platta-tfstate-* in the non-prod account), so a fresh
+# workspace has no .terraform/ and every `terraform output/plan/apply` —
+# including the Phase A bootstrap — would fail with "Backend initialization
+# required". Plain init suffices; -input=false so it never blocks on a prompt.
 $TF init -input=false
 
 # Tag every image for this run by git short SHA (+ -dirty if the tree is unclean).
@@ -317,10 +357,8 @@ case "${1:-}" in
     do_deploy "$target"
     ;;
   --redeploy)
-    [ $# -le 2 ] || usage
-    target="${2:-both}"
-    valid_target "$target" || usage
-    do_redeploy "$target"
+    [ $# -le 1 ] || usage
+    do_redeploy
     ;;
   *) usage ;;
 esac

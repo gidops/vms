@@ -16,10 +16,10 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         className={cn(
           "flex w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-fg",
           "placeholder:text-fg-subtle",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]",
-          "focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--color-canvas)]",
+          // Focus shows as a coloured border, not a ring around the field.
+          "transition-colors focus:border-[var(--color-ring)] focus:outline-none",
           "disabled:cursor-not-allowed disabled:opacity-50",
-          "aria-[invalid=true]:border-danger aria-[invalid=true]:ring-danger",
+          "aria-[invalid=true]:border-danger aria-[invalid=true]:focus:border-danger",
           className,
         )}
         {...props}

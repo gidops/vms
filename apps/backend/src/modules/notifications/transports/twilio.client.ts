@@ -3,11 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import twilio, { type Twilio } from 'twilio';
 import type { Env } from '../../../shared/config/env.schema';
 
-/**
- * Lazily-constructed shared Twilio client used by both the SMS and WhatsApp
- * transports (one account serves both channels). Returns undefined when Twilio
- * isn't configured so callers can fall back to logging.
- */
+/** Shared by SMS and WhatsApp; undefined when Twilio isn't configured so callers fall back to logging. */
 @Injectable()
 export class TwilioClientProvider {
   private client?: Twilio;

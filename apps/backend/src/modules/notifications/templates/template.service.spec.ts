@@ -1,11 +1,20 @@
 import { NotificationChannel } from '@prisma/client';
+import type { ConfigService } from '@nestjs/config';
+import type { Env } from '../../../shared/config/env.schema';
 import { I18nService } from '../../../shared/i18n/i18n.service';
 import { NOTIFICATION_TEMPLATES } from '../notification.types';
 import { QrService } from '../qr/qr.service';
 import { TemplateService } from './template.service';
 
 describe('TemplateService', () => {
-  const service = new TemplateService(new I18nService(), new QrService());
+  const config = {
+    get: () => 'https://vms.example.org',
+  } as unknown as ConfigService<Env, true>;
+  const service = new TemplateService(
+    new I18nService(),
+    new QrService(),
+    config,
+  );
   const data = {
     visitorName: 'Paebi Bobson',
     host: 'Sarah Lee',

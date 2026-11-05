@@ -24,7 +24,7 @@ export function TableHeader({
 }: React.HTMLAttributes<HTMLTableSectionElement>) {
   return (
     <thead
-      className={cn("[&_tr]:border-b [&_tr]:border-border", className)}
+      className={cn("[&_tr]:border-y [&_tr]:border-border-subtle", className)}
       {...props}
     />
   );
@@ -40,7 +40,7 @@ export function TableBody({ className, striped, ...props }: TableBodyProps) {
     <tbody
       className={cn(
         "[&_tr:last-child]:border-0",
-        striped && "[&>tr:nth-child(even)]:bg-surface-muted/50",
+        striped && "[&>tr:nth-child(even)]:bg-surface-stripe",
         className,
       )}
       {...props}
@@ -55,7 +55,7 @@ export function TableRow({
   return (
     <tr
       className={cn(
-        "border-b border-border transition-colors hover:bg-surface-muted/60 data-[state=selected]:bg-primary-subtle",
+        "border-b border-border-subtle transition-colors hover:bg-surface-muted/60 data-[state=selected]:bg-primary-subtle",
         className,
       )}
       {...props}
@@ -70,7 +70,7 @@ export function TableHead({
   return (
     <th
       className={cn(
-        "h-10 px-4 text-start align-middle text-xs font-medium uppercase tracking-wide text-fg-muted",
+        "h-12 px-4 text-start align-middle text-xs font-medium uppercase tracking-wide text-fg-muted",
         className,
       )}
       {...props}

@@ -4,7 +4,7 @@ import { StatusBadge } from "./StatusBadge";
 
 const ALL_STATUSES: VisitStatus[] = [
   "PENDING",
-  "NEEDS_MORE_INFO",
+  "REVIEW_REQUESTED",
   "APPROVED",
   "DENIED",
   "CHECKED_IN",

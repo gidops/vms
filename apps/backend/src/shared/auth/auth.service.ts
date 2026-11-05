@@ -1,9 +1,10 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ROLES, type SignupInput } from '@vms/contracts';
+import { isAddonRole, ROLES, type SignupInput } from '@vms/contracts';
 import {
   UsersService,
   type UserWithAccess,
@@ -15,6 +16,7 @@ import { EventPublisher } from '../events/event-publisher';
 import { TransactionManager } from '../events/transaction.manager';
 import { LocalAuthProvider } from './local-auth.provider';
 import { PasswordService } from './password.service';
+import { hashResetToken } from './reset-token.util';
 import { RefreshTokenService } from './refresh.service';
 import { type AccessTokenClaims, TokenService } from './token.service';
 
@@ -66,8 +68,7 @@ export class AuthService {
     try {
       user = await this.local.authenticate(input);
     } catch (err) {
-      // Failed credentials leave no business transaction — audit directly so
-      // brute-force / credential-stuffing attempts are visible in the trail.
+      // Audited directly so brute-force attempts are visible in the trail.
       await this.security.record({
         action: EVENT_TYPES.LoginFailed,
         entityType: 'User',
@@ -79,8 +80,17 @@ export class AuthService {
     return this.startSession(user, ctx);
   }
 
-  /** Open signup — creates a SUPER_ADMIN and logs in. */
+  /** Locked once any user exists; enforced here because attackers skip signupAvailable. */
   async signup(input: SignupInput, ctx: LoginContext): Promise<AuthResult> {
+    if (!(await this.signupAvailable())) {
+      await this.security.record({
+        action: EVENT_TYPES.SignupBlocked,
+        entityType: 'User',
+        level: 'Warning',
+        metadata: { email: input.email },
+      });
+      throw new ForbiddenException('Signup is closed');
+    }
     const user = await this.users.create({
       email: input.email,
       fullName: input.fullName,
@@ -90,9 +100,8 @@ export class AuthService {
     return this.startSession(user, ctx);
   }
 
-  /** Signup is always available (the first-run lock is intentionally disabled). */
-  signupAvailable(): Promise<boolean> {
-    return Promise.resolve(true);
+  async signupAvailable(): Promise<boolean> {
+    return (await this.prisma.user.count()) === 0;
   }
 
   async refresh(rawToken: string): Promise<AuthResult> {
@@ -102,9 +111,9 @@ export class AuthService {
     if (!user || !user.isActive) {
       throw new UnauthorizedException('Invalid refresh token');
     }
-    // Preserve the session's active role; fall back if it was removed.
+    // Fall back if the active role was removed or is an add-on (never active).
     const effectiveRole =
-      activeRole && user.roles.includes(activeRole)
+      activeRole && user.roles.includes(activeRole) && !isAddonRole(activeRole)
         ? activeRole
         : this.users.defaultRole(user);
     const accessToken = await this.tokens.signAccessToken(
@@ -130,7 +139,6 @@ export class AuthService {
     });
   }
 
-  /** Change password after verifying the current one; revokes all sessions. */
   async changePassword(
     userId: string,
     currentPassword: string,
@@ -158,11 +166,72 @@ export class AuthService {
         metadata: { actorUserId: userId },
       });
     });
-    // Force re-auth everywhere (matches the "logs you out of all sessions" copy).
     await this.refreshTokens.revokeAllForUser(userId);
   }
 
-  /** Switch the active role for the current session and re-mint the token. */
+  /** Lets the reset page show "link expired" before asking for a password. */
+  async validateResetToken(rawToken: string): Promise<boolean> {
+    const row = await this.prisma.passwordResetToken.findUnique({
+      where: { tokenHash: hashResetToken(rawToken) },
+      include: { user: { select: { isActive: true } } },
+    });
+    return Boolean(
+      row && !row.usedAt && row.expiresAt > new Date() && row.user.isActive,
+    );
+  }
+
+  /** Public completion of an admin-issued reset; mirrors changePassword minus the current-password check. */
+  async completePasswordReset(
+    rawToken: string,
+    newPassword: string,
+  ): Promise<void> {
+    const row = await this.prisma.passwordResetToken.findUnique({
+      where: { tokenHash: hashResetToken(rawToken) },
+      include: { user: { select: { isActive: true } } },
+    });
+    const valid =
+      row && !row.usedAt && row.expiresAt > new Date() && row.user.isActive;
+    if (!valid) return this.rejectReset(row?.userId);
+    const passwordHash = await this.passwords.hash(newPassword);
+    const claimed = await this.txm.run(async (tx) => {
+      // The used-check is part of the update, so of two concurrent submits of
+      // the same link only one claims it; the loser is rejected below.
+      const { count } = await tx.passwordResetToken.updateMany({
+        where: { id: row.id, usedAt: null },
+        data: { usedAt: new Date() },
+      });
+      if (count === 0) return false;
+      await tx.user.update({
+        where: { id: row.userId },
+        data: { passwordHash },
+      });
+      await this.events.publish(tx, {
+        type: EVENT_TYPES.PasswordResetCompleted,
+        aggregateType: 'User',
+        aggregateId: row.userId,
+        payload: {},
+        metadata: { actorUserId: row.userId },
+      });
+      return true;
+    });
+    if (!claimed) return this.rejectReset(row.userId);
+    // A reset implies the old credential may be compromised: end every session.
+    await this.refreshTokens.revokeAllForUser(row.userId);
+  }
+
+  /** Audited directly so guessing/replaying links is visible in the trail. */
+  private async rejectReset(userId: string | undefined): Promise<never> {
+    await this.security.record({
+      action: EVENT_TYPES.PasswordResetRejected,
+      entityType: 'User',
+      entityId: userId,
+      level: 'Warning',
+    });
+    throw new UnauthorizedException(
+      'This reset link is invalid or has expired',
+    );
+  }
+
   async switchRole(
     userId: string,
     sessionId: string | undefined,
@@ -174,6 +243,11 @@ export class AuthService {
     }
     if (!user.roles.includes(role)) {
       throw new ForbiddenException('You do not have that role');
+    }
+    if (isAddonRole(role)) {
+      throw new BadRequestException(
+        'Add-on roles extend your main role and cannot be switched to',
+      );
     }
     if (sessionId) {
       await this.refreshTokens.setSessionActiveRole(sessionId, role);
@@ -199,7 +273,6 @@ export class AuthService {
     };
   }
 
-  /** Create the session, refresh token + login event, then mint a scoped token. */
   private async startSession(
     user: UserWithAccess,
     ctx: LoginContext,
@@ -209,6 +282,10 @@ export class AuthService {
       const issued = await this.refreshTokens.issueForNewSession(tx, user.id, {
         ...ctx,
         activeRole,
+      });
+      await tx.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() },
       });
       await this.events.publish(tx, {
         type: EVENT_TYPES.UserLoggedIn,

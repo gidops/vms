@@ -1,0 +1,54 @@
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+
+export function newDeskToken(): string {
+  return randomBytes(16).toString('base64url');
+}
+
+const V1_TOKEN_RE = /^[0-9a-f]{32}$/i;
+
+/** Accepts a bare 32-hex issuer token or its printed URL (`https://aatcabuja.com.ng/qr.php?i=<hex32>`). */
+export function parseV1Token(input: string): string | null {
+  const raw = input.trim();
+  if (V1_TOKEN_RE.test(raw)) return raw.toLowerCase();
+  try {
+    const i = new URL(raw).searchParams.get('i') ?? '';
+    return V1_TOKEN_RE.test(i) ? i.toLowerCase() : null;
+  } catch {
+    return null;
+  }
+}
+
+function hmac(secret: string, value: string): Buffer {
+  return createHmac('sha256', secret).update(value).digest();
+}
+
+function sameBytes(a: Buffer, b: Buffer): boolean {
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+/** Tied to the current token, so rotating the QR also invalidates forms already open. */
+export function signFormToken(
+  secret: string,
+  deskQrToken: string,
+  expiresAt: Date,
+): string {
+  const exp = expiresAt.getTime();
+  const sig = hmac(secret, `form:${deskQrToken}:${exp}`).toString('base64url');
+  return `${exp}.${sig}`;
+}
+
+export function formTokenValid(
+  secret: string,
+  deskQrToken: string,
+  formToken: string,
+  now: Date = new Date(),
+): { ok: true } | { ok: false; reason: 'invalid' | 'expired' } {
+  const [expRaw, sig] = formToken.split('.');
+  const exp = Number(expRaw);
+  if (!Number.isFinite(exp) || !sig) return { ok: false, reason: 'invalid' };
+  const expected = hmac(secret, `form:${deskQrToken}:${exp}`);
+  if (!sameBytes(expected, Buffer.from(sig, 'base64url'))) {
+    return { ok: false, reason: 'invalid' };
+  }
+  return exp > now.getTime() ? { ok: true } : { ok: false, reason: 'expired' };
+}

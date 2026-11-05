@@ -21,10 +21,12 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: () => (
     <div className="w-[48rem]">
-      <FilterBar actions={<Button size="sm">Search</Button>}>
-        <div className="min-w-56 flex-1">
+      <FilterBar
+        search={
           <SearchInput placeholder="Search visitor, host, floor, pass id" />
-        </div>
+        }
+        actions={<Button size="sm">Search</Button>}
+      >
         <Select defaultValue="status">
           <SelectTrigger className="w-40">
             <SelectValue />

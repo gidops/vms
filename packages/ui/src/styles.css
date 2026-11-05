@@ -4,6 +4,7 @@
  * identically from the single token source of truth. */
 @import "tailwindcss";
 @import "@vms/tokens/theme.css";
+@import "./print.css";
 
 /* Tailwind only generates utilities it sees used. Storybook renders component
  * source from this package, so scan it for class names. */

@@ -1,11 +1,9 @@
-output "public_ip" {
-  description = "Public IPv4 address of the frontend EC2 instance."
-  value       = aws_instance.frontend.public_ip
-}
+# The app host is private — there is deliberately no public_ip output anymore.
+# Operator access is SSM: aws ssm start-session --target <instance-id>.
 
-output "backend_public_ip" {
-  description = "Public IPv4 address of the backend EC2 instance."
-  value       = aws_instance.backend.public_ip
+output "app_instance_id" {
+  description = "Instance ID of the app host (for SSM Session Manager)."
+  value       = aws_instance.app.id
 }
 
 output "rds_endpoint" {

@@ -60,7 +60,7 @@ export const Request: Story = {
     meta: (
       <Meta_
         createdBy="Judith Francis"
-        status="Awaiting CSO Approval"
+        status="Awaiting SM Approval"
         statusIntent="warning"
         notes={2}
       />
@@ -74,12 +74,12 @@ export const Alert: Story = {
     typeLabel: "Alerts",
     title: "Flagged Visitor Match",
     description:
-      "This visitor matches a flagged profile and requires CSO review.",
+      "This visitor matches a flagged profile and requires Security Manager review.",
     timeAgo: "2 min ago",
     meta: (
       <Meta_
         createdBy="Judith Francis"
-        status="Denied by CSO"
+        status="Denied by SM"
         statusIntent="danger"
       />
     ),

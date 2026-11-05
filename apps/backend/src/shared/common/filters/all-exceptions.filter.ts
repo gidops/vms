@@ -12,14 +12,7 @@ import { CLS_LOCALE } from '../../logging/cls-keys';
 import { I18nService, type Locale } from '../../i18n/i18n.service';
 import type { ValidationIssue } from '../pipes/zod-validation.pipe';
 
-/**
- * Single choke point for unhandled errors. Logs 5xx with the request's
- * correlation id (via the pino logger) and returns an RFC 7807-style problem
- * response, never leaking internals. Messages are localized to the request
- * locale (CLS): exception messages that are catalog keys (e.g.
- * `errors.visit.notFound`) and zod validation issues are translated; free-text
- * messages pass through unchanged.
- */
+/** RFC 7807-style responses that never leak internals; catalog-key messages are localized. */
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
@@ -57,7 +50,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
           typeof message === 'string'
             ? this.localize(message, locale)
             : this.localize(exception.message, locale);
-        // Localize structured validation issues from ZodValidationPipe.
         const rawErrors = (response as { errors?: unknown }).errors;
         if (Array.isArray(rawErrors)) {
           errors = rawErrors.map((e) =>
@@ -89,14 +81,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
     );
   }
 
-  /** Translate a string if it's a known catalog key; otherwise return it as-is. */
   private localize(message: string, locale: Locale): string {
     return this.i18n.has(message)
       ? this.i18n.translate(message, locale)
       : message;
   }
 
-  /** Localize one validation issue via `validation.<code>`, falling back to raw. */
   private localizeIssue(
     issue: ValidationIssue,
     locale: Locale,

@@ -15,12 +15,7 @@ export interface TimelineProps {
   className?: string;
 }
 
-/**
- * Vertical status stepper used for the visit lifecycle
- * (Invite Created → Awaiting Approval → Checked In → Pass Issued → Checked Out).
- * Generic over steps so it isn't coupled to a specific status enum; callers map
- * their domain status (e.g. contracts `VISIT_LIFECYCLE`) into steps + state.
- */
+/** Generic over steps; callers map their domain status into steps and state. */
 export function Timeline({ steps, className }: TimelineProps) {
   return (
     <ol className={cn("flex flex-col", className)}>

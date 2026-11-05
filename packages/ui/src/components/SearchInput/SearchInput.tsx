@@ -2,26 +2,35 @@ import { Search, X } from "lucide-react";
 import * as React from "react";
 import { cn } from "../../foundations/cn";
 import { Input, type InputProps } from "../../primitives/Input/Input";
+import {
+  searchInputVariants,
+  type SearchInputVariantProps,
+} from "./SearchInput.variants";
 
-export interface SearchInputProps extends InputProps {
+export interface SearchInputProps extends InputProps, SearchInputVariantProps {
   /** When provided and the field has a value, renders a clear button. */
   onClear?: () => void;
 }
 
 export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
-  function SearchInput({ className, onClear, value, ...props }, ref) {
+  function SearchInput({ className, onClear, value, variant, ...props }, ref) {
+    const s = searchInputVariants({ variant });
     const showClear = !!onClear && value != null && String(value).length > 0;
     return (
       <div className="relative w-full">
-        <Search
-          className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-fg-subtle"
-          aria-hidden="true"
-        />
+        <Search className={s.icon()} aria-hidden="true" />
         <Input
           ref={ref}
           type="search"
           value={value}
-          className={cn("ps-9", showClear && "pe-9", className)}
+          className={cn(
+            s.input(),
+            // With our own clear button, hide the browser's built-in one on
+            // type="search" (Chrome/Edge/Safari) so there is only one "x".
+            onClear && "[&::-webkit-search-cancel-button]:appearance-none",
+            showClear && "pe-9",
+            className,
+          )}
           {...props}
         />
         {showClear ? (
@@ -29,7 +38,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
             type="button"
             onClick={onClear}
             aria-label="Clear search"
-            className="absolute end-2 top-1/2 inline-flex size-6 -translate-y-1/2 items-center justify-center rounded text-fg-subtle transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+            className={s.clear()}
           >
             <X className="size-4" aria-hidden="true" />
           </button>

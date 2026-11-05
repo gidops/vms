@@ -1,10 +1,6 @@
 import { z } from "zod";
 
-/**
- * Cross-cutting enums shared by the frontend and backend. These are the single
- * source of truth for status/lifecycle values — the Prisma schema, API DTOs,
- * and UI all derive from these so a value can never drift between layers.
- */
+// Single source of truth: the Prisma enums and backend DTOs mirror these.
 
 export const Locale = z.enum(["EN", "FR", "AR"]);
 export type Locale = z.infer<typeof Locale>;
@@ -17,8 +13,10 @@ export type VisitType = z.infer<typeof VisitType>;
 
 export const VisitStatus = z.enum([
   "PENDING",
-  /** CSO asked the host for more details; the host edits & resubmits to PENDING. */
-  "NEEDS_MORE_INFO",
+  /** Host responds via notes and resubmits to PENDING. */
+  "REVIEW_REQUESTED",
+  /** Check-in is blocked until the alert is resolved. */
+  "FLAGGED",
   "APPROVED",
   "DENIED",
   "CHECKED_IN",
@@ -56,6 +54,14 @@ export const AlertStatus = z.enum([
   "DISMISSED",
 ]);
 export type AlertStatus = z.infer<typeof AlertStatus>;
+
+/** Raised only by the Security Manager or the system; staff/VMC cannot resolve them. */
+export const AlertType = z.enum([
+  "SECURITY_REVIEW",
+  "ADDITIONAL_INFO",
+  "RESTRICTED_MATCH",
+]);
+export type AlertType = z.infer<typeof AlertType>;
 
 export const GateEventType = z.enum([
   "QR_SCAN",

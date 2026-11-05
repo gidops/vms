@@ -14,8 +14,7 @@ export class ApiError extends Error {
   }
 }
 
-// Registered by the auth layer: attempts a token refresh on 401. Returning true
-// means the original request should be retried with the new access token.
+// Set by the auth layer; returns true when the request should be retried with a refreshed token.
 let unauthorizedHandler: (() => Promise<boolean>) | null = null;
 export function setUnauthorizedHandler(
   handler: (() => Promise<boolean>) | null,
@@ -23,11 +22,7 @@ export function setUnauthorizedHandler(
   unauthorizedHandler = handler;
 }
 
-/**
- * Best-effort current locale for outgoing requests. next-intl persists the
- * active locale in the `NEXT_LOCALE` cookie; we fall back to the first path
- * segment, then to "en". Backend normalizes (en → EN) and defaults to EN.
- */
+/** Locale from the `NEXT_LOCALE` cookie, else the first path segment, else "en". */
 function currentLocale(): string {
   if (typeof document !== "undefined") {
     const cookie = document.cookie
@@ -45,7 +40,6 @@ function currentLocale(): string {
 export interface ApiOptions {
   method?: string;
   body?: unknown;
-  /** Skip attaching the Authorization header (e.g. login/refresh). */
   auth?: boolean;
   _retry?: boolean;
 }
@@ -60,8 +54,7 @@ export async function api<T>(
 ): Promise<T> {
   const headers: Record<string, string> = {
     "x-correlation-id": crypto.randomUUID(),
-    // Tell the backend which language to render server-side content in (API
-    // errors, validation messages, and any notifications it triggers).
+    // The backend renders errors and notifications in this language.
     "x-locale": currentLocale(),
   };
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
@@ -97,4 +90,69 @@ export async function api<T>(
   }
 
   return json as T;
+}
+
+function filenameFromDisposition(
+  header: string | null,
+  fallback: string,
+): string {
+  const match = header?.match(/filename="?([^";]+)"?/i);
+  return match?.[1] ?? fallback;
+}
+
+/** Authenticated binary GET with the same one-shot refresh as {@link api}. */
+export async function apiBlob(
+  path: string,
+  _retry = false,
+): Promise<{ blob: Blob; headers: Headers }> {
+  const headers: Record<string, string> = {
+    "x-correlation-id": crypto.randomUUID(),
+    "x-locale": currentLocale(),
+  };
+  const token = tokenStore.getAccessToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const response = await fetch(`${BASE_URL}${path}`, { headers });
+  if (response.status === 401 && !_retry && unauthorizedHandler) {
+    const refreshed = await unauthorizedHandler();
+    if (refreshed) return apiBlob(path, true);
+  }
+  if (!response.ok) {
+    let body: unknown;
+    try {
+      body = await response.json();
+    } catch {
+      body = undefined;
+    }
+    const title =
+      (body as { title?: string } | undefined)?.title ?? response.statusText;
+    throw new ApiError(response.status, title, body);
+  }
+  return { blob: await response.blob(), headers: response.headers };
+}
+
+/** Saves an {@link apiBlob} download through a temporary object URL. */
+export async function apiDownload(
+  path: string,
+  fallbackName: string,
+): Promise<{ filename: string; size: number }> {
+  const { blob, headers } = await apiBlob(path);
+  const filename = filenameFromDisposition(
+    headers.get("Content-Disposition"),
+    fallbackName,
+  );
+  saveBlob(blob, filename);
+  return { filename, size: blob.size };
+}
+
+/** Hands a Blob to the browser as a download through a short-lived object URL. */
+export function saveBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

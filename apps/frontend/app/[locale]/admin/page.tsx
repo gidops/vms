@@ -1,53 +1,76 @@
 "use client";
 
-import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  TopNavShell,
-} from "@vms/ui";
-import { Users } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { TopNavShell } from "@vms/ui";
+import * as React from "react";
 import { AppTopNav } from "@/app/[locale]/_components/AppTopNav";
-import { PendingRequests } from "@/app/[locale]/admin/_components/PendingRequests";
-import { Link } from "@/i18n/navigation";
+import { useEvacuationAlertCount } from "@/app/[locale]/_components/EvacuationIndicator";
+import { QuickActionSheet } from "@/app/[locale]/dashboard/_components/QuickActionSheet";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
+import { AdminActionPanel } from "./_components/AdminActionPanel";
+import { AdminActivityFeed } from "./_components/AdminActivityFeed";
+import { AdminFilters, useAdminFilters } from "./_components/AdminFilters";
+import { AdminOverview } from "./_components/AdminOverview";
+import { adminConsoleRole } from "@/shared/auth/adminConsoleRole";
+import { PendingApprovalsTable } from "./_components/PendingApprovalsTable";
+import { TodaysVisitorsTable } from "./_components/TodaysVisitorsTable";
+import { useAdminBand } from "./_components/useAdminBand";
+import { useVisitOverlays } from "./_components/VisitOverlays";
 
-function Admin() {
-  const t = useTranslations("admin");
-  const { user, hasPermission } = useAuth();
+/** The Security Manager gets the pending-approvals queue; the System Admin gets Today's Visitors. */
+function Overview() {
+  const { hasPermission } = useAuth();
+  const role = adminConsoleRole(hasPermission);
+  const band = useAdminBand();
+  const filters = useAdminFilters();
+  const { openRow, open, overlays } = useVisitOverlays();
+  const [addingVisitor, setAddingVisitor] = React.useState(false);
+  // Tints the quick-actions panel while anyone is on the Evacuation Roll.
+  const evacuationCount = useEvacuationAlertCount();
+
   return (
-    <TopNavShell nav={<AppTopNav />}>
-      <div className="mx-auto flex max-w-3xl flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-semibold text-fg">
-            {t("welcome", { name: user?.fullName ?? "" })}
-          </h1>
-          <p className="text-fg-muted">{t("subtitle")}</p>
+    <TopNavShell
+      nav={<AppTopNav app="admin" active="overview" />}
+      filterBar={
+        <AdminFilters
+          variant="full"
+          value={filters.filters}
+          onChange={filters.onChange}
+          onSearch={filters.onSearch}
+        />
+      }
+    >
+      <div className="flex flex-col gap-6">
+        <AdminOverview
+          eyebrow={band.eyebrow}
+          eyebrowIcon={band.eyebrowIcon}
+          welcome={band.welcome}
+          stats={band.stats}
+          panelTone={evacuationCount > 0 ? "alert" : "default"}
+          panel={
+            <AdminActionPanel onAddVisitor={() => setAddingVisitor(true)} />
+          }
+        />
+
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
+          {role === "securityManager" ? (
+            <PendingApprovalsTable
+              variant="vmc"
+              query={filters.query}
+              onOpen={openRow}
+            />
+          ) : (
+            <TodaysVisitorsTable query={filters.query} onOpen={openRow} />
+          )}
+          <AdminActivityFeed variant="updates" onSelect={open} />
         </div>
-
-        {hasPermission("visit:approve") ? <PendingRequests /> : null}
-
-        {hasPermission("user:read") ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("userManagement")}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center justify-between gap-4">
-              <p className="text-sm text-fg-muted">{t("userManagementBody")}</p>
-              <Button asChild>
-                <Link href="/admin/users">
-                  <Users className="size-4" aria-hidden="true" />
-                  {t("manageUsers")}
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ) : null}
       </div>
+
+      <QuickActionSheet
+        mode={addingVisitor ? "invite" : null}
+        onClose={() => setAddingVisitor(false)}
+      />
+      {overlays}
     </TopNavShell>
   );
 }
@@ -55,7 +78,9 @@ function Admin() {
 export default function AdminPage() {
   return (
     <RouteGuard home="/admin">
-      <Admin />
+      <React.Suspense>
+        <Overview />
+      </React.Suspense>
     </RouteGuard>
   );
 }

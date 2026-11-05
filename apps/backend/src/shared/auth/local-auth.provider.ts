@@ -5,12 +5,7 @@ import {
 } from '../../modules/identity/users.service';
 import { PasswordService } from './password.service';
 
-/**
- * Provider-agnostic credential auth. `AuthService` depends on this interface,
- * not on a concrete provider, so an OIDC/Okta provider (Phase 2) can be added
- * as another implementation without touching the controller, guards, or
- * token/session machinery.
- */
+/** AuthService depends on this interface so other providers can be added without touching it. */
 export interface CredentialAuthProvider {
   readonly kind: 'LOCAL' | 'OIDC';
   authenticate(input: {

@@ -8,11 +8,7 @@ import { useAuth } from "./AuthContext";
 
 export interface RouteGuardProps {
   children: React.ReactNode;
-  /**
-   * The home route this page belongs to (e.g. "/admin"). When set, an
-   * authenticated user whose active role lands elsewhere is redirected to their
-   * own home — so a VMC-active user can't view the admin dashboard.
-   */
+  /** Redirects users whose active role's home is elsewhere, e.g. VMC away from /admin. */
   home?: string;
 }
 

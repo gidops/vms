@@ -1,12 +1,36 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../prisma/prisma.module';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { RfidCardsModule } from '../rfid-cards/rfid-cards.module';
+import { VisitAccessService } from './access.service';
+import { VisitDashboardService } from './dashboard.service';
+import { VisitAuthoringService } from './authoring.service';
+import { VisitDeliveriesService } from './deliveries.service';
+import { VisitEvacuationService } from './evacuation.service';
+import { VisitExportService } from './export.service';
+import { VisitModerationService } from './moderation.service';
+import { VisitReadService } from './read.service';
 import { VisitsController } from './visits.controller';
-import { VisitsService } from './visits.service';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, NotificationsModule, RfidCardsModule],
   controllers: [VisitsController],
-  providers: [VisitsService],
-  exports: [VisitsService],
+  providers: [
+    VisitDashboardService,
+    VisitReadService,
+    VisitAuthoringService,
+    VisitModerationService,
+    VisitAccessService,
+    VisitEvacuationService,
+    VisitExportService,
+    VisitDeliveriesService,
+  ],
+  exports: [
+    VisitDashboardService,
+    VisitReadService,
+    VisitAuthoringService,
+    VisitModerationService,
+    VisitAccessService,
+  ],
 })
 export class VisitsModule {}

@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
+import { GeistMono } from "geist/font/mono";
+import { GeistSans } from "geist/font/sans";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
-import { Geist, Geist_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
-import { isRtl, routing } from "@/i18n/routing";
+import { APP_TIME_ZONE, isRtl, routing } from "@/i18n/routing";
 import { AppProviders } from "@/shared/providers/AppProviders";
 import "../globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// Geist from npm rather than next/font/google, which fetches from a CDN at build time
+// and would make Docker/CI builds depend on it being reachable.
+const geistSans = GeistSans;
+const geistMono = GeistMono;
 
 export const metadata: Metadata = {
   title: "AATC VMS",
@@ -40,7 +40,11 @@ export default async function LocaleLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <NextIntlClientProvider locale={locale} messages={messages}>
+        <NextIntlClientProvider
+          locale={locale}
+          messages={messages}
+          timeZone={APP_TIME_ZONE}
+        >
           <AppProviders>{children}</AppProviders>
         </NextIntlClientProvider>
       </body>

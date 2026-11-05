@@ -12,7 +12,10 @@ import { useLocale, useTranslations } from "next-intl";
 import { useUpdateMe } from "@/data/settings/queries";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/shared/auth/AuthContext";
-import { SettingsDivider, SettingsRow } from "./SettingsRow";
+import {
+  SettingsDivider,
+  SettingsRow,
+} from "@/app/[locale]/_components/SettingsRow";
 
 const LOCALES = [
   { value: "en", labelKey: "en" },
@@ -29,8 +32,8 @@ const TIMEZONES = [
 
 const NOTIFICATIONS = [
   "newInviteRequest",
-  "csoDenied",
-  "csoApproved",
+  "smDenied",
+  "smApproved",
   "flaggedVisitor",
 ] as const;
 

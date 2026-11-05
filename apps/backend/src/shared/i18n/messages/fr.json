@@ -38,6 +38,14 @@
       "intro": "Cher/Chère {name}, merci de votre visite à l'AATC. Nous espérons que votre expérience a été agréable.",
       "ratingPrompt": "Votre avis nous intéresse. Veuillez prendre un instant pour évaluer votre visite :",
       "ratingButton": "Évaluer votre visite"
+    },
+    "passwordReset": {
+      "subject": "Définissez un nouveau mot de passe pour votre compte AATC VMS",
+      "heading": "Réinitialisez votre mot de passe",
+      "intro": "Un administrateur a réinitialisé votre mot de passe AATC VMS. Utilisez le bouton ci-dessous pour en choisir un nouveau.",
+      "cta": "Définir un nouveau mot de passe",
+      "expiry": "Ce lien ne fonctionne qu'une seule fois et expire dans {minutes} minutes. S'il a expiré, demandez à votre administrateur d'en envoyer un nouveau.",
+      "ignore": "Si vous n'attendiez pas cet e-mail, vous pouvez l'ignorer ; votre mot de passe actuel reste valide."
     }
   },
   "sms": {
@@ -71,7 +79,9 @@
     "validationFailed": "Échec de la validation",
     "visit": {
       "notFound": "Visite introuvable",
-      "invalidState": "La visite n'est pas dans un état valide pour cette action."
+      "invalidState": "La visite n'est pas dans un état valide pour cette action.",
+      "notOwner": "Vous n'êtes pas autorisé à modifier cette visite.",
+      "notCheckedOut": "La visite doit être terminée avant de pouvoir être évaluée."
     },
     "alert": {
       "notFound": "Alerte introuvable"
@@ -80,10 +90,42 @@
       "notFound": "Utilisateur introuvable"
     },
     "notification": {
-      "notFound": "Notification introuvable"
+      "notFound": "Notification introuvable",
+      "notRetryable": "Ce message ne peut être renvoyé qu'après un échec."
     },
     "auth": {
       "invalidCredentials": "E-mail ou mot de passe invalide."
+    },
+    "rateLimited": "Trop de tentatives. Patientez une minute puis réessayez.",
+    "deskQr": {
+      "notFound": "Le QR de l'accueil n'a pas encore été configuré.",
+      "exists": "Le QR de l'accueil existe déjà.",
+      "badV1Token": "Ce n'est pas un lien ou un jeton QR de la V1.",
+      "notActive": "Ce QR code n'est pas actif. Veuillez vous enregistrer à l'accueil VMC.",
+      "formInvalid": "Ce formulaire n'est pas valide. Veuillez scanner à nouveau le QR code.",
+      "formExpired": "Ce formulaire a expiré. Veuillez scanner à nouveau le QR code."
+    },
+    "gateKiosk": {
+      "notActive": "Ce lien de borne d'entrée n'est pas actif.",
+      "notFound": "Il n'existe pas encore de lien de borne d'entrée.",
+      "exists": "Le lien de borne d'entrée existe déjà."
+    },
+    "visitor": {
+      "notFound": "Visiteur introuvable"
+    },
+    "rfid": {
+      "notFound": "Attribution de carte d'accès introuvable",
+      "cardNotFound": "Carte d'accès introuvable",
+      "visitorHasCard": "Ce visiteur détient déjà une carte d'accès. Clôturez-la avant d'en attribuer une autre.",
+      "cardInUse": "Cette carte est déjà attribuée.",
+      "cardLost": "Cette carte est déclarée perdue. Marquez-la retrouvée avant de l'attribuer.",
+      "cardRetired": "Cette carte est retirée et ne peut pas être attribuée.",
+      "visitMismatch": "Cette visite n'appartient pas à ce visiteur.",
+      "notActive": "Cette carte a déjà été rendue ou déclarée perdue.",
+      "invalidValidity": "La date de fin doit être postérieure à la date de début.",
+      "invalidPhoto": "Téléversez la photo via le formulaire de carte d'accès.",
+      "returnRequired": "Ce visiteur détient une carte d'accès. Indiquez si elle a été récupérée avant de l'enregistrer en sortie.",
+      "returnNotAllowed": "Vous ne pouvez pas récupérer les cartes d'accès. Demandez à l'accueil d'enregistrer la sortie de ce visiteur."
     }
   },
   "validation": {

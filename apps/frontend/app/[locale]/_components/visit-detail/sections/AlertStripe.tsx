@@ -1,0 +1,17 @@
+import { TriangleAlert } from "lucide-react";
+import { useTranslations } from "next-intl";
+import type { VisitAlert } from "@/data/visits/visits.api";
+
+export function AlertStripe({ alert }: { alert: VisitAlert }) {
+  const t = useTranslations("requests");
+  const label =
+    alert.type === "ADDITIONAL_INFO"
+      ? t("stripe.additionalInfo")
+      : t("stripe.securityReview");
+  return (
+    <div className="flex items-center gap-2 rounded-lg bg-danger-subtle p-3 text-sm font-semibold text-danger">
+      <TriangleAlert className="size-4 shrink-0" aria-hidden="true" />
+      <span>{label}</span>
+    </div>
+  );
+}

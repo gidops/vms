@@ -7,16 +7,12 @@ import type { Env } from '../config/env.schema';
 export interface AccessTokenClaims {
   sub: string;
   email: string;
-  /** All role names the user holds (drives the role switcher). */
   roles: string[];
-  /** The role currently scoping this session. */
   activeRole?: string | null;
-  /** Permissions of the active role only (not the union of all roles). */
+  /** Active role only, not the union of all roles. */
   permissions: string[];
-  /** Session id — lets switch-role update the right session. */
   sid?: string;
   tenantId?: string | null;
-  /** User's preferred language (drives server-side localized rendering). */
   preferredLocale?: string;
 }
 
@@ -36,7 +32,6 @@ export class TokenService {
     });
   }
 
-  /** Access-token lifetime in seconds, parsed from JWT_EXPIRES_IN (e.g. "15m"). */
   accessTokenTtlSeconds(): number {
     const raw = this.config.get('JWT_EXPIRES_IN', { infer: true });
     const match = /^(\d+)([smhd])$/.exec(raw);
@@ -44,7 +39,7 @@ export class TokenService {
     return Number(match[1]) * (UNIT_SECONDS[match[2]] ?? 1);
   }
 
-  /** Opaque high-entropy refresh token + its deterministic (queryable) hash. */
+  /** The hash is deterministic so it can be queried. */
   generateRefreshToken(): { token: string; hash: string } {
     const token = randomBytes(32).toString('hex');
     return { token, hash: this.hashRefreshToken(token) };
