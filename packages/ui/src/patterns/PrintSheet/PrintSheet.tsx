@@ -34,6 +34,8 @@ export function PrintSheet({
     <div
       ref={ref}
       className={cn("vms-print-sheet", className)}
+      // Paper is always light, whatever the screen theme.
+      data-theme="light"
       data-preview={preview || undefined}
       aria-hidden={preview ? undefined : true}
       {...rest}

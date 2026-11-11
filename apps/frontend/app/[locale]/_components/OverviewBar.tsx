@@ -100,7 +100,7 @@ export function StatCell({ stat }: { stat: OverviewStat }) {
         <span
           className={cn(
             "text-xl leading-6 font-normal",
-            warning ? "text-warning" : "text-[#526070]",
+            warning ? "text-warning" : "text-fg-label",
           )}
         >
           {stat.label}
@@ -114,7 +114,7 @@ export function StatCell({ stat }: { stat: OverviewStat }) {
               "inline-flex size-8 shrink-0 items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]",
               warning
                 ? "text-warning hover:bg-warning/10"
-                : "text-[#526070] hover:bg-primary/10",
+                : "text-fg-label hover:bg-primary/10",
             )}
           >
             <ChevronRight
@@ -127,7 +127,7 @@ export function StatCell({ stat }: { stat: OverviewStat }) {
       <span
         className={cn(
           "text-[2.5rem] font-[550] leading-[1.2]",
-          warning ? "text-warning" : "text-[#344054]",
+          warning ? "text-warning" : "text-fg-strong",
         )}
       >
         {stat.value}
@@ -142,13 +142,13 @@ export function StatCell({ stat }: { stat: OverviewStat }) {
 export const cellBg = (stat: OverviewStat) =>
   stat.tone === "warning" ? "bg-warning-subtle" : "bg-primary-subtle";
 
-export const STAT_SEPARATOR = "border-s-[#A9B5C0]";
+export const STAT_SEPARATOR = "border-s-border-divider";
 
 /** Borders for cell `i` of a 2-up (sm) / 4-up (xl) grid; the end separator appears only where a neighbour follows. */
 export const statGridCellClass = (i: number) =>
   cn(
     "border-b border-border last:border-b-0 xl:border-b-0",
-    "border-e-[#A9B5C0]",
+    "border-e-border-divider",
     i % 2 === 0 ? "sm:border-e-[2px]" : "sm:border-e-0",
     i % 4 === 3 ? "xl:border-e-0" : "xl:border-e-[2px]",
   );
@@ -239,7 +239,7 @@ export function OverviewBar({
 }
 
 export const WELCOME_DESKTOP =
-  "text-[2rem] font-medium leading-tight text-[#344054]";
+  "text-[2rem] font-medium leading-tight text-fg-strong";
 
 /**
  * Stats behind a "View …" toggle for small screens: a row lifted by a slight
@@ -274,7 +274,7 @@ export function CollapsibleStats({
       </button>
       {open ? (
         // Same 2px slate separators as between the desktop stat cells.
-        <div className="divide-y-[2px] divide-[#A9B5C0] border-t border-border">
+        <div className="divide-y-[2px] divide-border-divider border-t border-border">
           {stats.map((stat) => (
             <div key={stat.label} className={cellBg(stat)}>
               <StatCell stat={stat} />
@@ -308,7 +308,7 @@ export function OverviewMobile({
     <div className="flex flex-col lg:hidden">
       <div className="flex flex-col gap-2 bg-surface-muted px-4 py-5">
         {eyebrow}
-        <h1 className="text-2xl font-medium leading-tight text-[#344054]">
+        <h1 className="text-2xl font-medium leading-tight text-fg-strong">
           {welcome}
         </h1>
       </div>

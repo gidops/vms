@@ -6,6 +6,7 @@ import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { APP_TIME_ZONE, isRtl, routing } from "@/i18n/routing";
 import { AppProviders } from "@/shared/providers/AppProviders";
+import { themeScript } from "@/shared/theme/theme";
 import "../globals.css";
 
 // Geist from npm rather than next/font/google, which fetches from a CDN at build time
@@ -38,7 +39,12 @@ export default async function LocaleLayout({
       dir={dir}
       data-theme="light"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      // The theme script below may switch data-theme before React hydrates.
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-full">
         <NextIntlClientProvider
           locale={locale}

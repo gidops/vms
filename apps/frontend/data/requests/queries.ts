@@ -12,6 +12,7 @@ import {
   type InboxKind,
   type InboxListParams,
 } from "@/data/inbox/inbox.api";
+import { staleKeysFor } from "@/data/live/invalidation";
 import { notesApi } from "@/data/notes/notes.api";
 import { visitsApi } from "@/data/visits/visits.api";
 
@@ -106,13 +107,16 @@ export function useMyVisits(params: MyVisitsParams = {}) {
   });
 }
 
-/** Invalidate every inbox + visits slice + the affected detail after a write. */
-function useInvalidate() {
+/**
+ * After a write, refresh every screen showing what it changed (boards, feeds,
+ * counts, sheets, stats), as the live push would for another user's write.
+ */
+function useInvalidate(change = "visit.updated") {
   const qc = useQueryClient();
-  return (detailKey?: readonly unknown[]) => {
-    void qc.invalidateQueries({ queryKey: ["inbox"] });
-    void qc.invalidateQueries({ queryKey: ["visits"] });
-    if (detailKey) void qc.invalidateQueries({ queryKey: detailKey });
+  return () => {
+    for (const queryKey of staleKeysFor(change)) {
+      void qc.invalidateQueries({ queryKey });
+    }
   };
 }
 
@@ -134,19 +138,19 @@ export function useVisitGroup(groupId: string | null) {
 }
 
 export function useCheckIn(id: string) {
-  const invalidate = useInvalidate();
+  const invalidate = useInvalidate("visitor.checked_in");
   return useMutation({
     mutationFn: (input: CheckInVisitInput) => visitsApi.checkIn(id, input),
-    onSuccess: () => invalidate(keys.visit(id)),
+    onSuccess: () => invalidate(),
   });
 }
 
 export function useCheckOut(id: string) {
-  const invalidate = useInvalidate();
+  const invalidate = useInvalidate("visitor.checked_in");
   return useMutation({
     mutationFn: (input: CheckOutVisitInput = {}) =>
       visitsApi.checkOut(id, input),
-    onSuccess: () => invalidate(keys.visit(id)),
+    onSuccess: () => invalidate(),
   });
 }
 
@@ -154,7 +158,7 @@ export function useApproveVisit(id: string) {
   const invalidate = useInvalidate();
   return useMutation({
     mutationFn: () => visitsApi.approve(id),
-    onSuccess: () => invalidate(keys.visit(id)),
+    onSuccess: () => invalidate(),
   });
 }
 
@@ -162,7 +166,7 @@ export function useDenyVisit(id: string) {
   const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (reason: string) => visitsApi.deny(id, reason),
-    onSuccess: () => invalidate(keys.visit(id)),
+    onSuccess: () => invalidate(),
   });
 }
 
@@ -187,7 +191,7 @@ export function useCancelVisit(id: string) {
   const invalidate = useInvalidate();
   return useMutation({
     mutationFn: () => visitsApi.cancel(id),
-    onSuccess: () => invalidate(keys.visit(id)),
+    onSuccess: () => invalidate(),
   });
 }
 
@@ -196,7 +200,7 @@ export function useUpdateVisit(id: string) {
   return useMutation({
     mutationFn: (input: Parameters<typeof visitsApi.update>[1]) =>
       visitsApi.update(id, input),
-    onSuccess: () => invalidate(keys.visit(id)),
+    onSuccess: () => invalidate(),
   });
 }
 
@@ -206,7 +210,7 @@ export function useResubmitVisit(id: string) {
   return useMutation({
     mutationFn: (input: { purpose?: string; scheduledAt?: string } = {}) =>
       visitsApi.resubmit(id, input),
-    onSuccess: () => invalidate(keys.visit(id)),
+    onSuccess: () => invalidate(),
   });
 }
 
@@ -216,7 +220,7 @@ export function useFlagVisit(id: string) {
   return useMutation({
     mutationFn: (input: Parameters<typeof visitsApi.flag>[1]) =>
       visitsApi.flag(id, input),
-    onSuccess: () => invalidate(keys.visit(id)),
+    onSuccess: () => invalidate(),
   });
 }
 
@@ -226,17 +230,17 @@ export function useRequestInfo(id: string) {
   return useMutation({
     mutationFn: (input: Parameters<typeof visitsApi.requestInfo>[1]) =>
       visitsApi.requestInfo(id, input),
-    onSuccess: () => invalidate(keys.visit(id)),
+    onSuccess: () => invalidate(),
   });
 }
 
-/** Keyed by the visit so its sheet refreshes; resolving clears the visit's hold. */
-export function useResolveAlert(visitId: string) {
+/** Resolving clears the visit's hold, so the visit's screens refresh too. */
+export function useResolveAlert() {
   const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (args: { alertId: string; status: AlertStatusAction }) =>
       alertsApi.updateStatus(args.alertId, args.status),
-    onSuccess: () => invalidate(keys.visit(visitId)),
+    onSuccess: () => invalidate(),
   });
 }
 
@@ -245,7 +249,7 @@ export function useRateVisit(id: string) {
   return useMutation({
     mutationFn: (input: { score: number; comment?: string }) =>
       visitsApi.rate(id, input),
-    onSuccess: () => invalidate(keys.visit(id)),
+    onSuccess: () => invalidate(),
   });
 }
 
@@ -253,7 +257,7 @@ export function useResendCode(id: string) {
   const invalidate = useInvalidate();
   return useMutation({
     mutationFn: () => visitsApi.resendCode(id),
-    onSuccess: () => invalidate(keys.visit(id)),
+    onSuccess: () => invalidate(),
   });
 }
 
@@ -261,11 +265,6 @@ export function useAddNote(target: { visitId?: string; alertId?: string }) {
   const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (body: string) => notesApi.add({ ...target, body }),
-    onSuccess: () =>
-      invalidate(
-        target.visitId
-          ? keys.visit(target.visitId)
-          : keys.alert(target.alertId ?? ""),
-      ),
+    onSuccess: () => invalidate(),
   });
 }

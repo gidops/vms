@@ -45,7 +45,7 @@
     "okta": "Login with Okta SSO"
   },
   "dashboard": {
-    "hub": "VMC HUB",
+    "hub": "VMC",
     "welcome": "Welcome {name}",
     "records": "Visitor Records",
     "selectAll": "Select all visitors",
@@ -616,8 +616,8 @@
         "awaitingNone": "All caught up",
         "onsiteFloors": "{count, plural, one {across # floor} other {across # floors}}",
         "console": {
-          "SUPER_ADMIN": "System console",
-          "ADMIN": "Security console"
+          "SUPER_ADMIN": "Tech Support",
+          "ADMIN": "Security Manager"
         }
       },
       "approvals": {
@@ -724,7 +724,7 @@
     }
   },
   "staff": {
-    "hub": "STAFF HUB",
+    "hub": "HOST",
     "welcome": "Welcome {name}",
     "expectedGuests": "Expected Guests",
     "guestCount": "{count, plural, one {# Guest} other {# Guests}}",
@@ -864,8 +864,7 @@
       },
       "visitDate": "Visit date",
       "host": "Host",
-      "scanNext": "Scan next",
-      "autoReturn": "Returning to the scanner in {seconds}s"
+      "scanNext": "Scan next"
     },
     "kiosk": {
       "checking": "Opening the gate kiosk…",
@@ -998,6 +997,13 @@
       "previous": "Previous session",
       "notYou": "Not you?",
       "reportIssue": "Report issue"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "help": "Choose how the app looks on this device.",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
     },
     "language": {
       "title": "Global Language",

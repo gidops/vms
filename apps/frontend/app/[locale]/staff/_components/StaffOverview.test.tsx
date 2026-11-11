@@ -29,8 +29,8 @@ describe("StaffOverview — Office Floor", () => {
     // Desktop and mobile copies both render in jsdom.
     const [label] = screen.getAllByText("Office Floor:");
     const [floor] = screen.getAllByText("3rd Floor - LW");
-    expect(label).toHaveClass("text-[#00736E]");
-    expect(floor).toHaveClass("text-[#FF6900]", "uppercase");
+    expect(label).toHaveClass("text-primary");
+    expect(floor).toHaveClass("text-highlight", "uppercase");
   });
 
   it("still shows the label, with Not set, before a desk is chosen", () => {

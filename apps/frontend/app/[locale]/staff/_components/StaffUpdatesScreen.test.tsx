@@ -12,6 +12,10 @@ vi.mock("@/data/staff/queries", () => ({
     return { isLoading: false, data };
   },
 }));
+const markSeen = vi.fn();
+vi.mock("@/data/requests/queries", () => ({
+  useMarkInboxSeen: () => ({ mutate: markSeen }),
+}));
 vi.mock("@/app/[locale]/_components/AppTopNav", () => ({
   AppTopNav: () => null,
 }));
@@ -36,6 +40,7 @@ const item = (
 describe("StaffUpdatesScreen", () => {
   beforeEach(() => {
     feedParams.mockReset();
+    markSeen.mockReset();
     data = {
       items: [
         item("1"),
@@ -43,6 +48,11 @@ describe("StaffUpdatesScreen", () => {
       ],
       totalPages: 3,
     };
+  });
+
+  it("marks every update read on opening, so the tab's unread count clears", () => {
+    renderWithIntl(<StaffUpdatesScreen />);
+    expect(markSeen).toHaveBeenCalledTimes(1);
   });
 
   it("lays out like Requests & Alerts: filter bar, inbox cards, pagination", () => {

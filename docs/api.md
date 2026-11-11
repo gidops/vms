@@ -271,6 +271,15 @@ call.
 | GET    | `/audit`            | `audit:read`                  | Filtered, paged audit log                 |
 | GET    | `/audit/export.csv` | `audit:read` + `audit:export` | Download the filtered log as CSV; audited |
 
+### Live updates (`/live`)
+
+| Method | Path           | Access    | Purpose                                                                          |
+| ------ | -------------- | --------- | -------------------------------------------------------------------------------- |
+| GET    | `/live/stream` | signed-in | Server-sent events: `change` with `{ "type": "<event type>" }`, `ping` every 25s |
+
+The stream closes after 5 minutes so the browser reopens it with a current
+access token. Auth, security and export events are never sent.
+
 ## Files and uploads
 
 - **Downloads** (`Cache-Control: no-store`, file name in `Content-Disposition`):

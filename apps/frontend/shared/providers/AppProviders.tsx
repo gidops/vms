@@ -1,11 +1,20 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
-import { AuthProvider } from "@/shared/auth/AuthContext";
+import { useEffect, useState } from "react";
+import { useLiveUpdates } from "@/data/live/useLiveUpdates";
+import { AuthProvider, useAuth } from "@/shared/auth/AuthContext";
+import { watchTheme } from "@/shared/theme/theme";
 
-/** Client-side providers: TanStack Query (server-state) + auth. */
+/** Pushed changes from other users, while someone is signed in. */
+function LiveUpdates() {
+  useLiveUpdates(useAuth().status === "authenticated");
+  return null;
+}
+
+/** Client-side providers: TanStack Query (server-state) + auth, live updates and theme sync. */
 export function AppProviders({ children }: { children: React.ReactNode }) {
+  useEffect(() => watchTheme(), []);
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -17,7 +26,10 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>{children}</AuthProvider>
+      <AuthProvider>
+        <LiveUpdates />
+        {children}
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

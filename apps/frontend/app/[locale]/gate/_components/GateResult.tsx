@@ -16,9 +16,6 @@ import { Field } from "@/app/[locale]/_components/visit-detail/helpers";
 import type { GateResult as GateResultData } from "@/data/gate/gate.api";
 import { formatWatDateTime } from "@/shared/wat";
 
-/** Seconds a result stays up before the kiosk returns to scanning. */
-export const AUTO_RETURN_SECONDS = 30;
-
 type Tone = "success" | "info" | "warning" | "danger";
 
 const LOOK: Record<GateVerdict, { tone: Tone; icon: React.ReactNode }> = {
@@ -45,7 +42,7 @@ const GLYPH: Record<Tone, string> = {
   danger: "text-danger",
 };
 
-/** Big, colour-coded answer for the guard, then back to scanning. */
+/** Big, colour-coded answer that stays up until the guard scans the next pass. */
 export function GateResult({
   result,
   onDone,
@@ -58,18 +55,9 @@ export function GateResult({
   const { tone, icon } = LOOK[result.verdict];
   const visit = result.visit;
   const heading = React.useRef<HTMLHeadingElement>(null);
-  const [left, setLeft] = React.useState(AUTO_RETURN_SECONDS);
   const [shownAt] = React.useState(() => Date.now());
 
   React.useEffect(() => heading.current?.focus(), []);
-
-  React.useEffect(() => {
-    const timer = window.setInterval(() => setLeft((s) => s - 1), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
-  React.useEffect(() => {
-    if (left <= 0) onDone();
-  }, [left, onDone]);
 
   const when = visit?.scheduledAt
     ? formatWatDateTime(visit.scheduledAt, locale)
@@ -132,13 +120,10 @@ export function GateResult({
         </div>
       ) : null}
 
-      <div className="flex w-full max-w-lg flex-col items-center gap-2">
+      <div className="flex w-full max-w-lg flex-col items-center">
         <Button intent="primary" size="lg" fullWidth onClick={onDone}>
           {t("scanNext")}
         </Button>
-        <span className="text-sm text-fg-muted">
-          {t("autoReturn", { seconds: Math.max(left, 0) })}
-        </span>
       </div>
     </section>
   );

@@ -29,7 +29,7 @@
     "visitorArrived": {
       "subject": "Votre invité est arrivé",
       "heading": "Votre invité est arrivé",
-      "intro": "{visitorName} s'est présenté(e) à l'entrée et vous attend.",
+      "intro": "{visitorName} a été enregistré(e) et vous attend.",
       "details": "Arrivée enregistrée à {time}."
     },
     "thankYou": {
@@ -50,12 +50,12 @@
   },
   "sms": {
     "visitApproved": "AATC : Bonjour {visitorName}, votre visite le {visitDate} à {time} avec {host} est confirmée. Votre code d'accès est {code}. Merci d'arriver à l'heure.",
-    "visitorArrived": "AATC : Votre invité {visitorName} est arrivé à l'entrée et vous attend.",
+    "visitorArrived": "AATC : Votre invité {visitorName} a été enregistré et vous attend.",
     "thankYou": "AATC : Merci de votre visite, {visitorName}. Votre avis nous intéresse : {ratingUrl}"
   },
   "whatsapp": {
     "visitApproved": "*Visite AATC confirmée*\n\nBonjour {visitorName}, votre visite le {visitDate} à {time} avec {host} est confirmée.\nCode d'accès : *{code}*\n\nMerci d'arriver à l'heure.",
-    "visitorArrived": "*AATC* — Votre invité *{visitorName}* est arrivé à l'entrée et vous attend.",
+    "visitorArrived": "*AATC* — Votre invité *{visitorName}* a été enregistré et vous attend.",
     "thankYou": "*AATC* — Merci de votre visite, {visitorName}. Votre avis nous intéresse : {ratingUrl}"
   },
   "inapp": {
@@ -65,7 +65,7 @@
     },
     "visitorArrived": {
       "title": "Invité arrivé",
-      "body": "{visitorName} s'est présenté(e) à l'entrée."
+      "body": "{visitorName} a été enregistré(e)."
     },
     "thankYou": {
       "title": "Visite terminée",

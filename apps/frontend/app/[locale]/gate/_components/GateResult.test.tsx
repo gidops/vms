@@ -2,7 +2,7 @@ import { act, fireEvent, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { GateResult as GateResultData } from "@/data/gate/gate.api";
 import { renderWithIntl } from "@/test/render";
-import { AUTO_RETURN_SECONDS, GateResult } from "./GateResult";
+import { GateResult } from "./GateResult";
 
 const visit = (scheduledAt: string | null = new Date().toISOString()) => ({
   visitorName: "Ada Lovelace",
@@ -70,10 +70,13 @@ describe("GateResult", () => {
     expect(onDone).toHaveBeenCalledTimes(1);
   });
 
-  it("returns to scanning by itself after the countdown", () => {
+  it("stays on the result until the guard asks for the next scan", () => {
     vi.useFakeTimers();
     const onDone = show({ verdict: "VALID_TODAY", visit: visit() });
-    act(() => vi.advanceTimersByTime(AUTO_RETURN_SECONDS * 1000));
-    expect(onDone).toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(10 * 60 * 1000));
+    expect(onDone).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: "Scan next" }),
+    ).toBeInTheDocument();
   });
 });

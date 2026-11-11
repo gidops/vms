@@ -14,14 +14,15 @@ const avatarVariants = tv({
   defaultVariants: { size: "md" },
 });
 
-// Fixed accent pairs (primitive palette) for deterministic, color-coded avatars.
+// Fixed accent pairs (primitive palette) for deterministic, color-coded avatars;
+// dark mode uses a low tint of the same hue so they stay quiet on dark surfaces.
 const ACCENTS = [
-  "bg-teal-100 text-teal-800",
-  "bg-orange-100 text-orange-800",
-  "bg-green-100 text-green-800",
-  "bg-amber-100 text-amber-900",
-  "bg-blue-100 text-blue-800",
-  "bg-red-100 text-red-800",
+  "bg-teal-100 text-teal-800 dark:bg-teal-400/15 dark:text-teal-200",
+  "bg-orange-100 text-orange-800 dark:bg-orange-400/15 dark:text-orange-200",
+  "bg-green-100 text-green-800 dark:bg-green-400/15 dark:text-green-200",
+  "bg-amber-100 text-amber-900 dark:bg-amber-400/15 dark:text-amber-200",
+  "bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-100",
+  "bg-red-100 text-red-800 dark:bg-red-400/15 dark:text-red-200",
 ] as const;
 
 function accentFor(seed: string): string {
