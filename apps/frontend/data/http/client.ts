@@ -131,6 +131,30 @@ export async function apiBlob(
   return { blob: await response.blob(), headers: response.headers };
 }
 
+/** Opens a long-lived authenticated GET (server-sent events) with the same one-shot refresh. */
+export async function apiStream(
+  path: string,
+  signal: AbortSignal,
+  _retry = false,
+): Promise<ReadableStream<Uint8Array>> {
+  const headers: Record<string, string> = {
+    Accept: "text/event-stream",
+    "x-correlation-id": crypto.randomUUID(),
+  };
+  const token = tokenStore.getAccessToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const response = await fetch(`${BASE_URL}${path}`, { headers, signal });
+  if (response.status === 401 && !_retry && unauthorizedHandler) {
+    const refreshed = await unauthorizedHandler();
+    if (refreshed) return apiStream(path, signal, true);
+  }
+  if (!response.ok || !response.body) {
+    throw new ApiError(response.status, response.statusText);
+  }
+  return response.body;
+}
+
 /** Saves an {@link apiBlob} download through a temporary object URL. */
 export async function apiDownload(
   path: string,

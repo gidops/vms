@@ -68,7 +68,7 @@ function VisitDetailBody({
   const deny = useDenyVisit(data.id);
   const flag = useFlagVisit(data.id);
   const requestInfo = useRequestInfo(data.id);
-  const resolveAlert = useResolveAlert(data.id);
+  const resolveAlert = useResolveAlert();
   const resubmit = useResubmitVisit(data.id);
   const cancel = useCancelVisit(data.id);
 

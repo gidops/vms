@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  SegmentedControl,
   Select,
   SelectContent,
   SelectItem,
@@ -12,6 +13,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { useUpdateMe } from "@/data/settings/queries";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/shared/auth/AuthContext";
+import { THEME_PREFERENCES, type ThemePreference } from "@/shared/theme/theme";
+import { useTheme } from "@/shared/theme/useTheme";
 import {
   SettingsDivider,
   SettingsRow,
@@ -45,6 +48,7 @@ export function PreferencesTab() {
   const pathname = usePathname();
   const { user } = useAuth();
   const updateMe = useUpdateMe();
+  const { theme, setTheme } = useTheme();
 
   const prefs = user?.notificationPrefs;
 
@@ -57,6 +61,25 @@ export function PreferencesTab() {
 
   return (
     <div className="flex flex-col">
+      <SettingsRow
+        title={t("appearance.title")}
+        description={t("appearance.help")}
+      >
+        <SegmentedControl
+          className="max-w-md"
+          fullWidth
+          aria-label={t("appearance.title")}
+          value={theme}
+          onValueChange={(value) => setTheme(value as ThemePreference)}
+          options={THEME_PREFERENCES.map((value) => ({
+            value,
+            label: t(`appearance.${value}`),
+          }))}
+        />
+      </SettingsRow>
+
+      <SettingsDivider />
+
       <SettingsRow title={t("language.title")} description={t("language.help")}>
         <Select value={locale} onValueChange={setLanguage}>
           <SelectTrigger className="max-w-md">

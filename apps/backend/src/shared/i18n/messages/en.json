@@ -29,7 +29,7 @@
     "visitorArrived": {
       "subject": "Your guest has arrived",
       "heading": "Your guest has arrived",
-      "intro": "{visitorName} has checked in at the gate and is waiting to see you.",
+      "intro": "{visitorName} has checked in and is waiting to see you.",
       "details": "Checked in at {time}."
     },
     "thankYou": {
@@ -50,12 +50,12 @@
   },
   "sms": {
     "visitApproved": "AATC: Hi {visitorName}, your visit on {visitDate} at {time} with {host} is confirmed. Your access code is {code}. Please arrive on time.",
-    "visitorArrived": "AATC: Your guest {visitorName} has arrived at the gate and is waiting to see you.",
+    "visitorArrived": "AATC: Your guest {visitorName} has checked in and is waiting to see you.",
     "thankYou": "AATC: Thank you for visiting, {visitorName}. We'd love your feedback: {ratingUrl}"
   },
   "whatsapp": {
     "visitApproved": "*AATC Visit Confirmed*\n\nHi {visitorName}, your visit on {visitDate} at {time} with {host} is confirmed.\nAccess code: *{code}*\n\nPlease arrive on time.",
-    "visitorArrived": "*AATC* — Your guest *{visitorName}* has arrived at the gate and is waiting to see you.",
+    "visitorArrived": "*AATC* — Your guest *{visitorName}* has checked in and is waiting to see you.",
     "thankYou": "*AATC* — Thank you for visiting, {visitorName}. We'd love your feedback: {ratingUrl}"
   },
   "inapp": {
@@ -65,7 +65,7 @@
     },
     "visitorArrived": {
       "title": "Guest arrived",
-      "body": "{visitorName} has checked in at the gate."
+      "body": "{visitorName} has checked in."
     },
     "thankYou": {
       "title": "Visit completed",

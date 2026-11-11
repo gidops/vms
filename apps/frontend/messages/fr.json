@@ -45,7 +45,7 @@
     "okta": "Se connecter avec Okta SSO"
   },
   "dashboard": {
-    "hub": "VMC HUB",
+    "hub": "VMC",
     "welcome": "Bienvenue {name}",
     "records": "Registre des visiteurs",
     "selectAll": "Tout sélectionner",
@@ -615,8 +615,8 @@
         "awaitingNone": "Tout est à jour",
         "onsiteFloors": "{count, plural, one {sur # étage} other {sur # étages}}",
         "console": {
-          "SUPER_ADMIN": "Console système",
-          "ADMIN": "Console de sécurité"
+          "SUPER_ADMIN": "Support technique",
+          "ADMIN": "Responsable de la sécurité"
         }
       },
       "approvals": {
@@ -723,7 +723,7 @@
     }
   },
   "staff": {
-    "hub": "ESPACE PERSONNEL",
+    "hub": "HÔTE",
     "welcome": "Bienvenue {name}",
     "expectedGuests": "Invités attendus",
     "guestCount": "{count, plural, one {# invité} other {# invités}}",
@@ -863,8 +863,7 @@
       },
       "visitDate": "Date de la visite",
       "host": "Hôte",
-      "scanNext": "Scanner le suivant",
-      "autoReturn": "Retour au scanner dans {seconds} s"
+      "scanNext": "Scanner le suivant"
     },
     "kiosk": {
       "checking": "Ouverture de la borne d'entrée…",
@@ -997,6 +996,13 @@
       "previous": "Session précédente",
       "notYou": "Pas vous ?",
       "reportIssue": "Signaler"
+    },
+    "appearance": {
+      "title": "Apparence",
+      "help": "Choisissez l'apparence de l'application sur cet appareil.",
+      "light": "Clair",
+      "dark": "Sombre",
+      "system": "Système"
     },
     "language": {
       "title": "Langue globale",

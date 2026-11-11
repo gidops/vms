@@ -53,7 +53,7 @@ export function AuthLayout({
         </div>
       </section>
 
-      <section className="flex flex-1 items-center justify-center bg-[#F2F6F9] p-4 sm:p-8 dark:bg-canvas">
+      <section className="flex flex-1 items-center justify-center bg-canvas-alt p-4 sm:p-8">
         <div className="w-full max-w-[26rem] rounded-2xl border border-border bg-surface px-6 py-10 shadow-sm sm:px-9">
           {logo ? <div className="mb-7 flex justify-center">{logo}</div> : null}
           <h1 className="text-center text-2xl font-medium tracking-tight text-fg">

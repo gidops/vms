@@ -8,6 +8,7 @@ import type {
   CloseRfidAssignmentInput,
   SetRfidCardStatusInput,
 } from "@vms/contracts";
+import { staleKeysFor } from "@/data/live/invalidation";
 import {
   rfidCardsApi,
   type AssignCardBody,
@@ -41,12 +42,13 @@ export function useRfidCards(params: CardListParams) {
   });
 }
 
-/** Every write refreshes all card lists, the detail, and the audit trail. */
+/** Every write refreshes the card lists and detail, the visits holding a card, and the audit trail. */
 function useInvalidate() {
   const qc = useQueryClient();
   return () => {
-    void qc.invalidateQueries({ queryKey: KEY });
-    void qc.invalidateQueries({ queryKey: ["audit"] });
+    for (const queryKey of staleKeysFor("rfid_card.")) {
+      void qc.invalidateQueries({ queryKey });
+    }
   };
 }
 

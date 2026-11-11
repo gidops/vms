@@ -134,6 +134,16 @@ OutboxRelay (polls every OUTBOX_POLL_INTERVAL_MS, default 2000) ─▶ EventEmit
 - Event metadata carries the correlation id, the acting user, IP, user agent and
   locale, captured from the request.
 
+**Live updates.** `LiveHub` (`modules/live`) is another listener on the bus,
+like the audit listener. It forwards the _type_ of each relayed event that
+changes something on screen (visits, alerts, cards, passes, users…) to every
+open `GET /live/stream` (server-sent events). It never sends the payload or ids,
+so a browser learns only that something changed and refetches through the
+normal permission-checked endpoints. On the frontend, `data/live/` maps event
+types to the query caches they make stale (`staleKeysFor`); the same map drives
+cache refreshes after the user's own writes. The relay is untouched, so a move
+to NATS only changes where the hub subscribes.
+
 ### Auth and RBAC
 
 **RBAC** (role-based access control) means users get roles, roles bundle

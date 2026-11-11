@@ -29,7 +29,7 @@
     "visitorArrived": {
       "subject": "وصل ضيفك",
       "heading": "وصل ضيفك",
-      "intro": "قام {visitorName} بتسجيل الوصول عند البوابة وهو في انتظارك.",
+      "intro": "قام {visitorName} بتسجيل الوصول وهو في انتظارك.",
       "details": "تم تسجيل الوصول في {time}."
     },
     "thankYou": {
@@ -50,12 +50,12 @@
   },
   "sms": {
     "visitApproved": "AATC: مرحبًا {visitorName}، تم تأكيد زيارتك في {visitDate} الساعة {time} مع {host}. رمز الدخول الخاص بك هو {code}. يُرجى الحضور في الوقت المحدد.",
-    "visitorArrived": "AATC: وصل ضيفك {visitorName} إلى البوابة وهو في انتظارك.",
+    "visitorArrived": "AATC: قام ضيفك {visitorName} بتسجيل الوصول وهو في انتظارك.",
     "thankYou": "AATC: شكرًا لزيارتك، {visitorName}. يسعدنا تلقّي ملاحظاتك: {ratingUrl}"
   },
   "whatsapp": {
     "visitApproved": "*تم تأكيد زيارة AATC*\n\nمرحبًا {visitorName}، تم تأكيد زيارتك في {visitDate} الساعة {time} مع {host}.\nرمز الدخول: *{code}*\n\nيُرجى الحضور في الوقت المحدد.",
-    "visitorArrived": "*AATC* — وصل ضيفك *{visitorName}* إلى البوابة وهو في انتظارك.",
+    "visitorArrived": "*AATC* — قام ضيفك *{visitorName}* بتسجيل الوصول وهو في انتظارك.",
     "thankYou": "*AATC* — شكرًا لزيارتك، {visitorName}. يسعدنا تلقّي ملاحظاتك: {ratingUrl}"
   },
   "inapp": {
@@ -65,7 +65,7 @@
     },
     "visitorArrived": {
       "title": "وصل الضيف",
-      "body": "قام {visitorName} بتسجيل الوصول عند البوابة."
+      "body": "قام {visitorName} بتسجيل الوصول."
     },
     "thankYou": {
       "title": "اكتملت الزيارة",

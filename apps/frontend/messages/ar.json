@@ -45,7 +45,7 @@
     "okta": "تسجيل الدخول عبر Okta SSO"
   },
   "dashboard": {
-    "hub": "مركز VMC",
+    "hub": "VMC",
     "welcome": "مرحبًا {name}",
     "records": "سجلات الزوّار",
     "selectAll": "تحديد كل الزوّار",
@@ -615,8 +615,8 @@
         "awaitingNone": "لا شيء معلّق",
         "onsiteFloors": "{count, plural, zero {في لا طوابق} one {في طابق واحد} two {في طابقين} few {في # طوابق} many {في # طابقًا} other {في # طابق}}",
         "console": {
-          "SUPER_ADMIN": "وحدة تحكم النظام",
-          "ADMIN": "وحدة تحكم الأمن"
+          "SUPER_ADMIN": "الدعم الفني",
+          "ADMIN": "مدير الأمن"
         }
       },
       "approvals": {
@@ -723,7 +723,7 @@
     }
   },
   "staff": {
-    "hub": "مساحة الموظفين",
+    "hub": "المضيف",
     "welcome": "مرحبًا {name}",
     "expectedGuests": "الضيوف المتوقعون",
     "guestCount": "{count, plural, zero {# ضيف} one {# ضيف} two {# ضيفان} few {# ضيوف} many {# ضيفًا} other {# ضيف}}",
@@ -863,8 +863,7 @@
       },
       "visitDate": "تاريخ الزيارة",
       "host": "المضيف",
-      "scanNext": "مسح التالي",
-      "autoReturn": "العودة إلى الماسح خلال {seconds} ث"
+      "scanNext": "مسح التالي"
     },
     "kiosk": {
       "checking": "جارٍ فتح جهاز البوابة…",
@@ -997,6 +996,13 @@
       "previous": "الجلسة السابقة",
       "notYou": "ألست أنت؟",
       "reportIssue": "إبلاغ"
+    },
+    "appearance": {
+      "title": "المظهر",
+      "help": "اختر مظهر التطبيق على هذا الجهاز.",
+      "light": "فاتح",
+      "dark": "داكن",
+      "system": "النظام"
     },
     "language": {
       "title": "اللغة العامة",

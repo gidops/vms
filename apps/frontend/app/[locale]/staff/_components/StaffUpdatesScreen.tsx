@@ -27,6 +27,7 @@ import {
   VisitDetailSheet,
   type NotificationContext,
 } from "@/app/[locale]/_components/VisitDetailSheet";
+import { useMarkInboxSeen } from "@/data/requests/queries";
 import { useStaffActivityFeed } from "@/data/staff/queries";
 import type {
   StaffActivityCategory,
@@ -68,6 +69,10 @@ export function StaffUpdatesScreen() {
     id: string;
     notification: NotificationContext;
   } | null>(null);
+
+  // Opening the page reads every update, so the tab's unread count clears.
+  const markSeen = useMarkInboxSeen().mutate;
+  React.useEffect(() => markSeen(), [markSeen]);
 
   // Debounce the search box into the query term (and reset to page 1).
   React.useEffect(() => {

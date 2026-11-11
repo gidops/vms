@@ -26,11 +26,11 @@ function OfficeFloor({ office }: { office?: string | null }) {
   const t = useTranslations("staff");
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-lg font-semibold text-[#00736E]">
+      <span className="text-lg font-semibold text-primary">
         {t("overview.officeFloor")}:
       </span>
       {office ? (
-        <span className="text-xl font-bold uppercase tracking-tight text-[#FF6900]">
+        <span className="text-xl font-bold uppercase tracking-tight text-highlight">
           {office}
         </span>
       ) : (
@@ -72,7 +72,7 @@ function BookPanel({ onNewInvite }: Pick<StaffOverviewProps, "onNewInvite">) {
 function OfficeFloorValue({ office }: { office?: string | null }) {
   const t = useTranslations("staff");
   return office ? (
-    <span className="text-base font-bold uppercase tracking-tight text-[#FF6900]">
+    <span className="text-base font-bold uppercase tracking-tight text-highlight">
       {office}
     </span>
   ) : (

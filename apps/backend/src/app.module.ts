@@ -10,6 +10,7 @@ import { GateModule } from './modules/gate/gate.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { InboxModule } from './modules/inbox/inbox.module';
 import { InsightsModule } from './modules/insights/insights.module';
+import { LiveModule } from './modules/live/live.module';
 import { NotesModule } from './modules/notes/notes.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { RfidCardsModule } from './modules/rfid-cards/rfid-cards.module';
@@ -51,6 +52,7 @@ import { StorageModule } from './shared/storage/storage.module';
     NotesModule,
     NotificationsModule,
     StaffModule,
+    LiveModule,
   ],
   controllers: [AppController],
   // AllExceptionsFilter is registered here (not in main.ts) so it can inject
